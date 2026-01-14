@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - CorrectMe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-900">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <!-- Coluna da Imagem (Esquerda) -->
+        <div class="w-full md:w-1/2 bg-white flex items-center justify-center p-8 md:p-12 order-2 md:order-1">
+            <img src="https://neureka-ai.com/wp-content/uploads/2025/08/MyCleverBotProfileRelatoriocomDuotonev2.png" 
+                 alt="Imagem de Relatório de Progresso" 
+                 class="max-w-md w-full h-auto object-contain"
+                 onerror="this.onerror=null;this.src='https://placehold.co/600x400/ffffff/cccccc?text=Imagem+do+Relatório';">
+        </div>
+
+        <!-- Coluna do Formulário (Direita) -->
+        <div class="w-full md:w-1/2 flex items-center justify-center p-6 md:p-12 order-1 md:order-2">
+            <div class="w-full max-w-md">
+                <!-- Logo -->
+                <div class="text-center mb-0">
+                    <a href="index.html">
+                        <img src="https://neureka-ai.com/wp-content/uploads/2025/08/LogobrancofundoTransparentev1.png" alt="Logo CorrectMe" class="h-48 mx-auto" onerror="this.onerror=null;this.src='https://placehold.co/200x48/1e293b/ffffff?text=CorrectMe';">
+                    </a>
+                </div>
+
+                <!-- Card do Formulário -->
+                <div class="bg-slate-800/80 backdrop-blur-sm rounded-2xl p-8 shadow-2xl shadow-purple-900/20">
+
+                    <!-- Formulário de Login -->
+                    <div id="login-form-container">
+                        <h2 class="text-3xl font-bold text-white mb-2 text-center">Bem-vindo de volta!</h2>
+                        <p class="text-slate-400 mb-8 text-center">Faça o login para continuar.</p>
+                        <form id="login-form" class="space-y-6">
+                            <div>
+                                <label for="login-email" class="sr-only">Email</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
+                                    </div>
+                                    <input type="email" id="login-email" placeholder="Digite seu e-mail" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 pl-10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="login-password" class="sr-only">Senha</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                    </div>
+                                    <input type="password" id="login-password" placeholder="Digite sua senha" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 pl-10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-end">
+                                <button type="button" id="show-forgot-password" class="text-sm font-medium text-purple-400 hover:underline">Esqueci minha senha</button>
+                            </div>
+                            <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 rounded-lg transition-transform transform hover:scale-105">Entrar</button>
+                        </form>
+
+                        <!-- DIVISOR E BOTÃO GOOGLE -->
+                        <div class="my-6 flex items-center">
+                            <div class="flex-grow border-t border-slate-600"></div>
+                            <span class="flex-shrink mx-4 text-slate-400 text-sm">OU</span>
+                            <div class="flex-grow border-t border-slate-600"></div>
+                        </div>
+
+                        <button id="google-login-btn" class="w-full flex items-center justify-center gap-3 bg-white text-slate-700 font-semibold py-3 rounded-lg border border-slate-300 hover:bg-slate-50 transition-colors">
+                            <svg class="w-5 h-5" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" fill="#FFC107"></path><path d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" fill="#FF3D00"></path><path d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" fill="#4CAF50"></path><path d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C42.022,36.21,44,30.551,44,24C44,22.659,43.862,21.35,43.611,20.083z" fill="#1976D2"></path></svg>
+                            <span>Entrar com Google</span>
+                        </button>
+                        <!-- FIM DO BOTÃO GOOGLE -->
+
+                        <p class="text-center text-slate-400 mt-6">
+                            Não tem uma conta? <button id="show-register" class="font-bold text-purple-400 hover:underline">Registre-se</button>
+                        </p>
+                    </div>
+
+                    <!-- Formulário de Registro (inicialmente escondido) -->
+                    <div id="register-form-container" class="hidden">
+                        <h2 class="text-3xl font-bold text-white mb-2 text-center">Crie sua conta</h2>
+                        <p class="text-slate-400 mb-8 text-center">Comece a evoluir agora mesmo.</p>
+                        <form id="register-form" class="space-y-6">
+                            <div>
+                                <label for="register-email" class="sr-only">Email</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5> 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
+                                    </div>
+                                    <input type="email" id="register-email" placeholder="Digite seu melhor e-mail" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 pl-10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="register-password" class="sr-only">Senha</label>
+                                 <div class="relative">
+                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                         <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                     </div>
+                                     <input type="password" id="register-password" placeholder="Crie uma senha forte" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 pl-10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 rounded-lg transition-transform transform hover:scale-105">Criar conta</button>
+                        </form>
+                        <p class="text-center text-slate-400 mt-6">
+                            Já tem uma conta? <button id="show-login" class="font-bold text-purple-400 hover:underline">Faça o login</button>
+                        </p>
+                    </div>
+
+                    <!-- Formulário de Recuperação de Senha (inicialmente escondido) -->
+                    <div id="forgot-password-container" class="hidden">
+                        <h2 class="text-3xl font-bold text-white mb-2 text-center">Recuperar Senha</h2>
+                        <p class="text-slate-400 mb-8 text-center">Digite seu e-mail para receber o link.</p>
+                        <form id="forgot-password-form" class="space-y-6">
+                            <div>
+                                <label for="forgot-email" class="sr-only">Email</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
+                                    </div>
+                                    <input type="email" id="forgot-email" placeholder="Digite seu e-mail" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 pl-10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 rounded-lg transition-transform transform hover:scale-105">Enviar link de recuperação</button>
+                        </form>
+                        <p class="text-center text-slate-400 mt-6">
+                            Lembrou da senha? <button id="back-to-login" class="font-bold text-purple-400 hover:underline">Voltar para o login</button>
+                        </p>
+                    </div>
+
+                    <!-- NOVO: Formulário para Definir Nova Senha -->
+                    <div id="update-password-container" class="hidden">
+                        <h2 class="text-3xl font-bold text-white mb-2 text-center">Defina sua Nova Senha</h2>
+                        <p class="text-slate-400 mb-8 text-center">Escolha uma senha forte e segura.</p>
+                        <form id="update-password-form" class="space-y-6">
+                            <div>
+                                <label for="new-password" class="sr-only">Nova Senha</label>
+                                <div class="relative">
+                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                         <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                     </div>
+                                     <input type="password" id="new-password" placeholder="Digite a nova senha" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 pl-10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 rounded-lg transition-transform transform hover:scale-105">Salvar nova senha</button>
+                        </form>
+                    </div>
+
+                    <div id="message" class="text-center mt-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://timqizyevfkvqgzvcrlx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbXFpenlldmZrdnFnenZjcmx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMTkwMDYsImV4cCI6MjA2MTU5NTAwNn0.LfWFCPPgzTkh7Scf2Q2LjLmYcLnaWSAGKDiMT8eSuWM';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const loginFormContainer = document.getElementById('login-form-container');
+        const registerFormContainer = document.getElementById('register-form-container');
+        const forgotPasswordContainer = document.getElementById('forgot-password-container');
+        const updatePasswordContainer = document.getElementById('update-password-container');
+
+        const showRegisterBtn = document.getElementById('show-register');
+        const showLoginBtn = document.getElementById('show-login');
+        const showForgotPasswordBtn = document.getElementById('show-forgot-password');
+        const backToLoginBtn = document.getElementById('back-to-login');
+
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const forgotPasswordForm = document.getElementById('forgot-password-form');
+        const updatePasswordForm = document.getElementById('update-password-form');
+        const messageDiv = document.getElementById('message');
+        
+        const googleLoginBtn = document.getElementById('google-login-btn');
+
+        const showForm = (formToShow) => {
+            [loginFormContainer, registerFormContainer, forgotPasswordContainer, updatePasswordContainer].forEach(form => {
+                form.classList.add('hidden');
+            });
+            formToShow.classList.remove('hidden');
+            messageDiv.textContent = '';
+        };
+
+        showRegisterBtn.addEventListener('click', () => showForm(registerFormContainer));
+        showLoginBtn.addEventListener('click', () => showForm(loginFormContainer));
+        showForgotPasswordBtn.addEventListener('click', () => showForm(forgotPasswordContainer));
+        backToLoginBtn.addEventListener('click', () => showForm(loginFormContainer));
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            messageDiv.textContent = '';
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+            if (error) {
+                messageDiv.textContent = 'E-mail ou senha inválidos.';
+                messageDiv.className = 'text-center text-red-400 mt-4';
+            } else {
+                window.location.href = 'dashboard.html';
+            }
+        });
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            messageDiv.textContent = '';
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const { data, error } = await _supabase.auth.signUp({ email, password });
+            if (error) {
+                messageDiv.textContent = error.message;
+                messageDiv.className = 'text-center text-red-400 mt-4';
+            } else {
+                messageDiv.textContent = 'Verifique seu e-mail para confirmar o registro!';
+                messageDiv.className = 'text-center text-green-400 mt-4';
+                registerForm.reset();
+            }
+        });
+
+        forgotPasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            messageDiv.textContent = 'A enviar...';
+            messageDiv.className = 'text-center text-slate-400 mt-4';
+            const email = document.getElementById('forgot-email').value;
+            
+            const { data, error } = await _supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin + window.location.pathname,
+            });
+
+            if (error) {
+                console.error('Erro na recuperação de senha:', error);
+                messageDiv.textContent = 'Erro ao enviar e-mail. Verifique o endereço e tente novamente.';
+                messageDiv.className = 'text-center text-red-400 mt-4';
+            } else {
+                messageDiv.textContent = 'Link de recuperação enviado! Verifique o seu e-mail (e a caixa de spam).';
+                messageDiv.className = 'text-center text-green-400 mt-4';
+            }
+        });
+
+        updatePasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            messageDiv.textContent = '';
+            const newPassword = document.getElementById('new-password').value;
+            const { data, error } = await _supabase.auth.updateUser({ password: newPassword });
+
+            if (error) {
+                messageDiv.textContent = 'Não foi possível atualizar a senha. Tente novamente.';
+                messageDiv.className = 'text-center text-red-400 mt-4';
+            } else {
+                messageDiv.textContent = 'Senha atualizada com sucesso! Você já pode fazer o login.';
+                messageDiv.className = 'text-center text-green-400 mt-4';
+                // --- ALTERAÇÃO --- Limpa o hash da URL e mostra o formulário de login
+                window.location.hash = '';
+                setTimeout(() => showForm(loginFormContainer), 3000);
+            }
+        });
+
+        // --- LÓGICA FINAL CORRIGIDA E MELHORADA ---
+
+        // 1. Verifica a URL para o marcador de recuperação de senha ANTES de tudo.
+        const isPasswordRecovery = window.location.hash.includes('type=recovery');
+
+        // 2. Se for uma recuperação de senha, mostra imediatamente o formulário correto.
+        if (isPasswordRecovery) {
+            showForm(updatePasswordContainer);
+        }
+
+        _supabase.auth.onAuthStateChange(async (event, session) => {
+            // 3. O listener ainda pode apanhar o evento como um backup, mas a verificação da URL já fez o trabalho.
+            if (event === 'PASSWORD_RECOVERY') {
+                showForm(updatePasswordContainer);
+                return;
+            }
+
+            // 4. A condição de redirecionamento agora SÓ é acionada se NÃO for uma recuperação de senha.
+            if (session?.user && !isPasswordRecovery) {
+                 // Verifica se a URL atual não é a do dashboard para evitar loops
+                if (!window.location.pathname.endsWith('dashboard.html') && !window.location.pathname.endsWith('onboarding.html')) {
+                    console.log('🔍 Verificando onboarding para usuário:', session.user.email);
+
+                    // Verificar se usuário já completou onboarding
+                    const { data: leadData, error: leadError } = await _supabase
+                        .from('leads')
+                        .select('id')
+                        .eq('id', session.user.id)
+                        .single();
+
+                    console.log('Lead data:', leadData);
+                    console.log('Lead error:', leadError);
+
+                    // Se não está na tabela leads, redirecionar para onboarding
+                    if (!leadData) {
+                        console.log('✅ Usuário NÃO está na tabela leads - redirecionando para onboarding');
+                        window.location.href = 'onboarding.html';
+                    } else {
+                        console.log('✅ Usuário JÁ está na tabela leads - redirecionando para dashboard');
+                        window.location.href = 'dashboard.html';
+                    }
+                }
+            }
+        });
+        
+        // Função para o login com Google
+        async function handleGoogleLogin() {
+            const { error } = await _supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin + '/dashboard.html'
+                }
+            });
+            if (error) {
+                // Mostrar erro detalhado para diagnosticar o problema
+                let errorMessage = 'Erro ao tentar fazer login com o Google: ';
+
+                if (error.message.includes('OAuth')) {
+                    errorMessage += 'Provedor OAuth não configurado corretamente no Supabase.';
+                } else if (error.message.includes('redirect')) {
+                    errorMessage += 'URL de redirecionamento não autorizada.';
+                } else {
+                    errorMessage += error.message;
+                }
+
+                messageDiv.textContent = errorMessage;
+                messageDiv.className = 'text-center text-red-400 mt-4';
+                console.error('Google Sign-In Error:', error);
+                console.error('Detalhes completos:', JSON.stringify(error, null, 2));
+            }
+        }
+        
+        // Adiciona o evento de clique ao botão do Google
+        googleLoginBtn.addEventListener('click', handleGoogleLogin);
+
+    </script>
+</body>
+</html>
+
+

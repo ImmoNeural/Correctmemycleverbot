@@ -1,0 +1,1764 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minhas Listas - CorrectMe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Flashcard 3D Flip Animation */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+
+        .flashcard-container {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+        .flashcard-container.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front, .flashcard-back {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        .flashcard-back {
+            transform: rotateY(180deg);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white">
+
+    <!-- Conteúdo principal que só aparece se o utilizador estiver logado -->
+    <div id="main-content" class="hidden">
+        <!-- Header -->
+        <header class="bg-slate-800/50 backdrop-blur-sm shadow-lg p-4 flex justify-between items-center sticky top-0 z-10">
+            <div id="header-nav" class="flex items-center gap-4">
+                 <a href="dashboard.html" class="text-slate-400 hover:text-white transition-colors">&larr; Voltar ao Dashboard</a>
+                <h1 id="header-title" class="text-2xl font-bold text-white">Minhas Listas</h1>
+            </div>
+            <button id="logout-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Sair</button>
+        </header>
+
+        <!-- Vista das Listas -->
+        <main id="lists-view" class="container mx-auto p-4 md:p-8">
+            <div class="flex justify-end mb-8 gap-4">
+                <div class="flex flex-col items-end gap-2">
+                    <button id="show-flashcards-list-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 flex items-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Artigos e Substantivos
+                    </button>
+                    <p class="text-xs text-slate-400 italic">💡 Artigos de substantivos usados nas suas redações</p>
+                </div>
+                <button id="show-add-list-modal-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    Criar Nova Lista
+                </button>
+            </div>
+            <div id="lists-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- As cartas das listas serão inseridas aqui -->
+            </div>
+        </main>
+
+        <!-- Vista das Palavras (inicialmente escondida) -->
+        <main id="words-view" class="hidden container mx-auto p-4 md:p-8 max-w-4xl">
+             <div class="flex justify-between mb-8 gap-4">
+                <button id="show-flashcard-game-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Jogar Flashcards
+                </button>
+                <div class="flex gap-4">
+                    <!-- Botão Atualizar (só aparece em Artigos e Substantivos) -->
+                    <button id="refresh-flashcards-btn" class="hidden bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 flex items-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        Atualizar
+                    </button>
+                    <button id="show-import-csv-modal-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 flex items-center gap-2">
+                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                        Importar CSV
+                    </button>
+                    <button id="show-add-word-modal-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 flex items-center gap-2">
+                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        Adicionar Palavra
+                    </button>
+                </div>
+            </div>
+            <!-- Mensagem de status para Artigos e Substantivos -->
+            <div id="flashcards-status" class="hidden mb-4"></div>
+            <div id="words-container" class="space-y-4">
+                 <!-- As palavras da lista selecionada aparecerão aqui -->
+            </div>
+        </main>
+    </div>
+
+     <!-- Mensagem de acesso negado que só aparece se o utilizador NÃO estiver logado -->
+    <div id="unauthorized-message" class="hidden min-h-screen flex items-center justify-center">
+        <div class="text-center p-8">
+            <h2 class="text-3xl font-bold mb-4">Acesso Negado</h2>
+            <p class="text-slate-400 mb-8">Você precisa de fazer login para ver esta página.</p>
+            <a href="login.html" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105">
+                Ir para a Página de Login
+            </a>
+        </div>
+    </div>
+
+    <!-- Modal para Adicionar Lista -->
+    <div id="add-list-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 rounded-lg shadow-2xl p-8 w-full max-w-md">
+            <h3 class="text-2xl font-bold mb-2">Criar Nova Lista</h3>
+            <p class="text-slate-400 mb-6">Crie uma nova lista de vocabulário.</p>
+            <form id="add-list-form" class="space-y-4">
+                <div>
+                    <label for="list-name" class="block text-slate-400 mb-2">Nome da Nova Lista</label>
+                    <input type="text" id="list-name" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                </div>
+                <div>
+                    <label for="list-description" class="block text-slate-400 mb-2">Descrição (opcional)</label>
+                    <textarea id="list-description" rows="3" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Ex: Palavras para o exame B1, Vocabulário do trabalho, etc."></textarea>
+                </div>
+                <div id="add-list-error" class="text-red-400 text-sm min-h-[1.25rem]"></div>
+                <div class="flex justify-end gap-4 pt-4">
+                    <button type="button" id="cancel-add-list-btn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                    <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg">Criar Lista</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Adicionar Palavra -->
+    <div id="add-word-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 rounded-lg shadow-2xl p-8 w-full max-w-md">
+            <h3 class="text-2xl font-bold mb-6">Adicionar Nova Palavra</h3>
+            <form id="add-word-form" class="space-y-4">
+                <div>
+                    <label for="word-german" class="block text-slate-400 mb-2">Palavra em Alemão</label>
+                    <input type="text" id="word-german" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white" required>
+                </div>
+                <div>
+                    <label for="word-translation" class="block text-slate-400 mb-2">Tradução (Descrição)</label>
+                    <textarea id="word-translation" rows="3" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white" required></textarea>
+                </div>
+                 <div>
+                    <label for="word-example" class="block text-slate-400 mb-2">Frase de Exemplo (Opcional)</label>
+                    <textarea id="word-example" rows="3" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white"></textarea>
+                </div>
+                <div id="add-word-error" class="text-red-400 text-sm min-h-[1.25rem]"></div>
+                <div class="flex justify-end gap-4 pt-4">
+                    <button type="button" id="cancel-add-word-btn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Salvar Palavra</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- NOVO: Modal para Editar Palavra -->
+    <div id="edit-word-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 rounded-lg shadow-2xl p-8 w-full max-w-md">
+            <h3 class="text-2xl font-bold mb-6">Editar Palavra</h3>
+            <form id="edit-word-form" class="space-y-4">
+                <div>
+                    <label for="edit-word-german" class="block text-slate-400 mb-2">Palavra em Alemão</label>
+                    <input type="text" id="edit-word-german" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white" required>
+                </div>
+                <div>
+                    <label for="edit-word-translation" class="block text-slate-400 mb-2">Tradução (Descrição)</label>
+                    <textarea id="edit-word-translation" rows="3" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white" required></textarea>
+                </div>
+                 <div>
+                    <label for="edit-word-example" class="block text-slate-400 mb-2">Frase de Exemplo (Opcional)</label>
+                    <textarea id="edit-word-example" rows="3" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white"></textarea>
+                </div>
+                <div id="edit-word-error" class="text-red-400 text-sm min-h-[1.25rem]"></div>
+                <div class="flex justify-end gap-4 pt-4">
+                    <button type="button" id="cancel-edit-word-btn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Editar Flashcard (Artigo e Substantivo) -->
+    <div id="edit-flashcard-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 rounded-lg shadow-2xl p-8 w-full max-w-md">
+            <h3 class="text-2xl font-bold mb-6">Editar Artigo e Substantivo</h3>
+            <form id="edit-flashcard-form" class="space-y-4">
+                <div>
+                    <label for="edit-flashcard-artigo" class="block text-slate-400 mb-2">Artigo</label>
+                    <select id="edit-flashcard-artigo" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white" required>
+                        <option value="der">der (masculino)</option>
+                        <option value="die">die (feminino)</option>
+                        <option value="das">das (neutro)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="edit-flashcard-palavra" class="block text-slate-400 mb-2">Substantivo</label>
+                    <input type="text" id="edit-flashcard-palavra" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white" required>
+                </div>
+                <div id="edit-flashcard-error" class="text-red-400 text-sm min-h-[1.25rem]"></div>
+                <div class="flex justify-end gap-4 pt-4">
+                    <button type="button" id="cancel-edit-flashcard-btn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação para Apagar -->
+    <div id="confirm-delete-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 rounded-lg shadow-2xl p-8 w-full max-w-md text-center">
+            <h3 id="delete-modal-title" class="text-2xl font-bold mb-4">Confirmar Exclusão</h3>
+            <p id="delete-modal-text" class="text-slate-400 mb-8">Tem a certeza de que deseja apagar este item?</p>
+            <div class="flex justify-center gap-4">
+                <button id="cancel-delete-btn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-lg">Cancelar</button>
+                <button id="confirm-delete-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg">Apagar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal do Jogo de Flashcards -->
+    <div id="flashcard-game-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 rounded-lg shadow-2xl p-8 w-full max-w-4xl">
+
+            <!-- Tela de Configuração -->
+            <div id="flashcard-setup" class="space-y-6">
+                <h3 class="text-3xl font-bold text-center">🎮 Jogo de Flashcards</h3>
+                <p class="text-slate-400 text-center">Escolha quais palavras você quer estudar</p>
+
+                <div class="bg-slate-700 p-6 rounded-lg">
+                    <h4 class="text-lg font-bold mb-4">Filtrar por dificuldade:</h4>
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-3 cursor-pointer hover:bg-slate-600 p-3 rounded-lg transition">
+                            <input type="checkbox" id="filter-vermelho" class="w-5 h-5 text-red-600 bg-slate-600 border-slate-500 rounded focus:ring-red-500" checked>
+                            <div class="w-6 h-6 bg-red-500 rounded"></div>
+                            <span class="flex-grow">Vermelho - Não aprendidas</span>
+                            <span id="count-vermelho" class="text-slate-400 text-sm">0 palavras</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer hover:bg-slate-600 p-3 rounded-lg transition">
+                            <input type="checkbox" id="filter-amarelo" class="w-5 h-5 text-yellow-600 bg-slate-600 border-slate-500 rounded focus:ring-yellow-500" checked>
+                            <div class="w-6 h-6 bg-yellow-500 rounded"></div>
+                            <span class="flex-grow">Amarelo - Aprendendo</span>
+                            <span id="count-amarelo" class="text-slate-400 text-sm">0 palavras</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer hover:bg-slate-600 p-3 rounded-lg transition">
+                            <input type="checkbox" id="filter-verde" class="w-5 h-5 text-green-600 bg-slate-600 border-slate-500 rounded focus:ring-green-500" checked>
+                            <div class="w-6 h-6 bg-green-500 rounded"></div>
+                            <span class="flex-grow">Verde - Aprendidas</span>
+                            <span id="count-verde" class="text-slate-400 text-sm">0 palavras</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer hover:bg-slate-600 p-3 rounded-lg transition">
+                            <input type="checkbox" id="filter-sem-cor" class="w-5 h-5 text-purple-600 bg-slate-600 border-slate-500 rounded focus:ring-purple-500" checked>
+                            <div class="w-6 h-6 bg-slate-500 rounded border-2 border-slate-400"></div>
+                            <span class="flex-grow">Sem cor - Novas palavras</span>
+                            <span id="count-sem-cor" class="text-slate-400 text-sm">0 palavras</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="bg-blue-900/30 border border-blue-500/50 rounded-lg p-4">
+                    <p class="text-blue-300 text-sm">
+                        💡 <strong>Sistema de Repetição Espaçada:</strong> Palavras com mais erros aparecem com maior frequência. O algoritmo adapta-se ao seu progresso!
+                    </p>
+                </div>
+
+                <div id="flashcard-setup-error" class="text-red-400 text-center min-h-[1.25rem]"></div>
+
+                <div class="flex justify-end gap-4">
+                    <button id="cancel-flashcard-btn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 px-6 rounded-lg">
+                        Cancelar
+                    </button>
+                    <button id="start-flashcard-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg">
+                        Começar Jogo 🎯
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tela do Jogo -->
+            <div id="flashcard-game" class="hidden space-y-6">
+                <!-- Header com progresso -->
+                <div class="flex justify-between items-center">
+                    <div class="text-sm text-slate-400">
+                        <span id="game-progress">Palavra 1 de 10</span>
+                    </div>
+                    <div class="flex gap-4 text-sm">
+                        <span class="text-green-400">✓ <span id="game-correct">0</span></span>
+                        <span class="text-red-400">✗ <span id="game-wrong">0</span></span>
+                    </div>
+                    <button id="exit-flashcard-btn" class="text-slate-400 hover:text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+
+                <!-- Barra de progresso -->
+                <div class="w-full bg-slate-700 rounded-full h-2">
+                    <div id="progress-bar" class="bg-purple-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+
+                <!-- Flashcard -->
+                <div class="perspective-1000 min-h-[400px] flex items-center justify-center">
+                    <div id="flashcard" class="flashcard-container w-full max-w-2xl cursor-pointer" onclick="flipCard()">
+                        <div class="flashcard-inner">
+                            <!-- Frente (Palavra em Alemão) -->
+                            <div class="flashcard-front bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl shadow-2xl p-12 flex flex-col items-center justify-center min-h-[400px]">
+                                <p class="text-sm text-purple-200 mb-4">Palavra em Alemão:</p>
+                                <h2 id="flashcard-word" class="text-5xl font-bold text-white text-center mb-6">Hund</h2>
+                                <p class="text-sm text-purple-200 italic">Clique para ver a tradução</p>
+                            </div>
+                            <!-- Verso (Tradução) -->
+                            <div class="flashcard-back bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl shadow-2xl p-12 flex flex-col items-center justify-center min-h-[400px]">
+                                <p class="text-sm text-slate-400 mb-2">Tradução:</p>
+                                <h3 id="flashcard-translation" class="text-3xl font-bold text-white text-center mb-4">cachorro</h3>
+                                <p id="flashcard-example" class="text-slate-300 italic text-center mt-4">"Der Hund ist groß"</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botões de resposta -->
+                <div id="answer-buttons" class="flex justify-center gap-6">
+                    <button onclick="answerCard(false)" class="answer-btn bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-8 rounded-xl transition-all transform hover:scale-105 flex flex-col items-center gap-2">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        <span>Errei</span>
+                    </button>
+                    <button onclick="answerCard(true)" class="answer-btn bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-xl transition-all transform hover:scale-105 flex flex-col items-center gap-2">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        <span>Acertei</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tela de Resultados -->
+            <div id="flashcard-results" class="hidden space-y-6 text-center">
+                <h3 class="text-4xl font-bold">🎉 Parabéns!</h3>
+                <p class="text-slate-400">Você completou a sessão de estudo!</p>
+
+                <div class="grid grid-cols-2 gap-6 max-w-md mx-auto">
+                    <div class="bg-green-900/30 border border-green-500/50 rounded-lg p-6">
+                        <div class="text-4xl font-bold text-green-400" id="result-correct">0</div>
+                        <div class="text-sm text-slate-400 mt-2">Acertos</div>
+                    </div>
+                    <div class="bg-red-900/30 border border-red-500/50 rounded-lg p-6">
+                        <div class="text-4xl font-bold text-red-400" id="result-wrong">0</div>
+                        <div class="text-sm text-slate-400 mt-2">Erros</div>
+                    </div>
+                </div>
+
+                <div class="bg-purple-900/30 border border-purple-500/50 rounded-lg p-6 max-w-md mx-auto">
+                    <div class="text-2xl font-bold text-purple-400" id="result-accuracy">0%</div>
+                    <div class="text-sm text-slate-400 mt-2">Taxa de Acerto</div>
+                </div>
+
+                <div class="flex justify-center gap-4 pt-6">
+                    <button id="restart-flashcard-btn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg">
+                        Jogar Novamente
+                    </button>
+                    <button id="close-results-btn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-3 px-6 rounded-lg">
+                        Fechar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Importar CSV -->
+    <div id="import-csv-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 overflow-y-auto">
+        <div class="bg-slate-800 rounded-lg shadow-2xl p-8 w-full max-w-6xl my-8">
+            <h3 class="text-2xl font-bold mb-2">Importar Palavras de CSV</h3>
+            <p class="text-slate-400 mb-6">Selecione um arquivo CSV e clique em "Próximo: Revisar" para verificar os dados antes de importar.</p>
+
+            <!-- Etapa 1: Upload do arquivo -->
+            <div id="csv-upload-step" class="space-y-4">
+                <div>
+                    <label for="csv-file-input" class="block text-slate-400 mb-2">Selecionar Arquivo CSV</label>
+                    <input type="file" id="csv-file-input" accept=".csv" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700">
+                </div>
+
+                <div class="bg-slate-700 p-4 rounded-lg">
+                    <p class="text-sm text-slate-300 mb-2"><strong>Formato esperado (separado por vírgulas):</strong></p>
+                    <code class="text-xs text-green-400 block">
+                        palavra,tradução,exemplo<br>
+                        Hund,cachorro,Der Hund ist groß<br>
+                        Katze,gato,Die Katze schläft
+                    </code>
+                    <p class="text-xs text-slate-400 mt-2">* A coluna de exemplo é opcional</p>
+                </div>
+
+                <div class="flex justify-end gap-4 pt-4">
+                    <button type="button" id="cancel-import-csv-btn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                    <button type="button" id="parse-csv-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Próximo: Revisar →</button>
+                </div>
+            </div>
+
+            <!-- Etapa 2: Revisão em Tabela -->
+            <div id="csv-review-step" class="hidden space-y-4">
+                <div class="bg-blue-900/30 border border-blue-500/50 rounded-lg p-4 mb-4">
+                    <p class="text-blue-300 text-sm">
+                        ✓ Revise os dados abaixo. Você pode editar qualquer campo diretamente na tabela antes de importar.
+                    </p>
+                </div>
+
+                <div class="overflow-x-auto max-h-96 overflow-y-auto border border-slate-600 rounded-lg">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-700 sticky top-0">
+                            <tr>
+                                <th class="px-4 py-3 text-left">#</th>
+                                <th class="px-4 py-3 text-left">Lista</th>
+                                <th class="px-4 py-3 text-left">Palavra (Alemão)</th>
+                                <th class="px-4 py-3 text-left">Tradução</th>
+                                <th class="px-4 py-3 text-left">Exemplo</th>
+                                <th class="px-4 py-3 text-left">Cartão</th>
+                                <th class="px-4 py-3 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="csv-preview-table" class="divide-y divide-slate-600">
+                            <!-- As linhas serão inseridas aqui -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="import-csv-status" class="text-sm min-h-[1.25rem]"></div>
+                <div id="import-csv-error" class="text-red-400 text-sm min-h-[1.25rem]"></div>
+
+                <div class="flex justify-between gap-4 pt-4">
+                    <button type="button" id="back-to-upload-btn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg">← Voltar</button>
+                    <div class="flex gap-4">
+                        <button type="button" id="cancel-import-csv-btn-2" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg">Cancelar</button>
+                        <button type="button" id="confirm-import-csv-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            Importar Tudo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://timqizyevfkvqgzvcrlx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbXFpenlldmZrdnFnenZjcmx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMTkwMDYsImV4cCI6MjA2MTU5NTAwNn0.LfWFCPPgzTkh7Scf2Q2LjLmYcLnaWSAGKDiMT8eSuWM';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const mainContent = document.getElementById('main-content');
+        const unauthorizedMessage = document.getElementById('unauthorized-message');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        const listsView = document.getElementById('lists-view');
+        const wordsView = document.getElementById('words-view');
+        const headerNav = document.getElementById('header-nav');
+
+        const listsContainer = document.getElementById('lists-container');
+        const wordsContainer = document.getElementById('words-container');
+
+        const addListModal = document.getElementById('add-list-modal');
+        const addWordModal = document.getElementById('add-word-modal');
+        const editWordModal = document.getElementById('edit-word-modal');
+        const editFlashcardModal = document.getElementById('edit-flashcard-modal');
+        const confirmDeleteModal = document.getElementById('confirm-delete-modal');
+        const importCsvModal = document.getElementById('import-csv-modal');
+
+        const addListForm = document.getElementById('add-list-form');
+        const addWordForm = document.getElementById('add-word-form');
+        const editWordForm = document.getElementById('edit-word-form');
+
+        let currentListName = null;
+        let currentWordToEditId = null;
+        let user = null;
+        let parsedCsvData = [];
+
+        // Variáveis do jogo de flashcards
+        let flashcardWords = [];
+        let currentFlashcardIndex = 0;
+        let correctAnswers = 0;
+        let wrongAnswers = 0;
+        let isFlipped = false;
+
+        async function checkAuth() {
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (session) {
+                user = session.user;
+                mainContent.classList.remove('hidden');
+                unauthorizedMessage.classList.add('hidden');
+                fetchAndRenderLists(); 
+            } else {
+                mainContent.classList.add('hidden');
+                unauthorizedMessage.classList.remove('hidden');
+            }
+        }
+        
+        checkAuth();
+
+        _supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT') {
+                user = null;
+                window.location.href = 'login.html';
+            } else if (event === 'SIGNED_IN') {
+                user = session.user;
+                checkAuth();
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => _supabase.auth.signOut());
+
+        async function fetchAndRenderLists() {
+            if (!user) return;
+            listsContainer.innerHTML = '<p class="text-slate-400">A carregar listas...</p>';
+            
+            const { data, error } = await _supabase
+                .from('palavrasgerais')
+                .select('lista')
+                .eq('user_id', user.id);
+
+            if (error) {
+                console.error('Erro ao buscar listas:', error);
+                listsContainer.innerHTML = `<p class="text-red-400">Não foi possível carregar as listas. Erro: ${error.message}</p>`;
+                return;
+            }
+            
+            const lists = {};
+            data.forEach(item => {
+                if (!item.lista) return;
+                if (!lists[item.lista]) {
+                    lists[item.lista] = 0;
+                }
+                lists[item.lista]++;
+            });
+
+            listsContainer.innerHTML = '';
+            if (Object.keys(lists).length === 0) {
+                 listsContainer.innerHTML = '<p class="text-slate-400 col-span-full text-center">Nenhuma lista criada ainda. Crie a sua primeira lista!</p>';
+            }
+
+            for (const listName in lists) {
+                const wordCount = lists[listName];
+                const listCard = `
+                    <div class="bg-slate-800 rounded-lg shadow-lg overflow-hidden transition-transform transform hover:-translate-y-2 cursor-pointer relative group" data-list-name="${listName}">
+                        <div class="p-6">
+                            <div class="flex items-center gap-4">
+                               <div class="bg-purple-600/20 p-3 rounded-lg">
+                                 <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                               </div>
+                               <div>
+                                  <h3 class="text-xl font-bold truncate">${listName}</h3>
+                                  <p class="text-slate-400">${wordCount} ${wordCount === 1 ? 'palavra' : 'palavras'}</p>
+                               </div>
+                            </div>
+                        </div>
+                        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                             <button data-list-name="${listName}" class="delete-list-btn bg-red-600/80 hover:bg-red-600 p-2 rounded-full">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                             </button>
+                        </div>
+                    </div>`;
+                listsContainer.innerHTML += listCard;
+            }
+        }
+        
+        addListForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!user) return;
+
+            const errorDiv = document.getElementById('add-list-error');
+            errorDiv.textContent = '';
+
+            const listName = document.getElementById('list-name').value.trim();
+            const listDescription = document.getElementById('list-description').value.trim();
+
+            if (!listName) {
+                errorDiv.textContent = 'Por favor, preencha o nome da lista.';
+                return;
+            }
+
+            // Verificar se a lista já existe
+            const { data: existingLists, error: checkError } = await _supabase
+                .from('palavrasgerais')
+                .select('lista')
+                .eq('user_id', user.id)
+                .eq('lista', listName)
+                .limit(1);
+
+            if (checkError) {
+                console.error('Erro ao verificar lista:', checkError);
+                errorDiv.textContent = `Erro ao verificar: ${checkError.message}`;
+                return;
+            }
+
+            if (existingLists && existingLists.length > 0) {
+                errorDiv.textContent = 'Já existe uma lista com esse nome. Escolha outro nome.';
+                return;
+            }
+
+            // Criar lista vazia adicionando uma entrada de metadados (opcional)
+            // Ou simplesmente fechar o modal e ir para a tela de adicionar palavras
+
+            // Fechar modal e mostrar mensagem de sucesso
+            addListModal.classList.add('hidden');
+            addListForm.reset();
+
+            // Ir direto para a vista de palavras da nova lista
+            showWordsView(listName);
+
+            // Mostrar mensagem
+            alert(`Lista "${listName}" criada! Agora adicione palavras a ela.`);
+        });
+
+        function createColorFlagsHTML(word) {
+            if (word.cartao) {
+                const colorClass = {
+                    'vermelho': 'bg-red-500',
+                    'amarelo': 'bg-yellow-500',
+                    'verde': 'bg-green-500'
+                }[word.cartao];
+                return `<div class="w-5 h-5 rounded-md cursor-pointer ${colorClass}" data-color="${word.cartao}" title="Clique para alterar"></div>`;
+            } else {
+                return `
+                    <div class="w-4 h-4 rounded-md cursor-pointer bg-red-500 hover:ring-2 ring-white/70" data-color="vermelho" title="Difícil"></div>
+                    <div class="w-4 h-4 rounded-md cursor-pointer bg-yellow-500 hover:ring-2 ring-white/70" data-color="amarelo" title="Aprendendo"></div>
+                    <div class="w-4 h-4 rounded-md cursor-pointer bg-green-500 hover:ring-2 ring-white/70" data-color="verde" title="Aprendido"></div>
+                `;
+            }
+        }
+
+        async function fetchWords(listName) {
+             wordsContainer.innerHTML = '<p class="text-slate-400">A carregar palavras...</p>';
+             const { data: words, error } = await _supabase
+                .from('palavrasgerais')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('lista', listName);
+            
+            if (error) {
+                console.error('Erro ao buscar palavras:', error);
+                wordsContainer.innerHTML = `<p class="text-red-400">Não foi possível carregar as palavras. Erro: ${error.message}</p>`;
+                return;
+            }
+
+            if (words.length === 0) {
+                wordsContainer.innerHTML = '<p class="text-slate-400 text-center">Nenhuma palavra adicionada a esta lista ainda.</p>';
+            } else {
+                // Construir todo o HTML de uma vez (mais eficiente)
+                let wordsHTML = '';
+                words.forEach(word => {
+                    wordsHTML += `
+                        <div class="bg-slate-800 rounded-lg p-4 flex justify-between items-center gap-4">
+                            <div class="flex-1">
+                                <p class="text-lg font-bold text-green-400">${word.palavra}</p>
+                                <p class="text-slate-300">${word.descricao}</p>
+                                ${word.exemplos ? `<p class="text-sm text-slate-400 italic mt-2">"${word.exemplos}"</p>` : ''}
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-2 color-flags-container" data-word-id="${word.id}">
+                                    ${createColorFlagsHTML(word)}
+                                </div>
+                                <div class="flex items-center">
+                                    <button data-word-id="${word.id}" class="edit-word-btn text-blue-500 hover:text-blue-400 p-2">
+                                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L14.732 3.732z"></path></svg>
+                                    </button>
+                                    <button data-word-id="${word.id}" class="delete-word-btn text-red-500 hover:text-red-400 p-2">
+                                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Atribuir todo o HTML de uma vez só
+                wordsContainer.innerHTML = wordsHTML;
+            }
+        }
+
+        addWordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const errorDiv = document.getElementById('add-word-error');
+            errorDiv.textContent = '';
+
+            const newWord = {
+                lista: currentListName,
+                user_id: user.id,
+                palavra: document.getElementById('word-german').value.trim(),
+                descricao: document.getElementById('word-translation').value.trim(),
+                exemplos: document.getElementById('word-example').value.trim() || null,
+                cartao: null
+            };
+
+            if (!newWord.palavra || !newWord.descricao) {
+                errorDiv.textContent = 'Por favor, preencha todos os campos obrigatórios.';
+                return;
+            }
+
+            const { error } = await _supabase.from('palavrasgerais').insert(newWord);
+            if (error) {
+                console.error('Erro ao adicionar palavra:', error);
+                errorDiv.textContent = `Erro ao salvar: ${error.message}`;
+            } else {
+                fetchWords(currentListName);
+                addWordForm.reset();
+                addWordModal.classList.add('hidden');
+            }
+        });
+
+        editWordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorDiv = document.getElementById('edit-word-error');
+            errorDiv.textContent = '';
+
+            const updatedWord = {
+                palavra: document.getElementById('edit-word-german').value.trim(),
+                descricao: document.getElementById('edit-word-translation').value.trim(),
+                exemplos: document.getElementById('edit-word-example').value.trim()
+            };
+
+            if (!updatedWord.palavra || !updatedWord.descricao) {
+                errorDiv.textContent = 'Os campos de palavra e descrição são obrigatórios.';
+                return;
+            }
+
+            const { error } = await _supabase
+                .from('palavrasgerais')
+                .update(updatedWord)
+                .eq('id', currentWordToEditId);
+
+            if (error) {
+                console.error('Erro ao atualizar palavra:', error);
+                errorDiv.textContent = `Erro ao atualizar: ${error.message}`;
+            } else {
+                editWordModal.classList.add('hidden');
+                fetchWords(currentListName);
+                currentWordToEditId = null;
+            }
+        });
+
+        async function handleColorUpdate(wordId, color) {
+            console.log(`Tentando atualizar wordId: ${wordId} com a cor: ${color}`);
+            const { error } = await _supabase
+                .from('palavrasgerais')
+                .update({ cartao: color })
+                .eq('id', wordId);
+
+            if (error) {
+                console.error('Erro ao atualizar cor:', error);
+                const errorEl = document.createElement('p');
+                errorEl.className = 'text-red-400 text-center my-4 font-bold';
+                errorEl.textContent = `ERRO: ${error.message}. Verifique as políticas de segurança (RLS) da sua tabela.`;
+                wordsContainer.prepend(errorEl);
+                setTimeout(() => errorEl.remove(), 7000);
+            } else {
+                console.log("Cor atualizada com sucesso. A recarregar palavras...");
+                fetchWords(currentListName);
+            }
+        }
+
+        function showWordsView(listName) {
+            currentListName = listName;
+            listsView.classList.add('hidden');
+            wordsView.classList.remove('hidden');
+
+            // Mostrar botões de ação (caso estavam ocultos)
+            document.getElementById('show-flashcard-game-btn').classList.remove('hidden');
+            document.getElementById('show-import-csv-modal-btn').classList.remove('hidden');
+            document.getElementById('show-add-word-modal-btn').classList.remove('hidden');
+
+            // Ocultar elementos específicos da lista de flashcards
+            document.getElementById('flashcards-status').classList.add('hidden');
+            document.getElementById('refresh-flashcards-btn').classList.add('hidden');
+
+            const backButton = document.createElement('a');
+            backButton.href = "#";
+            backButton.innerHTML = '&larr; Voltar';
+            backButton.className = 'text-slate-400 hover:text-white transition-colors dynamic-back-btn';
+            backButton.onclick = (e) => { e.preventDefault(); showListsView(); };
+
+            headerNav.innerHTML = '';
+            headerNav.appendChild(backButton);
+
+            const title = document.createElement('h1');
+            title.textContent = listName;
+            title.className = 'text-2xl font-bold text-white';
+            headerNav.appendChild(title);
+
+            fetchWords(listName);
+        }
+
+        function showListsView() {
+            currentListName = null;
+            wordsView.classList.add('hidden');
+            listsView.classList.remove('hidden');
+
+            headerNav.innerHTML = `
+                <a href="dashboard.html" class="text-slate-400 hover:text-white transition-colors">&larr; Voltar ao Dashboard</a>
+                <h1 id="header-title" class="text-2xl font-bold text-white">Minhas Listas</h1>`;
+
+            fetchAndRenderLists();
+        }
+
+        // Mostrar lista de Artigos e Substantivos (da tabela flashcards)
+        async function showFlashcardsList() {
+            currentListName = 'Artigos e Substantivos'; // Nome especial
+            listsView.classList.add('hidden');
+            wordsView.classList.remove('hidden');
+
+            const backButton = document.createElement('a');
+            backButton.href = "#";
+            backButton.innerHTML = '&larr; Voltar';
+            backButton.className = 'text-slate-400 hover:text-white transition-colors dynamic-back-btn';
+            backButton.onclick = (e) => { e.preventDefault(); showListsView(); };
+
+            headerNav.innerHTML = '';
+            headerNav.appendChild(backButton);
+
+            const title = document.createElement('h1');
+            title.textContent = 'Artigos e Substantivos';
+            title.className = 'text-2xl font-bold text-white';
+            headerNav.appendChild(title);
+
+            const subtitle = document.createElement('p');
+            subtitle.textContent = '(Gerado automaticamente das suas redações)';
+            subtitle.className = 'text-sm text-slate-400 italic';
+            headerNav.appendChild(subtitle);
+
+            // Ocultar botões normais e mostrar botão Atualizar
+            document.getElementById('show-flashcard-game-btn').classList.add('hidden');
+            document.getElementById('show-import-csv-modal-btn').classList.add('hidden');
+            document.getElementById('show-add-word-modal-btn').classList.add('hidden');
+            document.getElementById('refresh-flashcards-btn').classList.remove('hidden');
+
+            // Mostrar div de status
+            document.getElementById('flashcards-status').classList.remove('hidden');
+
+            // Buscar flashcards do usuário
+            await fetchFlashcardsWords();
+        }
+
+        // Buscar palavras da tabela flashcards
+        async function fetchFlashcardsWords(showUpdateMessage = false) {
+            console.log('🔄 fetchFlashcardsWords chamada, showUpdateMessage:', showUpdateMessage);
+            const statusDiv = document.getElementById('flashcards-status');
+            console.log('📍 statusDiv encontrado:', !!statusDiv);
+            console.log('📍 wordsContainer encontrado:', !!wordsContainer);
+
+            wordsContainer.innerHTML = '<p class="text-slate-400">A carregar artigos...</p>';
+
+            console.log('🔍 Buscando flashcards no Supabase para user_id:', user.id);
+            const { data: flashcards, error } = await _supabase
+                .from('flashcards')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
+
+            console.log('📦 Resposta do Supabase:', { flashcards: flashcards?.length, error });
+
+            if (error) {
+                console.error('❌ Erro ao buscar flashcards:', error);
+                wordsContainer.innerHTML = `<p class="text-red-400">Não foi possível carregar os artigos. Erro: ${error.message}</p>`;
+                statusDiv.innerHTML = '';
+                return;
+            }
+
+            console.log('✅ Limpando wordsContainer');
+            wordsContainer.innerHTML = '';
+
+            if (!flashcards || flashcards.length === 0) {
+                wordsContainer.innerHTML = '<p class="text-slate-400 text-center">Nenhum artigo encontrado. Escreva redações para gerar flashcards automaticamente!</p>';
+                statusDiv.innerHTML = '';
+                return;
+            }
+
+            // Filtrar flashcards válidos (que têm artigo e palavra não nulos)
+            const flashcardsValidos = flashcards.filter(card =>
+                card.artigo &&
+                card.palavra &&
+                card.artigo.trim() !== '' &&
+                card.palavra.trim() !== '' &&
+                card.artigo !== 'null' &&
+                card.palavra !== 'null'
+            );
+
+            console.log(`Total de flashcards: ${flashcards.length}, Válidos: ${flashcardsValidos.length}`);
+
+            // Mostrar status usando flashcards válidos
+            const totalWords = flashcardsValidos.length;
+
+            if (showUpdateMessage) {
+                if (totalWords > 0) {
+                    statusDiv.innerHTML = `
+                        <div class="bg-green-900/30 border border-green-500/50 rounded-lg p-4 text-center">
+                            <p class="text-green-400 font-bold">✓ Atualizado com sucesso!</p>
+                            <p class="text-slate-300 text-sm mt-1">${totalWords} ${totalWords === 1 ? 'artigo encontrado' : 'artigos encontrados'}</p>
+                        </div>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `
+                        <div class="bg-blue-900/30 border border-blue-500/50 rounded-lg p-4 text-center">
+                            <p class="text-blue-400 font-bold">ℹ Nenhum artigo válido encontrado</p>
+                            <p class="text-slate-300 text-sm mt-1">Escreva redações para gerar flashcards automaticamente!</p>
+                        </div>
+                    `;
+                }
+
+                // Ocultar mensagem após 4 segundos
+                setTimeout(() => {
+                    statusDiv.innerHTML = '';
+                }, 4000);
+            } else {
+                // Apenas mostrar total na primeira carga
+                if (totalWords > 0) {
+                    statusDiv.innerHTML = `
+                        <div class="bg-slate-700 rounded-lg p-3 text-center">
+                            <p class="text-slate-300 text-sm">${totalWords} ${totalWords === 1 ? 'artigo' : 'artigos'} • Última atualização: ${new Date().toLocaleString('pt-BR')}</p>
+                        </div>
+                    `;
+                }
+            }
+
+            if (flashcardsValidos.length === 0) {
+                wordsContainer.innerHTML = '<p class="text-slate-400 text-center">Nenhum artigo válido encontrado. Escreva redações para gerar flashcards automaticamente!</p>';
+                return;
+            }
+
+            // Construir todo o HTML de uma vez (mais eficiente)
+            let flashcardsHTML = '';
+
+            flashcardsValidos.forEach((card, index) => {
+                const artigoColor = {
+                    'der': 'text-blue-400',
+                    'die': 'text-red-400',
+                    'das': 'text-yellow-400'
+                }[card.artigo] || 'text-slate-400';
+
+                // Escapar aspas simples na palavra para evitar quebrar o HTML
+                const palavraEscapada = (card.palavra || '').replace(/'/g, '&#39;');
+
+                flashcardsHTML += `
+                    <div class="bg-slate-800 rounded-lg p-4 flex justify-between items-center gap-4">
+                        <div class="flex-1">
+                            <p class="text-lg font-bold ${artigoColor}">
+                                ${card.artigo} <span class="text-green-400">${palavraEscapada}</span>
+                            </p>
+                            <p class="text-sm text-slate-400 mt-1">
+                                Da redação enviada em ${new Date(card.created_at).toLocaleDateString('pt-BR')}
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold ${artigoColor} bg-slate-700">
+                                ${card.artigo}
+                            </span>
+                            <button onclick="editFlashcard('${card.id}')" class="p-2 bg-blue-600 hover:bg-blue-700 rounded transition-colors" title="Editar">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </button>
+                            <button onclick="deleteFlashcard('${card.id}', '${palavraEscapada}', '${card.artigo}')" class="p-2 bg-red-600 hover:bg-red-700 rounded transition-colors" title="Apagar">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            console.log(`HTML construído. Tamanho: ${flashcardsHTML.length} caracteres`);
+
+            // Atribuir todo o HTML de uma vez só
+            wordsContainer.innerHTML = flashcardsHTML;
+
+            console.log('HTML atribuído ao container');
+        }
+
+        // Variável global para armazenar o ID do flashcard sendo editado
+        let currentEditingFlashcardId = null;
+
+        // Função global para editar flashcard
+        window.editFlashcard = async function(flashcardId) {
+            // Buscar dados do flashcard
+            const { data: flashcard, error } = await _supabase
+                .from('flashcards')
+                .select('*')
+                .eq('id', flashcardId)
+                .single();
+
+            if (error || !flashcard) {
+                console.error('Erro ao buscar flashcard:', error);
+                return;
+            }
+
+            // Preencher o formulário
+            document.getElementById('edit-flashcard-artigo').value = flashcard.artigo;
+            document.getElementById('edit-flashcard-palavra').value = flashcard.palavra;
+            document.getElementById('edit-flashcard-error').textContent = '';
+
+            // Guardar o ID para usar no submit
+            currentEditingFlashcardId = flashcardId;
+
+            // Mostrar modal
+            editFlashcardModal.classList.remove('hidden');
+        };
+
+        // Função global para deletar flashcard
+        window.deleteFlashcard = function(flashcardId, palavra, artigo) {
+            document.getElementById('delete-modal-text').textContent = `Tem a certeza de que deseja apagar "${artigo} ${palavra}"?`;
+            showDeleteConfirmation(async () => {
+                const { error } = await _supabase
+                    .from('flashcards')
+                    .delete()
+                    .eq('id', flashcardId);
+
+                if (error) {
+                    console.error('Erro ao apagar flashcard:', error);
+                    alert('Erro ao apagar o flashcard.');
+                } else {
+                    await fetchFlashcardsWords(); // Recarregar lista
+                }
+            });
+        };
+
+        // Event listener para o botão "Artigos e Substantivos"
+        document.getElementById('show-flashcards-list-btn').addEventListener('click', () => {
+            showFlashcardsList();
+        });
+
+        // Event listener para o botão "Atualizar" da lista de flashcards
+        document.getElementById('refresh-flashcards-btn').addEventListener('click', async () => {
+            await fetchFlashcardsWords(true); // true = exibe mensagem de update
+        });
+
+        document.getElementById('show-add-list-modal-btn').addEventListener('click', () => addListModal.classList.remove('hidden'));
+        document.getElementById('cancel-add-list-btn').addEventListener('click', () => {
+            addListModal.classList.add('hidden');
+            document.getElementById('add-list-error').textContent = '';
+        });
+        document.getElementById('show-add-word-modal-btn').addEventListener('click', () => addWordModal.classList.remove('hidden'));
+        document.getElementById('cancel-add-word-btn').addEventListener('click', () => {
+            addWordModal.classList.add('hidden');
+            document.getElementById('add-word-error').textContent = '';
+        });
+        document.getElementById('cancel-edit-word-btn').addEventListener('click', () => {
+            editWordModal.classList.add('hidden');
+            document.getElementById('edit-word-error').textContent = '';
+        });
+
+        // Event listeners para modal de edição de flashcard
+        document.getElementById('cancel-edit-flashcard-btn').addEventListener('click', () => {
+            editFlashcardModal.classList.add('hidden');
+            document.getElementById('edit-flashcard-error').textContent = '';
+            currentEditingFlashcardId = null;
+        });
+
+        document.getElementById('edit-flashcard-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const artigo = document.getElementById('edit-flashcard-artigo').value;
+            const palavra = document.getElementById('edit-flashcard-palavra').value;
+            const errorDiv = document.getElementById('edit-flashcard-error');
+
+            if (!currentEditingFlashcardId) {
+                errorDiv.textContent = 'Erro: ID do flashcard não encontrado.';
+                return;
+            }
+
+            try {
+                const { error } = await _supabase
+                    .from('flashcards')
+                    .update({
+                        artigo: artigo,
+                        palavra: palavra
+                    })
+                    .eq('id', currentEditingFlashcardId);
+
+                if (error) {
+                    errorDiv.textContent = `Erro ao atualizar: ${error.message}`;
+                } else {
+                    editFlashcardModal.classList.add('hidden');
+                    errorDiv.textContent = '';
+                    currentEditingFlashcardId = null;
+                    await fetchFlashcardsWords(); // Recarregar lista
+                }
+            } catch (err) {
+                errorDiv.textContent = `Erro: ${err.message}`;
+            }
+        });
+
+        document.getElementById('cancel-delete-btn').addEventListener('click', () => confirmDeleteModal.classList.add('hidden'));
+
+        // ==== NOVO SISTEMA DE IMPORTAÇÃO CSV EM 2 ETAPAS ====
+
+        // Mostrar modal e resetar para etapa 1
+        document.getElementById('show-import-csv-modal-btn').addEventListener('click', () => {
+            importCsvModal.classList.remove('hidden');
+            document.getElementById('csv-upload-step').classList.remove('hidden');
+            document.getElementById('csv-review-step').classList.add('hidden');
+            document.getElementById('csv-file-input').value = '';
+            document.getElementById('import-csv-error').textContent = '';
+            document.getElementById('import-csv-status').textContent = '';
+            parsedCsvData = [];
+        });
+
+        // Fechar modal
+        document.getElementById('cancel-import-csv-btn').addEventListener('click', () => {
+            importCsvModal.classList.add('hidden');
+        });
+        document.getElementById('cancel-import-csv-btn-2').addEventListener('click', () => {
+            importCsvModal.classList.add('hidden');
+        });
+
+        // Botão "Próximo: Revisar" agora carrega e processa o arquivo
+        document.getElementById('parse-csv-btn').addEventListener('click', () => {
+            const fileInput = document.getElementById('csv-file-input');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('Por favor, selecione um arquivo CSV primeiro.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                const csvText = e.target.result.trim();
+
+                if (!csvText) {
+                    alert('O arquivo CSV está vazio.');
+                    return;
+                }
+
+                // Processar o CSV
+                processCSVText(csvText);
+            };
+
+            reader.onerror = () => {
+                alert('Erro ao ler o arquivo.');
+            };
+
+            reader.readAsText(file);
+        });
+
+        // Voltar para etapa 1
+        document.getElementById('back-to-upload-btn').addEventListener('click', () => {
+            document.getElementById('csv-review-step').classList.add('hidden');
+            document.getElementById('csv-upload-step').classList.remove('hidden');
+        });
+
+        // Função para processar texto CSV
+        function processCSVText(csvText) {
+            const lines = csvText.split('\n').filter(line => line.trim() !== '');
+
+            if (lines.length === 0) {
+                alert('O CSV está vazio.');
+                return;
+            }
+
+            parsedCsvData = [];
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+
+                // Parse CSV: primeira vírgula separa palavra, segunda separa tradução
+                const firstComma = line.indexOf(',');
+                if (firstComma === -1) continue;
+
+                const palavra = line.substring(0, firstComma).trim();
+                const rest = line.substring(firstComma + 1);
+
+                const secondComma = rest.indexOf(',');
+                let descricao, exemplos;
+
+                if (secondComma === -1) {
+                    descricao = rest.trim();
+                    exemplos = '';
+                } else {
+                    descricao = rest.substring(0, secondComma).trim();
+                    exemplos = rest.substring(secondComma + 1).trim();
+                }
+
+                if (!palavra || !descricao) continue;
+
+                parsedCsvData.push({
+                    rowIndex: i,
+                    lista: currentListName,
+                    palavra,
+                    descricao,
+                    exemplos,
+                    cartao: null
+                });
+            }
+
+            if (parsedCsvData.length === 0) {
+                alert('Nenhuma linha válida encontrada no CSV.');
+                return;
+            }
+
+            renderCsvPreviewTable();
+            document.getElementById('csv-upload-step').classList.add('hidden');
+            document.getElementById('csv-review-step').classList.remove('hidden');
+        }
+
+        // Renderizar tabela de revisão
+        function renderCsvPreviewTable() {
+            const tbody = document.getElementById('csv-preview-table');
+            tbody.innerHTML = '';
+
+            parsedCsvData.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-700';
+                tr.innerHTML = `
+                    <td class="px-4 py-3 text-slate-400">${index + 1}</td>
+                    <td class="px-4 py-3">
+                        <input type="text" value="${row.lista}" data-index="${index}" data-field="lista" class="csv-edit-input bg-slate-700 border border-slate-600 rounded px-2 py-1 w-full text-white text-sm">
+                    </td>
+                    <td class="px-4 py-3">
+                        <input type="text" value="${row.palavra}" data-index="${index}" data-field="palavra" class="csv-edit-input bg-slate-700 border border-slate-600 rounded px-2 py-1 w-full text-white text-sm">
+                    </td>
+                    <td class="px-4 py-3">
+                        <input type="text" value="${row.descricao}" data-index="${index}" data-field="descricao" class="csv-edit-input bg-slate-700 border border-slate-600 rounded px-2 py-1 w-full text-white text-sm">
+                    </td>
+                    <td class="px-4 py-3">
+                        <input type="text" value="${row.exemplos || ''}" data-index="${index}" data-field="exemplos" class="csv-edit-input bg-slate-700 border border-slate-600 rounded px-2 py-1 w-full text-white text-sm">
+                    </td>
+                    <td class="px-4 py-3">
+                        <select data-index="${index}" data-field="cartao" class="csv-edit-input bg-slate-700 border border-slate-600 rounded px-2 py-1 w-full text-white text-sm">
+                            <option value="">Nenhum</option>
+                            <option value="vermelho">🔴 Vermelho</option>
+                            <option value="amarelo">🟡 Amarelo</option>
+                            <option value="verde">🟢 Verde</option>
+                        </select>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <button data-index="${index}" class="delete-csv-row text-red-400 hover:text-red-300">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Event listeners para edição inline
+            document.querySelectorAll('.csv-edit-input').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    const field = e.target.dataset.field;
+                    parsedCsvData[index][field] = e.target.value;
+                });
+            });
+
+            // Event listeners para deletar linhas
+            document.querySelectorAll('.delete-csv-row').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.closest('button').dataset.index);
+                    parsedCsvData.splice(index, 1);
+                    renderCsvPreviewTable();
+                });
+            });
+        }
+
+        // Importar todas as palavras revisadas
+        document.getElementById('confirm-import-csv-btn').addEventListener('click', async () => {
+            const statusDiv = document.getElementById('import-csv-status');
+            const errorDiv = document.getElementById('import-csv-error');
+
+            statusDiv.textContent = '';
+            errorDiv.textContent = '';
+
+            if (parsedCsvData.length === 0) {
+                errorDiv.textContent = 'Nenhuma palavra para importar.';
+                return;
+            }
+
+            // PASSO 1: Buscar o último ID da tabela para saber qual usar
+            statusDiv.textContent = `Buscando último ID...`;
+            statusDiv.className = 'text-blue-400 text-sm min-h-[1.25rem]';
+
+            const { data: lastWord, error: fetchError } = await _supabase
+                .from('palavrasgerais')
+                .select('id')
+                .order('id', { ascending: false })
+                .limit(1)
+                .single();
+
+            let nextId = 1; // Se não existir nenhuma palavra, começa do 1
+
+            if (fetchError && fetchError.code !== 'PGRST116') {
+                console.error('Erro ao buscar último ID:', fetchError);
+                errorDiv.textContent = `Erro ao buscar último ID: ${fetchError.message}`;
+                return;
+            }
+
+            if (lastWord) {
+                nextId = lastWord.id + 1;
+                console.log('📊 Último ID encontrado:', lastWord.id, '→ Próximo ID:', nextId);
+            } else {
+                console.log('📊 Nenhuma palavra encontrada. Começando do ID 1');
+            }
+
+            // PASSO 2: Importar as palavras com IDs sequenciais
+            statusDiv.textContent = `Importando ${parsedCsvData.length} palavra(s)...`;
+            statusDiv.className = 'text-blue-400 text-sm min-h-[1.25rem]';
+
+            let importedCount = 0;
+            let errorCount = 0;
+
+            for (const row of parsedCsvData) {
+                // Ordem e nomes EXATOS conforme tabela Supabase palavrasgerais
+                const wordData = {
+                    id: nextId,                // int8 - ID sequencial
+                    lista: row.lista,          // text
+                    user_id: user.id,          // uuid do usuário autenticado
+                    palavra: row.palavra,      // text
+                    descricao: row.descricao,  // text
+                    exemplos: row.exemplos || null,  // text (nullable)
+                    cartao: row.cartao || null       // text (nullable: vermelho/amarelo/verde)
+                };
+
+                console.log(`🔍 Tentando inserir palavra ${importedCount + 1}/${parsedCsvData.length}:`, wordData);
+                console.log('📊 User ID atual:', user.id);
+                console.log('📊 Email atual:', user.email);
+
+                // Tenta inserir diretamente
+                const { data, error } = await _supabase
+                    .from('palavrasgerais')
+                    .insert(wordData)
+                    .select();
+
+                if (error) {
+                    console.error('❌ ERRO ao importar palavra:', row.palavra);
+                    console.error('📦 Dados enviados:', JSON.stringify(wordData, null, 2));
+                    console.error('🚨 Erro completo:', JSON.stringify(error, null, 2));
+                    console.error('📍 Código:', error.code);
+                    console.error('💬 Mensagem:', error.message);
+                    console.error('📋 Detalhes:', error.details);
+                    console.error('💡 Hint:', error.hint);
+
+                    // Exibe erro na tela também
+                    errorDiv.textContent = `Erro na palavra "${row.palavra}": ${error.message}`;
+                    errorCount++;
+                } else {
+                    console.log(`✅ Palavra ${importedCount + 1} importada: ${row.palavra} (ID: ${nextId})`);
+                    importedCount++;
+                    nextId++; // Incrementa para a próxima palavra
+                }
+            }
+
+            if (errorCount > 0) {
+                errorDiv.textContent = `${errorCount} palavra(s) falharam ao importar.`;
+            }
+
+            if (importedCount > 0) {
+                statusDiv.textContent = `✓ ${importedCount} palavra(s) importada(s) com sucesso!`;
+                statusDiv.className = 'text-green-400 text-sm min-h-[1.25rem]';
+
+                setTimeout(() => {
+                    importCsvModal.classList.add('hidden');
+                    fetchWords(currentListName);
+                }, 1500);
+            } else {
+                errorDiv.textContent = 'Nenhuma palavra foi importada.';
+            }
+        });
+
+        let deleteFunction = null;
+        function showDeleteConfirmation(onConfirm) {
+            deleteFunction = onConfirm;
+            confirmDeleteModal.classList.remove('hidden');
+        }
+        
+        document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
+            if (typeof deleteFunction === 'function') await deleteFunction();
+            confirmDeleteModal.classList.add('hidden');
+            deleteFunction = null;
+        });
+
+        async function handleEditWord(wordId) {
+            currentWordToEditId = wordId;
+            const { data: word, error } = await _supabase
+                .from('palavrasgerais')
+                .select('*')
+                .eq('id', wordId)
+                .single();
+
+            if (error || !word) {
+                console.error('Erro ao buscar palavra para editar:', error);
+                return;
+            }
+
+            document.getElementById('edit-word-german').value = word.palavra;
+            document.getElementById('edit-word-translation').value = word.descricao;
+            document.getElementById('edit-word-example').value = word.exemplos || '';
+            
+            editWordModal.classList.remove('hidden');
+        }
+
+        document.body.addEventListener('click', (e) => {
+            const listCard = e.target.closest('[data-list-name]');
+            if (listCard && !e.target.closest('button')) {
+                 showWordsView(listCard.dataset.listName);
+            }
+
+            const deleteListBtn = e.target.closest('.delete-list-btn');
+            if(deleteListBtn) {
+                e.stopPropagation();
+                const listName = deleteListBtn.dataset.listName;
+                document.getElementById('delete-modal-text').textContent = `Tem a certeza de que deseja apagar a lista "${listName}" e todas as suas palavras?`;
+                showDeleteConfirmation(async () => {
+                    const { error } = await _supabase.from('palavrasgerais').delete().eq('user_id', user.id).eq('lista', listName);
+                    if (error) console.error("Erro ao apagar lista:", error);
+                    else fetchAndRenderLists();
+                });
+            }
+
+            const deleteWordBtn = e.target.closest('.delete-word-btn');
+            if(deleteWordBtn) {
+                 const wordId = deleteWordBtn.dataset.wordId;
+                 document.getElementById('delete-modal-text').textContent = `Tem a certeza de que deseja apagar esta palavra?`;
+                 showDeleteConfirmation(async () => {
+                    const { error } = await _supabase.from('palavrasgerais').delete().eq('id', wordId);
+                    if (error) console.error("Erro ao apagar palavra:", error);
+                    else fetchWords(currentListName);
+                });
+            }
+
+            const editWordBtn = e.target.closest('.edit-word-btn');
+            if (editWordBtn) {
+                const wordId = editWordBtn.dataset.wordId;
+                handleEditWord(wordId);
+            }
+
+            const colorFlag = e.target.closest('[data-color]');
+            if (colorFlag) {
+                const container = colorFlag.closest('.color-flags-container');
+                const wordId = container.dataset.wordId;
+                const selectedColor = colorFlag.dataset.color;
+
+                if (container.children.length === 1) {
+                    handleColorUpdate(wordId, null);
+                } 
+                else {
+                    handleColorUpdate(wordId, selectedColor);
+                }
+            }
+        });
+
+        // ========================================
+        // SISTEMA DE FLASHCARDS COM SRS
+        // ========================================
+
+        const flashcardModal = document.getElementById('flashcard-game-modal');
+
+        // Abrir modal de configuração
+        document.getElementById('show-flashcard-game-btn').addEventListener('click', async () => {
+            await loadFlashcardStats();
+            flashcardModal.classList.remove('hidden');
+            document.getElementById('flashcard-setup').classList.remove('hidden');
+            document.getElementById('flashcard-game').classList.add('hidden');
+            document.getElementById('flashcard-results').classList.add('hidden');
+        });
+
+        // Fechar modal
+        document.getElementById('cancel-flashcard-btn').addEventListener('click', () => {
+            flashcardModal.classList.add('hidden');
+        });
+
+        document.getElementById('exit-flashcard-btn').addEventListener('click', () => {
+            if (confirm('Deseja sair do jogo? Seu progresso não será salvo.')) {
+                flashcardModal.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('close-results-btn').addEventListener('click', () => {
+            flashcardModal.classList.add('hidden');
+            fetchWords(currentListName); // Atualizar lista com novas cores
+        });
+
+        document.getElementById('restart-flashcard-btn').addEventListener('click', async () => {
+            await loadFlashcardStats();
+            document.getElementById('flashcard-results').classList.add('hidden');
+            document.getElementById('flashcard-setup').classList.remove('hidden');
+        });
+
+        // Carregar estatísticas e contar palavras por cor
+        async function loadFlashcardStats() {
+            const { data: words, error } = await _supabase
+                .from('palavrasgerais')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('lista', currentListName);
+
+            if (error) {
+                console.error('Erro ao carregar palavras:', error);
+                return;
+            }
+
+            const counts = {
+                vermelho: 0,
+                amarelo: 0,
+                verde: 0,
+                semCor: 0
+            };
+
+            words.forEach(word => {
+                if (word.cartao === 'vermelho') counts.vermelho++;
+                else if (word.cartao === 'amarelo') counts.amarelo++;
+                else if (word.cartao === 'verde') counts.verde++;
+                else counts.semCor++;
+            });
+
+            document.getElementById('count-vermelho').textContent = `${counts.vermelho} palavras`;
+            document.getElementById('count-amarelo').textContent = `${counts.amarelo} palavras`;
+            document.getElementById('count-verde').textContent = `${counts.verde} palavras`;
+            document.getElementById('count-sem-cor').textContent = `${counts.semCor} palavras`;
+        }
+
+        // Iniciar jogo
+        document.getElementById('start-flashcard-btn').addEventListener('click', async () => {
+            const filters = {
+                vermelho: document.getElementById('filter-vermelho').checked,
+                amarelo: document.getElementById('filter-amarelo').checked,
+                verde: document.getElementById('filter-verde').checked,
+                semCor: document.getElementById('filter-sem-cor').checked
+            };
+
+            // Buscar palavras com base nos filtros
+            const { data: words, error } = await _supabase
+                .from('palavrasgerais')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('lista', currentListName);
+
+            if (error) {
+                console.error('Erro ao carregar palavras:', error);
+                document.getElementById('flashcard-setup-error').textContent = 'Erro ao carregar palavras.';
+                return;
+            }
+
+            // Filtrar por cor
+            flashcardWords = words.filter(word => {
+                if (word.cartao === 'vermelho' && filters.vermelho) return true;
+                if (word.cartao === 'amarelo' && filters.amarelo) return true;
+                if (word.cartao === 'verde' && filters.verde) return true;
+                if (!word.cartao && filters.semCor) return true;
+                return false;
+            });
+
+            if (flashcardWords.length === 0) {
+                document.getElementById('flashcard-setup-error').textContent = 'Nenhuma palavra encontrada com os filtros selecionados.';
+                return;
+            }
+
+            // Aplicar algoritmo SRS: ordenar por prioridade
+            flashcardWords = applySRS(flashcardWords);
+
+            // LOG: Mostrar ordem de prioridade
+            console.log('🎯 ORDEM DAS PALAVRAS (SRS):');
+            flashcardWords.slice(0, 10).forEach((word, idx) => {
+                console.log(`${idx + 1}. ${word.palavra} - Prioridade: ${word.priority.toFixed(0)} | Acertos: ${word.acertos || 0} | Erros: ${word.erros || 0} | Intervalo: ${word.intervalo || 0} dias`);
+            });
+            if (flashcardWords.length > 10) {
+                console.log(`... e mais ${flashcardWords.length - 10} palavras`);
+            }
+
+            // Inicializar jogo
+            currentFlashcardIndex = 0;
+            correctAnswers = 0;
+            wrongAnswers = 0;
+
+            document.getElementById('flashcard-setup').classList.add('hidden');
+            document.getElementById('flashcard-game').classList.remove('hidden');
+
+            showCurrentFlashcard();
+        });
+
+        // Algoritmo SRS (Spaced Repetition System)
+        function applySRS(words) {
+            const now = new Date();
+
+            // Calcular prioridade para cada palavra
+            const wordsWithPriority = words.map(word => {
+                let priority = 100; // Prioridade base
+
+                // Palavras nunca revisadas têm alta prioridade
+                if (!word.ultimo_review) {
+                    priority += 50;
+                }
+
+                // Palavras com mais erros têm maior prioridade
+                const errorRate = word.erros / Math.max(1, word.acertos + word.erros);
+                priority += errorRate * 100;
+
+                // Palavras que precisam revisão têm prioridade máxima
+                if (word.proximo_review) {
+                    const nextReview = new Date(word.proximo_review);
+                    if (nextReview <= now) {
+                        priority += 200; // Prioridade MUITO alta
+                    }
+                }
+
+                // Facilidade baixa = maior prioridade
+                priority += (2.5 - (word.facilidade || 2.5)) * 50;
+
+                return { ...word, priority };
+            });
+
+            // Ordenar por prioridade (maior primeiro)
+            wordsWithPriority.sort((a, b) => b.priority - a.priority);
+
+            // Adicionar aleatoriedade aos 30% menos prioritários
+            const cutoff = Math.floor(wordsWithPriority.length * 0.7);
+            const highPriority = wordsWithPriority.slice(0, cutoff);
+            const lowPriority = wordsWithPriority.slice(cutoff);
+
+            // Embaralhar baixa prioridade
+            for (let i = lowPriority.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [lowPriority[i], lowPriority[j]] = [lowPriority[j], lowPriority[i]];
+            }
+
+            return [...highPriority, ...lowPriority];
+        }
+
+        // Mostrar flashcard atual
+        function showCurrentFlashcard() {
+            if (currentFlashcardIndex >= flashcardWords.length) {
+                showResults();
+                return;
+            }
+
+            const word = flashcardWords[currentFlashcardIndex];
+
+            document.getElementById('flashcard-word').textContent = word.palavra;
+            document.getElementById('flashcard-translation').textContent = word.descricao;
+            document.getElementById('flashcard-example').textContent = word.exemplos ? `"${word.exemplos}"` : '';
+
+            // Resetar flip
+            document.getElementById('flashcard').classList.remove('flipped');
+            isFlipped = false;
+
+            // Atualizar progresso
+            document.getElementById('game-progress').textContent = `Palavra ${currentFlashcardIndex + 1} de ${flashcardWords.length}`;
+            document.getElementById('game-correct').textContent = correctAnswers;
+            document.getElementById('game-wrong').textContent = wrongAnswers;
+
+            const progress = ((currentFlashcardIndex + 1) / flashcardWords.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+        }
+
+        // Flip do card
+        function flipCard() {
+            document.getElementById('flashcard').classList.toggle('flipped');
+            isFlipped = !isFlipped;
+        }
+
+        // Responder card
+        async function answerCard(correct) {
+            const word = flashcardWords[currentFlashcardIndex];
+
+            if (correct) {
+                correctAnswers++;
+            } else {
+                wrongAnswers++;
+            }
+
+            // Atualizar estatísticas no Supabase com algoritmo SM-2
+            await updateWordStats(word, correct);
+
+            // Próxima palavra
+            currentFlashcardIndex++;
+            showCurrentFlashcard();
+        }
+
+        // Atualizar estatísticas da palavra (Algoritmo SuperMemo SM-2)
+        async function updateWordStats(word, correct) {
+            const now = new Date();
+
+            let acertos = (word.acertos || 0) + (correct ? 1 : 0);
+            let erros = (word.erros || 0) + (correct ? 0 : 1);
+            let repeticoes = (word.repeticoes || 0) + 1;
+            let facilidade = word.facilidade || 2.5;
+            let intervalo = word.intervalo || 0;
+
+            // Algoritmo SM-2
+            if (correct) {
+                if (repeticoes === 1) {
+                    intervalo = 1;
+                } else if (repeticoes === 2) {
+                    intervalo = 6;
+                } else {
+                    intervalo = Math.round(intervalo * facilidade);
+                }
+
+                facilidade = Math.max(1.3, facilidade + 0.1); // Aumenta facilidade
+            } else {
+                repeticoes = 0;
+                intervalo = 0;
+                facilidade = Math.max(1.3, facilidade - 0.2); // Diminui facilidade
+            }
+
+            const proximo_review = new Date();
+            proximo_review.setDate(proximo_review.getDate() + intervalo);
+
+            // Atualizar no Supabase
+            const { error } = await _supabase
+                .from('palavrasgerais')
+                .update({
+                    acertos,
+                    erros,
+                    repeticoes,
+                    facilidade,
+                    intervalo,
+                    ultimo_review: now.toISOString(),
+                    proximo_review: proximo_review.toISOString()
+                })
+                .eq('id', word.id);
+
+            if (error) {
+                console.error('Erro ao atualizar estatísticas:', error);
+            } else {
+                console.log(`✓ Palavra "${word.palavra}" atualizada:`, {
+                    acertos,
+                    erros,
+                    intervalo: `${intervalo} dias`,
+                    facilidade: facilidade.toFixed(2),
+                    proximo_review: proximo_review.toLocaleDateString()
+                });
+            }
+        }
+
+        // Mostrar resultados
+        function showResults() {
+            document.getElementById('flashcard-game').classList.add('hidden');
+            document.getElementById('flashcard-results').classList.remove('hidden');
+
+            document.getElementById('result-correct').textContent = correctAnswers;
+            document.getElementById('result-wrong').textContent = wrongAnswers;
+
+            const total = correctAnswers + wrongAnswers;
+            const accuracy = total > 0 ? Math.round((correctAnswers / total) * 100) : 0;
+            document.getElementById('result-accuracy').textContent = `${accuracy}%`;
+        }
+
+        // Tornar funções globais para onclick
+        window.flipCard = flipCard;
+        window.answerCard = answerCard;
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Perfil - CorrectMe</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fontes do Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Esconde o input de arquivo padrão */
+        #avatar-input { display: none; }
+    </style>
+</head>
+<body class="bg-slate-900 text-white flex items-center justify-center min-h-screen">
+
+    <div class="w-full max-w-md bg-slate-800 p-8 rounded-lg border border-slate-700">
+        <h1 class="text-4xl font-extrabold text-center mb-8 bg-gradient-to-r from-purple-400 to-blue-500 text-transparent bg-clip-text">Meu Perfil</h1>
+        
+        <div class="flex flex-col items-center mb-8">
+            <img src="https://placehold.co/150x150/172a45/ccd6f6?text=Foto" alt="Foto do Perfil" id="profile-pic" class="w-40 h-40 rounded-full object-cover border-4 border-slate-700 mb-4">
+            <input type="file" id="avatar-input" accept="image/*">
+            <label for="avatar-input" id="upload-label" class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                Trocar Foto
+            </label>
+        </div>
+
+        <div class="profile-info space-y-4 bg-slate-900 p-6 rounded-lg">
+            <div class="flex justify-between">
+                <span class="text-slate-400">Email:</span>
+                <span id="user-email" class="font-bold">Carregando...</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-slate-400">Créditos:</span>
+                <span id="user-credits" class="font-bold text-purple-400">Carregando...</span>
+            </div>
+        </div>
+
+        <div class="mt-8 space-y-4">
+            <a href="dashboard.html" class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                Voltar ao Dashboard
+            </a>
+            <button id="logout-button" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                Sair (Logout)
+            </button>
+        </div>
+    </div>
+
+    <!-- Script do Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Nosso script do perfil -->
+    <script src="profile.js"></script>
+
+</body>
+</html>

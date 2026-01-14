@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico CorrectMe</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .log-entry {
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .log-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .log-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .log-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+
+    <div class="max-w-4xl mx-auto">
+
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">🔍 Diagnóstico CorrectMe</h1>
+            <p class="text-gray-600">Verificando status do sistema e dados do usuário</p>
+        </div>
+
+        <!-- Status Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+            <!-- Autenticação -->
+            <div class="bg-white rounded-lg shadow p-4">
+                <h3 class="font-bold text-gray-700 mb-2">Autenticação</h3>
+                <div id="auth-status" class="flex items-center">
+                    <div class="spinner"></div>
+                    <span class="ml-3 text-sm text-gray-500">Verificando...</span>
+                </div>
+            </div>
+
+            <!-- Onboarding -->
+            <div class="bg-white rounded-lg shadow p-4">
+                <h3 class="font-bold text-gray-700 mb-2">Onboarding</h3>
+                <div id="onboarding-status" class="flex items-center">
+                    <div class="spinner"></div>
+                    <span class="ml-3 text-sm text-gray-500">Verificando...</span>
+                </div>
+            </div>
+
+            <!-- Perfil -->
+            <div class="bg-white rounded-lg shadow p-4">
+                <h3 class="font-bold text-gray-700 mb-2">Perfil</h3>
+                <div id="profile-status" class="flex items-center">
+                    <div class="spinner"></div>
+                    <span class="ml-3 text-sm text-gray-500">Verificando...</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Logs -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">📋 Logs do Sistema</h2>
+            <div id="logs-container" class="bg-gray-50 rounded p-4 max-h-96 overflow-y-auto">
+                <!-- Logs serão adicionados aqui -->
+            </div>
+        </div>
+
+        <!-- Dados do Usuário -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">👤 Dados do Usuário</h2>
+            <div id="user-data" class="bg-gray-50 rounded p-4">
+                <p class="text-gray-500">Carregando...</p>
+            </div>
+        </div>
+
+        <!-- Dados de Onboarding -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">📊 Dados de Onboarding (Leads)</h2>
+            <div id="lead-data" class="bg-gray-50 rounded p-4">
+                <p class="text-gray-500">Carregando...</p>
+            </div>
+        </div>
+
+        <!-- Dados de Perfil -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">🎨 Dados de Perfil</h2>
+            <div id="profile-data" class="bg-gray-50 rounded p-4">
+                <p class="text-gray-500">Carregando...</p>
+            </div>
+        </div>
+
+        <!-- Ações -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">⚡ Ações Rápidas</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button onclick="reloadDiagnostic()" class="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    🔄 Recarregar Diagnóstico
+                </button>
+                <a href="dashboard.html" class="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-center">
+                    📊 Ir para Dashboard
+                </a>
+                <a href="reset-onboarding.html" class="px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-center">
+                    🗑️ Resetar Onboarding
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://timqizyevfkvqgzvcrlx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbXFpenlldmZrdnFnenZjcmx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMTkwMDYsImV4cCI6MjA2MTU5NTAwNn0.LfWFCPPgzTkh7Scf2Q2LjLmYcLnaWSAGKDiMT8eSuWM';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Elements
+        const logsContainer = document.getElementById('logs-container');
+        const authStatus = document.getElementById('auth-status');
+        const onboardingStatus = document.getElementById('onboarding-status');
+        const profileStatus = document.getElementById('profile-status');
+        const userData = document.getElementById('user-data');
+        const leadData = document.getElementById('lead-data');
+        const profileData = document.getElementById('profile-data');
+
+        // Logging Functions
+        function addLog(message, type = 'info') {
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+
+            const timestamp = new Date().toLocaleTimeString('pt-BR');
+            logEntry.textContent = `[${timestamp}] ${message}`;
+
+            logsContainer.appendChild(logEntry);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+
+        function setStatus(element, success, message) {
+            if (success) {
+                element.innerHTML = `
+                    <span class="text-2xl">✅</span>
+                    <span class="ml-3 text-sm text-green-600 font-semibold">${message}</span>
+                `;
+            } else {
+                element.innerHTML = `
+                    <span class="text-2xl">❌</span>
+                    <span class="ml-3 text-sm text-red-600 font-semibold">${message}</span>
+                `;
+            }
+        }
+
+        function setWarningStatus(element, message) {
+            element.innerHTML = `
+                <span class="text-2xl">⚠️</span>
+                <span class="ml-3 text-sm text-yellow-600 font-semibold">${message}</span>
+            `;
+        }
+
+        // Main Diagnostic Function
+        async function runDiagnostic() {
+            logsContainer.innerHTML = '';
+            addLog('🚀 Iniciando diagnóstico completo...', 'info');
+
+            // 1. Check Authentication
+            addLog('1️⃣ Verificando autenticação...', 'info');
+            const { data: { session }, error: authError } = await _supabase.auth.getSession();
+
+            if (authError) {
+                addLog(`❌ Erro ao verificar autenticação: ${authError.message}`, 'error');
+                setStatus(authStatus, false, 'Erro');
+                return;
+            }
+
+            if (!session || !session.user) {
+                addLog('❌ Nenhum usuário autenticado', 'error');
+                setStatus(authStatus, false, 'Não autenticado');
+                userData.innerHTML = '<p class="text-red-600 font-semibold">⚠️ Você não está autenticado. Faça login primeiro.</p>';
+                return;
+            }
+
+            addLog(`✅ Usuário autenticado: ${session.user.email}`, 'success');
+            setStatus(authStatus, true, 'Autenticado');
+
+            // Display User Data
+            userData.innerHTML = `
+                <div class="space-y-2">
+                    <p><strong>Email:</strong> ${session.user.email}</p>
+                    <p><strong>ID:</strong> <code class="bg-gray-200 px-2 py-1 rounded text-xs">${session.user.id}</code></p>
+                    <p><strong>Criado em:</strong> ${new Date(session.user.created_at).toLocaleString('pt-BR')}</p>
+                    <p><strong>Provider:</strong> ${session.user.app_metadata.provider || 'email'}</p>
+                </div>
+            `;
+
+            // 2. Check Onboarding (Leads Table)
+            addLog('2️⃣ Verificando dados de onboarding (tabela leads)...', 'info');
+            const { data: leadDataResult, error: leadError } = await _supabase
+                .from('leads')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+
+            if (leadError) {
+                if (leadError.code === 'PGRST116') {
+                    addLog('⚠️ Usuário NÃO completou o onboarding', 'warning');
+                    setWarningStatus(onboardingStatus, 'Não completado');
+                    leadData.innerHTML = '<p class="text-yellow-600 font-semibold">⚠️ Você ainda não completou o onboarding.</p>';
+                } else {
+                    addLog(`❌ Erro ao verificar onboarding: ${leadError.message}`, 'error');
+                    setStatus(onboardingStatus, false, 'Erro');
+                    leadData.innerHTML = `<p class="text-red-600 font-semibold">❌ Erro: ${leadError.message}</p>`;
+                }
+            } else {
+                addLog('✅ Dados de onboarding encontrados!', 'success');
+                setStatus(onboardingStatus, true, 'Completado');
+
+                const levelMap = ['--', 'Básico', 'Intermediário', 'Avançado', 'Fluente'];
+                const achievementMap = ['--', 'Aprender o básico', 'Melhorar a escrita', 'Escrever sem erros', 'Não sei dizer'];
+                const careerMap = ['--', 'Viagens', 'Negócios', 'Morar fora', 'Certificados oficiais'];
+                const learningMap = ['--', 'Jogos e prática', 'Exercícios escritos', 'Conversação', 'Estudo tradicional'];
+                const ageMap = ['--', '18-24 anos', '25-34 anos', '35-44 anos', '45+ anos'];
+                const timeMap = ['--', '10-15 minutos', '30 minutos', '1 hora', 'Mais de 1 hora'];
+                const professionMap = ['--', 'Estudante', 'Tecnologia', 'Saúde', 'Outros'];
+
+                leadData.innerHTML = `
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="font-semibold text-gray-700">Nível de Alemão:</p>
+                            <p class="text-blue-600">${levelMap[leadDataResult.germanlevel] || leadDataResult.germanlevel}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700">Objetivo:</p>
+                            <p class="text-blue-600">${achievementMap[leadDataResult.achievement] || leadDataResult.achievement}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700">Motivo:</p>
+                            <p class="text-blue-600">${careerMap[leadDataResult.carreer] || leadDataResult.carreer}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700">Tipo de Aprendizado:</p>
+                            <p class="text-blue-600">${learningMap[leadDataResult.typelearning] || leadDataResult.typelearning}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700">Faixa Etária:</p>
+                            <p class="text-blue-600">${ageMap[leadDataResult.age] || leadDataResult.age}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700">Tempo de Estudo:</p>
+                            <p class="text-blue-600">${timeMap[leadDataResult.timestudy] || leadDataResult.timestudy}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700">Profissão:</p>
+                            <p class="text-blue-600">${professionMap[leadDataResult.profession] || leadDataResult.profession}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700">Atualizado em:</p>
+                            <p class="text-blue-600">${new Date(leadDataResult.updated_at).toLocaleString('pt-BR')}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 3. Check Profile
+            addLog('3️⃣ Verificando dados de perfil (tabela profiles)...', 'info');
+            const { data: profileDataResult, error: profileError } = await _supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single();
+
+            if (profileError) {
+                if (profileError.code === 'PGRST116') {
+                    addLog('⚠️ Perfil NÃO encontrado (será criado automaticamente)', 'warning');
+                    setWarningStatus(profileStatus, 'Não criado');
+                    profileData.innerHTML = '<p class="text-yellow-600 font-semibold">⚠️ Perfil não encontrado. Será criado automaticamente no dashboard.</p>';
+                } else {
+                    addLog(`❌ Erro ao verificar perfil: ${profileError.message}`, 'error');
+                    setStatus(profileStatus, false, 'Erro');
+                    profileData.innerHTML = `<p class="text-red-600 font-semibold">❌ Erro: ${profileError.message}</p>`;
+                }
+            } else {
+                addLog('✅ Dados de perfil encontrados!', 'success');
+                setStatus(profileStatus, true, 'Encontrado');
+
+                profileData.innerHTML = `
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="font-semibold text-gray-700">Créditos:</p>
+                            <p class="text-green-600 text-2xl font-bold">${profileDataResult.credits || 0}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700">Total de Redações:</p>
+                            <p class="text-blue-600 text-2xl font-bold">${profileDataResult.total_essays || 0}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700">Erros de Declinação:</p>
+                            <p class="text-red-600">${profileDataResult.error_declinacao || 0}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700">Erros de Conjugação:</p>
+                            <p class="text-red-600">${profileDataResult.error_conjugacao || 0}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700">Erros de Sintaxe:</p>
+                            <p class="text-red-600">${profileDataResult.error_sintaxe || 0}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700">Erros de Preposição:</p>
+                            <p class="text-red-600">${profileDataResult.error_preposicao || 0}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700">Erros de Vocabulário:</p>
+                            <p class="text-red-600">${profileDataResult.error_vocabulario || 0}</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700">Avatar:</p>
+                            <p class="text-gray-600">${profileDataResult.avatar_url || 'Sem avatar'}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 4. Summary
+            addLog('✅ Diagnóstico completo!', 'success');
+
+            // Recommendations
+            if (!leadDataResult) {
+                addLog('💡 Recomendação: Complete o onboarding para começar a usar o sistema', 'info');
+            }
+            if (!profileDataResult) {
+                addLog('💡 Recomendação: Seu perfil será criado automaticamente ao acessar o dashboard', 'info');
+            }
+        }
+
+        function reloadDiagnostic() {
+            window.location.reload();
+        }
+
+        // Run on page load
+        document.addEventListener('DOMContentLoaded', runDiagnostic);
+    </script>
+
+</body>
+</html>

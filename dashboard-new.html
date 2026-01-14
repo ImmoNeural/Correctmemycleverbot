@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - CorrectMe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar-link:hover { background: rgba(139, 92, 246, 0.1); }
+        .sidebar-link.active { background: rgba(139, 92, 246, 0.2); border-left: 3px solid #8b5cf6; }
+
+        /* Animação do robô */
+        .robot-dance {
+            display: inline-block;
+            font-size: 2.5rem;
+            animation: dance 1s infinite ease-in-out;
+        }
+        @keyframes dance {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-15deg); }
+            75% { transform: rotate(15deg); }
+        }
+
+        /* ANIMAÇÃO DO ROBOZINHO A DANÇAR */
+        .robot-dance {
+            display: inline-block;
+            font-size: 2.5rem;
+            animation: dance 1s infinite ease-in-out;
+        }
+        @keyframes dance {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-15deg); }
+            75% { transform: rotate(15deg); }
+        }
+
+        /* Animações para Flashcards */
+        .flashcard-3d {
+            transition: background-color 0.3s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .shake-animation {
+            animation: shake 0.5s;
+            background-color: #7f1d1d !important;
+            border-color: #9f1239 !important;
+        }
+
+        .correct-animation {
+            animation: correctPulse 0.5s;
+            background-color: #14532d !important;
+            border-color: #166534 !important;
+        }
+
+        .artigos-wrong {
+            background-color: #7f1d1d !important;
+            border-color: #9f1239 !important;
+        }
+
+        .artigos-correct {
+            background-color: #14532d !important;
+            border-color: #166534 !important;
+        }
+
+        /* Responsividade APENAS para Mobile Portrait (vertical) */
+        @media (max-width: 768px) and (orientation: portrait) {
+            /* Layout Mobile: Perfil no topo, menu na parte inferior */
+            .sidebar {
+                width: 100% !important;
+                max-width: 100% !important;
+                min-width: 100% !important;
+                height: auto !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                z-index: 100;
+                flex-direction: row !important;
+                border-right: none !important;
+                border-bottom: 2px solid #475569;
+            }
+
+            /* Perfil organizado: Foto (esquerda) | Email (centro) | Créditos (direita) - TUDO NA MESMA LINHA */
+            .sidebar-profile {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                padding: 0.75rem !important;
+                border-bottom: none !important;
+                border-right: none !important;
+                gap: 0.75rem !important;
+                width: 100% !important;
+            }
+
+            /* Forçar wrapper interno a não usar flex-col no mobile */
+            .sidebar-profile .profile-inner-wrapper {
+                display: contents !important;
+            }
+
+            /* Foto de perfil - lado esquerdo */
+            .profile-pic-container {
+                width: 3.5rem !important;
+                height: 3.5rem !important;
+                margin-bottom: 0 !important;
+                flex-shrink: 0;
+            }
+
+            .profile-pic-container img {
+                width: 3.5rem !important;
+                height: 3.5rem !important;
+                border-width: 2px !important;
+            }
+
+            .profile-pic-container label {
+                display: none !important;
+            }
+
+            /* Email - centro, mesma linha horizontal */
+            .sidebar-profile h3 {
+                display: block !important;
+                font-size: 0.875rem;
+                margin-bottom: 0 !important;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                text-align: center;
+                flex: 1;
+                line-height: 1;
+            }
+
+            /* Créditos - lado direito, mesma linha horizontal */
+            .sidebar-profile .credits-container {
+                display: flex !important;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                padding: 0.4rem 0.7rem;
+                background-color: #0f172a;
+                border-radius: 0.5rem;
+                gap: 0.4rem;
+                flex-shrink: 0;
+            }
+
+            .sidebar-profile .credits-container svg {
+                width: 1.25rem;
+                height: 1.25rem;
+            }
+
+            /* Mostrar apenas o número de créditos */
+            .sidebar-profile .credits-container span {
+                font-size: 0.875rem;
+                font-weight: bold;
+                line-height: 1;
+            }
+
+            .sidebar-profile .credits-container span:last-of-type {
+                display: none;
+            }
+
+            /* Menu de navegação oculto no topo - só aparece na barra inferior */
+            .sidebar nav {
+                display: none !important;
+            }
+
+            /* Botão sair oculto no topo */
+            .sidebar > div:last-child {
+                display: none !important;
+            }
+
+            /* Barra de navegação inferior fixa */
+            body::after {
+                content: '';
+                display: block;
+                height: 4.5rem;
+            }
+
+            /* Criar menu inferior fixo */
+            .bottom-nav {
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                background-color: #1e293b !important;
+                border-top: 2px solid #475569;
+                display: flex !important;
+                justify-content: space-around !important;
+                align-items: center !important;
+                padding: 0.5rem 0 !important;
+                z-index: 100;
+                height: 4.5rem;
+            }
+
+            .bottom-nav .sidebar-link {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 0.5rem !important;
+                gap: 0.25rem;
+                flex: 1;
+                min-width: 0;
+            }
+
+            .bottom-nav .sidebar-link svg {
+                width: 1.5rem !important;
+                height: 1.5rem !important;
+            }
+
+            .bottom-nav .sidebar-link span {
+                font-size: 0.625rem;
+                text-align: center;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
+            }
+
+            /* Ajustar conteúdo principal */
+            main {
+                padding: 1rem !important;
+                margin-top: 5rem !important;
+                margin-bottom: 5rem !important;
+                height: calc(100vh - 10rem) !important;
+            }
+
+            /* Responsividade para Flashcards */
+            #flashcard-type-choice .grid,
+            #flashcard-game-area .flex {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 1rem !important;
+            }
+
+            #flashcard-type-choice button,
+            .flashcard-3d,
+            #artigos-flashcard {
+                width: 100% !important;
+                max-width: 100% !important;
+                min-height: 300px !important;
+            }
+
+            #vocab-flashcard-container,
+            #artigos-flashcard-container {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            /* Responsividade para Lista de Palavras */
+
+            /* Botões de ação (Jogar, Importar, Adicionar) - horizontais em mobile */
+            #section-wordlist > .flex.gap-4.mb-6 {
+                flex-direction: row !important;
+                flex-wrap: wrap !important;
+                gap: 0.5rem !important;
+            }
+
+            #section-wordlist > .flex.gap-4.mb-6 button {
+                flex: 1 1 auto !important;
+                min-width: calc(33.333% - 0.35rem) !important;
+                width: auto !important;
+                font-size: 0.75rem !important;
+                padding: 0.75rem 0.5rem !important;
+                white-space: nowrap !important;
+            }
+
+            #section-wordlist > .flex.gap-4.mb-6 button svg {
+                width: 1rem !important;
+                height: 1rem !important;
+            }
+
+            /* Layout de listas - empilhar verticalmente mas sem altura fixa */
+            #section-wordlist > div:last-child {
+                flex-direction: column !important;
+                height: auto !important;
+                max-height: none !important;
+                overflow: visible !important;
+            }
+
+            /* Container de listas - 2 colunas */
+            #listas-menu-container {
+                width: 100% !important;
+                max-width: 100% !important;
+                height: auto !important;
+                max-height: 300px !important;
+                overflow-y: auto !important;
+                border-right: none !important;
+                border-bottom: 2px solid #475569 !important;
+                margin-bottom: 1rem !important;
+                padding-bottom: 1rem !important;
+            }
+
+            #listas-menu {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 0.5rem !important;
+            }
+
+            #listas-menu button {
+                width: 100% !important;
+                font-size: 0.75rem !important;
+                padding: 0.75rem 0.5rem !important;
+            }
+
+            /* Conteúdo da lista de palavras - SEM barra de rolagem */
+            #wordlist-content {
+                width: 100% !important;
+                max-width: 100% !important;
+                height: auto !important;
+                max-height: none !important;
+                overflow-y: visible !important;
+                overflow: visible !important;
+            }
+
+            /* Container principal das palavras - vertical */
+            #wordlist-content > div {
+                display: flex !important;
+                flex-direction: column !important;
+            }
+
+            #wordlist-content .space-y-3 {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 0.75rem !important;
+            }
+
+            /* Cards individuais de palavras - conteúdo à esquerda, botões à direita na mesma linha */
+            #wordlist-content .space-y-3 > div {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: flex-start !important;
+                gap: 0.5rem !important;
+                padding: 0.75rem !important;
+            }
+
+            /* Conteúdo da palavra (texto) */
+            #wordlist-content .space-y-3 > div > div:first-child {
+                flex: 1 !important;
+                min-width: 0 !important;
+            }
+
+            /* Container de botões (cores + edit + delete) */
+            #wordlist-content .space-y-3 > div > div:last-child {
+                display: flex !important;
+                flex-direction: row !important;
+                gap: 0.5rem !important;
+                flex-shrink: 0 !important;
+                align-items: center !important;
+            }
+
+            #wordlist-content button {
+                padding: 0.5rem !important;
+                min-width: auto !important;
+            }
+
+            #wordlist-content button svg {
+                width: 1.25rem !important;
+                height: 1.25rem !important;
+            }
+
+            /* Flags de cores menores */
+            #wordlist-content .color-flags-container div {
+                width: 1.25rem !important;
+                height: 1.25rem !important;
+            }
+
+            /* Artigos Alemães - layout responsivo */
+            #section-artigos .grid {
+                grid-template-columns: 1fr !important;
+                gap: 1rem !important;
+            }
+
+            /* Tabelas responsivas */
+            table {
+                font-size: 0.75rem !important;
+            }
+
+            table th,
+            table td {
+                padding: 0.5rem !important;
+            }
+
+            /* Modais e forms */
+            .modal-content,
+            form {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+        }
+
+        /* Esconder toggle button no mobile (não é mais necessário) */
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: none !important;
+            }
+        }
+
+        /* Tablets e Mobile Landscape - Usar sidebar normal lateral */
+        @media (min-width: 481px) and (max-width: 1024px),
+               (max-width: 768px) and (orientation: landscape) {
+
+            /* Sidebar lateral compacta */
+            .sidebar {
+                width: 12rem !important; /* Mais estreito para landscape */
+                min-width: 12rem !important;
+                max-width: 12rem !important;
+                position: relative !important;
+                height: 100vh !important;
+                flex-direction: column !important;
+                overflow-y: auto !important;
+            }
+
+            /* Perfil muito compacto */
+            .sidebar-profile {
+                flex-direction: column !important;
+                padding: 0.75rem !important;
+                border-bottom: 2px solid #475569 !important;
+            }
+
+            .sidebar-profile .profile-inner-wrapper {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+            }
+
+            .profile-pic-container {
+                width: 3rem !important;
+                height: 3rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+
+            .profile-pic-container img {
+                width: 3rem !important;
+                height: 3rem !important;
+            }
+
+            .sidebar-profile h3 {
+                font-size: 0.7rem !important;
+                text-align: center !important;
+                margin-bottom: 0.25rem !important;
+                line-height: 1.2 !important;
+            }
+
+            .sidebar-profile .credits-container {
+                flex-direction: row !important;
+                justify-content: center !important;
+                padding: 0.25rem 0.5rem !important;
+                gap: 0.25rem !important;
+            }
+
+            .sidebar-profile .credits-container svg {
+                width: 1rem !important;
+                height: 1rem !important;
+            }
+
+            .sidebar-profile .credits-container span {
+                font-size: 0.7rem !important;
+            }
+
+            /* Menu lateral visível mas compacto */
+            .sidebar nav {
+                display: block !important;
+                padding: 0.5rem !important;
+            }
+
+            .sidebar nav ul {
+                gap: 0.25rem !important;
+            }
+
+            /* Esconder bottom nav */
+            .bottom-nav {
+                display: none !important;
+            }
+
+            /* Ajustar conteúdo principal para ter mais espaço */
+            main {
+                margin-top: 0 !important;
+                margin-bottom: 0 !important;
+                height: 100vh !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                padding: 0.75rem !important;
+                flex: 1 !important;
+                width: calc(100vw - 12rem) !important;
+                max-width: calc(100vw - 12rem) !important;
+                box-sizing: border-box !important;
+            }
+
+            /* Garantir que seções usem largura total */
+            .content-section {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            /* Botões de ação em landscape - mais compactos horizontalmente */
+            #section-wordlist > .flex.gap-4.mb-6 {
+                gap: 0.35rem !important;
+                margin-bottom: 0.75rem !important;
+            }
+
+            #section-wordlist > .flex.gap-4.mb-6 button {
+                font-size: 0.65rem !important;
+                padding: 0.5rem 0.35rem !important;
+                min-width: calc(33.333% - 0.25rem) !important;
+            }
+
+            #section-wordlist > .flex.gap-4.mb-6 button svg {
+                width: 0.875rem !important;
+                height: 0.875rem !important;
+            }
+
+            /* Layout de listas em landscape - TUDO EMPILHADO VERTICALMENTE */
+            #section-wordlist > div:last-child {
+                flex-direction: column !important;
+                height: auto !important;
+                max-height: none !important;
+                overflow: visible !important;
+            }
+
+            /* Container de listas - SEM barra de rolagem, grid 2 colunas */
+            #listas-menu-container {
+                width: 100% !important;
+                max-width: 100% !important;
+                height: auto !important;
+                max-height: none !important;
+                overflow-y: visible !important;
+                overflow: visible !important;
+                border-right: none !important;
+                border-bottom: 2px solid #475569 !important;
+                margin-bottom: 0.75rem !important;
+                padding-bottom: 0.75rem !important;
+            }
+
+            #listas-menu {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 0.35rem !important;
+            }
+
+            #listas-menu button {
+                font-size: 0.7rem !important;
+                padding: 0.5rem !important;
+            }
+
+            /* Conteúdo da lista de palavras - SEM barra de rolagem */
+            #wordlist-content {
+                width: 100% !important;
+                max-width: 100% !important;
+                height: auto !important;
+                max-height: none !important;
+                overflow-y: visible !important;
+                overflow: visible !important;
+            }
+
+            /* Cards de palavras mais compactos */
+            #wordlist-content .space-y-3 {
+                gap: 0.5rem !important;
+            }
+
+            #wordlist-content .space-y-3 > div {
+                padding: 0.5rem !important;
+            }
+
+            #wordlist-content .space-y-3 > div p {
+                font-size: 0.75rem !important;
+                line-height: 1.3 !important;
+            }
+
+            #wordlist-content button {
+                padding: 0.35rem !important;
+            }
+
+            #wordlist-content button svg {
+                width: 0.875rem !important;
+                height: 0.875rem !important;
+            }
+
+            #wordlist-content .color-flags-container div {
+                width: 1rem !important;
+                height: 1rem !important;
+            }
+
+            /* Chatbot em landscape - altura automática, sem posição fixa */
+            /* IMPORTANTE: Apenas aplicar quando section-chatbot NÃO está hidden */
+            #section-chatbot:not(.hidden) {
+                height: auto !important;
+                max-height: none !important;
+                overflow: visible !important;
+                display: flex !important;
+                flex-direction: column !important;
+                position: relative !important;
+            }
+
+            /* Container principal do chatbot - altura automática */
+            #section-chatbot:not(.hidden) #chatbot-prompt-container {
+                width: 100% !important;
+                height: auto !important;
+                min-height: calc(100vh - 2rem) !important;
+                max-height: none !important;
+                overflow: visible !important;
+                position: relative !important;
+            }
+
+            /* Iframes e divs internos do chatbot - altura automática */
+            #section-chatbot:not(.hidden) iframe,
+            #section-chatbot:not(.hidden) #chatbot-prompt-container iframe,
+            #section-chatbot:not(.hidden) #chatbot-prompt-container > div {
+                width: 100% !important;
+                height: auto !important;
+                min-height: calc(100vh - 2rem) !important;
+                max-height: none !important;
+                border: none !important;
+                position: relative !important;
+            }
+
+            /* Garantir que o chatbot n8n renderize corretamente SEM posição fixa */
+            /* APENAS quando section-chatbot está visível */
+            #section-chatbot:not(.hidden) [id*="n8n-chat"],
+            #section-chatbot:not(.hidden) [class*="n8n-chat"] {
+                height: auto !important;
+                min-height: calc(100vh - 2rem) !important;
+                max-height: none !important;
+                overflow: visible !important;
+                position: relative !important;
+            }
+
+            /* Remover posição fixa do input do chatbot */
+            #section-chatbot:not(.hidden) [id*="n8n-chat"] input,
+            #section-chatbot:not(.hidden) [id*="n8n-chat"] textarea,
+            #section-chatbot:not(.hidden) [id*="n8n-chat"] form,
+            #section-chatbot:not(.hidden) [id*="n8n-chat"] [class*="input"],
+            #section-chatbot:not(.hidden) [id*="n8n-chat"] [class*="footer"],
+            #section-chatbot:not(.hidden) [id*="n8n-chat"] [class*="message-input"] {
+                position: relative !important;
+                bottom: auto !important;
+                left: auto !important;
+                right: auto !important;
+            }
+
+            /* Container de mensagens sem altura fixa */
+            #section-chatbot:not(.hidden) [id*="n8n-chat"] [class*="messages"],
+            #section-chatbot:not(.hidden) [id*="n8n-chat"] [class*="chat-messages"],
+            #section-chatbot:not(.hidden) [id*="n8n-chat"] [class*="message-list"] {
+                height: auto !important;
+                max-height: none !important;
+                overflow: visible !important;
+                position: relative !important;
+            }
+
+            /* Remover espaçamento extra */
+            body::after {
+                display: none !important;
+            }
+
+            /* Links do menu super compactos */
+            .sidebar-link {
+                padding: 0.5rem !important;
+                font-size: 0.75rem !important;
+                gap: 0.5rem !important;
+            }
+
+            .sidebar-link svg {
+                width: 1rem !important;
+                height: 1rem !important;
+                flex-shrink: 0 !important;
+            }
+
+            .sidebar-link span {
+                font-size: 0.7rem !important;
+                line-height: 1.2 !important;
+            }
+
+            /* Botão sair compacto */
+            .logout-btn {
+                padding: 0.5rem !important;
+                font-size: 0.75rem !important;
+            }
+
+            .logout-btn svg {
+                width: 1rem !important;
+                height: 1rem !important;
+            }
+
+            /* Títulos das seções menores */
+            h1 {
+                font-size: 1.25rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+
+            h2 {
+                font-size: 1rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+
+            h3 {
+                font-size: 0.875rem !important;
+                margin-bottom: 0.35rem !important;
+            }
+
+            /* Descrições menores */
+            p {
+                font-size: 0.8rem !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen">
+
+    <div class="flex h-screen overflow-hidden">
+
+        <!-- SIDEBAR ESQUERDA -->
+        <aside class="sidebar w-80 bg-slate-800 border-r border-slate-700 flex flex-col overflow-y-auto">
+
+            <!-- Perfil do Usuário -->
+            <div class="sidebar-profile p-6 border-b border-slate-700">
+                <div class="profile-inner-wrapper flex flex-col items-center text-center">
+                    <div class="profile-pic-container relative mb-4">
+                        <img id="profile-pic" src="https://placehold.co/128x128/172a45/ccd6f6?text=Foto" alt="Foto de perfil" class="w-32 h-32 rounded-full object-cover border-4 border-purple-500">
+                        <label for="avatar-input-dashboard" class="absolute bottom-0 right-0 bg-purple-600 hover:bg-purple-700 rounded-full p-2 cursor-pointer transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </label>
+                        <input type="file" id="avatar-input-dashboard" class="hidden" accept="image/*">
+                    </div>
+                    <h3 id="user-email" class="sidebar-text text-lg font-semibold text-white mb-1">email@exemplo.com</h3>
+                    <div class="credits-container flex items-center gap-2 bg-slate-700 px-4 py-2 rounded-full">
+                        <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"></path>
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span id="user-credits" class="sidebar-text font-bold text-lg">0</span>
+                        <span class="sidebar-text text-sm text-slate-400">créditos</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Menu de Navegação -->
+            <nav class="flex-1 p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" data-section="corrigir" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg transition-all">
+                            <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <span class="sidebar-text font-medium">Corrigir Redação</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-section="parafrasear" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all">
+                            <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                            </svg>
+                            <span class="sidebar-text font-medium">Parafrasear Redação</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-section="chatbot" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all">
+                            <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                            </svg>
+                            <span class="sidebar-text font-medium">Treinar com Chatbot</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-section="wordlist" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all">
+                            <svg class="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                            </svg>
+                            <span class="sidebar-text font-medium">Listas de Palavras</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-section="artigos" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all">
+                            <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                            </svg>
+                            <span class="sidebar-text font-medium">Artigos (der/die/das)</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-section="flashcards" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all">
+                            <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                            <span class="sidebar-text font-medium">Jogo Flashcards</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-section="progresso" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all">
+                            <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                            <span class="sidebar-text font-medium">Progresso</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" data-section="creditos" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all">
+                            <svg class="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                            <span class="sidebar-text font-medium">Comprar Créditos</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Botão Sair -->
+            <div class="p-4 border-t border-slate-700">
+                <button id="logout-button" class="logout-btn w-full flex items-center justify-center gap-3 px-4 py-3 bg-red-600 hover:bg-red-700 rounded-lg transition-colors font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
+                    <span class="sidebar-text">Sair</span>
+                </button>
+            </div>
+
+        </aside>
+
+        <!-- Botão de Toggle do Menu (apenas mobile) -->
+        <button class="menu-toggle" id="menu-toggle-btn">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+        </button>
+
+        <!-- ÁREA DE CONTEÚDO PRINCIPAL -->
+        <main class="flex-1 overflow-y-auto p-8">
+
+            <!-- Seção: Corrigir Redação -->
+            <div id="section-corrigir" class="content-section">
+                <h1 class="text-4xl font-extrabold mb-2 bg-gradient-to-r from-purple-400 to-blue-500 text-transparent bg-clip-text">Corrija sua Redação</h1>
+                <p class="text-slate-400 mb-8">Envie seu texto e receba uma análise detalhada em minutos.</p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Coluna Esquerda: Formulário -->
+                    <div>
+                        <form id="correction-form" class="space-y-6">
+                            <div>
+                                <label for="user-name" class="block text-sm font-medium text-slate-300 mb-2">Nome</label>
+                                <input type="text" id="user-name" class="w-full bg-slate-800 border border-slate-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Seu nome" required>
+                            </div>
+                            <div>
+                                <label for="redacao" class="block text-sm font-medium text-slate-300 mb-2">Sua redação</label>
+                                <textarea id="redacao" rows="10" class="w-full bg-slate-800 border border-slate-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Escreva seu texto aqui..." required spellcheck="false"></textarea>
+                                <div id="word-counter" class="text-right text-xs text-slate-400 mt-1"></div>
+                            </div>
+                            <fieldset>
+                                <legend class="text-base font-medium text-slate-300 mb-4">Nível de alemão</legend>
+                                <div class="space-y-3">
+                                    <div class="flex items-center">
+                                        <input id="nivel-a" name="nivel" type="radio" value="A1/A2" class="h-4 w-4 text-purple-600" checked>
+                                        <label for="nivel-a" class="ml-3 text-sm">A1 / A2 (Básico)</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input id="nivel-b" name="nivel" type="radio" value="B1/B2" class="h-4 w-4 text-purple-600">
+                                        <label for="nivel-b" class="ml-3 text-sm">B1 / B2 (Intermediário)</label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input id="nivel-c" name="nivel" type="radio" value="C1/C2" class="h-4 w-4 text-purple-600">
+                                        <label for="nivel-c" class="ml-3 text-sm">C1 / C2 (Avançado)</label>
+                                    </div>
+                                </div>
+                            </fieldset>
+                            <button type="submit" class="w-full py-3 px-6 rounded-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 transition-all">
+                                Corrigir agora!
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Coluna Direita: Resultado da Correção -->
+                    <div id="form-message" class="overflow-y-auto" style="max-height: calc(100vh - 200px);"></div>
+                </div>
+            </div>
+
+            <!-- Seção: Parafrasear -->
+            <div id="section-parafrasear" class="content-section hidden">
+                <h1 class="text-4xl font-extrabold mb-2 bg-gradient-to-r from-blue-400 to-cyan-500 text-transparent bg-clip-text">Parafrasear Redação</h1>
+                <p class="text-slate-400 mb-8">Reescreva seu texto de forma diferente mantendo o significado.</p>
+                <div class="max-w-3xl">
+                    <p class="text-slate-300">Funcionalidade em desenvolvimento...</p>
+                </div>
+            </div>
+
+            <!-- Seção: Listas de Palavras -->
+            <div id="section-wordlist" class="content-section hidden">
+                <h1 class="text-4xl font-extrabold mb-2 bg-gradient-to-r from-yellow-400 to-amber-500 text-transparent bg-clip-text">Listas de Vocabulário</h1>
+                <p class="text-slate-400 mb-6">Gerencie e pratique suas palavras em alemão</p>
+
+                <div class="flex gap-4 mb-6">
+                    <button id="btn-jogar-flashcards" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg font-semibold text-white transition-all shadow-lg hover:shadow-xl flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Jogar Flashcards
+                    </button>
+                    <button id="btn-importar-csv" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-lg font-semibold text-white transition-all shadow-lg hover:shadow-xl flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                        </svg>
+                        Importar CSV
+                    </button>
+                    <button id="btn-adicionar-palavra" class="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg font-semibold text-white transition-all shadow-lg hover:shadow-xl flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Adicionar Palavra
+                    </button>
+                </div>
+
+                <!-- Layout com menu lateral de listas -->
+                <div class="flex gap-6" style="height: calc(100vh - 320px);">
+                    <!-- Menu Lateral de Listas -->
+                    <aside class="w-72 bg-slate-800 rounded-xl p-4 overflow-y-auto flex-shrink-0 shadow-xl">
+                        <!-- Header do Menu -->
+                        <div class="mb-4 pb-4 border-b border-slate-700">
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-lg font-bold text-purple-400">Minhas Listas</h3>
+                                <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                </svg>
+                            </div>
+                            <p id="total-listas-count" class="text-sm text-slate-400 mb-3">
+                                <span class="font-semibold text-white">0</span> listas no total
+                            </p>
+
+                            <!-- Botão Criar Nova Lista -->
+                            <button id="btn-criar-lista" class="w-full px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg font-semibold text-white text-sm transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                Nova Lista
+                            </button>
+                        </div>
+
+                        <!-- Lista de Botões das Listas -->
+                        <div id="listas-menu" class="space-y-2">
+                            <p class="text-slate-400 text-sm text-center py-8">Carregando listas...</p>
+                        </div>
+                    </aside>
+
+                    <!-- Área de Conteúdo das Palavras -->
+                    <div class="flex-1 overflow-y-auto">
+                        <div id="wordlist-content" class="space-y-4">
+                            <p class="text-slate-400 text-center py-8">Selecione uma lista para ver as palavras</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal para Adicionar Palavra -->
+            <div id="add-word-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+                <div class="bg-slate-800 rounded-lg shadow-2xl p-8 w-full max-w-md">
+                    <h3 class="text-2xl font-bold mb-6">Adicionar Nova Palavra</h3>
+                    <form id="add-word-form" class="space-y-4">
+                        <div>
+                            <label for="word-german" class="block text-slate-400 mb-2">Palavra em Alemão</label>
+                            <input type="text" id="word-german" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                        </div>
+                        <div>
+                            <label for="word-translation" class="block text-slate-400 mb-2">Tradução em Português</label>
+                            <textarea id="word-translation" rows="3" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" required></textarea>
+                        </div>
+                        <div>
+                            <label for="word-example" class="block text-slate-400 mb-2">Frase de Exemplo (Opcional)</label>
+                            <textarea id="word-example" rows="3" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                        </div>
+                        <div>
+                            <label for="word-lista" class="block text-slate-400 mb-2">Nome da Lista</label>
+                            <input type="text" id="word-lista" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Ex: Vocabulário B1" required>
+                        </div>
+                        <div id="add-word-error" class="text-red-400 text-sm min-h-[1.25rem]"></div>
+                        <div class="flex justify-end gap-4 pt-4">
+                            <button type="button" id="cancel-add-word-btn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Cancelar</button>
+                            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Salvar Palavra</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal para Editar Palavra -->
+            <div id="edit-word-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+                <div class="bg-slate-800 rounded-lg shadow-2xl p-8 w-full max-w-md">
+                    <h3 class="text-2xl font-bold mb-6">Editar Palavra</h3>
+                    <form id="edit-word-form" class="space-y-4">
+                        <div>
+                            <label for="edit-word-german" class="block text-slate-400 mb-2">Palavra em Alemão</label>
+                            <input type="text" id="edit-word-german" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" required>
+                        </div>
+                        <div>
+                            <label for="edit-word-translation" class="block text-slate-400 mb-2">Tradução em Português</label>
+                            <textarea id="edit-word-translation" rows="3" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" required></textarea>
+                        </div>
+                        <div>
+                            <label for="edit-word-example" class="block text-slate-400 mb-2">Frase de Exemplo (Opcional)</label>
+                            <textarea id="edit-word-example" rows="3" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                        </div>
+                        <div id="edit-word-error" class="text-red-400 text-sm min-h-[1.25rem]"></div>
+                        <div class="flex justify-end gap-4 pt-4">
+                            <button type="button" id="cancel-edit-word-btn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Cancelar</button>
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Salvar Alterações</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal para Criar Nova Lista -->
+            <div id="create-list-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+                <div class="bg-slate-800 rounded-lg shadow-2xl p-8 w-full max-w-md">
+                    <h3 class="text-2xl font-bold mb-6">Criar Nova Lista</h3>
+                    <form id="create-list-form" class="space-y-4">
+                        <div>
+                            <label for="list-name" class="block text-slate-400 mb-2">Nome da Lista</label>
+                            <input type="text" id="list-name" class="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Ex: Vocabulário do filme Lucifer" required>
+                            <p class="text-slate-500 text-xs mt-2">Digite um nome único para identificar esta lista de palavras</p>
+                        </div>
+                        <div id="create-list-error" class="text-red-400 text-sm min-h-[1.25rem]"></div>
+                        <div class="flex justify-end gap-4 pt-4">
+                            <button type="button" id="cancel-create-list-btn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Cancelar</button>
+                            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Criar Lista</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Seção: Artigos (der/die/das) -->
+            <div id="section-artigos" class="content-section hidden">
+                <h1 class="text-4xl font-extrabold mb-2 bg-gradient-to-r from-red-400 to-pink-500 text-transparent bg-clip-text">Artigos Alemães (der/die/das)</h1>
+                <p class="text-slate-400 mb-4">Pratique e domine os artigos definidos em alemão</p>
+                <p class="text-yellow-400 text-sm mb-6">💡 Estas palavras são obtidas automaticamente das redações que você envia na seção "Corrigir Redação"</p>
+
+                <div class="flex gap-4 mb-6">
+                    <button id="btn-atualizar-artigos" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 rounded-lg font-semibold text-white transition-all shadow-lg hover:shadow-xl flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        Atualizar
+                    </button>
+                </div>
+
+                <div id="artigos-content" class="grid grid-cols-1 gap-3">
+                    <p class="text-slate-400 text-center py-8">Carregando palavras com artigos...</p>
+                </div>
+            </div>
+
+            <!-- Seção: Jogo Flashcards -->
+            <div id="section-flashcards" class="content-section hidden">
+                <h1 class="text-4xl font-extrabold mb-2 bg-gradient-to-r from-pink-400 to-purple-500 text-transparent bg-clip-text">Jogo de Flashcards</h1>
+                <p class="text-slate-400 mb-8">Teste seu conhecimento com flashcards interativos.</p>
+
+                <!-- Escolha do tipo de jogo -->
+                <div id="flashcard-type-choice" class="max-w-6xl">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <button id="btn-vocabulario-game" class="bg-slate-800 hover:bg-slate-700 border-2 border-slate-700 hover:border-indigo-500 text-white font-semibold py-8 px-6 rounded-lg transition-all text-left">
+                            <div class="text-5xl mb-3">📚</div>
+                            <h3 class="text-xl mb-2 text-slate-100">Vocabulário</h3>
+                            <p class="text-sm text-slate-400">Pratique palavras e traduções</p>
+                        </button>
+                        <button id="btn-artigos-game" class="bg-slate-800 hover:bg-slate-700 border-2 border-slate-700 hover:border-pink-500 text-white font-semibold py-8 px-6 rounded-lg transition-all text-left">
+                            <div class="text-5xl mb-3">🎯</div>
+                            <h3 class="text-xl mb-2 text-slate-100">Artigos</h3>
+                            <p class="text-sm text-slate-400">Adivinhe der, die ou das</p>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Setup do jogo de Vocabulário -->
+                <div id="vocabulario-setup" class="hidden max-w-2xl">
+                    <button id="back-from-vocab-setup" class="mb-4 text-slate-400 hover:text-slate-200">← Voltar</button>
+                    <div class="bg-slate-800 border border-slate-700 p-6 rounded-lg">
+                        <h3 class="text-xl font-semibold mb-5 text-slate-100">Configuração - Vocabulário</h3>
+                        <div class="space-y-5">
+                            <div>
+                                <label class="block text-slate-300 mb-3 text-sm font-medium">Selecione os cartões para praticar:</label>
+                                <div class="space-y-2">
+                                    <label class="flex items-center p-3 bg-slate-700 rounded hover:bg-slate-600 cursor-pointer">
+                                        <input type="checkbox" id="vocab-red" checked class="mr-3">
+                                        <span class="text-slate-200">🔴 Vermelho (difíceis)</span>
+                                    </label>
+                                    <label class="flex items-center p-3 bg-slate-700 rounded hover:bg-slate-600 cursor-pointer">
+                                        <input type="checkbox" id="vocab-yellow" checked class="mr-3">
+                                        <span class="text-slate-200">🟡 Amarelo (médios)</span>
+                                    </label>
+                                    <label class="flex items-center p-3 bg-slate-700 rounded hover:bg-slate-600 cursor-pointer">
+                                        <input type="checkbox" id="vocab-green" checked class="mr-3">
+                                        <span class="text-slate-200">🟢 Verde (fáceis)</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div id="vocab-setup-error" class="text-red-400 text-sm min-h-6"></div>
+                            <button id="start-vocab-game" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                                Iniciar Jogo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Setup do jogo de Artigos -->
+                <div id="artigos-setup" class="hidden max-w-2xl">
+                    <button id="back-from-artigos-setup" class="mb-4 text-slate-400 hover:text-slate-200">← Voltar</button>
+                    <div class="bg-slate-800 border border-slate-700 p-6 rounded-lg">
+                        <h3 class="text-xl font-semibold mb-3 text-slate-100">Jogo de Artigos</h3>
+                        <p class="text-slate-400 text-sm mb-5">Pratique der, die e das com seus substantivos!</p>
+                        <div id="artigos-setup-error" class="text-red-400 text-sm min-h-6 mb-4"></div>
+                        <button id="start-artigos-game" class="w-full bg-pink-600 hover:bg-pink-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                            Iniciar Jogo
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Área do Jogo -->
+                <div id="flashcard-game-area" class="hidden max-w-4xl">
+                    <!-- Header com progresso -->
+                    <div class="mb-6 flex justify-between items-center">
+                        <button id="exit-game-btn" class="text-slate-400 hover:text-slate-200 text-sm">← Sair</button>
+                        <div class="flex gap-6 text-sm text-slate-400">
+                            <span id="game-progress-text">Palavra 1 de 10</span>
+                            <span class="text-green-400">✓ <span id="game-correct-count">0</span></span>
+                            <span class="text-red-400">✗ <span id="game-wrong-count">0</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Barra de progresso -->
+                    <div class="w-full bg-slate-700 rounded-full h-2 mb-6">
+                        <div id="game-progress-bar" class="bg-indigo-500 h-2 rounded-full transition-all" style="width: 0%"></div>
+                    </div>
+
+                    <!-- Flashcard Vocabulário -->
+                    <div id="vocab-flashcard-container" class="hidden">
+                        <div id="vocab-flashcard" class="flashcard-3d cursor-pointer bg-slate-800 border-2 border-slate-700 rounded-xl p-10 min-h-[350px] flex flex-col items-center justify-center" onclick="flipVocabCard()">
+                            <h2 id="vocab-word" class="text-4xl font-bold text-slate-100 text-center mb-4">Palavra</h2>
+                            <div id="vocab-translation" class="text-2xl text-slate-100 text-center font-semibold hidden">Tradução</div>
+                            <p id="vocab-example" class="text-base text-slate-300 text-center mt-4 hidden">Exemplo</p>
+                            <p id="vocab-hint" class="text-xs text-slate-500 mt-6">Clique para ver a resposta</p>
+                        </div>
+                        <div class="flex gap-4 mt-6">
+                            <button id="vocab-wrong-btn" class="flex-1 bg-red-700 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                                ✗ Errei
+                            </button>
+                            <button id="vocab-correct-btn" class="flex-1 bg-green-700 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                                ✓ Acertei
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Flashcard Artigos -->
+                    <div id="artigos-flashcard-container" class="hidden">
+                        <div id="artigos-flashcard" class="bg-slate-800 border-2 border-slate-700 rounded-xl p-10 min-h-[350px] flex flex-col items-center justify-center transition-all">
+                            <h2 id="artigos-word" class="text-4xl font-bold text-slate-100 text-center mb-6">Substantivo</h2>
+                            <p id="artigos-question" class="text-sm text-slate-400 mb-6">Qual é o artigo correto?</p>
+                            <p id="artigos-feedback" class="text-2xl font-semibold text-center mb-6 hidden"></p>
+                            <div id="artigos-buttons" class="flex gap-4">
+                                <button class="artigo-btn bg-blue-700 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg text-xl transition-colors" data-artigo="der">der</button>
+                                <button class="artigo-btn bg-pink-700 hover:bg-pink-600 text-white font-semibold py-3 px-6 rounded-lg text-xl transition-colors" data-artigo="die">die</button>
+                                <button class="artigo-btn bg-green-700 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg text-xl transition-colors" data-artigo="das">das</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resultados -->
+                <div id="flashcard-results" class="hidden max-w-2xl">
+                    <div class="bg-slate-800 border border-slate-700 p-8 rounded-lg">
+                        <h2 class="text-3xl font-bold mb-4 text-slate-100">Parabéns!</h2>
+                        <p class="text-slate-400 mb-6">Você completou o jogo!</p>
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="bg-green-800 border border-green-700 p-5 rounded-lg">
+                                <div class="text-3xl font-bold text-green-200" id="final-correct">0</div>
+                                <div class="text-sm text-green-300">Acertos</div>
+                            </div>
+                            <div class="bg-red-800 border border-red-700 p-5 rounded-lg">
+                                <div class="text-3xl font-bold text-red-200" id="final-wrong">0</div>
+                                <div class="text-sm text-red-300">Erros</div>
+                            </div>
+                        </div>
+                        <button id="restart-game-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                            Jogar Novamente
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção: Chatbot -->
+            <div id="section-chatbot" class="content-section hidden">
+                <!-- Container do Chatbot (sem bordas, sem cabeçalho) -->
+                <div id="chatbot-prompt-container" style="width: 100%; height: calc(100vh - 200px);">
+                    <!-- Chatbot será carregado aqui automaticamente -->
+                </div>
+            </div>
+
+            <!-- Seção: Progresso -->
+            <div id="section-progresso" class="content-section hidden">
+                <h1 class="text-4xl font-extrabold mb-2 bg-gradient-to-r from-indigo-400 to-purple-500 text-transparent bg-clip-text">Seu Progresso</h1>
+                <p class="text-slate-400 mb-8">Acompanhe sua evolução no aprendizado.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-800 p-6 rounded-lg">
+                        <h3 class="text-lg font-semibold mb-4">Estatísticas Gerais</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Data de Início:</span>
+                                <span id="start-date" class="font-bold">--/--/----</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Redações Enviadas:</span>
+                                <span id="total-essays" class="font-bold">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800 p-6 rounded-lg">
+                        <h3 class="text-lg font-semibold mb-4">Distribuição de Erros</h3>
+                        <div class="relative h-48">
+                            <canvas id="error-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800 p-6 rounded-lg md:col-span-2">
+                        <h3 class="text-lg font-semibold mb-4">Erros por Categoria</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                            <div class="text-center">
+                                <p class="text-3xl font-bold text-pink-400" id="error-declinacao">0 erros</p>
+                                <p class="text-sm text-slate-400 mt-1">Declinação</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-3xl font-bold text-purple-400" id="error-conjugacao">0 erros</p>
+                                <p class="text-sm text-slate-400 mt-1">Conjugação</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-3xl font-bold text-orange-400" id="error-sintaxe">0 erros</p>
+                                <p class="text-sm text-slate-400 mt-1">Sintaxe</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-3xl font-bold text-blue-400" id="error-preposicao">0 erros</p>
+                                <p class="text-sm text-slate-400 mt-1">Preposição</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-3xl font-bold text-green-400" id="error-vocabulario">0 erros</p>
+                                <p class="text-sm text-slate-400 mt-1">Vocabulário</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800 p-6 rounded-lg md:col-span-2">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold">Histórico de Erros</h3>
+                            <button id="toggle-last-10" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-medium transition-colors">
+                                Mostrar últimas 10 redações
+                            </button>
+                        </div>
+                        <div id="history-chart-container" class="relative h-64">
+                            <canvas id="history-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção: Créditos -->
+            <div id="section-creditos" class="content-section hidden">
+                <h1 class="text-4xl font-extrabold mb-2 bg-gradient-to-r from-orange-400 to-yellow-500 text-transparent bg-clip-text">Comprar Créditos</h1>
+                <p class="text-slate-400 mb-8">Adquira mais créditos para continuar aprendendo.</p>
+                <div class="max-w-md space-y-4">
+                    <button data-price-id="price_1RusAKCYJo68kcPWjlHcTBSC" class="buy-credits-btn w-full bg-gradient-to-r from-blue-800 to-blue-900 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-lg transition-all shadow-lg hover:shadow-xl">
+                        Comprar 500 Créditos
+                    </button>
+                    <button data-price-id="price_1RusCBCYJo68kcPWGnvYB6f8" class="buy-credits-btn w-full bg-gradient-to-r from-blue-800 to-blue-900 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-lg transition-all shadow-lg hover:shadow-xl">
+                        Comprar 1000 Créditos
+                    </button>
+                    <button data-price-id="price_1RusDPCYJo68kcPWTlp9t9hz" class="buy-credits-btn w-full bg-gradient-to-r from-blue-800 to-blue-900 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-6 rounded-lg transition-all shadow-lg hover:shadow-xl">
+                        Comprar 1500 Créditos
+                    </button>
+                </div>
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- INÍCIO DO CÓDIGO DE INTEGRAÇÃO DO CHATBOT CORRECTME                 -->
+    <!-- =================================================================== -->
+
+    <!-- Scripts para renderização segura de Markdown (necessário para o chatbot) -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script>
+        // Configura a biblioteca 'marked' para interpretar quebras de linha
+        marked.setOptions({ breaks: true });
+
+        // Função global para renderizar Markdown de forma segura, usada pelo script do chatbot
+        function renderMarkdown(input) {
+            const dirtyHTML = marked.parse(input);
+            const cleanHTML = DOMPurify.sanitize(dirtyHTML);
+            return cleanHTML;
+        }
+
+        // Configuração específica para o seu site
+        window.ChatWidgetConfig = {
+            webhook: {
+                url: 'https://pastro83.app.n8n.cloud/webhook/chatbot',
+            }
+        };
+    </script>
+
+    <!-- Script principal do Chatbot CorrectMe -->
+    <script src="https://cdn.jsdelivr.net/gh/neureka-ai/chat-widget@main/mycleverbot/bot_049.js" defer></script>
+
+    <!-- =================================================================== -->
+    <!-- FIM DO CÓDIGO DE INTEGRAÇÃO DO CHATBOT                              -->
+    <!-- =================================================================== -->
+
+    <script src="dashboard-new.js"></script>
+
+    <script>
+        // CSS para FORÇAR esconder APENAS o bubble do chatbot (não outros divs)
+        const hideBubbleCSS = document.createElement('style');
+        hideBubbleCSS.textContent = `
+            /* Esconder APENAS o botão launcher do chatbot (floating bubble) */
+            .chat-assist-widget > .chat-launcher,
+            button.chat-launcher[style*="position: fixed"],
+            body > .chat-assist-widget > button.chat-launcher {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+                z-index: -99999 !important;
+                width: 0 !important;
+                height: 0 !important;
+                overflow: hidden !important;
+            }
+
+            /* Classe adicional para elementos marcados */
+            .chatbot-bubble-hidden {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+                z-index: -99999 !important;
+                width: 0 !important;
+                height: 0 !important;
+                overflow: hidden !important;
+            }
+
+            /* GARANTIR que form-message seja sempre visível */
+            #form-message {
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+
+            /* Permitir que elementos internos mantenham seus displays originais */
+            #form-message mark {
+                display: inline !important;
+            }
+
+            #form-message .flex,
+            #form-message [class*="flex"] {
+                display: flex !important;
+            }
+
+            #form-message .inline-block,
+            #form-message span {
+                display: inline-block !important;
+            }
+
+            #form-message .hidden {
+                display: none !important;
+            }
+
+            /* Garantir que divs com classes específicas mantenham display correto */
+            #form-message div[class*="space-y"],
+            #form-message div[class*="space-x"],
+            #form-message div[class*="grid"],
+            #form-message div[class*="bg-"] {
+                display: block !important;
+            }
+        `;
+        document.head.appendChild(hideBubbleCSS);
+
+        // Função para esconder bubble AGRESSIVAMENTE
+        const hideChatbotBubble = () => {
+            const embeddedContainer = document.getElementById('chatbot-prompt-container');
+
+            // Procurar todos os divs no body
+            document.querySelectorAll('body > div').forEach(div => {
+                // Não esconder se faz parte do container integrado
+                if (embeddedContainer && embeddedContainer.contains(div)) {
+                    return;
+                }
+
+                const style = window.getComputedStyle(div);
+
+                // Detectar bubble: position fixed + bottom + button
+                if (style.position === 'fixed') {
+                    const hasButton = div.querySelector('button');
+                    const hasBottom = style.bottom !== 'auto' || div.style.bottom;
+                    const hasRight = style.right !== 'auto' || div.style.right;
+
+                    if (hasButton && (hasBottom || hasRight)) {
+                        console.log('🚫 Bubble detectado e escondido:', div);
+                        div.classList.add('chatbot-bubble-hidden');
+                        div.remove(); // REMOVER completamente do DOM
+                    }
+                }
+            });
+        };
+
+        // Executar múltiplas vezes
+        hideChatbotBubble();
+        setTimeout(hideChatbotBubble, 100);
+        setTimeout(hideChatbotBubble, 500);
+        setTimeout(hideChatbotBubble, 1000);
+        setTimeout(hideChatbotBubble, 2000);
+
+        // Monitorar DOM changes
+        const observer = new MutationObserver(() => {
+            hideChatbotBubble();
+        });
+
+        // Começar a observar quando o DOM carregar
+        if (document.body) {
+            observer.observe(document.body, {
+                childList: true,
+                subtree: false  // Apenas filhos diretos do body
+            });
+        }
+
+        window.addEventListener('load', () => {
+            hideChatbotBubble();
+            setInterval(hideChatbotBubble, 300);
+        });
+    </script>
+</body>
+</html>

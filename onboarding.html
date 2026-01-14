@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bem-vindo ao CorrectMe</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .step-indicator {
+            transition: all 0.3s ease;
+        }
+        .step-indicator.active {
+            background: #4F46E5;
+        }
+        .step-indicator.completed {
+            background: #10B981;
+        }
+        .option-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .option-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.2);
+        }
+        .option-card.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #4F46E5;
+        }
+        .progress-bar {
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-50 via-white to-purple-50 min-h-screen">
+
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+
+        <!-- Header com Logo -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Bem-vindo ao CorrectMe! 👋</h1>
+            <p class="text-gray-600">Vamos personalizar sua experiência de aprendizado</p>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-sm text-gray-600" id="step-text">Passo 1 de 7</span>
+                <span class="text-sm text-indigo-600 font-semibold" id="progress-percentage">14%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="progress-bar bg-indigo-600 h-2 rounded-full" id="progress-bar" style="width: 14%"></div>
+            </div>
+        </div>
+
+        <!-- Question Container -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-6" id="question-container">
+
+            <!-- Step 1: German Level -->
+            <div class="step-content" id="step-1">
+                <div class="flex items-center mb-6">
+                    <span class="text-4xl mr-4">📊</span>
+                    <h2 class="text-2xl font-bold text-gray-800">Qual é o seu nível de alemão?</h2>
+                </div>
+                <p class="text-gray-600 mb-6">Escolha a opção que melhor descreve seu nível atual</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="1">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">🌱</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Básico</h3>
+                                <p class="text-sm text-gray-500">A1 - Iniciante</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="2">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">📚</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Intermediário</h3>
+                                <p class="text-sm text-gray-500">A2 - B1</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="3">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">🎓</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Avançado</h3>
+                                <p class="text-sm text-gray-500">B2 - C1</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="4">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">⭐</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Fluente</h3>
+                                <p class="text-sm text-gray-500">C2 - Nativo</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Achievement Goal -->
+            <div class="step-content hidden" id="step-2">
+                <div class="flex items-center mb-6">
+                    <span class="text-4xl mr-4">🎯</span>
+                    <h2 class="text-2xl font-bold text-gray-800">O que você deseja alcançar?</h2>
+                </div>
+                <p class="text-gray-600 mb-6">Qual é seu principal objetivo com o alemão?</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="1">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">📖</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Aprender o básico</h3>
+                                <p class="text-sm text-gray-500">Primeiros passos</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="2">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">✍️</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Melhorar a escrita</h3>
+                                <p class="text-sm text-gray-500">Escrever melhor</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="3">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">💯</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Escrever sem erros</h3>
+                                <p class="text-sm text-gray-500">Perfeição gramatical</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="4">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">🤔</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Não sei dizer</h3>
+                                <p class="text-sm text-gray-500">Ainda explorando</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Career Goal -->
+            <div class="step-content hidden" id="step-3">
+                <div class="flex items-center mb-6">
+                    <span class="text-4xl mr-4">💼</span>
+                    <h2 class="text-2xl font-bold text-gray-800">Qual é seu principal motivo?</h2>
+                </div>
+                <p class="text-gray-600 mb-6">Por que você está aprendendo alemão?</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="1">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">✈️</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Viagens</h3>
+                                <p class="text-sm text-gray-500">Turismo e lazer</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="2">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">💼</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Negócios</h3>
+                                <p class="text-sm text-gray-500">Trabalho e carreira</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="3">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">🏠</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Morar fora</h3>
+                                <p class="text-sm text-gray-500">Mudança permanente</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="4">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">📜</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Certificados oficiais</h3>
+                                <p class="text-sm text-gray-500">TestDaF, Goethe, etc.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Type of Learning -->
+            <div class="step-content hidden" id="step-4">
+                <div class="flex items-center mb-6">
+                    <span class="text-4xl mr-4">🎨</span>
+                    <h2 class="text-2xl font-bold text-gray-800">Como você prefere aprender?</h2>
+                </div>
+                <p class="text-gray-600 mb-6">Qual método funciona melhor para você?</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="1">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">🎮</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Jogos e prática</h3>
+                                <p class="text-sm text-gray-500">Aprender brincando</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="2">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">📝</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Exercícios escritos</h3>
+                                <p class="text-sm text-gray-500">Prática de escrita</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="3">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">🗣️</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Conversação</h3>
+                                <p class="text-sm text-gray-500">Falar e ouvir</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="4">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">📚</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Estudo tradicional</h3>
+                                <p class="text-sm text-gray-500">Livros e teoria</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5: Age Range -->
+            <div class="step-content hidden" id="step-5">
+                <div class="flex items-center mb-6">
+                    <span class="text-4xl mr-4">🎂</span>
+                    <h2 class="text-2xl font-bold text-gray-800">Qual é a sua faixa etária?</h2>
+                </div>
+                <p class="text-gray-600 mb-6">Isso nos ajuda a personalizar o conteúdo</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="1">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">🧒</span>
+                            <div>
+                                <h3 class="font-bold text-lg">18-24 anos</h3>
+                                <p class="text-sm text-gray-500">Jovem adulto</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="2">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">👨</span>
+                            <div>
+                                <h3 class="font-bold text-lg">25-34 anos</h3>
+                                <p class="text-sm text-gray-500">Adulto jovem</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="3">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">👔</span>
+                            <div>
+                                <h3 class="font-bold text-lg">35-44 anos</h3>
+                                <p class="text-sm text-gray-500">Adulto</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="4">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">👴</span>
+                            <div>
+                                <h3 class="font-bold text-lg">45+ anos</h3>
+                                <p class="text-sm text-gray-500">Adulto experiente</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 6: Time to Study -->
+            <div class="step-content hidden" id="step-6">
+                <div class="flex items-center mb-6">
+                    <span class="text-4xl mr-4">⏰</span>
+                    <h2 class="text-2xl font-bold text-gray-800">Quanto tempo você pode estudar?</h2>
+                </div>
+                <p class="text-gray-600 mb-6">Por dia, quanto tempo você consegue dedicar?</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="1">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">⏱️</span>
+                            <div>
+                                <h3 class="font-bold text-lg">10-15 minutos</h3>
+                                <p class="text-sm text-gray-500">Rápido e eficiente</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="2">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">⏲️</span>
+                            <div>
+                                <h3 class="font-bold text-lg">30 minutos</h3>
+                                <p class="text-sm text-gray-500">Dedicação moderada</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="3">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">⏳</span>
+                            <div>
+                                <h3 class="font-bold text-lg">1 hora</h3>
+                                <p class="text-sm text-gray-500">Estudo focado</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="4">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">📅</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Mais de 1 hora</h3>
+                                <p class="text-sm text-gray-500">Dedicação intensa</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 7: Profession -->
+            <div class="step-content hidden" id="step-7">
+                <div class="flex items-center mb-6">
+                    <span class="text-4xl mr-4">👨‍💼</span>
+                    <h2 class="text-2xl font-bold text-gray-800">Qual é sua área profissional?</h2>
+                </div>
+                <p class="text-gray-600 mb-6">Vamos adaptar o vocabulário para sua área</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="1">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">🎓</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Estudante</h3>
+                                <p class="text-sm text-gray-500">Ainda estudando</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="2">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">💻</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Tecnologia</h3>
+                                <p class="text-sm text-gray-500">TI, desenvolvimento, etc.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="3">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">🏥</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Saúde</h3>
+                                <p class="text-sm text-gray-500">Medicina, enfermagem, etc.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="option-card border-2 border-gray-200 rounded-xl p-6" data-value="4">
+                        <div class="flex items-center">
+                            <span class="text-3xl mr-4">🏢</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Outros</h3>
+                                <p class="text-sm text-gray-500">Outras áreas</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="flex justify-between items-center">
+            <button id="back-btn" class="px-6 py-3 text-indigo-600 font-semibold rounded-lg hover:bg-indigo-50 transition hidden">
+                ← Voltar
+            </button>
+            <div class="flex-1"></div>
+            <button id="next-btn" class="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition opacity-50 cursor-not-allowed" disabled>
+                Próximo →
+            </button>
+            <button id="finish-btn" class="hidden px-8 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition opacity-50 cursor-not-allowed" disabled>
+                Finalizar ✓
+            </button>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-2xl p-8 text-center">
+                <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+                <p class="text-gray-700 font-semibold">Salvando suas preferências...</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://timqizyevfkvqgzvcrlx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbXFpenlldmZrdnFnenZjcmx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMTkwMDYsImV4cCI6MjA2MTU5NTAwNn0.LfWFCPPgzTkh7Scf2Q2LjLmYcLnaWSAGKDiMT8eSuWM';
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // State Management
+        let currentStep = 1;
+        const totalSteps = 7;
+        const answers = {
+            germanlevel: 0,
+            achievement: 0,
+            carreer: 0,
+            typelearning: 0,
+            age: 0,
+            timestudy: 0,
+            profession: 0
+        };
+
+        const stepMapping = {
+            1: 'germanlevel',
+            2: 'achievement',
+            3: 'carreer',
+            4: 'typelearning',
+            5: 'age',
+            6: 'timestudy',
+            7: 'profession'
+        };
+
+        // Elements
+        const backBtn = document.getElementById('back-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const finishBtn = document.getElementById('finish-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const stepText = document.getElementById('step-text');
+        const progressPercentage = document.getElementById('progress-percentage');
+        const loadingOverlay = document.getElementById('loading-overlay');
+
+        // Check Authentication
+        async function checkAuth() {
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (!session) {
+                window.location.href = 'login.html';
+                return null;
+            }
+            return session.user;
+        }
+
+        // Check if user already completed onboarding
+        async function checkExistingOnboarding(userId) {
+            console.log('🔍 Verificando se usuário já completou onboarding...');
+
+            const { data: leadData, error } = await _supabase
+                .from('leads')
+                .select('id')
+                .eq('id', userId)
+                .single();
+
+            console.log('Lead Data:', leadData);
+            console.log('Lead Error:', error);
+
+            if (leadData) {
+                console.log('✅ Usuário já completou onboarding, redirecionando para dashboard...');
+                window.location.href = 'dashboard.html';
+                return true;
+            }
+
+            console.log('⚠️ Usuário ainda não completou onboarding');
+            return false;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await checkAuth();
+            if (!user) return;
+
+            // Verificar se já completou onboarding
+            const alreadyCompleted = await checkExistingOnboarding(user.id);
+            if (alreadyCompleted) return;
+
+            setupEventListeners();
+        });
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+            // Option cards click
+            document.querySelectorAll('.option-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const stepId = `step-${currentStep}`;
+                    const stepContent = document.getElementById(stepId);
+
+                    // Remove previous selection
+                    stepContent.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
+
+                    // Add selection to clicked card
+                    this.classList.add('selected');
+
+                    // Save answer
+                    const fieldName = stepMapping[currentStep];
+                    answers[fieldName] = parseInt(this.dataset.value);
+
+                    // Enable next button
+                    enableNextButton();
+                });
+            });
+
+            // Navigation buttons
+            backBtn.addEventListener('click', goToPreviousStep);
+            nextBtn.addEventListener('click', goToNextStep);
+            finishBtn.addEventListener('click', finishOnboarding);
+        }
+
+        function enableNextButton() {
+            if (currentStep === totalSteps) {
+                finishBtn.disabled = false;
+                finishBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                finishBtn.classList.add('hover:shadow-lg');
+            } else {
+                nextBtn.disabled = false;
+                nextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                nextBtn.classList.add('hover:shadow-lg');
+            }
+        }
+
+        function goToPreviousStep() {
+            if (currentStep > 1) {
+                document.getElementById(`step-${currentStep}`).classList.add('hidden');
+                currentStep--;
+                document.getElementById(`step-${currentStep}`).classList.remove('hidden');
+                updateProgress();
+                updateButtons();
+            }
+        }
+
+        function goToNextStep() {
+            if (currentStep < totalSteps) {
+                document.getElementById(`step-${currentStep}`).classList.add('hidden');
+                currentStep++;
+                document.getElementById(`step-${currentStep}`).classList.remove('hidden');
+                updateProgress();
+                updateButtons();
+
+                // Check if current step already has an answer
+                const fieldName = stepMapping[currentStep];
+                if (answers[fieldName] > 0) {
+                    enableNextButton();
+                } else {
+                    disableNextButton();
+                }
+            }
+        }
+
+        function disableNextButton() {
+            nextBtn.disabled = true;
+            nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            nextBtn.classList.remove('hover:shadow-lg');
+        }
+
+        function updateProgress() {
+            const percentage = Math.round((currentStep / totalSteps) * 100);
+            progressBar.style.width = `${percentage}%`;
+            stepText.textContent = `Passo ${currentStep} de ${totalSteps}`;
+            progressPercentage.textContent = `${percentage}%`;
+        }
+
+        function updateButtons() {
+            // Back button
+            if (currentStep > 1) {
+                backBtn.classList.remove('hidden');
+            } else {
+                backBtn.classList.add('hidden');
+            }
+
+            // Next vs Finish button
+            if (currentStep === totalSteps) {
+                nextBtn.classList.add('hidden');
+                finishBtn.classList.remove('hidden');
+            } else {
+                nextBtn.classList.remove('hidden');
+                finishBtn.classList.add('hidden');
+            }
+        }
+
+        async function finishOnboarding() {
+            loadingOverlay.classList.remove('hidden');
+
+            try {
+                const { data: { session } } = await _supabase.auth.getSession();
+                const userId = session.user.id;
+
+                // Insert lead data
+                const { data, error } = await _supabase
+                    .from('leads')
+                    .insert([
+                        {
+                            id: userId,
+                            germanlevel: answers.germanlevel,
+                            achievement: answers.achievement,
+                            carreer: answers.carreer,
+                            typelearning: answers.typelearning,
+                            age: answers.age,
+                            timestudy: answers.timestudy,
+                            profession: answers.profession,
+                            updated_at: new Date().toISOString()
+                        }
+                    ]);
+
+                if (error) {
+                    console.error('❌ Error saving lead data:', error);
+                    console.error('Error details:', JSON.stringify(error, null, 2));
+                    console.error('Attempted to save:', {
+                        id: userId,
+                        germanlevel: answers.germanlevel,
+                        achievement: answers.achievement,
+                        carreer: answers.carreer,
+                        typelearning: answers.typelearning,
+                        age: answers.age,
+                        timestudy: answers.timestudy,
+                        profession: answers.profession
+                    });
+
+                    let errorMessage = 'Erro ao salvar dados: ';
+                    if (error.message.includes('permission') || error.message.includes('policy')) {
+                        errorMessage += 'Problema de permissão no banco de dados. Verifique as políticas RLS no Supabase.';
+                    } else if (error.message.includes('duplicate') || error.code === '23505') {
+                        errorMessage += 'Você já completou o onboarding. Redirecionando para o dashboard...';
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 2000);
+                        return;
+                    } else {
+                        errorMessage += error.message;
+                    }
+
+                    alert(errorMessage);
+                    loadingOverlay.classList.add('hidden');
+                    return;
+                }
+
+                // Success! Redirect to dashboard
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Erro ao salvar dados. Por favor, tente novamente.');
+                loadingOverlay.classList.add('hidden');
+            }
+        }
+    </script>
+
+</body>
+</html>
