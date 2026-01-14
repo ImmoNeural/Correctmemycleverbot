@@ -79,7 +79,7 @@ loginForm.addEventListener('submit', async (e) => {
         loginError.textContent = `Erro: ${error.message}`;
     } else if (data.user) {
         // CORREÇÃO: Garante que o redirecionamento é para dashboard.html
-        window.location.href = 'dashboard.html';
+        window.location.href = 'dashboard-new.html';
     }
 });
 
@@ -88,7 +88,7 @@ async function checkUserSession() {
     const { data: { session } } = await _supabase.auth.getSession();
     if (session) {
         // CORREÇÃO: Garante que o redirecionamento é para dashboard.html
-        window.location.href = 'dashboard.html';
+        window.location.href = 'dashboard-new.html';
     }
 }
 

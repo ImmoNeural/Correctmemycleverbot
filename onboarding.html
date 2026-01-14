@@ -504,7 +504,7 @@
 
             if (leadData) {
                 console.log('✅ Usuário já completou onboarding, redirecionando para dashboard...');
-                window.location.href = 'dashboard.html';
+                window.location.href = 'dashboard-new.html';
                 return true;
             }
 
@@ -668,7 +668,7 @@
                     } else if (error.message.includes('duplicate') || error.code === '23505') {
                         errorMessage += 'Você já completou o onboarding. Redirecionando para o dashboard...';
                         setTimeout(() => {
-                            window.location.href = 'dashboard.html';
+                            window.location.href = 'dashboard-new.html';
                         }, 2000);
                         return;
                     } else {
@@ -682,7 +682,7 @@
 
                 // Success! Redirect to dashboard
                 setTimeout(() => {
-                    window.location.href = 'dashboard.html';
+                    window.location.href = 'dashboard-new.html';
                 }, 1000);
 
             } catch (error) {

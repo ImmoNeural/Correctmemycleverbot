@@ -207,7 +207,7 @@
                 messageDiv.textContent = 'E-mail ou senha inválidos.';
                 messageDiv.className = 'text-center text-red-400 mt-4';
             } else {
-                window.location.href = 'dashboard.html';
+                window.location.href = 'dashboard-new.html';
             }
         });
 
@@ -285,7 +285,7 @@
             // 4. A condição de redirecionamento agora SÓ é acionada se NÃO for uma recuperação de senha.
             if (session?.user && !isPasswordRecovery) {
                  // Verifica se a URL atual não é a do dashboard para evitar loops
-                if (!window.location.pathname.endsWith('dashboard.html') && !window.location.pathname.endsWith('onboarding.html')) {
+                if (!window.location.pathname.endsWith('dashboard-new.html') && !window.location.pathname.endsWith('onboarding.html')) {
                     console.log('🔍 Verificando onboarding para usuário:', session.user.email);
 
                     // Verificar se usuário já completou onboarding
@@ -304,7 +304,7 @@
                         window.location.href = 'onboarding.html';
                     } else {
                         console.log('✅ Usuário JÁ está na tabela leads - redirecionando para dashboard');
-                        window.location.href = 'dashboard.html';
+                        window.location.href = 'dashboard-new.html';
                     }
                 }
             }
@@ -315,7 +315,7 @@
             const { error } = await _supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: window.location.origin + '/dashboard.html'
+                    redirectTo: window.location.origin + '/dashboard-new.html'
                 }
             });
             if (error) {
