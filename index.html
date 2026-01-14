@@ -674,115 +674,128 @@
                             </div>
                         </div>
 
-                        <div class="faq-item rounded-xl overflow-hidden">
-                            <button class="faq-question w-full p-6 text-left flex justify-between items-center">
-                                <span class="font-semibold">Como funciona o sistema de flashcards?</span>
-                                <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
-                                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
-                                    </svg>
-                                </div>
+                        <!-- Botão para ver mais perguntas -->
+                        <div class="text-center py-6">
+                            <button id="show-more-faq" class="group inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 hover:border-purple-500/60 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20">
+                                <span class="text-purple-300 font-semibold group-hover:text-white transition-colors">Ver mais perguntas</span>
+                                <svg id="faq-arrow" class="w-5 h-5 text-purple-400 group-hover:text-white transition-all duration-300 transform group-hover:translate-y-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
                             </button>
-                            <div class="faq-answer">
-                                <p class="px-6 pb-6 text-gray-400">Os flashcards permitem praticar vocabulário de forma interativa. Você pode filtrar por nível de dificuldade (vermelho, amarelo, verde) e o sistema acompanha seu progresso, priorizando palavras que você ainda não domina.</p>
-                            </div>
                         </div>
 
-                        <div class="faq-item rounded-xl overflow-hidden">
-                            <button class="faq-question w-full p-6 text-left flex justify-between items-center">
-                                <span class="font-semibold">Posso importar minhas próprias listas de vocabulário?</span>
-                                <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
-                                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
-                                    </svg>
+                        <!-- Perguntas adicionais (escondidas inicialmente) -->
+                        <div id="more-faq" class="space-y-4 hidden">
+                            <div class="faq-item rounded-xl overflow-hidden">
+                                <button class="faq-question w-full p-6 text-left flex justify-between items-center">
+                                    <span class="font-semibold">Como funciona o sistema de flashcards?</span>
+                                    <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
+                                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
+                                        </svg>
+                                    </div>
+                                </button>
+                                <div class="faq-answer">
+                                    <p class="px-6 pb-6 text-gray-400">Os flashcards permitem praticar vocabulário de forma interativa. Você pode filtrar por nível de dificuldade (vermelho, amarelo, verde) e o sistema acompanha seu progresso, priorizando palavras que você ainda não domina.</p>
                                 </div>
-                            </button>
-                            <div class="faq-answer">
-                                <p class="px-6 pb-6 text-gray-400">Sim! Você pode importar listas de vocabulário via arquivo CSV. Basta incluir as colunas com a palavra em alemão e sua tradução. Também é possível criar listas manualmente dentro da plataforma.</p>
                             </div>
-                        </div>
 
-                        <div class="faq-item rounded-xl overflow-hidden">
-                            <button class="faq-question w-full p-6 text-left flex justify-between items-center">
-                                <span class="font-semibold">A IA corrige apenas gramática ou também estilo?</span>
-                                <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
-                                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
-                                    </svg>
+                            <div class="faq-item rounded-xl overflow-hidden">
+                                <button class="faq-question w-full p-6 text-left flex justify-between items-center">
+                                    <span class="font-semibold">Posso importar minhas próprias listas de vocabulário?</span>
+                                    <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
+                                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
+                                        </svg>
+                                    </div>
+                                </button>
+                                <div class="faq-answer">
+                                    <p class="px-6 pb-6 text-gray-400">Sim! Você pode importar listas de vocabulário via arquivo CSV. Basta incluir as colunas com a palavra em alemão e sua tradução. Também é possível criar listas manualmente dentro da plataforma.</p>
                                 </div>
-                            </button>
-                            <div class="faq-answer">
-                                <p class="px-6 pb-6 text-gray-400">A IA corrige erros gramaticais e também oferece sugestões de vocabulário mais adequado ao contexto. Ela identifica palavras que podem ser substituídas por opções mais naturais ou precisas em alemão.</p>
                             </div>
-                        </div>
 
-                        <div class="faq-item rounded-xl overflow-hidden">
-                            <button class="faq-question w-full p-6 text-left flex justify-between items-center">
-                                <span class="font-semibold">Preciso de conhecimento prévio de alemão?</span>
-                                <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
-                                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
-                                    </svg>
+                            <div class="faq-item rounded-xl overflow-hidden">
+                                <button class="faq-question w-full p-6 text-left flex justify-between items-center">
+                                    <span class="font-semibold">A IA corrige apenas gramática ou também estilo?</span>
+                                    <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
+                                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
+                                        </svg>
+                                    </div>
+                                </button>
+                                <div class="faq-answer">
+                                    <p class="px-6 pb-6 text-gray-400">A IA corrige erros gramaticais e também oferece sugestões de vocabulário mais adequado ao contexto. Ela identifica palavras que podem ser substituídas por opções mais naturais ou precisas em alemão.</p>
                                 </div>
-                            </button>
-                            <div class="faq-answer">
-                                <p class="px-6 pb-6 text-gray-400">A plataforma é ideal para quem já tem conhecimento básico de alemão e quer praticar a escrita. Se você está começando do zero, recomendamos primeiro fazer um curso introdutório antes de usar nossa ferramenta de correção.</p>
                             </div>
-                        </div>
 
-                        <div class="faq-item rounded-xl overflow-hidden">
-                            <button class="faq-question w-full p-6 text-left flex justify-between items-center">
-                                <span class="font-semibold">Quanto tempo leva para receber a correção?</span>
-                                <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
-                                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
-                                    </svg>
+                            <div class="faq-item rounded-xl overflow-hidden">
+                                <button class="faq-question w-full p-6 text-left flex justify-between items-center">
+                                    <span class="font-semibold">Preciso de conhecimento prévio de alemão?</span>
+                                    <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
+                                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
+                                        </svg>
+                                    </div>
+                                </button>
+                                <div class="faq-answer">
+                                    <p class="px-6 pb-6 text-gray-400">A plataforma é ideal para quem já tem conhecimento básico de alemão e quer praticar a escrita. Se você está começando do zero, recomendamos primeiro fazer um curso introdutório antes de usar nossa ferramenta de correção.</p>
                                 </div>
-                            </button>
-                            <div class="faq-answer">
-                                <p class="px-6 pb-6 text-gray-400">A correção é praticamente instantânea! Nossa IA processa seu texto em segundos e retorna o feedback completo com todos os erros identificados e explicações detalhadas.</p>
                             </div>
-                        </div>
 
-                        <div class="faq-item rounded-xl overflow-hidden">
-                            <button class="faq-question w-full p-6 text-left flex justify-between items-center">
-                                <span class="font-semibold">Como posso acompanhar meu progresso?</span>
-                                <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
-                                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
-                                    </svg>
+                            <div class="faq-item rounded-xl overflow-hidden">
+                                <button class="faq-question w-full p-6 text-left flex justify-between items-center">
+                                    <span class="font-semibold">Quanto tempo leva para receber a correção?</span>
+                                    <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
+                                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
+                                        </svg>
+                                    </div>
+                                </button>
+                                <div class="faq-answer">
+                                    <p class="px-6 pb-6 text-gray-400">A correção é praticamente instantânea! Nossa IA processa seu texto em segundos e retorna o feedback completo com todos os erros identificados e explicações detalhadas.</p>
                                 </div>
-                            </button>
-                            <div class="faq-answer">
-                                <p class="px-6 pb-6 text-gray-400">O dashboard exibe gráficos detalhados com a distribuição dos seus erros por categoria, histórico de redações e evolução ao longo do tempo. Assim você identifica seus pontos fracos e acompanha sua melhora.</p>
                             </div>
-                        </div>
 
-                        <div class="faq-item rounded-xl overflow-hidden">
-                            <button class="faq-question w-full p-6 text-left flex justify-between items-center">
-                                <span class="font-semibold">Como funciona o chatbot de conversação?</span>
-                                <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
-                                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
-                                    </svg>
+                            <div class="faq-item rounded-xl overflow-hidden">
+                                <button class="faq-question w-full p-6 text-left flex justify-between items-center">
+                                    <span class="font-semibold">Como posso acompanhar meu progresso?</span>
+                                    <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
+                                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
+                                        </svg>
+                                    </div>
+                                </button>
+                                <div class="faq-answer">
+                                    <p class="px-6 pb-6 text-gray-400">O dashboard exibe gráficos detalhados com a distribuição dos seus erros por categoria, histórico de redações e evolução ao longo do tempo. Assim você identifica seus pontos fracos e acompanha sua melhora.</p>
                                 </div>
-                            </button>
-                            <div class="faq-answer">
-                                <p class="px-6 pb-6 text-gray-400">O chatbot permite praticar conversação em alemão sobre mais de 50 temas diferentes. Você pode tirar dúvidas de gramática, pedir explicações sobre regras específicas ou simplesmente conversar para praticar o idioma.</p>
                             </div>
-                        </div>
 
-                        <div class="faq-item rounded-xl overflow-hidden">
-                            <button class="faq-question w-full p-6 text-left flex justify-between items-center">
-                                <span class="font-semibold">Posso cancelar minha assinatura a qualquer momento?</span>
-                                <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
-                                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
-                                    </svg>
+                            <div class="faq-item rounded-xl overflow-hidden">
+                                <button class="faq-question w-full p-6 text-left flex justify-between items-center">
+                                    <span class="font-semibold">Como funciona o chatbot de conversação?</span>
+                                    <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
+                                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
+                                        </svg>
+                                    </div>
+                                </button>
+                                <div class="faq-answer">
+                                    <p class="px-6 pb-6 text-gray-400">O chatbot permite praticar conversação em alemão sobre mais de 50 temas diferentes. Você pode tirar dúvidas de gramática, pedir explicações sobre regras específicas ou simplesmente conversar para praticar o idioma.</p>
                                 </div>
-                            </button>
-                            <div class="faq-answer">
-                                <p class="px-6 pb-6 text-gray-400">Sim! Você pode cancelar sua assinatura a qualquer momento diretamente na plataforma. Não há fidelidade ou multa por cancelamento. Seus créditos restantes ficam disponíveis até o fim do período pago.</p>
+                            </div>
+
+                            <div class="faq-item rounded-xl overflow-hidden">
+                                <button class="faq-question w-full p-6 text-left flex justify-between items-center">
+                                    <span class="font-semibold">Posso cancelar minha assinatura a qualquer momento?</span>
+                                    <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
+                                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
+                                        </svg>
+                                    </div>
+                                </button>
+                                <div class="faq-answer">
+                                    <p class="px-6 pb-6 text-gray-400">Sim! Você pode cancelar sua assinatura a qualquer momento diretamente na plataforma. Não há fidelidade ou multa por cancelamento. Seus créditos restantes ficam disponíveis até o fim do período pago.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -860,6 +873,38 @@
                 }
             });
         });
+
+        // Show more FAQ toggle
+        const showMoreBtn = document.getElementById('show-more-faq');
+        const moreFaq = document.getElementById('more-faq');
+        const faqArrow = document.getElementById('faq-arrow');
+
+        if (showMoreBtn && moreFaq) {
+            showMoreBtn.addEventListener('click', () => {
+                const isHidden = moreFaq.classList.contains('hidden');
+
+                if (isHidden) {
+                    moreFaq.classList.remove('hidden');
+                    moreFaq.style.opacity = '0';
+                    moreFaq.style.transform = 'translateY(-10px)';
+                    setTimeout(() => {
+                        moreFaq.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                        moreFaq.style.opacity = '1';
+                        moreFaq.style.transform = 'translateY(0)';
+                    }, 10);
+                    showMoreBtn.querySelector('span').textContent = 'Ver menos perguntas';
+                    faqArrow.style.transform = 'rotate(180deg)';
+                } else {
+                    moreFaq.style.opacity = '0';
+                    moreFaq.style.transform = 'translateY(-10px)';
+                    setTimeout(() => {
+                        moreFaq.classList.add('hidden');
+                    }, 400);
+                    showMoreBtn.querySelector('span').textContent = 'Ver mais perguntas';
+                    faqArrow.style.transform = 'rotate(0deg)';
+                }
+            });
+        }
     </script>
 
 </body>
