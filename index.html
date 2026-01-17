@@ -33,6 +33,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
+    <!-- Preload critical images -->
+    <link rel="preload" href="images/Jogos.png" as="image">
+
     <!-- Structured Data -->
     <script type="application/ld+json">
     {
@@ -534,8 +537,12 @@
                         <div class="screenshot-container glow-blue">
                             <img src="images/Jogos.png"
                                  alt="Jogo de Flashcards"
+                                 width="1064"
+                                 height="898"
                                  class="w-full h-auto"
-                                 loading="lazy"
+                                 loading="eager"
+                                 decoding="async"
+                                 fetchpriority="high"
                                  onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'bg-dark-700 rounded-lg p-12 text-center\'><p class=\'text-gray-400\'>Screenshot: Flashcards</p></div>';">
                         </div>
                     </div>
