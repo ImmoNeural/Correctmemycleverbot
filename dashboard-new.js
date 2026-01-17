@@ -1279,8 +1279,9 @@ async function handleCorrectionSubmit(e) {
     };
 
     async function loadFlashcardsData() {
-        // Esta função será implementada depois
         console.log('Carregando flashcards...');
+        // Mostrar a tela de escolha do tipo de jogo
+        showScreen('flashcard-type-choice');
     }
 
     // =================================================================
