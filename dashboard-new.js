@@ -1825,14 +1825,36 @@ async function handleCorrectionSubmit(e) {
             const bottomLinks = bottomNav.querySelectorAll('.sidebar-link');
             bottomLinks.forEach(link => {
                 link.addEventListener('click', (e) => {
-                    const section = link.getAttribute('data-section');
-                    if (section) {
+                    const sectionName = link.getAttribute('data-section');
+                    if (sectionName) {
                         e.preventDefault();
-                        showScreen(section);
 
-                        // Atualizar classe active
-                        bottomLinks.forEach(l => l.classList.remove('active'));
+                        // Usar a mesma lógica da sidebar para mostrar seções
+                        // Remover classe active de todos os links (sidebar e bottom)
+                        document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
                         link.classList.add('active');
+
+                        // Esconder todas as seções
+                        document.querySelectorAll('.content-section').forEach(section => {
+                            section.classList.add('hidden');
+                        });
+
+                        // Mostrar a seção selecionada
+                        const targetSection = document.getElementById(`section-${sectionName}`);
+                        if (targetSection) {
+                            targetSection.classList.remove('hidden');
+
+                            // Carregar dados específicos de cada seção
+                            if (sectionName === 'wordlist') {
+                                loadWordlistData();
+                            } else if (sectionName === 'artigos') {
+                                loadArtigosData();
+                            } else if (sectionName === 'flashcards') {
+                                loadFlashcardsData();
+                            } else if (sectionName === 'chatbot') {
+                                initializeChatbot();
+                            }
+                        }
                     }
                 });
             });
