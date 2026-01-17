@@ -163,6 +163,11 @@
                 box-shadow: 0 0 30px rgba(168, 85, 247, 0.2);
             }
         }
+        @media (max-width: 768px) {
+            body {
+                padding-bottom: 80px;
+            }
+        }
         .screenshot-container::before {
             content: '';
             position: absolute;
@@ -862,6 +867,36 @@
                 </div>
             </div>
         </footer>
+
+        <!-- Mobile Bottom Navigation -->
+        <nav class="fixed bottom-0 left-0 right-0 bg-dark-900/95 backdrop-blur-lg border-t border-purple-500/20 md:hidden z-50">
+            <div class="flex justify-around items-center py-3 px-2">
+                <a href="#features" class="mobile-nav-item flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all hover:bg-purple-500/10">
+                    <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    <span class="text-xs text-gray-400">Recursos</span>
+                </a>
+                <a href="#how-it-works" class="mobile-nav-item flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all hover:bg-purple-500/10">
+                    <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    </svg>
+                    <span class="text-xs text-gray-400">Como</span>
+                </a>
+                <a href="#faq" class="mobile-nav-item flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all hover:bg-purple-500/10">
+                    <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="text-xs text-gray-400">FAQ</span>
+                </a>
+                <a href="login.html" class="mobile-nav-item flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all hover:bg-purple-500/10">
+                    <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                    </svg>
+                    <span class="text-xs text-pink-400 font-semibold">Entrar</span>
+                </a>
+            </div>
+        </nav>
     </div>
 
     <script>
