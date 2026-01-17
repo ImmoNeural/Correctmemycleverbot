@@ -146,6 +146,22 @@
             border-radius: 1rem;
             overflow: hidden;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 100%;
+        }
+        .screenshot-container img {
+            display: block;
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+        }
+        @media (max-width: 640px) {
+            .screenshot-container {
+                border-radius: 0.75rem;
+            }
+            .glow-pink, .glow-purple, .glow-blue {
+                box-shadow: 0 0 30px rgba(168, 85, 247, 0.2);
+            }
         }
         .screenshot-container::before {
             content: '';
@@ -483,7 +499,7 @@
                 </div>
 
                 <!-- Feature 4: Flashcards -->
-                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
                     <div class="order-2">
                         <div class="flex items-center gap-3 mb-4">
                             <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
@@ -493,23 +509,23 @@
                             </div>
                             <span class="text-blue-400 font-semibold">Jogo de Flashcards</span>
                         </div>
-                        <h3 class="text-3xl md:text-4xl font-bold mb-4">
+                        <h3 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
                             Pratique de forma interativa
                         </h3>
-                        <p class="text-gray-400 text-lg mb-6">
+                        <p class="text-gray-400 text-base sm:text-lg mb-6">
                             Teste seu conhecimento com flashcards interativos. Filtre por nível de dificuldade e pratique vocabulário, artigos e conjugações de forma divertida.
                         </p>
                         <ul class="space-y-3 text-gray-300">
                             <li class="flex items-center gap-3">
-                                <span class="color-dot bg-red-500"></span>
+                                <span class="color-dot bg-red-500 flex-shrink-0"></span>
                                 <span>Vermelho - Palavras difíceis</span>
                             </li>
                             <li class="flex items-center gap-3">
-                                <span class="color-dot bg-yellow-500"></span>
+                                <span class="color-dot bg-yellow-500 flex-shrink-0"></span>
                                 <span>Amarelo - Nível médio</span>
                             </li>
                             <li class="flex items-center gap-3">
-                                <span class="color-dot bg-green-500"></span>
+                                <span class="color-dot bg-green-500 flex-shrink-0"></span>
                                 <span>Verde - Palavras fáceis</span>
                             </li>
                         </ul>
@@ -518,9 +534,9 @@
                         <div class="screenshot-container glow-blue">
                             <img src="images/Jogos.png"
                                  alt="Jogo de Flashcards"
-                                 class="w-full h-auto"
+                                 class="w-full h-auto max-w-full"
                                  loading="lazy"
-                                 onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'bg-dark-700 rounded-lg p-12 text-center\'><p class=\'text-gray-400\'>Screenshot: Flashcards</p></div>';">
+                                 onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'bg-dark-700 rounded-lg p-8 sm:p-12 text-center\'><p class=\'text-gray-400\'>Screenshot: Flashcards</p></div>';">
                         </div>
                     </div>
                 </div>
