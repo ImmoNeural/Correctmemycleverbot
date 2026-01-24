@@ -54,6 +54,80 @@
           "url": "https://correctme.com.br/",
           "name": "CorrectMe",
           "publisher": { "@id": "https://correctme.com.br/#organization" }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://correctme.com.br/#software",
+          "name": "CorrectMe - Correção de Redações em Alemão",
+          "description": "Ferramenta de correção de redações em alemão com inteligência artificial. Oferece feedback pedagógico detalhado, categorização de erros (declinação, conjugação, sintaxe, preposições, vocabulário), flashcards integrados e estatísticas de progresso para níveis A1 a C2.",
+          "url": "https://correctme.com.br/",
+          "applicationCategory": "EducationalApplication",
+          "operatingSystem": "Web Browser",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "BRL",
+            "description": "Créditos gratuitos para começar"
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.8",
+            "ratingCount": "150",
+            "bestRating": "5",
+            "worstRating": "1"
+          },
+          "featureList": [
+            "Correção gramatical de textos em alemão",
+            "Feedback pedagógico detalhado",
+            "Categorização de erros em 5 tipos",
+            "Suporte para níveis A1, A2, B1, B2, C1, C2",
+            "Flashcards integrados para prática",
+            "Listas de vocabulário personalizadas",
+            "Estatísticas de progresso",
+            "Chatbot para tirar dúvidas de gramática"
+          ],
+          "screenshot": "https://correctme.com.br/images/Foto%20Dashboard.png",
+          "softwareHelp": "https://correctme.com.br/#faq",
+          "author": { "@id": "https://correctme.com.br/#organization" }
+        },
+        {
+          "@type": "Service",
+          "@id": "https://correctme.com.br/#service",
+          "name": "Correção de Redações em Alemão com IA",
+          "description": "Serviço de correção automática de textos em alemão usando inteligência artificial. Alternativa especializada ao LanguageTool e Scribbr para quem estuda alemão.",
+          "provider": { "@id": "https://correctme.com.br/#organization" },
+          "serviceType": "Correção de Textos",
+          "areaServed": {
+            "@type": "Country",
+            "name": "Brasil"
+          },
+          "hasOfferCatalog": {
+            "@type": "OfferCatalog",
+            "name": "Pacotes de Créditos",
+            "itemListElement": [
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "500 Créditos"
+                }
+              },
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "1000 Créditos"
+                }
+              },
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "1500 Créditos"
+                }
+              }
+            ]
+          }
         }
       ]
     }
