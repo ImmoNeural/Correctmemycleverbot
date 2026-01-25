@@ -755,23 +755,14 @@
         }
 
         try {
-            // NÃO enviar se userId for null - esperar autenticação
+            // Tentar obter dados do parent se ainda não tiver
             if (!currentUserId || !currentUserEmail) {
-                console.error('❌ Usuário não autenticado ainda. Não é possível enviar mensagem.');
-                addBotMessage("Por favor, aguarde enquanto carregamos seus dados de autenticação...");
-
-                // Tentar obter dados do parent novamente
                 tryGetUserFromParent();
+            }
 
-                // Tentar novamente após 1 segundo
-                setTimeout(() => {
-                    if (currentUserId && currentUserEmail) {
-                        console.log('✅ Autenticação recuperada, tentando enviar novamente');
-                        sendToN8n(payload);
-                    }
-                }, 1000);
-
-                return null;
+            // Se ainda não tiver userId, permitir envio mesmo assim para teste
+            if (!currentUserId || !currentUserEmail) {
+                console.warn('⚠️ Usuário não autenticado - tentando enviar mesmo assim...');
             }
 
             const webhookPayload = {
@@ -798,16 +789,31 @@
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-                throw new Error(`HTTP error! status: ${response.status}`);
+                // Tentar parsear como JSON para ver se tem mensagem de erro
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    if (errorJson.output) {
+                        addBotMessage(errorJson.output);
+                        return null;
+                    }
+                    if (errorJson.error) {
+                        addBotMessage(`Erro: ${errorJson.error}`);
+                        return null;
+                    }
+                } catch (e) {
+                    // Não é JSON, usar texto puro
+                }
+                addBotMessage(`Erro do servidor (${response.status}): ${errorText.substring(0, 200)}`);
+                return null;
             }
 
             const responseData = await response.json();
-            console.log('✅ Resposta do n8n:', responseData);
+            console.log('✅ Resposta do webhook:', responseData);
 
             return responseData;
         } catch (error) {
             console.error('Webhook Error:', error);
-            addBotMessage("Desculpe, ocorreu um erro de comunicação. Tente novamente.");
+            addBotMessage(`Erro de comunicação: ${error.message}`);
             return null;
         }
     };

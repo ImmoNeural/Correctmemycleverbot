@@ -508,11 +508,18 @@ async function handleCorrectionSubmit(e) {
         let trataerroData = null;
         if (trataRes && trataRes.ok) {
             const raw = await trataRes.text();
+            console.log('trataerro raw response:', raw);
             try { trataerroData = JSON.parse(raw); }
             catch {
                 console.warn('trataerro: retorno não-JSON:', raw);
-                // tenta deixar em objeto se for "json-like"? não inferimos aqui.
             }
+        } else if (trataRes) {
+            const errorText = await trataRes.text();
+            console.error('trataerro error:', trataRes.status, errorText);
+            if (formMessageEl) {
+                formMessageEl.innerHTML = `<div class="text-red-400"><p>Erro ao processar correção: ${trataRes.status}</p><p class="text-sm">${errorText}</p></div>`;
+            }
+            return;
         }
 
                 // Mantém reload do perfil
@@ -551,7 +558,7 @@ async function handleCorrectionSubmit(e) {
             vocabulario: { corHex: '#4ade80', nome: 'Vocabulário' }
         };
 
-        const camposComConteudo = ['palavra_errada', 'palavra', 'sugestao_correcao', 'sugestao', 'gramatica', 'descricao', 'explicacao', 'explanation'];
+        const camposComConteudo = ['palavra_errada', 'palavra', 'sugestao_correcao', 'sugestao', 'gramatica', 'descricao_topico_gramatical', 'descricao', 'explicacao', 'explanation'];
         const errosPorCategoria = {};
         let totalErros = 0;
 
