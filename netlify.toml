@@ -6,13 +6,13 @@
   node_bundler = "esbuild"
 
 [functions."chatbot"]
-  timeout = 26
+  timeout = 60
 
 [functions."trataerro"]
-  timeout = 26
+  timeout = 60
 
 [functions."flashcard"]
-  timeout = 26
+  timeout = 60
 
 [[headers]]
   for = "/*"

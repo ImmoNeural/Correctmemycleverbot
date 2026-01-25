@@ -83,49 +83,6 @@ const GRAMMAR_TOPICS_TABLE = `
 68. „Viel" und „wenig"
 `;
 
-// System prompt para classificação de tópico gramatical
-const TOPIC_CLASSIFIER_SYSTEM_PROMPT = `Você é um assistente de IA focado em classificação e enriquecimento de dados para um sistema de aprendizado de alemão. Sua única função é preparar a consulta do usuário para um próximo agente.
-
-**Processo:**
-1. Você receberá uma entrada do usuário contendo um tópico gramatical e um nível de proficiência.
-2. Sua tarefa é analisar o tópico e encontrar a correspondência exata na "Tabela Oficial de Tópicos" abaixo.
-3. Após identificar o tópico, você deve gerar uma frase em **alemão** que inclua o nome do tópico e 2-3 palavras-chave relevantes (como "Regeln", "Verwendung", "Beispiele"). Esta frase servirá como uma consulta otimizada para uma busca semântica posterior.
-
-**Regras Críticas:**
-- **NÃO EXPLIQUE A GRAMÁTICA.** Sua única saída é a estrutura de dados definida abaixo.
-- Sua resposta deve ser exclusivamente a estrutura de dados no formato especificado.
-- A \`mensagemParaRAG\` deve ser inteiramente em **alemão**.
-
-**Formato de Saída Obrigatório:**
-Sua resposta deve ser um objeto JSON contendo as seguintes chaves:
-{
-  "numeroTopico": "[Número do Tópico]",
-  "nomeTopico": "[Nome do Tópico em Alemão]",
-  "nivelAluno": "[Nível do aluno]",
-  "mensagemParaRAG": "[Frase em alemão com o tópico e palavras-chave.]"
-}
-
-Tabela Oficial de Tópicos:
-${GRAMMAR_TOPICS_TABLE}`;
-
-// System prompt para o RAG Agent de gramática
-const RAG_AGENT_SYSTEM_PROMPT = `Você é o "CorrectMe", um professor de alemão especialista em gramática, amigável e pedagógico, que ajuda estudantes brasileiros a aprender alemão.
-
-**Processo:**
-1. Você receberá um objeto JSON contendo um tópico gramatical já identificado e uma mensagem otimizada para busca.
-2. Use esse contexto para formular uma explicação clara, detalhada e didática sobre o tópico gramatical.
-
-**Regras de Comportamento:**
-- Use exemplos práticos para ilustrar a explicação.
-- Mantenha um tom amigável e encorajador.
-- A sua resposta deve ser exclusivamente em português do Brasil.
-
-**Formato de Saída:**
-- A sua resposta deve ser um texto formatado em Markdown para fácil leitura.
-- Comece a resposta com o título do tópico em alemão e português: Exemplo: \`### **Modalverben (Verbos Modais)**\`
-- Não mencione a ferramenta RAG ou o processo de busca. Apenas apresente a explicação final.
-- Inclua exemplos em alemão com tradução para português.`;
-
 // System prompt para conversação em alemão (escrita)
 const CONVERSATION_SYSTEM_PROMPT = `Sua diretiva principal é atuar como um tutor de conversação em alemão chamado "CorrectMe", mantendo um diálogo contínuo e coerente sobre um tópico pré-definido. Você deve conversar somente em alemão. Somente quando for fazer alguma explicação da correção do erro do aluno você deve fazer em português do Brasil.
 
@@ -280,59 +237,6 @@ function getWorkflowType(workflow) {
     if (lowerWorkflow.includes('intermediario') || lowerWorkflow.includes('intermediário') || lowerWorkflow.includes('b1') || lowerWorkflow.includes('b2')) return 'intermediario';
     if (lowerWorkflow.includes('avancado') || lowerWorkflow.includes('avançado') || lowerWorkflow.includes('c1') || lowerWorkflow.includes('c2')) return 'avancado';
     return 'general';
-}
-
-// Step 1: Classify the grammar topic
-async function classifyGrammarTopic(message, workflow) {
-    const userPrompt = `O aluno, que está no nível de proficiência **${workflow}**, selecionou o seguinte tópico para estudar: **"${message}"**.
-
-Siga suas instruções, identifique o tópico na tabela e gere a saída no formato JSON obrigatório.`;
-
-    const response = await callDeepSeek(TOPIC_CLASSIFIER_SYSTEM_PROMPT, userPrompt, 0.3);
-
-    try {
-        // Try to parse JSON from response
-        const jsonMatch = response.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-            return JSON.parse(jsonMatch[0]);
-        }
-        return JSON.parse(response);
-    } catch (e) {
-        console.error('Error parsing topic classification:', e);
-        return {
-            numeroTopico: '0',
-            nomeTopico: message,
-            nivelAluno: workflow,
-            mensagemParaRAG: `Deutsche Grammatik: ${message} Erklärung und Beispiele.`
-        };
-    }
-}
-
-// Step 2: Generate grammar explanation using RAG
-async function generateGrammarExplanation(topicInfo) {
-    // Try to get context from Supabase
-    let supabaseContext = null;
-    try {
-        supabaseContext = await searchSupabaseContent(topicInfo.mensagemParaRAG);
-    } catch (e) {
-        console.log('Could not fetch from Supabase');
-    }
-
-    let systemPrompt = RAG_AGENT_SYSTEM_PROMPT;
-    if (supabaseContext) {
-        systemPrompt += `\n\n# Material de Referência (do banco de dados)\nUse este material como base para sua explicação:\n${supabaseContext}`;
-    }
-
-    const userPrompt = `Use a seguinte informação para fornecer uma explicação completa sobre o tópico gramatical para o aluno.
-
-**Tópico:** ${topicInfo.nomeTopico}
-**Número:** ${topicInfo.numeroTopico}
-**Nível do Aluno:** ${topicInfo.nivelAluno}
-**Mensagem para Busca:** ${topicInfo.mensagemParaRAG}
-
-Formule sua resposta final diretamente para o aluno, seguindo todas as suas regras de formatação e comportamento. Em hipótese alguma coloque a numeração do capítulo do tópico da gramática.`;
-
-    return await callDeepSeek(systemPrompt, userPrompt, 0.4);
 }
 
 // Combined prompt for direct grammar explanation (single API call)
