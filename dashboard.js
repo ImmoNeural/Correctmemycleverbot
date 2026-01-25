@@ -317,8 +317,8 @@ document.addEventListener('DOMContentLoaded', () => {
             nivel: document.querySelector('input[name="nivel"]:checked').value
         };
 
-        const flashcardWebhookUrl = '/.netlify/functions/flashcard';
-        const trataerroWebhookUrl = '/.netlify/functions/trataerro';
+        const flashcardWebhookUrl = 'https://pastro83.app.n8n.cloud/webhook/flashcard';
+        const trataerroWebhookUrl = 'https://pastro83.app.n8n.cloud/webhook/trataerro';
 
         try {
             if (formMessageEl) formMessageEl.textContent = 'A enviar para correção...';
