@@ -5,6 +5,15 @@
 [functions]
   node_bundler = "esbuild"
 
+[functions."chatbot"]
+  timeout = 26
+
+[functions."trataerro"]
+  timeout = 26
+
+[functions."flashcard"]
+  timeout = 26
+
 [[headers]]
   for = "/*"
   [headers.values]

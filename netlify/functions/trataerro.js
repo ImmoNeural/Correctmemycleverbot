@@ -6,25 +6,7 @@ const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzd
 const DEEPSEEK_API_KEY = 'sk-e080234eab8b442fb65fe8955d8947de';
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 
-// Prompt para limpar o texto (remover caracteres especiais)
-const CLEAN_TEXT_SYSTEM_PROMPT = `Você é uma ferramenta de pré-processamento de texto. Sua única função é limpar o texto fornecido, removendo caracteres específicos.
-
-**REGRA FUNDAMENTAL:**
-Sua única e exclusiva saída deve ser o texto limpo. NÃO adicione nenhuma palavra, saudação, explicação ou qualquer outro texto antes ou depois do texto limpo.
-
-**Processo Obrigatório:**
-1. Receba o texto da redação.
-2. Remova todos os seguintes caracteres do texto: colchetes ( [ e ] ), parênteses ( ( e ) ) e chaves ( { e } ).
-3. Substitua todas as quebras de linha (\\n, \\r, \\r\\n) por um único espaço em branco.
-4. Se houver aspas ou aspas alemãs(„"), duplas("") ou simples ('') adicione somente UMA barra invertida na frente conforme exemplos abaixo.
-„das Auto" ficaria \\„das Auto\\"
-"das Auto" ficaria \\"das Auto\\"
-'das Auto' ficaria \\'das Auto\\'
-
-IMPORTANTE
-Em hipótese alguma faça correções de palavras. Siga somente as instruções dadas. Em hipótese alguma esqueça de colocar a barra invertida conforme explicado no item 4.`;
-
-// Prompt principal para análise de erros gramaticais
+// Prompt principal para análise de erros gramaticais (combinado com limpeza de texto)
 const GRAMMAR_ANALYSIS_SYSTEM_PROMPT = `PERSONA E OBJETIVO
 Você é um especialista meticuloso em gramática alemã. A sua única tarefa é analisar um texto, identificar todos os erros gramaticais, ortográficos, etc e estruturar a sua análise num formato JSON preciso, usando uma tabela de referência numérica.
 
@@ -408,7 +390,7 @@ exports.handler = async (event) => {
 
         console.log('Processing trataerro request for:', email);
 
-        // 2. Get user_id from email
+        // 2. Get user_id from email and profile in parallel
         const userId = await getUserIdByEmail(email);
 
         if (!userId) {
@@ -421,16 +403,7 @@ exports.handler = async (event) => {
 
         console.log('Found user_id:', userId);
 
-        // 3. Clean the text with AI
-        const cleanedText = await callDeepSeek(
-            CLEAN_TEXT_SYSTEM_PROMPT,
-            `Limpe o seguinte texto de acordo com as suas instruções:\n\n${redacao}`,
-            0.1
-        );
-
-        console.log('Text cleaned');
-
-        // 4. Get user profile to check credits
+        // 3. Get user profile to check credits
         const userProfile = await getUserProfile(userId);
 
         if (!userProfile) {
@@ -452,35 +425,34 @@ exports.handler = async (event) => {
 
         console.log('User has sufficient credits:', userProfile.credits);
 
-        // 6. Analyze grammar errors with AI
+        // 4. Analyze grammar errors with AI (the prompt already handles text cleaning)
         const analysisResponse = await callDeepSeek(
             GRAMMAR_ANALYSIS_SYSTEM_PROMPT,
-            cleanedText,
+            redacao,
             0.3
         );
 
         console.log('Grammar analysis completed');
 
-        // 7. Parse and organize the response
+        // 5. Parse and organize the response
         const organizedResponse = organizeResponse(analysisResponse);
 
-        // 8. Get the errors object
+        // 6. Get the errors object
         const erros = organizedResponse.erros || organizedResponse;
 
-        // 9. Count errors for stats
+        // 7. Count errors for stats
         const contagem = countErrors(erros);
 
         console.log('Error counts:', contagem);
 
-        // 10. Update stats in background (non-blocking)
-        // We don't await these to return response faster
+        // 8. Update stats in background (non-blocking)
         Promise.all([
             updateProfileStats(userId, contagem, userProfile),
             insertEssayHistory(userId, contagem),
             deductCredits(userId, userProfile.credits)
         ]).catch(err => console.error('Error updating stats:', err));
 
-        // 11. Return the errors to the client
+        // 9. Return the errors to the client
         return {
             statusCode: 200,
             headers,

@@ -335,16 +335,32 @@ Formule sua resposta final diretamente para o aluno, seguindo todas as suas regr
     return await callDeepSeek(systemPrompt, userPrompt, 0.4);
 }
 
-// Handle grammar study (iniciante, intermediario, avancado)
+// Combined prompt for direct grammar explanation (single API call)
+const DIRECT_GRAMMAR_PROMPT = `Você é o "CorrectMe", um professor de alemão especialista em gramática, amigável e pedagógico, que ajuda estudantes brasileiros a aprender alemão.
+
+**Sua Tarefa:**
+Forneça uma explicação clara, detalhada e didática sobre o tópico gramatical solicitado, adequada ao nível do aluno.
+
+**Regras de Comportamento:**
+- Use exemplos práticos para ilustrar a explicação.
+- Mantenha um tom amigável e encorajador.
+- A sua resposta deve ser exclusivamente em português do Brasil.
+- Inclua exemplos em alemão com tradução para português.
+
+**Formato de Saída:**
+- A sua resposta deve ser um texto formatado em Markdown para fácil leitura.
+- Comece a resposta com o título do tópico em alemão e português: Exemplo: \`### **Modalverben (Verbos Modais)**\`
+- Não mencione processos internos ou ferramentas. Apenas apresente a explicação final.`;
+
+// Handle grammar study (iniciante, intermediario, avancado) - optimized single API call
 async function handleGrammarRequest(message, workflow) {
     console.log('Handling grammar request:', message, workflow);
 
-    // Step 1: Classify the topic
-    const topicInfo = await classifyGrammarTopic(message, workflow);
-    console.log('Topic classified:', topicInfo);
+    const userPrompt = `O aluno, que está no nível de proficiência **${workflow}**, quer aprender sobre o seguinte tópico gramatical: **"${message}"**.
 
-    // Step 2: Generate explanation
-    const explanation = await generateGrammarExplanation(topicInfo);
+Forneça uma explicação completa, didática e adequada ao nível do aluno. Inclua exemplos práticos em alemão com tradução para português.`;
+
+    const explanation = await callDeepSeek(DIRECT_GRAMMAR_PROMPT, userPrompt, 0.4);
     return explanation;
 }
 
