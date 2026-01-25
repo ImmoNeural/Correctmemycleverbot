@@ -480,34 +480,70 @@ async function handleCorrectionSubmit(e) {
      }
 
     try {
-        const [flashRes, trataRes] = await Promise.all([
-            fetch('/.netlify/functions/flashcard', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: dataToSend.email, redacao: dataToSend.redacao })
-            }),
-            fetch('/.netlify/functions/trataerro', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(dataToSend)
-            })
-        ]);
+        // Inicia flashcard em paralelo (não precisa esperar)
+        fetch('/.netlify/functions/flashcard', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: dataToSend.email, redacao: dataToSend.redacao })
+        }).catch(err => console.warn('Flashcard error (não crítico):', err));
 
-        let trataerroData = null;
-        if (trataRes && trataRes.ok) {
-            const raw = await trataRes.text();
-            console.log('trataerro raw response:', raw);
-            try { trataerroData = JSON.parse(raw); }
-            catch {
-                console.warn('trataerro: retorno não-JSON:', raw);
-            }
-        } else if (trataRes) {
+        // Usa streaming para trataerro
+        if (formMessageEl) {
+            formMessageEl.innerHTML = `
+                <div class="text-yellow-400">
+                    <p>🤖 Analisando sua redação...</p>
+                    <div id="streaming-output" style="margin-top: 12px; padding: 12px; background: #1e293b; border-radius: 8px; font-family: monospace; font-size: 13px; color: #94a3b8; max-height: 200px; overflow-y: auto; white-space: pre-wrap;"></div>
+                </div>`;
+        }
+
+        const streamingOutput = document.getElementById('streaming-output');
+        let fullResponse = '';
+
+        // Chama a Edge Function com streaming
+        const trataRes = await fetch('/api/trataerro-stream', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dataToSend)
+        });
+
+        if (!trataRes.ok) {
             const errorText = await trataRes.text();
-            console.error('trataerro error:', trataRes.status, errorText);
+            console.error('trataerro-stream error:', trataRes.status, errorText);
             if (formMessageEl) {
                 formMessageEl.innerHTML = `<div class="text-red-400"><p>Erro ao processar correção: ${trataRes.status}</p><p class="text-sm">${errorText}</p></div>`;
             }
             return;
+        }
+
+        // Processa o stream
+        const reader = trataRes.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            fullResponse += chunk;
+
+            // Mostra o texto sendo recebido em tempo real
+            if (streamingOutput) {
+                streamingOutput.textContent = fullResponse;
+                streamingOutput.scrollTop = streamingOutput.scrollHeight;
+            }
+        }
+
+        console.log('trataerro-stream raw response:', fullResponse);
+
+        // Tenta parsear o JSON da resposta completa
+        let trataerroData = null;
+        try {
+            const jsonMatch = fullResponse.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                trataerroData = JSON.parse(jsonMatch[0]);
+            }
+        } catch (parseErr) {
+            console.warn('trataerro: retorno não-JSON:', fullResponse);
         }
 
                 // Mantém reload do perfil
