@@ -171,31 +171,47 @@ Para decidir em qual categoria macro ("declinacao", "conjugacao", etc.) colocar 
 - Se o 'topico_gramatical_numero' for um destes [1, 49, 50, 53, 54, 55, 56, 57, 58, 59, 60, 62, 66], coloque na lista "vocabulario".
 - Se o 'topico_gramatical_numero' for [5], coloque na lista "preposicoes".`;
 
-// Helper function to call DeepSeek API
+// Helper function to call DeepSeek API with timeout
 async function callDeepSeek(systemPrompt, userPrompt, temperature = 0.3) {
-    const response = await fetch(DEEPSEEK_API_URL, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            model: 'deepseek-chat',
-            messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userPrompt }
-            ],
-            temperature: temperature
-        })
-    });
+    // Timeout de 20 segundos para caber no limite de 26s do Netlify Pro
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
 
-    if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`DeepSeek API error: ${errorText}`);
+    try {
+        const response = await fetch(DEEPSEEK_API_URL, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'deepseek-chat',
+                messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: userPrompt }
+                ],
+                temperature: temperature,
+                max_tokens: 2000
+            }),
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`DeepSeek API error: ${errorText}`);
+        }
+
+        const data = await response.json();
+        return data.choices[0]?.message?.content || '';
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            throw new Error('DeepSeek timeout: A análise demorou mais que 20 segundos');
+        }
+        throw error;
     }
-
-    const data = await response.json();
-    return data.choices[0]?.message?.content || '';
 }
 
 // Helper function for Supabase requests
@@ -360,6 +376,10 @@ function countErrors(erros) {
 }
 
 exports.handler = async (event) => {
+    // LOG IMEDIATO - para verificar se a função está sendo chamada
+    console.log('=== TRATAERRO INICIADA ===', new Date().toISOString());
+    console.log('Method:', event.httpMethod);
+
     const headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
@@ -368,17 +388,22 @@ exports.handler = async (event) => {
     };
 
     if (event.httpMethod === 'OPTIONS') {
+        console.log('OPTIONS request - retornando 200');
         return { statusCode: 200, headers, body: '' };
     }
 
     if (event.httpMethod !== 'POST') {
+        console.log('Método não permitido:', event.httpMethod);
         return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
     }
 
     try {
         // 1. Parse request body
+        console.log('Parsing body...');
         const body = JSON.parse(event.body);
         const { email, redacao, nivel, nome } = body;
+        console.log('Email recebido:', email);
+        console.log('Tamanho da redação:', redacao?.length || 0, 'caracteres');
 
         if (!email || !redacao) {
             return {
@@ -426,13 +451,15 @@ exports.handler = async (event) => {
         console.log('User has sufficient credits:', userProfile.credits);
 
         // 4. Analyze grammar errors with AI (the prompt already handles text cleaning)
+        console.log('=== INICIANDO CHAMADA AO DEEPSEEK ===', new Date().toISOString());
         const analysisResponse = await callDeepSeek(
             GRAMMAR_ANALYSIS_SYSTEM_PROMPT,
             redacao,
             0.3
         );
 
-        console.log('Grammar analysis completed');
+        console.log('=== DEEPSEEK RESPONDEU ===', new Date().toISOString());
+        console.log('Grammar analysis completed, response length:', analysisResponse?.length || 0);
 
         // 5. Parse and organize the response
         const organizedResponse = organizeResponse(analysisResponse);
@@ -460,7 +487,9 @@ exports.handler = async (event) => {
         };
 
     } catch (error) {
-        console.error('TrataErro webhook error:', error);
+        console.error('=== ERRO NA TRATAERRO ===', new Date().toISOString());
+        console.error('TrataErro webhook error:', error.message);
+        console.error('Stack:', error.stack);
         return {
             statusCode: 500,
             headers,
