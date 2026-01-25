@@ -412,14 +412,32 @@ exports.handler = async (event) => {
         // Check credits if we have a user
         if (userIdResolved) {
             const profile = await getUserProfile(userIdResolved);
+            console.log('Profile found:', JSON.stringify(profile));
+            console.log('Credits value:', profile?.credits, 'Type:', typeof profile?.credits);
 
-            if (!profile || parseInt(profile.credits) < MIN_CREDITS) {
+            if (!profile) {
+                console.log('ERROR: Profile not found for userId:', userIdResolved);
+                return {
+                    statusCode: 402,
+                    headers,
+                    body: JSON.stringify({
+                        error: 'Perfil não encontrado',
+                        output: 'Não foi possível encontrar seu perfil. Por favor, faça login novamente.',
+                        credito: 'Perfil não encontrado.'
+                    })
+                };
+            }
+
+            const credits = parseInt(profile.credits) || 0;
+            console.log('Parsed credits:', credits, 'MIN_CREDITS:', MIN_CREDITS);
+
+            if (credits < MIN_CREDITS) {
                 return {
                     statusCode: 402,
                     headers,
                     body: JSON.stringify({
                         error: 'Sem crédito suficiente',
-                        output: 'Você não tem créditos suficientes para usar o chatbot. Por favor, adquira mais créditos.',
+                        output: `Você tem ${credits} créditos, mas precisa de pelo menos ${MIN_CREDITS}. Por favor, adquira mais créditos.`,
                         credito: 'Sem crédito suficiente.'
                     })
                 };
