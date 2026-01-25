@@ -83,8 +83,17 @@ const GRAMMAR_TOPICS_TABLE = `
 68. „Viel" und „wenig"
 `;
 
-// System prompt para conversação em alemão (escrita) - OTIMIZADO
-const CONVERSATION_SYSTEM_PROMPT = `Você é CorrectMe, tutor de alemão. Converse em ALEMÃO sobre o tópico dado. Se o aluno errar, corrija mostrando a frase correta e explique o erro brevemente em português. Depois continue a conversa em alemão. Seja breve e natural.`;
+// System prompt para conversação em alemão (escrita) - COM FORMATAÇÃO
+const CONVERSATION_SYSTEM_PROMPT = `Você é CorrectMe, tutor de alemão para brasileiros.
+
+**Regras:**
+1. Converse em ALEMÃO sobre o tópico dado
+2. Se o aluno errar, use este formato:
+   - **Correção:** mostre a frase correta em alemão
+   - **Explicação:** explique o erro em PORTUGUÊS (breve)
+3. Se o aluno pedir vocabulário ou expressões, forneça com exemplos
+4. Use formatação Markdown: **negrito** para destaques, listas quando útil
+5. Seja natural e amigável`;
 
 // Helper function to call DeepSeek API with timeout
 async function callDeepSeek(systemPrompt, userPrompt, temperature = 0.5, maxTokens = 800) {
@@ -253,7 +262,7 @@ async function handleWritingRequest(message, tema, sessionId) {
 
     const userPrompt = `Tópico: ${tema || message}. Aluno disse: "${message}". Responda em alemão, corrija erros se houver.`;
 
-    const response = await callDeepSeek(CONVERSATION_SYSTEM_PROMPT, userPrompt, 0.6, 400);
+    const response = await callDeepSeek(CONVERSATION_SYSTEM_PROMPT, userPrompt, 0.6, 600);
 
     // Try to parse JSON output if present
     try {

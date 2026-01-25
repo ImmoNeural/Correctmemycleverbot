@@ -103,27 +103,15 @@
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
                 restaurarCorrecaoSeNecessario();
-                
-                // [NOVA LÓGICA CHATBOT]
-                // Se o chatbot for a seção ativa, reinicia-o
-                const chatbotSection = document.getElementById('section-chatbot');
-                if (chatbotSection && !chatbotSection.classList.contains('hidden')) {
-                    console.log('Restaurando chatbot ao re-focar a aba.');
-                    initializeChatbot();
-                }
+
+                // Chatbot não precisa reiniciar - o iframe é preservado
             }
         });
         
         // O evento 'focus' ajuda a pegar casos que o 'visibilitychange' pode perder
         window.addEventListener('focus', () => {
              restaurarCorrecaoSeNecessario();
-             
-             // [NOVA LÓGICA CHATBOT]
-             const chatbotSection = document.getElementById('section-chatbot');
-             if (chatbotSection && !chatbotSection.classList.contains('hidden')) {
-                 console.log('Restaurando chatbot ao re-focar (window focus).');
-                 initializeChatbot();
-             }
+             // Chatbot não precisa reiniciar - o iframe é preservado
         });
         
         // --- FIM DA CORREÇÃO ---
@@ -1292,23 +1280,20 @@ async function handleCorrectionSubmit(e) {
     let chatbotInitialized = false;
 
     async function initializeChatbot() {
-        // [REMOVIDO] O 'if (chatbotInitialized)' foi removido.
-        // Queremos que o chatbot recarregue CADA VEZ que a seção é aberta,
-        // pois o iframe é perdido ao navegar para outras seções (display: none).
-        // Esta é a mesma "estratégia" de persistência da redação:
-        // "Recarregar o conteúdo ao voltar para a aba."
-        
-        console.log('🤖 Inicializando/Recarregando chatbot integrado...');
-
         const chatbotContainer = document.getElementById('chatbot-prompt-container');
         if (!chatbotContainer) {
             console.error('❌ Container do chatbot não encontrado');
             return;
         }
 
-        // Carregar chatbot IMEDIATAMENTE (sem botão)
-        // A função loadChatbotIframe() já limpa o container (innerHTML = ''),
-        // então é seguro chamá-la múltiplas vezes.
+        // Verificar se o iframe já existe para preservar histórico
+        const existingIframe = chatbotContainer.querySelector('#chatbot-iframe');
+        if (existingIframe) {
+            console.log('✅ Chatbot iframe já existe, preservando histórico...');
+            return; // Não recriar, manter o histórico
+        }
+
+        console.log('🤖 Inicializando chatbot integrado...');
         loadChatbotIframe();
     }
 
