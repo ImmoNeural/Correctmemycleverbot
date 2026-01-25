@@ -493,12 +493,12 @@ async function handleCorrectionSubmit(e) {
 
     try {
         const [flashRes, trataRes] = await Promise.all([
-            fetch('https://pastro83.app.n8n.cloud/webhook/flashcard', {
+            fetch('/.netlify/functions/flashcard', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: dataToSend.email, redacao: dataToSend.redacao })
             }),
-            fetch('https://pastro83.app.n8n.cloud/webhook/trataerro', {
+            fetch('/.netlify/functions/trataerro', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(dataToSend)
@@ -1478,7 +1478,7 @@ async function handleCorrectionSubmit(e) {
                             // Configuração do Chatbot Widget v051
                             window.ChatWidgetConfig = {
                                 webhook: {
-                                    url: 'https://pastro83.app.n8n.cloud/webhook/chatbot',
+                                    url: '/.netlify/functions/chatbot',
                                 },
                                 getUserData: getUserData,
                                 embedded: true,
