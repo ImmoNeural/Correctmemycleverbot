@@ -9,7 +9,7 @@
   timeout = 60
 
 [functions."trataerro"]
-  timeout = 60
+  timeout = 300
 
 [functions."flashcard"]
   timeout = 60
