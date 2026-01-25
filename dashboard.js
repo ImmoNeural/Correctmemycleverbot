@@ -317,22 +317,20 @@ document.addEventListener('DOMContentLoaded', () => {
             nivel: document.querySelector('input[name="nivel"]:checked').value
         };
 
-        const webhookUrl = 'https://pastro83.app.n8n.cloud/webhook/corrige';
         const flashcardWebhookUrl = '/.netlify/functions/flashcard';
         const trataerroWebhookUrl = '/.netlify/functions/trataerro';
 
         try {
             if (formMessageEl) formMessageEl.textContent = 'A enviar para correção...';
 
-            // Enviar para os 3 webhooks em paralelo
-            const [response, flashcardResponse, trataerroResponse] = await Promise.all([
-                fetch(webhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dataToSend) }),
+            // Enviar para os 2 webhooks em paralelo (flashcard e trataerro)
+            const [flashcardResponse, trataerroResponse] = await Promise.all([
                 fetch(flashcardWebhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: currentUser.email, redacao: dataToSend.redacao }) }),
                 fetch(trataerroWebhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dataToSend) })
             ]);
 
-            if (!response.ok) {
-                const errorData = await response.json();
+            if (!trataerroResponse.ok) {
+                const errorData = await trataerroResponse.json();
                 throw new Error(errorData.message || 'Ocorreu um problema ao comunicar com o sistema de correção.');
             }
 

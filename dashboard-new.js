@@ -492,12 +492,7 @@ async function handleCorrectionSubmit(e) {
      }
 
     try {
-        const [corrigeRes, flashRes, trataRes] = await Promise.all([
-            fetch('https://pastro83.app.n8n.cloud/webhook/corrige', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(dataToSend)
-            }),
+        const [flashRes, trataRes] = await Promise.all([
             fetch('/.netlify/functions/flashcard', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
