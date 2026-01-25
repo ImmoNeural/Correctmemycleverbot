@@ -109,40 +109,54 @@ Não se desvie do tópico mesmo que o aluno insista em falar de um outro assunto
 - **Idioma das Correções:** As explicações dos erros DEVEM ser em **português**.
 - **Persistência:** Mantenha a conversa focada no **Tópico Geral da Conversa** fornecido.`;
 
-// Helper function to call DeepSeek API
-async function callDeepSeek(systemPrompt, userPrompt, temperature = 0.5, maxTokens = 1200) {
+// Helper function to call DeepSeek API with timeout
+async function callDeepSeek(systemPrompt, userPrompt, temperature = 0.5, maxTokens = 800) {
     console.log('Calling DeepSeek API...');
-    const body = {
-        model: 'deepseek-chat',
-        messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt }
-        ],
-        temperature: temperature,
-        max_tokens: maxTokens
-    };
 
-    const response = await fetch(DEEPSEEK_API_URL, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
 
-    console.log('DeepSeek response status:', response.status);
+    try {
+        const body = {
+            model: 'deepseek-chat',
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt }
+            ],
+            temperature: temperature,
+            max_tokens: maxTokens
+        };
 
-    if (!response.ok) {
-        const errorText = await response.text();
-        console.error('DeepSeek API error:', errorText);
-        throw new Error(`DeepSeek API error: ${errorText}`);
+        const response = await fetch(DEEPSEEK_API_URL, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body),
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+        console.log('DeepSeek response status:', response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('DeepSeek API error:', errorText);
+            throw new Error(`DeepSeek API error: ${errorText}`);
+        }
+
+        const data = await response.json();
+        const content = data.choices[0]?.message?.content || '';
+        console.log('DeepSeek response length:', content.length);
+        return content;
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            throw new Error('DeepSeek API timeout - resposta demorou muito');
+        }
+        throw error;
     }
-
-    const data = await response.json();
-    const content = data.choices[0]?.message?.content || '';
-    console.log('DeepSeek response length:', content.length);
-    return content;
 }
 
 // Helper function for Supabase requests
@@ -244,17 +258,15 @@ function getWorkflowType(workflow) {
 }
 
 // Combined prompt for direct grammar explanation (single API call)
-const DIRECT_GRAMMAR_PROMPT = `Você é o CorrectMe, professor de alemão. Explique o tópico gramatical de forma clara e concisa em português do Brasil. Use exemplos em alemão com tradução. Formate em Markdown, começando com o título do tópico.`;
+const DIRECT_GRAMMAR_PROMPT = `Você é um professor de alemão. Explique o tópico de forma BREVE e DIRETA em português. Inclua 2-3 exemplos em alemão com tradução. Máximo 200 palavras.`;
 
 // Handle grammar study (iniciante, intermediario, avancado) - optimized single API call
 async function handleGrammarRequest(message, workflow) {
     console.log('Handling grammar request:', message, workflow);
 
-    const userPrompt = `O aluno, que está no nível de proficiência **${workflow}**, quer aprender sobre o seguinte tópico gramatical: **"${message}"**.
+    const userPrompt = `Explique "${message}" para nível ${workflow}. Seja breve.`;
 
-Forneça uma explicação completa, didática e adequada ao nível do aluno. Inclua exemplos práticos em alemão com tradução para português.`;
-
-    const explanation = await callDeepSeek(DIRECT_GRAMMAR_PROMPT, userPrompt, 0.4);
+    const explanation = await callDeepSeek(DIRECT_GRAMMAR_PROMPT, userPrompt, 0.5, 600);
     return explanation;
 }
 
