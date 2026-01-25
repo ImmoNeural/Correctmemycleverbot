@@ -752,7 +752,7 @@
         sendButton.disabled = true;
 
         try {
-            let responseData = await sendToN8n(payload);
+            let responseData = await sendToWebhook(payload);
             
             if (Array.isArray(responseData) && responseData.length > 0) {
                 responseData = responseData[0];
@@ -776,8 +776,8 @@
             } else if (!responseData) {
                 // Error already handled
             } else {
-                console.error("Formato de resposta inesperado do n8n:", responseData);
-                addBotMessage("Recebi uma resposta, mas o formato é inválido. Por favor, verifique a configuração do n8n.");
+                console.error("Formato de resposta inesperado:", responseData);
+                addBotMessage("Recebi uma resposta, mas o formato é inválido. Por favor, tente novamente.");
             }
         } catch (error) {
             console.error("Error submitting payload:", error);
@@ -831,12 +831,12 @@
         });
     };
     
-    const sendToN8n = async (payload) => {
+    const sendToWebhook = async (payload) => {
         if (!settings.webhook.url) {
             console.warn("Webhook URL not configured. Using mock response.");
             await new Promise(resolve => setTimeout(resolve, 1500));
             if (payload.workflow) {
-                 return { output: `### **Tópico Recebido** \n\nRecebi o seu pedido para falar sobre **${payload.message}** no fluxo **${payload.workflow}**. A integração com o n8n está pronta!` };
+                 return { output: `### **Tópico Recebido** \n\nRecebi o seu pedido para falar sobre **${payload.message}** no fluxo **${payload.workflow}**. Configure a URL do webhook.` };
             }
             return {};
         }
@@ -863,7 +863,7 @@
                 timestamp: new Date().toISOString()
             };
 
-            console.log('📤 Enviando para n8n:', webhookPayload);
+            console.log('📤 Enviando para webhook:', webhookPayload);
 
             const response = await fetch(settings.webhook.url, {
                 method: 'POST',
