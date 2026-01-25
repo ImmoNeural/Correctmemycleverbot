@@ -1476,7 +1476,7 @@ async function handleCorrectionSubmit(e) {
                             // Configuração do Chatbot Widget v051
                             window.ChatWidgetConfig = {
                                 webhook: {
-                                    url: 'https://pastro83.app.n8n.cloud/webhook/chatbot',
+                                    url: '/.netlify/functions/chatbot',
                                 },
                                 getUserData: getUserData,
                                 embedded: true,
