@@ -318,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const webhookUrl = 'https://pastro83.app.n8n.cloud/webhook/corrige';
-        const flashcardWebhookUrl = 'https://pastro83.app.n8n.cloud/webhook/flashcard';
+        const flashcardWebhookUrl = '/.netlify/functions/flashcard';
         const trataerroWebhookUrl = 'https://pastro83.app.n8n.cloud/webhook/trataerro';
 
         try {
