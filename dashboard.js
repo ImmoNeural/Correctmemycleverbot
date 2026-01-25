@@ -319,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const webhookUrl = 'https://pastro83.app.n8n.cloud/webhook/corrige';
         const flashcardWebhookUrl = '/.netlify/functions/flashcard';
-        const trataerroWebhookUrl = 'https://pastro83.app.n8n.cloud/webhook/trataerro';
+        const trataerroWebhookUrl = '/.netlify/functions/trataerro';
 
         try {
             if (formMessageEl) formMessageEl.textContent = 'A enviar para correção...';

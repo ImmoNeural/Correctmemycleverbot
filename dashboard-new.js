@@ -503,7 +503,7 @@ async function handleCorrectionSubmit(e) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: dataToSend.email, redacao: dataToSend.redacao })
             }),
-            fetch('https://pastro83.app.n8n.cloud/webhook/trataerro', {
+            fetch('/.netlify/functions/trataerro', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(dataToSend)
