@@ -2,7 +2,7 @@
 // Usa DeepSeek para extrair substantivos alemães e salva no Supabase
 
 const SUPABASE_URL = 'https://timqizyevfkvqgzvcrlx.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbXFpenlldmZrdnFnenZjcmx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYwMTkwMDYsImV4cCI6MjA2MTU5NTAwNn0.LfWFCPPgzTkh7Scf2Q2LjLmYcLnaWSAGKDiMT8eSuWM';
+const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbXFpenlldmZrdnFnenZjcmx4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NjAxOTAwNiwiZXhwIjoyMDYxNTk1MDA2fQ.mQcEtge5GlyTQHzJMlWO2oT42tiAG-KFl58o-39MEG0';
 const DEEPSEEK_API_KEY = 'sk-e080234eab8b442fb65fe8955d8947de';
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 
@@ -43,8 +43,8 @@ exports.handler = async (event) => {
         const userIdResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_user_id_by_email`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+                'apikey': SUPABASE_SERVICE_KEY,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ user_email: email })
@@ -175,8 +175,8 @@ IMPORTANTE: APENAS JSON válido. Não inclua a marcação \`\`\`json, comentári
                 {
                     method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                        'apikey': SUPABASE_ANON_KEY
+                        'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+                        'apikey': SUPABASE_SERVICE_KEY
                     }
                 }
             );
@@ -188,8 +188,8 @@ IMPORTANTE: APENAS JSON válido. Não inclua a marcação \`\`\`json, comentári
                 const insertResponse = await fetch(`${SUPABASE_URL}/rest/v1/flashcards`, {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+                        'apikey': SUPABASE_SERVICE_KEY,
                         'Content-Type': 'application/json',
                         'Prefer': 'return=minimal'
                     },
