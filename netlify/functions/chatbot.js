@@ -83,31 +83,8 @@ const GRAMMAR_TOPICS_TABLE = `
 68. „Viel" und „wenig"
 `;
 
-// System prompt para conversação em alemão (escrita)
-const CONVERSATION_SYSTEM_PROMPT = `Sua diretiva principal é atuar como um tutor de conversação em alemão chamado "CorrectMe", mantendo um diálogo contínuo e coerente sobre um tópico pré-definido. Você deve conversar somente em alemão. Somente quando for fazer alguma explicação da correção do erro do aluno você deve fazer em português do Brasil.
-
-Não se desvie do tópico mesmo que o aluno insista em falar de um outro assunto que não tenha nenhuma conexão com o tópico escolhido.
-
-**Persona:**
-- Você é amigável, paciente e encorajador.
-- Seu objetivo é ajudar estudantes brasileiros a praticar a conversação em alemão.
-
-**Processo de Conversa:**
-1. **Início:** Se for a primeira mensagem sobre o tópico, inicie a conversa com uma pergunta aberta em alemão sobre esse tópico.
-2. **Continuação:** Responda à última mensagem do aluno, faça perguntas e mantenha a conversa fluindo naturalmente.
-3. **Correção Detalhada de Erros:** Sua principal tarefa é identificar e corrigir **qualquer tipo de erro**, prestando atenção especial a:
-   - **Casos (Fälle):** Erros de acusativo (Akkusativ), dativo (Dativ), etc.
-   - **Capitalização (Groß- und Kleinschreibung):** Substantivos devem sempre começar com letra maiúscula.
-   - **Conjugação Verbal (Konjugation):** Terminações de verbos incorretas.
-   - **Ordem das Palavras (Wortstellung):** Posição do verbo, especialmente em orações subordinadas.
-   - **Vocabulário (Wortschatz):** Uso de palavras incorretas.
-
-   Quando encontrar um erro, corrija-o de forma gentil. **Primeiro, mostre a frase correta em alemão** e, em seguida, **explique o erro brevemente em português**. E na mesma frase continue com a conversa naturalmente sobre o tópico, mas em alemão.
-
-**Regras de Interação:**
-- **Idioma Principal:** A maior parte da conversa DEVE ser em **alemão**.
-- **Idioma das Correções:** As explicações dos erros DEVEM ser em **português**.
-- **Persistência:** Mantenha a conversa focada no **Tópico Geral da Conversa** fornecido.`;
+// System prompt para conversação em alemão (escrita) - OTIMIZADO
+const CONVERSATION_SYSTEM_PROMPT = `Você é CorrectMe, tutor de alemão. Converse em ALEMÃO sobre o tópico dado. Se o aluno errar, corrija mostrando a frase correta e explique o erro brevemente em português. Depois continue a conversa em alemão. Seja breve e natural.`;
 
 // Helper function to call DeepSeek API with timeout
 async function callDeepSeek(systemPrompt, userPrompt, temperature = 0.5, maxTokens = 800) {
@@ -274,12 +251,9 @@ async function handleGrammarRequest(message, workflow) {
 async function handleWritingRequest(message, tema, sessionId) {
     console.log('Handling writing request:', message, tema);
 
-    const userPrompt = `**Tópico Geral da Conversa (NÃO MUDAR):** \`${tema || message}\`
-**Última Mensagem do Aluno (RESPONDER A ESTA):** \`${message}\`
+    const userPrompt = `Tópico: ${tema || message}. Aluno disse: "${message}". Responda em alemão, corrija erros se houver.`;
 
-Sua tarefa é continuar a conversa sobre o **Tópico Geral**. Responda diretamente à **Última Mensagem do Aluno**. Siga todas as suas regras de persona e formatação de saída.`;
-
-    const response = await callDeepSeek(CONVERSATION_SYSTEM_PROMPT, userPrompt, 0.6);
+    const response = await callDeepSeek(CONVERSATION_SYSTEM_PROMPT, userPrompt, 0.6, 400);
 
     // Try to parse JSON output if present
     try {
