@@ -203,18 +203,37 @@ async function getUserIdByEmail(email) {
         body: JSON.stringify({ user_email: email })
     });
     const text = await response.text();
+    console.log('getUserIdByEmail response:', text);
     try {
         const parsed = JSON.parse(text);
-        return typeof parsed === 'string' ? parsed : parsed.data || parsed;
+        const userId = typeof parsed === 'string' ? parsed : parsed.data || parsed;
+        console.log('Parsed userId:', userId);
+        return userId;
     } catch (e) {
-        return text.replace(/"/g, '');
+        const userId = text.replace(/"/g, '');
+        console.log('Fallback userId:', userId);
+        return userId;
     }
 }
 
 // Get user profile (for credits check)
 async function getUserProfile(userId) {
-    const response = await supabaseRequest(`/rest/v1/profiles?id=eq.${userId}&select=*`);
-    const data = await response.json();
+    console.log('Getting profile for userId:', userId);
+
+    // Try with 'id' first
+    let response = await supabaseRequest(`/rest/v1/profiles?id=eq.${userId}&select=*`);
+    let data = await response.json();
+    console.log('Profile query by id result:', JSON.stringify(data));
+
+    if (data && data.length > 0) {
+        return data[0];
+    }
+
+    // Try with 'user_id' if 'id' didn't work
+    response = await supabaseRequest(`/rest/v1/profiles?user_id=eq.${userId}&select=*`);
+    data = await response.json();
+    console.log('Profile query by user_id result:', JSON.stringify(data));
+
     return data[0] || null;
 }
 
