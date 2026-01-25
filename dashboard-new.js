@@ -1488,7 +1488,7 @@ async function handleCorrectionSubmit(e) {
                                 sendButtonText: 'Enviar'
                             };
                         </script>
-                        <script src="bot_051.js"></script>
+                        <script src="bot_051.js?v=${Date.now()}"></script>
                     </body>
                     </html>
                 `;
