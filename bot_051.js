@@ -188,29 +188,68 @@
             color: var(--chat-color-text-dark);
             border-radius: var(--chat-radius-md) 0 var(--chat-radius-md) var(--chat-radius-md);
         }
-        
+
+        .chat-assist-widget .markdown-content h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin-top: 0;
+            margin-bottom: 14px;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 8px;
+        }
+        .chat-assist-widget .markdown-content h2 {
+            font-size: 17px;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin-top: 16px;
+            margin-bottom: 10px;
+        }
         .chat-assist-widget .markdown-content h3 {
             font-size: 16px;
-            font-weight: 600;
-            margin-top: 0;
-            margin-bottom: 12px;
+            font-weight: 700;
+            color: #2563eb;
+            margin-top: 14px;
+            margin-bottom: 10px;
         }
         .chat-assist-widget .markdown-content p {
             margin-top: 0;
-            margin-bottom: 8px;
-            line-height: 1.5;
+            margin-bottom: 10px;
+            line-height: 1.6;
         }
         .chat-assist-widget .markdown-content ul {
             list-style-type: disc;
             padding-left: 20px;
             margin-top: 0;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+        }
+        .chat-assist-widget .markdown-content li {
+            margin-bottom: 6px;
+            line-height: 1.5;
         }
         .chat-assist-widget .markdown-content strong {
-            font-weight: 600;
+            font-weight: 700;
+            color: #1e40af;
         }
         .chat-assist-widget .markdown-content em {
             font-style: italic;
+            color: #4b5563;
+        }
+        .chat-assist-widget .markdown-content code {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+        }
+        .chat-assist-widget .markdown-content blockquote {
+            border-left: 4px solid #3b82f6;
+            margin: 12px 0;
+            padding: 8px 16px;
+            background: #eff6ff;
+            color: #1e3a5f;
+            border-radius: 0 8px 8px 0;
         }
         .chat-assist-widget .markdown-content p:last-child {
             margin-bottom: 0;
