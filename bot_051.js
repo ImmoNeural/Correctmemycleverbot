@@ -491,6 +491,54 @@
     `;
     document.head.appendChild(widgetStyles);
 
+    // Simple Markdown renderer
+    window.renderMarkdown = function(text) {
+        if (!text) return '';
+
+        let html = text
+            // Escape HTML first
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+
+            // Headers (must be at start of line)
+            .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+            .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+            .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+
+            // Bold and italic
+            .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.+?)\*/g, '<em>$1</em>')
+
+            // Inline code
+            .replace(/`([^`]+)`/g, '<code>$1</code>')
+
+            // Blockquotes
+            .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+
+            // Unordered lists
+            .replace(/^[\-\*] (.+)$/gm, '<li>$1</li>')
+
+            // Line breaks
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/\n/g, '<br>');
+
+        // Wrap consecutive <li> items in <ul>
+        html = html.replace(/(<li>.*?<\/li>)(\s*<br>)?(\s*<li>)/g, '$1$3');
+        html = html.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>');
+
+        // Merge consecutive blockquotes
+        html = html.replace(/<\/blockquote>\s*<br>\s*<blockquote>/g, '<br>');
+
+        // Wrap in paragraph if not already wrapped
+        if (!html.startsWith('<h') && !html.startsWith('<ul') && !html.startsWith('<blockquote')) {
+            html = '<p>' + html + '</p>';
+        }
+
+        return html;
+    };
+
     // Default configuration
     const defaultSettings = {
         webhook: { url: '' },
