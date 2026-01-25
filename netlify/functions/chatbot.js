@@ -111,6 +111,7 @@ Não se desvie do tópico mesmo que o aluno insista em falar de um outro assunto
 
 // Helper function to call DeepSeek API
 async function callDeepSeek(systemPrompt, userPrompt, temperature = 0.5, maxTokens = 1200) {
+    console.log('Calling DeepSeek API...');
     const body = {
         model: 'deepseek-chat',
         messages: [
@@ -121,8 +122,6 @@ async function callDeepSeek(systemPrompt, userPrompt, temperature = 0.5, maxToke
         max_tokens: maxTokens
     };
 
-    // Note: DeepSeek may not support response_format, so we rely on prompt instructions for JSON
-
     const response = await fetch(DEEPSEEK_API_URL, {
         method: 'POST',
         headers: {
@@ -132,13 +131,18 @@ async function callDeepSeek(systemPrompt, userPrompt, temperature = 0.5, maxToke
         body: JSON.stringify(body)
     });
 
+    console.log('DeepSeek response status:', response.status);
+
     if (!response.ok) {
         const errorText = await response.text();
+        console.error('DeepSeek API error:', errorText);
         throw new Error(`DeepSeek API error: ${errorText}`);
     }
 
     const data = await response.json();
-    return data.choices[0]?.message?.content || '';
+    const content = data.choices[0]?.message?.content || '';
+    console.log('DeepSeek response length:', content.length);
+    return content;
 }
 
 // Helper function for Supabase requests
