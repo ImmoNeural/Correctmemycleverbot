@@ -153,7 +153,7 @@ Não se desvie do tópico mesmo que o aluno insista em falar de um outro assunto
 - **Persistência:** Mantenha a conversa focada no **Tópico Geral da Conversa** fornecido.`;
 
 // Helper function to call DeepSeek API
-async function callDeepSeek(systemPrompt, userPrompt, temperature = 0.5, jsonMode = false) {
+async function callDeepSeek(systemPrompt, userPrompt, temperature = 0.5) {
     const body = {
         model: 'deepseek-chat',
         messages: [
@@ -164,9 +164,7 @@ async function callDeepSeek(systemPrompt, userPrompt, temperature = 0.5, jsonMod
         max_tokens: 2500
     };
 
-    if (jsonMode) {
-        body.response_format = { type: 'json_object' };
-    }
+    // Note: DeepSeek may not support response_format, so we rely on prompt instructions for JSON
 
     const response = await fetch(DEEPSEEK_API_URL, {
         method: 'POST',
@@ -271,7 +269,7 @@ async function classifyGrammarTopic(message, workflow) {
 
 Siga suas instruções, identifique o tópico na tabela e gere a saída no formato JSON obrigatório.`;
 
-    const response = await callDeepSeek(TOPIC_CLASSIFIER_SYSTEM_PROMPT, userPrompt, 0.3, true);
+    const response = await callDeepSeek(TOPIC_CLASSIFIER_SYSTEM_PROMPT, userPrompt, 0.3);
 
     try {
         // Try to parse JSON from response

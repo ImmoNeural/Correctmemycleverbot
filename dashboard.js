@@ -368,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 todosErros.push({
                                     palavra: palavraErrada,
                                     sugestao: erro.sugestao_correcao || '',
-                                    explicacao: erro.descricao_topico_grammatical || erro.descricao_topico_gramatical || '',
+                                    explicacao: erro.descricao_topico_grammatical || erro.descricao_topico_gramatical || erro.gramatica || '',
                                     topico: erro.topico_grammatical_nome || erro.topico_gramatical_nome || '',
                                     categoria: categoria,
                                     cor: categorias[categoria].cor,

@@ -47,7 +47,7 @@ A sua resposta DEVE ser APENAS um objeto JSON válido, sem nenhum texto extra. A
     {
       "topico_gramatical_numero": "",
       "topico_gramatical_nome": "",
-      "gramatica": "",
+      "descricao_topico_gramatical": "",
       "linha": "",
       "coluna": "",
       "palavra_errada": "",
@@ -59,7 +59,7 @@ A sua resposta DEVE ser APENAS um objeto JSON válido, sem nenhum texto extra. A
     {
       "topico_gramatical_numero": "",
       "topico_gramatical_nome": "",
-      "gramatica": "",
+      "descricao_topico_gramatical": "",
       "linha": "",
       "coluna": "",
       "palavra_errada": "",
@@ -71,7 +71,7 @@ A sua resposta DEVE ser APENAS um objeto JSON válido, sem nenhum texto extra. A
     {
       "topico_gramatical_numero": "",
       "topico_gramatical_nome": "",
-      "gramatica": "",
+      "descricao_topico_gramatical": "",
       "linha": "",
       "coluna": "",
       "palavra_errada": "",
@@ -83,7 +83,7 @@ A sua resposta DEVE ser APENAS um objeto JSON válido, sem nenhum texto extra. A
     {
       "topico_gramatical_numero": "",
       "topico_gramatical_nome": "",
-      "gramatica": "",
+      "descricao_topico_gramatical": "",
       "linha": "",
       "coluna": "",
       "palavra_errada": "",
@@ -95,7 +95,7 @@ A sua resposta DEVE ser APENAS um objeto JSON válido, sem nenhum texto extra. A
     {
       "topico_gramatical_numero": "",
       "topico_gramatical_nome": "",
-      "gramatica": "",
+      "descricao_topico_gramatical": "",
       "linha": "",
       "coluna": "",
       "palavra_errada": "",
