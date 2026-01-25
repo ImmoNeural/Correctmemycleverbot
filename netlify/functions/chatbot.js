@@ -261,7 +261,17 @@ async function handleGrammarRequest(message, workflow) {
 async function handleWritingRequest(message, tema, sessionId) {
     console.log('Handling writing request:', message, tema);
 
-    const userPrompt = `Tópico: ${tema || message}. Aluno disse: "${message}". Responda em alemão, corrija erros se houver.`;
+    // Detectar se é a primeira mensagem (seleção de tópico)
+    const isFirstMessage = message === tema || !tema;
+
+    let userPrompt;
+    if (isFirstMessage) {
+        // Primeira mensagem: iniciar conversa sobre o tópico
+        userPrompt = `O aluno escolheu o tópico "${message}" para conversar. Diga "Ótimo! Vamos conversar sobre este tópico." em português, depois inicie uma conversa em alemão fazendo uma pergunta sobre o tema.`;
+    } else {
+        // Mensagens seguintes: conversa normal
+        userPrompt = `Tópico: ${tema}. Aluno disse: "${message}". Responda em alemão, corrija erros se houver.`;
+    }
 
     const response = await callDeepSeek(CONVERSATION_SYSTEM_PROMPT, userPrompt, 0.6, 600);
 

@@ -646,8 +646,12 @@
         if (isChatInitialized) return;
         isChatInitialized = true;
         conversationId = createSessionId();
-        
-        addBotMessage(`Hallo! 😊 Ich bin dein deutscher Sprachassistent! / Olá! Sou seu assistente de alemão!<br><br>Was möchtest du lernen? / O que você quer aprender?`, [
+
+        addBotMessage(`Hallo! 😊 Ich bin dein deutscher Sprachassistent!
+
+Olá! Sou seu assistente de alemão!
+
+Was möchtest du lernen? / O que você quer aprender?`, [
             { text: 'Estudar Gramática 📚', action: 'showLevelSelection' },
             { text: 'Treinar Escrita ✍️', action: 'showWritingTopics' }
         ]);
