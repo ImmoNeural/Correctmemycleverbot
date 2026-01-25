@@ -110,7 +110,7 @@ Não se desvie do tópico mesmo que o aluno insista em falar de um outro assunto
 - **Persistência:** Mantenha a conversa focada no **Tópico Geral da Conversa** fornecido.`;
 
 // Helper function to call DeepSeek API
-async function callDeepSeek(systemPrompt, userPrompt, temperature = 0.5) {
+async function callDeepSeek(systemPrompt, userPrompt, temperature = 0.5, maxTokens = 1200) {
     const body = {
         model: 'deepseek-chat',
         messages: [
@@ -118,7 +118,7 @@ async function callDeepSeek(systemPrompt, userPrompt, temperature = 0.5) {
             { role: 'user', content: userPrompt }
         ],
         temperature: temperature,
-        max_tokens: 2500
+        max_tokens: maxTokens
     };
 
     // Note: DeepSeek may not support response_format, so we rely on prompt instructions for JSON
@@ -240,21 +240,7 @@ function getWorkflowType(workflow) {
 }
 
 // Combined prompt for direct grammar explanation (single API call)
-const DIRECT_GRAMMAR_PROMPT = `Você é o "CorrectMe", um professor de alemão especialista em gramática, amigável e pedagógico, que ajuda estudantes brasileiros a aprender alemão.
-
-**Sua Tarefa:**
-Forneça uma explicação clara, detalhada e didática sobre o tópico gramatical solicitado, adequada ao nível do aluno.
-
-**Regras de Comportamento:**
-- Use exemplos práticos para ilustrar a explicação.
-- Mantenha um tom amigável e encorajador.
-- A sua resposta deve ser exclusivamente em português do Brasil.
-- Inclua exemplos em alemão com tradução para português.
-
-**Formato de Saída:**
-- A sua resposta deve ser um texto formatado em Markdown para fácil leitura.
-- Comece a resposta com o título do tópico em alemão e português: Exemplo: \`### **Modalverben (Verbos Modais)**\`
-- Não mencione processos internos ou ferramentas. Apenas apresente a explicação final.`;
+const DIRECT_GRAMMAR_PROMPT = `Você é o CorrectMe, professor de alemão. Explique o tópico gramatical de forma clara e concisa em português do Brasil. Use exemplos em alemão com tradução. Formate em Markdown, começando com o título do tópico.`;
 
 // Handle grammar study (iniciante, intermediario, avancado) - optimized single API call
 async function handleGrammarRequest(message, workflow) {
