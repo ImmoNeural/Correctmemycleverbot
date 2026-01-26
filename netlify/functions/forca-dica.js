@@ -50,24 +50,26 @@ exports.handler = async (event) => {
         // Nível da dica: 1 = vaga, 2 = média, 3 = mais direta
         const nivelDica = nivel || 1;
 
+        // IMPORTANTE: Usar SOMENTE a tradução, não mencionar a palavra alemã para evitar que a IA tente adivinhar
         let instrucaoDica;
         if (nivelDica === 1) {
-            instrucaoDica = `Com base no significado "${traducao}", dê uma dica MUITO VAGA sobre a categoria ou contexto geral (ex: "relacionado a sentimentos", "usado na cozinha"). NÃO use a palavra "${traducao}" nem sinônimos diretos.`;
+            instrucaoDica = `A palavra em português é "${traducao}". Crie uma dica MUITO VAGA sobre a categoria ou contexto geral. Exemplos: "relacionado a sentimentos", "usado na cozinha", "algo abstrato". NÃO use a palavra "${traducao}" nem sinônimos diretos na dica.`;
         } else if (nivelDica === 2) {
-            instrucaoDica = `Com base no significado "${traducao}", dê uma dica MÉDIA explicando quando ou onde a palavra é usada (ex: "você usa isso quando está com fome", "encontrado em escritórios"). NÃO use a palavra "${traducao}" nem sinônimos diretos.`;
+            instrucaoDica = `A palavra em português é "${traducao}". Crie uma dica MÉDIA explicando situações onde esse conceito é usado. Exemplos: "você sente isso quando a rotina cansa", "algo que todo mundo busca no dia a dia". NÃO use a palavra "${traducao}" nem sinônimos diretos na dica.`;
         } else {
-            instrucaoDica = `Com base no significado "${traducao}", dê uma dica BEM CLARA com uma frase de exemplo usando "___" no lugar da palavra (ex: "Eu ___ muito café de manhã" para "beber"). Pode dar sinônimos ou explicações mais diretas.`;
+            instrucaoDica = `A palavra em português é "${traducao}". Crie uma dica BEM CLARA com uma frase de exemplo usando "___" no lugar da palavra. Exemplo para "variedade": "Ter ___ na alimentação é importante para a saúde". Pode usar sinônimos ou explicações diretas.`;
         }
 
-        const systemPrompt = `Você é um assistente para um jogo da forca. Sua tarefa é criar UMA dica curta e útil.
+        const systemPrompt = `Você é um assistente para um jogo da forca em português. Você receberá uma TRADUÇÃO em português e deve criar UMA dica baseada EXCLUSIVAMENTE nessa tradução.
 
-REGRAS OBRIGATÓRIAS:
-1. A dica deve ser em português
-2. Máximo de 20 palavras
-3. Seja direto e claro
-4. Responda APENAS com a dica, sem explicações
+REGRAS CRÍTICAS:
+1. Use SOMENTE a tradução fornecida como base - NÃO tente adivinhar outros significados
+2. A dica deve ser em português
+3. Máximo de 15 palavras
+4. Responda APENAS com a dica, sem prefixos como "Dica:" ou explicações
 5. Para nível 1 e 2: NÃO revele a tradução direta nem sinônimos óbvios
-6. Para nível 3: Pode ser mais direto, usar sinônimos ou frases de exemplo`;
+6. Para nível 3: Pode ser mais direto, usar sinônimos ou frases de exemplo
+7. IGNORE qualquer palavra em alemão - foque APENAS na tradução portuguesa fornecida`;
 
         const userPrompt = instrucaoDica;
 
