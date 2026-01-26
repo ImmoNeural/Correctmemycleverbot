@@ -1336,9 +1336,20 @@
 
                                 <!-- Área da palavra e dica -->
                                 <div class="flex-1 text-center">
-                                    <!-- Dica/Tradução -->
-                                    <p class="text-slate-400 text-sm mb-2">Dica (tradução):</p>
-                                    <p id="forca-dica" class="text-xl text-amber-400 font-semibold mb-6">tradução aqui</p>
+                                    <!-- Botão de Dica com IA -->
+                                    <div class="flex items-center justify-center gap-3 mb-4">
+                                        <button id="forca-dica-btn" class="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/>
+                                            </svg>
+                                            Pedir Dica
+                                            <span id="forca-dicas-restantes" class="bg-amber-800 text-amber-200 text-xs font-bold px-2 py-0.5 rounded-full">3</span>
+                                        </button>
+                                    </div>
+                                    <!-- Área da dica -->
+                                    <div id="forca-dica-container" class="mb-6 min-h-[3rem]">
+                                        <p id="forca-dica" class="text-lg text-amber-400 font-medium italic"></p>
+                                    </div>
 
                                     <!-- Palavra com espaços -->
                                     <div id="forca-palavra" class="flex justify-center gap-2 mb-6 flex-wrap">

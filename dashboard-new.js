@@ -2594,7 +2594,10 @@ async function handleCorrectionSubmit(e) {
             maxErrors: 6,
             correctCount: 0,
             wrongCount: 0,
-            gameOver: false
+            gameOver: false,
+            dicasRestantes: 3,
+            dicaNivel: 0,
+            dicasUsadas: []
         };
 
         const forcaPartes = [
@@ -2707,12 +2710,23 @@ async function handleCorrectionSubmit(e) {
             }
 
             // Resetar estado para nova palavra
-            forcaGameState.currentWord = word.palavra.toUpperCase();
-            forcaGameState.currentHint = word.descricao || 'Sem dica';
+            // Limpar a palavra: remover espaços, quebras de linha e caracteres especiais desnecessários
+            let palavraLimpa = word.palavra
+                .trim()
+                .replace(/[\r\n\t]/g, '') // Remove quebras de linha e tabs
+                .replace(/\s+/g, '') // Remove espaços extras
+                .toUpperCase();
+            forcaGameState.currentWord = palavraLimpa;
+            forcaGameState.currentHint = word.descricao || '';
             forcaGameState.guessedLetters = [];
             forcaGameState.wrongLetters = [];
             forcaGameState.errors = 0;
             forcaGameState.gameOver = false;
+
+            // Resetar sistema de dicas
+            forcaGameState.dicasRestantes = 3;
+            forcaGameState.dicaNivel = 0;
+            forcaGameState.dicasUsadas = [];
 
             // Atualizar progresso
             document.getElementById('game-progress-text').textContent = `Palavra ${forcaGameState.currentIndex + 1} de ${forcaGameState.words.length}`;
@@ -2724,8 +2738,19 @@ async function handleCorrectionSubmit(e) {
             // Resetar visual
             resetForcaVisual();
 
-            // Mostrar dica
-            document.getElementById('forca-dica').textContent = forcaGameState.currentHint;
+            // Limpar área de dica (não mostrar tradução)
+            document.getElementById('forca-dica').textContent = '';
+
+            // Resetar botão de dicas
+            const dicaBtn = document.getElementById('forca-dica-btn');
+            const dicasRestantesEl = document.getElementById('forca-dicas-restantes');
+            if (dicaBtn) {
+                dicaBtn.disabled = false;
+                dicaBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            if (dicasRestantesEl) {
+                dicasRestantesEl.textContent = '3';
+            }
 
             // Criar slots da palavra
             renderForcaPalavra();
@@ -2762,11 +2787,29 @@ async function handleCorrectionSubmit(e) {
             const container = document.getElementById('forca-palavra');
             container.innerHTML = '';
 
-            for (const letra of forcaGameState.currentWord) {
+            const palavra = forcaGameState.currentWord;
+            const tamanho = palavra.length;
+
+            // Ajustar tamanho das letras para palavras longas
+            let slotSize = '2rem';
+            let fontSize = '1.5rem';
+            if (tamanho > 12) {
+                slotSize = '1.5rem';
+                fontSize = '1.1rem';
+            }
+            if (tamanho > 16) {
+                slotSize = '1.2rem';
+                fontSize = '0.9rem';
+            }
+
+            for (const letra of palavra) {
                 const slot = document.createElement('div');
                 slot.className = 'forca-letra-slot';
+                slot.style.width = slotSize;
+                slot.style.height = '2.5rem';
+                slot.style.fontSize = fontSize;
 
-                // Verificar se é letra ou caractere especial
+                // Verificar se é letra válida (incluindo umlauts alemães)
                 if (/[A-ZÄÖÜß]/i.test(letra)) {
                     if (forcaGameState.guessedLetters.includes(letra)) {
                         slot.textContent = letra;
@@ -2774,10 +2817,14 @@ async function handleCorrectionSubmit(e) {
                     } else {
                         slot.textContent = '';
                     }
-                } else {
-                    // Espaços, hífens, etc - mostrar diretamente
+                } else if (letra === '-') {
+                    // Hífen - mostrar diretamente
                     slot.textContent = letra;
                     slot.style.borderBottom = 'none';
+                }
+                // Ignorar outros caracteres (espaços, quebras de linha, etc)
+                else {
+                    continue;
                 }
 
                 container.appendChild(slot);
@@ -2790,6 +2837,93 @@ async function handleCorrectionSubmit(e) {
                 btn.classList.remove('correta', 'errada');
             });
         }
+
+        // Função para pedir dica via IA
+        async function pedirDicaForca() {
+            if (forcaGameState.gameOver) return;
+            if (forcaGameState.dicasRestantes <= 0) return;
+
+            const dicaBtn = document.getElementById('forca-dica-btn');
+            const dicasRestantesEl = document.getElementById('forca-dicas-restantes');
+            const dicaEl = document.getElementById('forca-dica');
+
+            // Desabilitar botão durante carregamento
+            if (dicaBtn) {
+                dicaBtn.disabled = true;
+                dicaBtn.innerHTML = `
+                    <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Gerando...
+                `;
+            }
+
+            try {
+                // Incrementar nível da dica (1, 2, 3)
+                forcaGameState.dicaNivel++;
+                const nivel = forcaGameState.dicaNivel;
+
+                const response = await fetch('/.netlify/functions/forca-dica', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        palavra: forcaGameState.currentWord,
+                        nivel: nivel
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.dica) {
+                    // Atualizar contador de dicas
+                    forcaGameState.dicasRestantes--;
+                    forcaGameState.dicasUsadas.push(data.dica);
+
+                    // Mostrar dica
+                    if (dicaEl) {
+                        dicaEl.innerHTML = forcaGameState.dicasUsadas.map((d, i) =>
+                            `<span class="block mb-1">Dica ${i + 1}: ${d}</span>`
+                        ).join('');
+                    }
+
+                    // Atualizar contador visual
+                    if (dicasRestantesEl) {
+                        dicasRestantesEl.textContent = forcaGameState.dicasRestantes;
+                    }
+                } else {
+                    if (dicaEl) {
+                        dicaEl.textContent = 'Erro ao gerar dica. Tente novamente.';
+                    }
+                    forcaGameState.dicaNivel--; // Reverter incremento se falhou
+                }
+            } catch (error) {
+                console.error('Erro ao pedir dica:', error);
+                if (dicaEl) {
+                    dicaEl.textContent = 'Erro de conexão. Tente novamente.';
+                }
+                forcaGameState.dicaNivel--; // Reverter incremento se falhou
+            } finally {
+                // Restaurar botão
+                if (dicaBtn) {
+                    dicaBtn.disabled = forcaGameState.dicasRestantes <= 0;
+                    dicaBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/>
+                        </svg>
+                        Pedir Dica
+                        <span id="forca-dicas-restantes" class="bg-amber-800 text-amber-200 text-xs font-bold px-2 py-0.5 rounded-full">${forcaGameState.dicasRestantes}</span>
+                    `;
+
+                    if (forcaGameState.dicasRestantes <= 0) {
+                        dicaBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    }
+                }
+            }
+        }
+
+        // Event listener para botão de dica
+        document.getElementById('forca-dica-btn')?.addEventListener('click', pedirDicaForca);
 
         // Event listeners para teclas
         document.querySelectorAll('.forca-tecla').forEach(btn => {
@@ -2906,6 +3040,13 @@ async function handleCorrectionSubmit(e) {
             // Desabilitar teclado
             document.querySelectorAll('.forca-tecla').forEach(btn => btn.disabled = true);
 
+            // Desabilitar botão de dica
+            const dicaBtn = document.getElementById('forca-dica-btn');
+            if (dicaBtn) {
+                dicaBtn.disabled = true;
+                dicaBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+
             // Mostrar botão próxima
             showForcaProximaBtn();
         }
@@ -2921,11 +3062,13 @@ async function handleCorrectionSubmit(e) {
             // Revelar palavra completa
             const container = document.getElementById('forca-palavra');
             const slots = container.querySelectorAll('.forca-letra-slot');
-            const wordArray = forcaGameState.currentWord.split('');
+
+            // Filtrar apenas as letras válidas da palavra (mesma lógica do render)
+            const letrasValidas = forcaGameState.currentWord.split('').filter(c => /[A-ZÄÖÜß-]/i.test(c));
 
             slots.forEach((slot, i) => {
-                if (!slot.textContent && /[A-ZÄÖÜß]/i.test(wordArray[i])) {
-                    slot.textContent = wordArray[i];
+                if (!slot.textContent && letrasValidas[i] && /[A-ZÄÖÜß]/i.test(letrasValidas[i])) {
+                    slot.textContent = letrasValidas[i];
                     slot.classList.add('perdeu');
                 }
             });
@@ -2940,6 +3083,13 @@ async function handleCorrectionSubmit(e) {
 
             // Desabilitar teclado
             document.querySelectorAll('.forca-tecla').forEach(btn => btn.disabled = true);
+
+            // Desabilitar botão de dica
+            const dicaBtn = document.getElementById('forca-dica-btn');
+            if (dicaBtn) {
+                dicaBtn.disabled = true;
+                dicaBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
 
             // Mostrar botão próxima
             showForcaProximaBtn();
