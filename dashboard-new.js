@@ -633,11 +633,6 @@ async function handleCorrectionSubmit(e) {
             return;
         }
 
-        // Remove o status de "analisando" - agora vamos mostrar os erros
-        if (statusAnalise) {
-            statusAnalise.remove();
-        }
-
         // Prepara lista de palavras para pintar progressivamente
         const palavrasSet = new Map();
         Object.entries(errosPorCategoria).forEach(([catKey, lista]) => {
@@ -653,19 +648,22 @@ async function handleCorrectionSubmit(e) {
         const palavrasParaGrifar = Array.from(palavrasSet.values()).sort((a,b) => b.palavra.length - a.palavra.length);
 
         // Função para pintar uma palavra no texto
-        function pintarPalavra(textoAtual, item) {
+        function pintarPalavra(textoAtual, item, markId) {
+            const markStyle = `background-color:${item.corHex}; color:#000000; padding:2px 6px; border-radius:4px; font-weight:500;`;
+            const markClass = 'mark-highlight';
+
             if (item.palavra.includes('...')) {
                 const partes = item.palavra.split('...').map(p => p.trim()).filter(p => p);
                 partes.forEach(parte => {
                     const escaped = parte.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                     textoAtual = textoAtual.replace(new RegExp(`\\b${escaped}\\b`, 'gi'), (match) => {
-                        return `<mark style="background-color:${item.corHex}; color:#000000; padding:2px 4px; border-radius:3px; animation: fadeInMark 0.3s ease;">${match}</mark>`;
+                        return `<mark class="${markClass}" style="${markStyle}">${match}</mark>`;
                     });
                 });
             } else {
                 const escaped = item.palavra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                 textoAtual = textoAtual.replace(new RegExp(`\\b${escaped}\\b`, 'gi'), (match) => {
-                    return `<mark style="background-color:${item.corHex}; color:#000000; padding:2px 4px; border-radius:3px; animation: fadeInMark 0.3s ease;">${match}</mark>`;
+                    return `<mark class="${markClass}" style="${markStyle}">${match}</mark>`;
                 });
             }
             return textoAtual;
@@ -674,8 +672,24 @@ async function handleCorrectionSubmit(e) {
         // Adiciona CSS para animação
         const styleEl = document.createElement('style');
         styleEl.textContent = `
-            @keyframes fadeInMark { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-            @keyframes slideInCard { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+            @keyframes fadeInMark {
+                from { opacity: 0; transform: scale(0.8); background-color: #fef08a; }
+                to { opacity: 1; transform: scale(1); }
+            }
+            @keyframes slideInCard {
+                from { opacity: 0; transform: translateX(-20px); }
+                to { opacity: 1; transform: translateX(0); }
+            }
+            @keyframes pulseHighlight {
+                0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4); }
+                50% { box-shadow: 0 0 0 8px rgba(251, 191, 36, 0); }
+            }
+            .error-card-appear {
+                animation: slideInCard 0.4s ease-out forwards;
+            }
+            .mark-highlight {
+                animation: fadeInMark 0.5s ease-out, pulseHighlight 0.6s ease-out;
+            }
         `;
         document.head.appendChild(styleEl);
 
@@ -683,33 +697,53 @@ async function handleCorrectionSubmit(e) {
         let textoAtual = escapeHtml(text);
         let indexPalavra = 0;
 
+        // Atualiza contador de erros durante a animação
+        function atualizarContador() {
+            const statusDiv = document.getElementById('status-analise');
+            if (statusDiv && indexPalavra < palavrasParaGrifar.length) {
+                statusDiv.innerHTML = `
+                    <div class="text-yellow-400" style="display: flex; align-items: center; gap: 10px;">
+                        <span class="loading-spinner" style="width: 20px; height: 20px; border: 2px solid #fbbf24; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span>
+                        <span>Destacando erro ${indexPalavra + 1} de ${palavrasParaGrifar.length}...</span>
+                    </div>
+                `;
+            }
+        }
+
         async function pintarProximaPalavra() {
             if (indexPalavra >= palavrasParaGrifar.length) {
                 // Terminou de pintar, agora mostra os detalhes
-                mostrarDetalhesProgressivamente();
+                const statusDiv = document.getElementById('status-analise');
+                if (statusDiv) {
+                    statusDiv.innerHTML = `
+                        <div class="text-green-400" style="display: flex; align-items: center; gap: 10px;">
+                            <span>Erros destacados! Mostrando explicações...</span>
+                        </div>
+                    `;
+                }
+                setTimeout(mostrarDetalhesProgressivamente, 500);
                 return;
             }
 
+            atualizarContador();
             const item = palavrasParaGrifar[indexPalavra];
-            textoAtual = pintarPalavra(textoAtual, item);
+            textoAtual = pintarPalavra(textoAtual, item, indexPalavra);
             if (textoContainer) {
                 textoContainer.innerHTML = textoAtual;
+                // Scroll suave para manter o texto visível
+                textoContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
 
             indexPalavra++;
-            setTimeout(pintarProximaPalavra, 150); // 150ms entre cada palavra
+            setTimeout(pintarProximaPalavra, 400); // 400ms entre cada palavra para melhor visualização
         }
 
         // ANIMAÇÃO PROGRESSIVA: Mostrar detalhes dos erros
         async function mostrarDetalhesProgressivamente() {
-            const todosErros = [];
-
-            // Coleta todos os erros com sua categoria
-            for (const [catKey, cat] of Object.entries(categorias)) {
-                const lista = errosPorCategoria[catKey] || [];
-                lista.forEach(errObj => {
-                    todosErros.push({ errObj, catKey, cat });
-                });
+            // Remove o status de análise pois vamos mostrar os detalhes
+            const statusDiv = document.getElementById('status-analise');
+            if (statusDiv) {
+                statusDiv.remove();
             }
 
             // Agrupa por categoria para exibir
@@ -723,6 +757,7 @@ async function handleCorrectionSubmit(e) {
 
             let indexCategoria = 0;
             const categoriasKeys = Object.keys(categoriasComErros);
+            let erroGlobalIndex = 0;
 
             async function mostrarProximaCategoria() {
                 if (indexCategoria >= categoriasKeys.length) {
@@ -734,13 +769,22 @@ async function handleCorrectionSubmit(e) {
                 const catKey = categoriasKeys[indexCategoria];
                 const { cat, lista } = categoriasComErros[catKey];
 
-                // Cria container da categoria
+                // Cria container da categoria com animação
                 const catContainer = document.createElement('div');
-                catContainer.style.cssText = 'margin-bottom: 24px; animation: slideInCard 0.3s ease;';
-                catContainer.innerHTML = `<h4 style="font-size: 16px; font-weight: 600; color: ${cat.corHex}; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid ${cat.corHex}40;">${cat.nome} (${lista.length})</h4>`;
+                catContainer.className = 'error-card-appear';
+                catContainer.style.cssText = 'margin-bottom: 24px; opacity: 0;';
+                catContainer.innerHTML = `
+                    <h4 style="font-size: 18px; font-weight: 700; color: ${cat.corHex}; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 3px solid ${cat.corHex}; display: flex; align-items: center; gap: 10px;">
+                        <span style="display: inline-block; width: 12px; height: 12px; background: ${cat.corHex}; border-radius: 50%;"></span>
+                        ${cat.nome} <span style="font-weight: 400; font-size: 14px; color: #94a3b8;">(${lista.length} ${lista.length === 1 ? 'erro' : 'erros'})</span>
+                    </h4>
+                `;
 
                 if (detalhesContainer) {
                     detalhesContainer.appendChild(catContainer);
+                    // Força reflow para animação funcionar
+                    catContainer.offsetHeight;
+                    catContainer.style.opacity = '1';
                 }
 
                 // Mostra erros dessa categoria um por um
@@ -748,33 +792,43 @@ async function handleCorrectionSubmit(e) {
 
                 function mostrarProximoErro() {
                     if (indexErro >= lista.length) {
-                        // Próxima categoria
+                        // Próxima categoria após delay
                         indexCategoria++;
-                        setTimeout(mostrarProximaCategoria, 200);
+                        setTimeout(mostrarProximaCategoria, 600);
                         return;
                     }
 
                     const errObj = lista[indexErro];
+                    erroGlobalIndex++;
                     const tituloErro = escapeHtml((errObj.topico_grammatical_nome || errObj.topico_gramatical_nome || '').trim());
                     const palavraErrada = escapeHtml((errObj.palavra_errada || '').trim());
                     const sugestaoCorrecao = escapeHtml((errObj.sugestao_correcao || '').trim());
                     const gramatica = escapeHtml((errObj.gramatica || '').trim());
 
-                    const cardHtml = `
-                        <div style="background-color: #1e293b; border: 1px solid #475569; border-left: 4px solid ${cat.corHex}; border-radius: 8px; padding: 16px; margin-bottom: 12px; animation: slideInCard 0.3s ease;">
-                            ${tituloErro ? `<div style="margin-bottom: 12px;"><strong style="color: #a78bfa; font-size: 15px;">${tituloErro}</strong></div>` : ''}
-                            ${palavraErrada ? `<p style="margin: 0 0 8px 0; font-size: 14px;"><span style="color: #94a3b8;">Palavra Errada:</span> <span style="color: #fca5a5; font-weight: 600;">${palavraErrada}</span></p>` : ''}
-                            ${sugestaoCorrecao ? `<p style="margin: 0 0 8px 0; font-size: 14px;"><span style="color: #94a3b8;">Correção:</span> <span style="color: #86efac; font-weight: 600;">${sugestaoCorrecao}</span></p>` : ''}
-                            ${gramatica ? `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #334155;"><p style="margin: 0; color: #cbd5e1; font-size: 14px; line-height: 1.6;">${gramatica}</p></div>` : ''}
-                        </div>
+                    const cardDiv = document.createElement('div');
+                    cardDiv.className = 'error-card-appear';
+                    cardDiv.style.cssText = `background-color: #1e293b; border: 1px solid #475569; border-left: 5px solid ${cat.corHex}; border-radius: 8px; padding: 16px; margin-bottom: 14px; opacity: 0; transform: translateX(-20px);`;
+                    cardDiv.innerHTML = `
+                        ${tituloErro ? `<div style="margin-bottom: 12px;"><strong style="color: #a78bfa; font-size: 15px;">${tituloErro}</strong></div>` : ''}
+                        ${palavraErrada ? `<p style="margin: 0 0 10px 0; font-size: 14px;"><span style="color: #94a3b8;">Palavra Errada:</span> <span style="color: #fca5a5; font-weight: 600; background: #7f1d1d; padding: 2px 8px; border-radius: 4px;">${palavraErrada}</span></p>` : ''}
+                        ${sugestaoCorrecao ? `<p style="margin: 0 0 10px 0; font-size: 14px;"><span style="color: #94a3b8;">Correção:</span> <span style="color: #86efac; font-weight: 600; background: #14532d; padding: 2px 8px; border-radius: 4px;">${sugestaoCorrecao}</span></p>` : ''}
+                        ${gramatica ? `<div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid #334155;"><p style="margin: 0; color: #e2e8f0; font-size: 14px; line-height: 1.7;"><strong style="color: #fbbf24;">Explicação:</strong> ${gramatica}</p></div>` : ''}
                     `;
 
-                    catContainer.insertAdjacentHTML('beforeend', cardHtml);
+                    catContainer.appendChild(cardDiv);
+                    // Força reflow e anima
+                    cardDiv.offsetHeight;
+                    cardDiv.style.opacity = '1';
+                    cardDiv.style.transform = 'translateX(0)';
+
+                    // Scroll suave para mostrar o card
+                    cardDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
                     indexErro++;
-                    setTimeout(mostrarProximoErro, 100); // 100ms entre cada erro
+                    setTimeout(mostrarProximoErro, 500); // 500ms entre cada erro para visualização clara
                 }
 
-                setTimeout(mostrarProximoErro, 100);
+                setTimeout(mostrarProximoErro, 300);
             }
 
             mostrarProximaCategoria();
