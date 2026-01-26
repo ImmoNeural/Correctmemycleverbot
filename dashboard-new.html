@@ -81,16 +81,17 @@
 
         /* Estilos do Jogo da Forca */
         .forca-parte {
-            stroke: #ef4444;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.3s ease, transform 0.3s ease;
         }
 
         .forca-parte.hidden {
             opacity: 0;
+            transform: scale(0.8);
         }
 
         .forca-parte.visible {
             opacity: 1;
+            transform: scale(1);
         }
 
         .forca-tecla {
@@ -1309,28 +1310,88 @@
                                 <!-- SVG da Forca -->
                                 <div class="flex-shrink-0">
                                     <svg id="forca-svg" width="200" height="250" viewBox="0 0 200 250" class="stroke-slate-400">
-                                        <!-- Base -->
-                                        <line x1="20" y1="230" x2="100" y2="230" stroke-width="4" stroke-linecap="round"/>
+                                        <!-- Base de madeira estilizada -->
+                                        <rect x="15" y="225" width="90" height="8" rx="2" fill="#8B4513" stroke="none"/>
+                                        <line x1="20" y1="230" x2="100" y2="230" stroke-width="4" stroke="#5D3A1A" stroke-linecap="round"/>
                                         <!-- Poste vertical -->
-                                        <line x1="60" y1="230" x2="60" y2="20" stroke-width="4" stroke-linecap="round"/>
+                                        <line x1="60" y1="230" x2="60" y2="20" stroke-width="6" stroke="#5D3A1A" stroke-linecap="round"/>
                                         <!-- Poste horizontal -->
-                                        <line x1="60" y1="20" x2="140" y2="20" stroke-width="4" stroke-linecap="round"/>
+                                        <line x1="55" y1="20" x2="145" y2="20" stroke-width="6" stroke="#5D3A1A" stroke-linecap="round"/>
+                                        <!-- Suporte diagonal -->
+                                        <line x1="60" y1="50" x2="90" y2="20" stroke-width="4" stroke="#5D3A1A" stroke-linecap="round"/>
                                         <!-- Corda -->
-                                        <line x1="140" y1="20" x2="140" y2="50" stroke-width="4" stroke-linecap="round"/>
+                                        <line x1="140" y1="20" x2="140" y2="42" stroke-width="3" stroke="#C4A574" stroke-linecap="round"/>
 
-                                        <!-- Partes do corpo (inicialmente escondidas) -->
-                                        <!-- Cabeça -->
-                                        <circle id="forca-cabeca" cx="140" cy="70" r="20" fill="none" stroke-width="4" class="forca-parte hidden"/>
-                                        <!-- Corpo -->
-                                        <line id="forca-corpo" x1="140" y1="90" x2="140" y2="150" stroke-width="4" stroke-linecap="round" class="forca-parte hidden"/>
-                                        <!-- Braço esquerdo -->
-                                        <line id="forca-braco-esq" x1="140" y1="110" x2="110" y2="130" stroke-width="4" stroke-linecap="round" class="forca-parte hidden"/>
-                                        <!-- Braço direito -->
-                                        <line id="forca-braco-dir" x1="140" y1="110" x2="170" y2="130" stroke-width="4" stroke-linecap="round" class="forca-parte hidden"/>
-                                        <!-- Perna esquerda -->
-                                        <line id="forca-perna-esq" x1="140" y1="150" x2="110" y2="190" stroke-width="4" stroke-linecap="round" class="forca-parte hidden"/>
-                                        <!-- Perna direita -->
-                                        <line id="forca-perna-dir" x1="140" y1="150" x2="170" y2="190" stroke-width="4" stroke-linecap="round" class="forca-parte hidden"/>
+                                        <!-- Boneco Bavaro (inicialmente escondido) -->
+                                        <!-- Cabeca com chapeu tiroles -->
+                                        <g id="forca-cabeca" class="forca-parte hidden">
+                                            <!-- Chapeu tiroles (Filzhut) -->
+                                            <ellipse cx="140" cy="47" rx="18" ry="6" fill="#2D5A27" stroke="#1a3d17" stroke-width="1"/>
+                                            <path d="M 125 47 Q 125 32 140 30 Q 155 32 155 47" fill="#2D5A27" stroke="#1a3d17" stroke-width="1"/>
+                                            <!-- Fita do chapeu -->
+                                            <rect x="125" y="43" width="30" height="4" fill="#8B0000" stroke="none"/>
+                                            <!-- Pena no chapeu -->
+                                            <path d="M 150 35 Q 158 25 155 15 Q 152 25 148 30 Q 150 28 150 35" fill="#F5DEB3" stroke="#DDD" stroke-width="0.5"/>
+                                            <!-- Cabeca -->
+                                            <circle cx="140" cy="62" r="15" fill="#FDBF6F" stroke="#E5A04D" stroke-width="2"/>
+                                            <!-- Olhos -->
+                                            <circle cx="135" cy="59" r="2" fill="#2B1810"/>
+                                            <circle cx="145" cy="59" r="2" fill="#2B1810"/>
+                                            <!-- Nariz -->
+                                            <ellipse cx="140" cy="64" rx="2" ry="3" fill="#E5A04D" stroke="none"/>
+                                            <!-- Bigode alemao -->
+                                            <path d="M 133 68 Q 137 72 140 68 Q 143 72 147 68" fill="none" stroke="#5D3A1A" stroke-width="2" stroke-linecap="round"/>
+                                        </g>
+
+                                        <!-- Corpo com Lederhosen e suspensorios -->
+                                        <g id="forca-corpo" class="forca-parte hidden">
+                                            <!-- Camisa branca -->
+                                            <rect x="130" y="77" width="20" height="35" rx="3" fill="#FFF" stroke="#DDD" stroke-width="1"/>
+                                            <!-- Suspensorios -->
+                                            <line x1="134" y1="77" x2="134" y2="112" stroke="#5D3A1A" stroke-width="3"/>
+                                            <line x1="146" y1="77" x2="146" y2="112" stroke="#5D3A1A" stroke-width="3"/>
+                                            <!-- Fivela dos suspensorios -->
+                                            <rect x="132" y="90" width="5" height="4" fill="#FFD700" stroke="none"/>
+                                            <rect x="143" y="90" width="5" height="4" fill="#FFD700" stroke="none"/>
+                                            <!-- Lederhosen (calcoes de couro) -->
+                                            <path d="M 128 112 L 125 150 L 140 150 L 155 150 L 152 112 Z" fill="#5D3A1A" stroke="#3D2A1A" stroke-width="1"/>
+                                            <!-- Bordado nos Lederhosen -->
+                                            <path d="M 135 125 L 140 135 L 145 125" fill="none" stroke="#8B4513" stroke-width="1"/>
+                                        </g>
+
+                                        <!-- Braco esquerdo com manga -->
+                                        <g id="forca-braco-esq" class="forca-parte hidden">
+                                            <line x1="130" y1="85" x2="105" y2="115" stroke="#FFF" stroke-width="8" stroke-linecap="round"/>
+                                            <line x1="130" y1="85" x2="105" y2="115" stroke="#DDD" stroke-width="6" stroke-linecap="round"/>
+                                            <!-- Mao -->
+                                            <circle cx="102" cy="118" r="5" fill="#FDBF6F" stroke="#E5A04D" stroke-width="1"/>
+                                        </g>
+
+                                        <!-- Braco direito com manga -->
+                                        <g id="forca-braco-dir" class="forca-parte hidden">
+                                            <line x1="150" y1="85" x2="175" y2="115" stroke="#FFF" stroke-width="8" stroke-linecap="round"/>
+                                            <line x1="150" y1="85" x2="175" y2="115" stroke="#DDD" stroke-width="6" stroke-linecap="round"/>
+                                            <!-- Mao -->
+                                            <circle cx="178" cy="118" r="5" fill="#FDBF6F" stroke="#E5A04D" stroke-width="1"/>
+                                        </g>
+
+                                        <!-- Perna esquerda com meia e sapato -->
+                                        <g id="forca-perna-esq" class="forca-parte hidden">
+                                            <!-- Meia branca tradicional -->
+                                            <line x1="132" y1="150" x2="115" y2="195" stroke="#FFF" stroke-width="7" stroke-linecap="round"/>
+                                            <line x1="132" y1="150" x2="115" y2="195" stroke="#EEE" stroke-width="5" stroke-linecap="round"/>
+                                            <!-- Sapato de couro -->
+                                            <ellipse cx="112" cy="200" rx="10" ry="5" fill="#2B1810" stroke="#1a0f08" stroke-width="1"/>
+                                        </g>
+
+                                        <!-- Perna direita com meia e sapato -->
+                                        <g id="forca-perna-dir" class="forca-parte hidden">
+                                            <!-- Meia branca tradicional -->
+                                            <line x1="148" y1="150" x2="165" y2="195" stroke="#FFF" stroke-width="7" stroke-linecap="round"/>
+                                            <line x1="148" y1="150" x2="165" y2="195" stroke="#EEE" stroke-width="5" stroke-linecap="round"/>
+                                            <!-- Sapato de couro -->
+                                            <ellipse cx="168" cy="200" rx="10" ry="5" fill="#2B1810" stroke="#1a0f08" stroke-width="1"/>
+                                        </g>
                                     </svg>
                                 </div>
 

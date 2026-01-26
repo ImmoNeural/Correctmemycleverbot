@@ -2715,11 +2715,11 @@ async function handleCorrectionSubmit(e) {
             }
 
             // Resetar estado para nova palavra
-            // Limpar a palavra: remover espaços, quebras de linha e caracteres especiais desnecessários
+            // Limpar a palavra: normalizar espaços (manter apenas um espaço entre palavras para expressões)
             let palavraOriginal = word.palavra
                 .trim()
-                .replace(/[\r\n\t]/g, '') // Remove quebras de linha e tabs
-                .replace(/\s+/g, ''); // Remove espaços extras
+                .replace(/[\r\n\t]/g, ' ') // Converte quebras de linha e tabs para espaço
+                .replace(/\s+/g, ' '); // Normaliza múltiplos espaços para um único
 
             // Guardar palavra original para as dicas da IA (sem uppercase)
             forcaGameState.originalWord = palavraOriginal;
@@ -2796,21 +2796,32 @@ async function handleCorrectionSubmit(e) {
             container.innerHTML = '';
 
             const palavra = forcaGameState.currentWord;
-            const tamanho = palavra.length;
+            // Contar apenas letras válidas para ajustar tamanho
+            const letrasValidas = palavra.replace(/[^A-ZÄÖÜß-]/gi, '').length;
 
             // Ajustar tamanho das letras para palavras longas
             let slotSize = '2rem';
             let fontSize = '1.5rem';
-            if (tamanho > 12) {
+            if (letrasValidas > 12) {
                 slotSize = '1.5rem';
                 fontSize = '1.1rem';
             }
-            if (tamanho > 16) {
+            if (letrasValidas > 16) {
                 slotSize = '1.2rem';
                 fontSize = '0.9rem';
             }
 
             for (const letra of palavra) {
+                // Espaço - criar separador visual entre palavras
+                if (letra === ' ') {
+                    const spacer = document.createElement('div');
+                    spacer.className = 'forca-espacador';
+                    spacer.style.width = '1.5rem';
+                    spacer.style.height = '2.5rem';
+                    container.appendChild(spacer);
+                    continue;
+                }
+
                 const slot = document.createElement('div');
                 slot.className = 'forca-letra-slot';
                 slot.style.width = slotSize;
@@ -2832,7 +2843,7 @@ async function handleCorrectionSubmit(e) {
                     slot.textContent = letra;
                     slot.style.borderBottom = 'none';
                 }
-                // Ignorar outros caracteres (espaços, quebras de linha, etc)
+                // Ignorar outros caracteres inválidos
                 else {
                     continue;
                 }
