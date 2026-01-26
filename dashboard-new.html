@@ -173,99 +173,147 @@
            RESPONSIVIDADE DO JOGO DA FORCA
            ============================================= */
 
-        /* Mobile Portrait - Jogo da Forca compacto */
+        /* Mobile Portrait - Jogo da Forca SUPER compacto */
         @media (max-width: 768px) and (orientation: portrait) {
+            /* Container principal sem padding extra */
             #forca-game-container {
                 padding: 0 !important;
+                margin: 0 !important;
             }
 
             #forca-game-container > div {
-                padding: 1rem !important;
+                padding: 0.5rem !important;
+                border-radius: 0.5rem !important;
             }
 
-            /* Layout vertical: forca em cima, palavra/teclado embaixo */
+            /* Layout horizontal: forca à esquerda, conteúdo à direita */
             #forca-game-container .flex.flex-col.md\\:flex-row {
-                flex-direction: column !important;
-                gap: 1rem !important;
+                flex-direction: row !important;
+                gap: 0.5rem !important;
+                align-items: flex-start !important;
             }
 
-            /* SVG da forca menor */
+            /* Forca MUITO menor */
+            #forca-game-container .flex-shrink-0 {
+                flex-shrink: 0 !important;
+            }
+
             #forca-svg {
-                width: 140px !important;
-                height: 175px !important;
+                width: 90px !important;
+                height: 115px !important;
             }
 
-            /* Área da palavra */
-            #forca-palavra {
+            /* Área direita ocupa o resto */
+            #forca-game-container .flex-1 {
+                flex: 1 !important;
+                min-width: 0 !important;
+            }
+
+            /* Botão de dica PEQUENO */
+            #forca-game-container .flex.items-center.justify-center.gap-3.mb-4 {
+                margin-bottom: 0.25rem !important;
                 gap: 0.25rem !important;
-                margin-bottom: 0.75rem !important;
             }
 
-            .forca-letra-slot {
-                width: 1.4rem !important;
-                height: 2rem !important;
-                font-size: 1rem !important;
-            }
-
-            .forca-espacador {
-                width: 0.75rem !important;
-            }
-
-            /* Botão de dica menor */
             #forca-dica-btn {
-                padding: 0.4rem 0.75rem !important;
-                font-size: 0.75rem !important;
+                padding: 0.25rem 0.5rem !important;
+                font-size: 0.65rem !important;
+                border-radius: 0.25rem !important;
             }
 
             #forca-dica-btn svg {
-                width: 1rem !important;
-                height: 1rem !important;
+                width: 0.75rem !important;
+                height: 0.75rem !important;
             }
 
-            /* Área de dica compacta */
+            #forca-dica-btn span {
+                padding: 0.1rem 0.3rem !important;
+                font-size: 0.55rem !important;
+            }
+
+            /* Área de dica super compacta */
             #forca-dica-container {
-                min-height: 2rem !important;
-                margin-bottom: 0.5rem !important;
+                min-height: 1rem !important;
+                margin-bottom: 0.25rem !important;
             }
 
             #forca-dica {
-                font-size: 0.85rem !important;
+                font-size: 0.6rem !important;
+                line-height: 1.2 !important;
             }
 
-            /* Teclado compacto */
-            #forca-teclado {
-                margin-top: 0.5rem !important;
+            /* Slots das letras MENORES */
+            #forca-palavra {
+                gap: 2px !important;
+                margin-bottom: 0.35rem !important;
+                justify-content: flex-start !important;
             }
 
-            .forca-tecla {
-                width: 1.8rem !important;
-                height: 2rem !important;
+            .forca-letra-slot {
+                width: 1.1rem !important;
+                height: 1.4rem !important;
+                font-size: 0.8rem !important;
+                border-bottom-width: 2px !important;
+            }
+
+            .forca-espacador {
+                width: 0.5rem !important;
+                height: 1.4rem !important;
+            }
+
+            /* Letras erradas compactas */
+            #forca-game-container .mb-4 {
+                margin-bottom: 0.25rem !important;
+            }
+
+            #forca-game-container .mb-4 p.text-slate-500 {
+                font-size: 0.5rem !important;
+                margin-bottom: 0.1rem !important;
+            }
+
+            #forca-letras-erradas {
+                min-height: 1rem !important;
+                gap: 2px !important;
+            }
+
+            #forca-letras-erradas span {
                 font-size: 0.7rem !important;
-            }
-
-            #forca-teclado > div {
-                gap: 0.2rem !important;
             }
 
             /* Feedback menor */
             #forca-feedback {
-                font-size: 0.9rem !important;
-                margin-bottom: 0.5rem !important;
+                font-size: 0.7rem !important;
+                margin-bottom: 0.25rem !important;
+                min-height: 1rem !important;
             }
 
-            /* Letras erradas */
-            #forca-letras-erradas {
-                min-height: 1.5rem !important;
+            /* Teclado SUPER compacto */
+            #forca-teclado {
+                margin-top: 0.25rem !important;
             }
 
-            #forca-letras-erradas span {
-                font-size: 0.9rem !important;
+            #forca-teclado > div {
+                gap: 2px !important;
+                margin-top: 2px !important;
+                max-width: 100% !important;
             }
 
-            /* Botão próxima */
+            .forca-tecla {
+                width: 1.5rem !important;
+                height: 1.5rem !important;
+                font-size: 0.6rem !important;
+                border-radius: 0.2rem !important;
+                border-width: 1px !important;
+            }
+
+            /* Botão próxima compacto */
+            #forca-proxima-container {
+                margin-top: 0.35rem !important;
+            }
+
             #forca-proxima-btn {
-                padding: 0.5rem 1rem !important;
-                font-size: 0.85rem !important;
+                padding: 0.35rem 0.75rem !important;
+                font-size: 0.7rem !important;
             }
         }
 
