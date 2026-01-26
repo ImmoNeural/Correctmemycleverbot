@@ -2746,19 +2746,27 @@ async function handleCorrectionSubmit(e) {
             // Resetar visual
             resetForcaVisual();
 
-            // Limpar área de dica (não mostrar tradução)
-            document.getElementById('forca-dica').textContent = '';
+            // Limpar área de dica (não mostrar tradução) - desktop e mobile
+            const dicaEl = document.getElementById('forca-dica');
+            const dicaElMobile = document.getElementById('forca-dica-mobile');
+            if (dicaEl) dicaEl.textContent = '';
+            if (dicaElMobile) dicaElMobile.textContent = '';
 
-            // Resetar botão de dicas
+            // Resetar botão de dicas - desktop e mobile
             const dicaBtn = document.getElementById('forca-dica-btn');
+            const dicaBtnMobile = document.getElementById('forca-dica-btn-mobile');
             const dicasRestantesEl = document.getElementById('forca-dicas-restantes');
-            if (dicaBtn) {
-                dicaBtn.disabled = false;
-                dicaBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            }
-            if (dicasRestantesEl) {
-                dicasRestantesEl.textContent = '3';
-            }
+            const dicasRestantesMobileEl = document.getElementById('forca-dicas-restantes-mobile');
+
+            [dicaBtn, dicaBtnMobile].forEach(btn => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            });
+            [dicasRestantesEl, dicasRestantesMobileEl].forEach(el => {
+                if (el) el.textContent = '3';
+            });
 
             // Criar slots da palavra
             renderForcaPalavra();
@@ -2865,28 +2873,47 @@ async function handleCorrectionSubmit(e) {
             if (forcaGameState.dicasRestantes <= 0) return;
 
             const dicaBtn = document.getElementById('forca-dica-btn');
+            const dicaBtnMobile = document.getElementById('forca-dica-btn-mobile');
             const dicasRestantesEl = document.getElementById('forca-dicas-restantes');
+            const dicasRestantesMobileEl = document.getElementById('forca-dicas-restantes-mobile');
             const dicaEl = document.getElementById('forca-dica');
+            const dicaElMobile = document.getElementById('forca-dica-mobile');
+
+            // Função helper para atualizar ambos os botões de dica
+            function updateDicaBtns(disabled, html, addDisabledClass = false) {
+                [dicaBtn, dicaBtnMobile].forEach(btn => {
+                    if (btn) {
+                        btn.disabled = disabled;
+                        if (html) btn.innerHTML = html;
+                        if (addDisabledClass) {
+                            btn.classList.add('opacity-50', 'cursor-not-allowed');
+                        }
+                    }
+                });
+            }
+
+            // Função helper para atualizar ambos os elementos de dica
+            function updateDicaText(html) {
+                [dicaEl, dicaElMobile].forEach(el => {
+                    if (el) el.innerHTML = html;
+                });
+            }
 
             // Desabilitar botão durante carregamento
-            if (dicaBtn) {
-                dicaBtn.disabled = true;
-                dicaBtn.innerHTML = `
-                    <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Gerando...
-                `;
-            }
+            const loadingHtml = `
+                <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Gerando...
+            `;
+            updateDicaBtns(true, loadingHtml);
 
             // Mostrar dicas anteriores + loading para nova dica
-            if (dicaEl) {
-                const dicasAnteriores = forcaGameState.dicasUsadas.map((d, i) =>
-                    `<span class="block mb-1"><strong>Dica ${i + 1}:</strong> ${d}</span>`
-                ).join('');
-                dicaEl.innerHTML = dicasAnteriores + `<span class="block mb-1 text-gray-400 animate-pulse"><strong>Dica ${forcaGameState.dicasUsadas.length + 1}:</strong> Gerando...</span>`;
-            }
+            const dicasAnteriores = forcaGameState.dicasUsadas.map((d, i) =>
+                `<span class="block mb-1"><strong>Dica ${i + 1}:</strong> ${d}</span>`
+            ).join('');
+            updateDicaText(dicasAnteriores + `<span class="block mb-1 text-gray-400 animate-pulse"><strong>Dica ${forcaGameState.dicasUsadas.length + 1}:</strong> Gerando...</span>`);
 
             try {
                 // Incrementar nível da dica (1, 2, 3)
@@ -2910,50 +2937,61 @@ async function handleCorrectionSubmit(e) {
                     forcaGameState.dicasRestantes--;
                     forcaGameState.dicasUsadas.push(data.dica);
 
-                    // Mostrar todas as dicas (anteriores + nova)
-                    if (dicaEl) {
-                        dicaEl.innerHTML = forcaGameState.dicasUsadas.map((d, i) =>
-                            `<span class="block mb-1"><strong>Dica ${i + 1}:</strong> ${d}</span>`
-                        ).join('');
-                    }
+                    // Mostrar todas as dicas (anteriores + nova) em ambos os elementos
+                    const dicasHtml = forcaGameState.dicasUsadas.map((d, i) =>
+                        `<span class="block mb-1"><strong>Dica ${i + 1}:</strong> ${d}</span>`
+                    ).join('');
+                    updateDicaText(dicasHtml);
 
-                    // Atualizar contador visual
-                    if (dicasRestantesEl) {
-                        dicasRestantesEl.textContent = forcaGameState.dicasRestantes;
-                    }
+                    // Atualizar contador visual em ambos os elementos
+                    [dicasRestantesEl, dicasRestantesMobileEl].forEach(el => {
+                        if (el) el.textContent = forcaGameState.dicasRestantes;
+                    });
                 } else {
-                    if (dicaEl) {
-                        dicaEl.textContent = 'Erro ao gerar dica. Tente novamente.';
-                    }
+                    updateDicaText('Erro ao gerar dica. Tente novamente.');
                     forcaGameState.dicaNivel--; // Reverter incremento se falhou
                 }
             } catch (error) {
                 console.error('Erro ao pedir dica:', error);
-                if (dicaEl) {
-                    dicaEl.textContent = 'Erro de conexão. Tente novamente.';
-                }
+                updateDicaText('Erro de conexão. Tente novamente.');
                 forcaGameState.dicaNivel--; // Reverter incremento se falhou
             } finally {
-                // Restaurar botão
+                // Restaurar botões (desktop e mobile)
+                const desktopBtnHtml = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/>
+                    </svg>
+                    Pedir Dica
+                    <span id="forca-dicas-restantes" class="bg-amber-800 text-amber-200 text-xs font-bold px-2 py-0.5 rounded-full">${forcaGameState.dicasRestantes}</span>
+                `;
+                const mobileBtnHtml = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/>
+                    </svg>
+                    Dica
+                    <span id="forca-dicas-restantes-mobile" class="bg-amber-800 text-amber-200 text-xs font-bold px-1.5 py-0.5 rounded-full">${forcaGameState.dicasRestantes}</span>
+                `;
+
                 if (dicaBtn) {
                     dicaBtn.disabled = forcaGameState.dicasRestantes <= 0;
-                    dicaBtn.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/>
-                        </svg>
-                        Pedir Dica
-                        <span id="forca-dicas-restantes" class="bg-amber-800 text-amber-200 text-xs font-bold px-2 py-0.5 rounded-full">${forcaGameState.dicasRestantes}</span>
-                    `;
-
+                    dicaBtn.innerHTML = desktopBtnHtml;
                     if (forcaGameState.dicasRestantes <= 0) {
                         dicaBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    }
+                }
+                if (dicaBtnMobile) {
+                    dicaBtnMobile.disabled = forcaGameState.dicasRestantes <= 0;
+                    dicaBtnMobile.innerHTML = mobileBtnHtml;
+                    if (forcaGameState.dicasRestantes <= 0) {
+                        dicaBtnMobile.classList.add('opacity-50', 'cursor-not-allowed');
                     }
                 }
             }
         }
 
-        // Event listener para botão de dica
+        // Event listener para botão de dica (desktop e mobile)
         document.getElementById('forca-dica-btn')?.addEventListener('click', pedirDicaForca);
+        document.getElementById('forca-dica-btn-mobile')?.addEventListener('click', pedirDicaForca);
 
         // Event listeners para teclas
         document.querySelectorAll('.forca-tecla').forEach(btn => {

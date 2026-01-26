@@ -173,80 +173,84 @@
            RESPONSIVIDADE DO JOGO DA FORCA
            ============================================= */
 
-        /* Mobile Portrait - Jogo da Forca SUPER compacto */
+        /* Mobile Portrait - Jogo da Forca - Layout reorganizado */
         @media (max-width: 768px) and (orientation: portrait) {
-            /* Container principal sem padding extra */
+            /* Container principal compacto */
             #forca-game-container {
                 padding: 0 !important;
                 margin: 0 !important;
             }
 
-            #forca-game-container > div {
+            #forca-inner-box {
                 padding: 0.5rem !important;
                 border-radius: 0.5rem !important;
+                display: flex !important;
+                flex-direction: column !important;
             }
 
-            /* Layout horizontal: forca à esquerda, conteúdo à direita */
-            #forca-game-container .flex.flex-col.md\\:flex-row {
-                flex-direction: row !important;
-                gap: 0.5rem !important;
-                align-items: flex-start !important;
+            /* Área de dica no topo - VISÍVEL em mobile */
+            #forca-dica-area {
+                display: block !important;
+                margin-bottom: 0.4rem !important;
             }
 
-            /* Forca MUITO menor */
-            #forca-game-container .flex-shrink-0 {
-                flex-shrink: 0 !important;
-            }
-
-            #forca-svg {
-                width: 90px !important;
-                height: 115px !important;
-            }
-
-            /* Área direita ocupa o resto */
-            #forca-game-container .flex-1 {
-                flex: 1 !important;
-                min-width: 0 !important;
-            }
-
-            /* Botão de dica PEQUENO */
-            #forca-game-container .flex.items-center.justify-center.gap-3.mb-4 {
-                margin-bottom: 0.25rem !important;
-                gap: 0.25rem !important;
-            }
-
-            #forca-dica-btn {
+            #forca-dica-area button {
                 padding: 0.25rem 0.5rem !important;
                 font-size: 0.65rem !important;
-                border-radius: 0.25rem !important;
             }
 
-            #forca-dica-btn svg {
+            #forca-dica-area button svg {
                 width: 0.75rem !important;
                 height: 0.75rem !important;
             }
 
-            #forca-dica-btn span {
-                padding: 0.1rem 0.3rem !important;
-                font-size: 0.55rem !important;
-            }
-
-            /* Área de dica super compacta */
-            #forca-dica-container {
-                min-height: 1rem !important;
-                margin-bottom: 0.25rem !important;
-            }
-
-            #forca-dica {
-                font-size: 0.6rem !important;
+            #forca-dica-mobile {
+                font-size: 0.65rem !important;
                 line-height: 1.2 !important;
+                min-height: 0.8rem !important;
             }
 
-            /* Slots das letras MENORES */
+            /* Esconder a dica desktop dentro do flex-1 */
+            #forca-game-container .flex-1 .flex.items-center.justify-center.gap-3.mb-4,
+            #forca-dica-container {
+                display: none !important;
+            }
+
+            /* Área principal: forca à esquerda, palavra à direita */
+            #forca-main-area {
+                display: flex !important;
+                flex-direction: row !important;
+                gap: 0.5rem !important;
+                align-items: flex-end !important;
+            }
+
+            /* Forca (esquerda) */
+            #forca-svg-container {
+                flex-shrink: 0 !important;
+            }
+
+            #forca-svg {
+                width: 95px !important;
+                height: 125px !important;
+            }
+
+            /* Área direita (palavra + erradas + feedback) - alinhada com base da forca */
+            #forca-game-container .flex-1 {
+                flex: 1 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: flex-end !important;
+                align-items: flex-start !important;
+                text-align: left !important;
+                min-width: 0 !important;
+            }
+
+            /* Slots das letras - alinhados à direita da forca */
             #forca-palavra {
                 gap: 2px !important;
-                margin-bottom: 0.35rem !important;
+                margin-bottom: 0.25rem !important;
                 justify-content: flex-start !important;
+                flex-wrap: wrap !important;
             }
 
             .forca-letra-slot {
@@ -257,39 +261,43 @@
             }
 
             .forca-espacador {
-                width: 0.5rem !important;
+                width: 0.4rem !important;
                 height: 1.4rem !important;
             }
 
             /* Letras erradas compactas */
             #forca-game-container .mb-4 {
-                margin-bottom: 0.25rem !important;
+                margin-bottom: 0.15rem !important;
             }
 
             #forca-game-container .mb-4 p.text-slate-500 {
                 font-size: 0.5rem !important;
-                margin-bottom: 0.1rem !important;
+                margin-bottom: 0.05rem !important;
+                text-align: left !important;
             }
 
             #forca-letras-erradas {
-                min-height: 1rem !important;
+                min-height: 0.7rem !important;
                 gap: 2px !important;
+                justify-content: flex-start !important;
             }
 
             #forca-letras-erradas span {
-                font-size: 0.7rem !important;
+                font-size: 0.6rem !important;
             }
 
             /* Feedback menor */
             #forca-feedback {
-                font-size: 0.7rem !important;
-                margin-bottom: 0.25rem !important;
-                min-height: 1rem !important;
+                font-size: 0.6rem !important;
+                margin-bottom: 0.15rem !important;
+                min-height: 0.7rem !important;
+                text-align: left !important;
             }
 
-            /* Teclado SUPER compacto */
+            /* Teclado minimizado abaixo de tudo */
             #forca-teclado {
                 margin-top: 0.25rem !important;
+                width: 100% !important;
             }
 
             #forca-teclado > div {
@@ -299,21 +307,22 @@
             }
 
             .forca-tecla {
-                width: 1.5rem !important;
-                height: 1.5rem !important;
-                font-size: 0.6rem !important;
-                border-radius: 0.2rem !important;
+                width: 1.35rem !important;
+                height: 1.35rem !important;
+                font-size: 0.5rem !important;
+                border-radius: 0.15rem !important;
                 border-width: 1px !important;
+                padding: 0 !important;
             }
 
             /* Botão próxima compacto */
             #forca-proxima-container {
-                margin-top: 0.35rem !important;
+                margin-top: 0.25rem !important;
             }
 
             #forca-proxima-btn {
-                padding: 0.35rem 0.75rem !important;
-                font-size: 0.7rem !important;
+                padding: 0.3rem 0.6rem !important;
+                font-size: 0.65rem !important;
             }
         }
 
@@ -1653,11 +1662,25 @@
 
                     <!-- Jogo da Forca -->
                     <div id="forca-game-container" class="hidden">
-                        <div class="bg-slate-800 border-2 border-slate-700 rounded-xl p-8">
-                            <!-- Área do desenho da forca -->
-                            <div class="flex flex-col md:flex-row gap-8 items-center justify-center">
-                                <!-- SVG da Forca -->
-                                <div class="flex-shrink-0">
+                        <div class="bg-slate-800 border-2 border-slate-700 rounded-xl p-8" id="forca-inner-box">
+                            <!-- Área de Dica (mobile: topo) -->
+                            <div id="forca-dica-area" class="hidden md:hidden">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <button id="forca-dica-btn-mobile" class="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-3 rounded-lg transition-colors text-sm">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/>
+                                        </svg>
+                                        Dica
+                                        <span id="forca-dicas-restantes-mobile" class="bg-amber-800 text-amber-200 text-xs font-bold px-1.5 py-0.5 rounded-full">3</span>
+                                    </button>
+                                </div>
+                                <p id="forca-dica-mobile" class="text-sm text-amber-400 font-medium italic min-h-[1rem]"></p>
+                            </div>
+
+                            <!-- Área principal do jogo (forca + palavra) -->
+                            <div id="forca-main-area" class="flex flex-col md:flex-row gap-8 items-center justify-center">
+                                <!-- SVG da Forca (esquerda) -->
+                                <div class="flex-shrink-0" id="forca-svg-container">
                                     <svg id="forca-svg" width="200" height="250" viewBox="0 0 200 250" class="stroke-slate-400">
                                         <!-- Base de madeira estilizada -->
                                         <rect x="15" y="225" width="90" height="8" rx="2" fill="#8B4513" stroke="none"/>
