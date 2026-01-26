@@ -2824,18 +2824,15 @@ async function handleCorrectionSubmit(e) {
             for (const letra of palavra) {
                 // Espaço - criar separador visual entre palavras
                 if (letra === ' ') {
-                    const spacer = document.createElement('div');
+                    const spacer = document.createElement('span');
                     spacer.className = 'forca-espacador';
-                    spacer.style.width = '1.5rem';
-                    spacer.style.height = '2.5rem';
                     container.appendChild(spacer);
                     continue;
                 }
 
-                const slot = document.createElement('div');
+                const slot = document.createElement('span');
                 slot.className = 'forca-letra-slot';
                 slot.style.width = slotSize;
-                slot.style.height = '2.5rem';
                 slot.style.fontSize = fontSize;
 
                 // Verificar se é letra válida (incluindo umlauts alemães)

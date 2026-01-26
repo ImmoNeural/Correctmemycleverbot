@@ -199,6 +199,22 @@
         /* Espaçador entre palavras */
         .forca-espacador {
             width: 0.75rem;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        /* FORÇAR LAYOUT HORIZONTAL DAS LETRAS - BASE (sempre aplicado) */
+        #forca-palavra {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            justify-content: center !important;
+            align-items: center !important;
+        }
+
+        .forca-letra-slot {
+            display: inline-flex !important;
+            flex-shrink: 0 !important;
         }
 
         /* =============================================
