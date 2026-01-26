@@ -2268,6 +2268,7 @@ async function handleCorrectionSubmit(e) {
             showScreen('flashcard-game-area');
             document.getElementById('vocab-flashcard-container').classList.remove('hidden');
             document.getElementById('artigos-flashcard-container').classList.add('hidden');
+            document.getElementById('forca-game-container').classList.add('hidden');
             showCurrentCard();
         });
 
@@ -2318,6 +2319,7 @@ async function handleCorrectionSubmit(e) {
             showScreen('flashcard-game-area');
             document.getElementById('vocab-flashcard-container').classList.add('hidden');
             document.getElementById('artigos-flashcard-container').classList.remove('hidden');
+            document.getElementById('forca-game-container').classList.add('hidden');
             showCurrentCard();
         });
 
