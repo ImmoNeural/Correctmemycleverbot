@@ -317,103 +317,23 @@ document.addEventListener('DOMContentLoaded', () => {
             nivel: document.querySelector('input[name="nivel"]:checked').value
         };
 
+        const textoOriginal = dataToSend.redacao;
         const flashcardWebhookUrl = '/.netlify/functions/flashcard';
-        const trataerroWebhookUrl = '/.netlify/functions/trataerro';
+        const trataerroStreamUrl = '/api/trataerro-stream';
 
-        try {
-            if (formMessageEl) formMessageEl.textContent = 'A enviar para correção...';
+        // Categorias de erros
+        const categorias = {
+            declinacao: { cor: 'bg-pink-400', corHex: '#f472b6', nome: 'Declinação' },
+            conjugacao: { cor: 'bg-purple-400', corHex: '#c084fc', nome: 'Conjugação' },
+            preposicoes: { cor: 'bg-blue-400', corHex: '#60a5fa', nome: 'Preposições' },
+            sintaxe: { cor: 'bg-orange-400', corHex: '#fb923c', nome: 'Sintaxe' },
+            vocabulario: { cor: 'bg-green-400', corHex: '#4ade80', nome: 'Vocabulário' }
+        };
 
-            // Enviar para os 2 webhooks em paralelo (flashcard e trataerro)
-            const [flashcardResponse, trataerroResponse] = await Promise.all([
-                fetch(flashcardWebhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: currentUser.email, redacao: dataToSend.redacao }) }),
-                fetch(trataerroWebhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dataToSend) })
-            ]);
-
-            if (!trataerroResponse.ok) {
-                const errorData = await trataerroResponse.json();
-                throw new Error(errorData.message || 'Ocorreu um problema ao comunicar com o sistema de correção.');
-            }
-
-            // Processar resposta do webhook trataerro
-            let trataerroData = null;
-            if (trataerroResponse.ok) {
-                trataerroData = await trataerroResponse.json();
-            }
-
-            await loadUserProfile(currentUser);
-
-            // Se recebeu dados do trataerro, mostrar análise detalhada
-            if (trataerroData) {
-                const textoOriginal = dataToSend.redacao;
-
-                // Categorias de erros
-                const categorias = {
-                    declinacao: { cor: 'bg-pink-400', corHex: '#f472b6', nome: 'Declinação' },
-                    conjugacao: { cor: 'bg-purple-400', corHex: '#c084fc', nome: 'Conjugação' },
-                    preposicoes: { cor: 'bg-blue-400', corHex: '#60a5fa', nome: 'Preposições' },
-                    sintaxe: { cor: 'bg-orange-400', corHex: '#fb923c', nome: 'Sintaxe' },
-                    vocabulario: { cor: 'bg-green-400', corHex: '#4ade80', nome: 'Vocabulário' }
-                };
-
-                // Coletar todos os erros (SEM duplicar)
-                let todosErros = [];
-                let palavrasParaGrifar = []; // Separado: para grifar no texto
-
-                Object.keys(categorias).forEach(categoria => {
-                    if (trataerroData[categoria] && Array.isArray(trataerroData[categoria])) {
-                        trataerroData[categoria].forEach(erro => {
-                            const palavraErrada = (erro.palavra_errada || '').trim();
-                            if (palavraErrada) {
-                                // Adicionar erro UMA VEZ para exibição
-                                todosErros.push({
-                                    palavra: palavraErrada,
-                                    sugestao: erro.sugestao_correcao || '',
-                                    explicacao: erro.descricao_topico_grammatical || erro.descricao_topico_gramatical || erro.gramatica || '',
-                                    topico: erro.topico_grammatical_nome || erro.topico_gramatical_nome || '',
-                                    categoria: categoria,
-                                    cor: categorias[categoria].cor,
-                                    corHex: categorias[categoria].corHex
-                                });
-
-                                // Dividir palavras compostas APENAS para grifar
-                                const palavras = palavraErrada.split(/\s+/);
-                                palavras.forEach(palavra => {
-                                    if (palavra) {
-                                        palavrasParaGrifar.push({
-                                            palavra: palavra,
-                                            cor: categorias[categoria].cor
-                                        });
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
-
-                // Grifar texto (usando palavrasParaGrifar, não todosErros)
-                let textoGrifado = textoOriginal;
-                const palavrasJaGrifadas = new Set();
-
-                palavrasParaGrifar.forEach(item => {
-                    const palavra = item.palavra;
-                    if (palavra && !palavrasJaGrifadas.has(palavra.toLowerCase())) {
-                        // Escapar regex
-                        const palavraEscapada = palavra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                        const regex = new RegExp(`\\b${palavraEscapada}\\b`, 'gi');
-
-                        textoGrifado = textoGrifado.replace(regex, (match) => {
-                            return `<mark class="${item.cor} text-black px-1 rounded">${match}</mark>`;
-                        });
-
-                        palavrasJaGrifadas.add(palavra.toLowerCase());
-                    }
-                });
-
-                // Montar HTML
-                let mensagem = '';
-
-                // Legenda
-                mensagem += `<div class="mt-4 p-4 bg-slate-800 rounded-lg">
+        // Mostrar imediatamente a legenda e o texto
+        if (formMessageEl) {
+            formMessageEl.innerHTML = `
+                <div class="mt-4 p-4 bg-slate-800 rounded-lg">
                     <p class="text-white font-semibold mb-3">Legenda de Cores:</p>
                     <div class="flex flex-wrap gap-3">
                         <span class="flex items-center gap-2 text-sm">
@@ -437,79 +357,243 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="text-white">Vocabulário</span>
                         </span>
                     </div>
-                </div>`;
+                </div>
+                <div class="mt-4 p-4 bg-slate-700 rounded-lg">
+                    <p class="text-white font-semibold mb-3">Texto corrigido:</p>
+                    <div id="texto-corrigido" class="text-white leading-relaxed whitespace-pre-wrap">${textoOriginal}</div>
+                </div>
+                <div id="analise-container" class="mt-4 p-4 bg-slate-800 rounded-lg">
+                    <p class="text-white font-semibold mb-3">Análise detalhada:</p>
+                    <div id="erros-lista" class="space-y-3">
+                        <p class="text-slate-400 text-sm animate-pulse">Analisando sua redação...</p>
+                    </div>
+                </div>
+            `;
+        }
 
-                // Texto Original
-                mensagem += `<div class="mt-4 p-4 bg-slate-700 rounded-lg">
-                    <p class="text-white font-semibold mb-3">Texto original</p>
-                    <div class="text-white leading-relaxed whitespace-pre-wrap">${textoGrifado}</div>
-                </div>`;
+        try {
+            // Enviar para flashcard em paralelo (não bloqueia)
+            fetch(flashcardWebhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: currentUser.email, redacao: dataToSend.redacao })
+            }).catch(err => console.error('Erro ao enviar flashcard:', err));
 
-                // Análise Detalhada
-                const totalErros = todosErros.length;
-                mensagem += `<div class="mt-4 p-4 bg-slate-800 rounded-lg">
-                    <p class="text-white font-semibold mb-3">Análise detalhada (${totalErros} erro${totalErros !== 1 ? 's' : ''}):</p>`;
+            // Streaming da correção
+            const response = await fetch(trataerroStreamUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: currentUser.email, redacao: textoOriginal })
+            });
 
-                // Agrupar erros por categoria
-                Object.keys(categorias).forEach(catKey => {
-                    const errosCategoria = todosErros.filter(e => e.categoria === catKey);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Ocorreu um problema ao comunicar com o sistema de correção.');
+            }
 
-                    if (errosCategoria.length > 0) {
-                        const cat = categorias[catKey];
-                        mensagem += `<div class="mt-4 mb-3">
-                            <p class="text-white font-semibold mb-2">${cat.nome} (${errosCategoria.length})</p>
-                            <div class="space-y-3">`;
+            // Processar streaming
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullJson = '';
+            let errosProcessados = new Set();
+            let todosErros = [];
+            let palavrasJaGrifadas = new Set();
 
-                        errosCategoria.forEach(erro => {
-                            mensagem += `<div class="bg-slate-700 p-3 rounded-lg text-sm border-l-4" style="border-color: ${erro.corHex}">`;
+            // Função para grifar uma palavra no texto
+            function grifarPalavra(palavra, corClass) {
+                const textoEl = document.getElementById('texto-corrigido');
+                if (!textoEl || palavrasJaGrifadas.has(palavra.toLowerCase())) return;
 
-                            if (erro.topico) {
-                                mensagem += `<p class="text-yellow-400 font-semibold mb-2">${erro.topico}</p>`;
-                            }
+                const palavraEscapada = palavra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(`\\b${palavraEscapada}\\b`, 'gi');
 
-                            mensagem += `<p class="text-red-300 mb-1">
-                                <span class="font-semibold">Errado:</span>
-                                <span class="line-through">${erro.palavra}</span>
-                            </p>`;
-
-                            if (erro.sugestao) {
-                                mensagem += `<p class="text-green-300 mb-2">
-                                    <span class="font-semibold">Correção:</span>
-                                    ${erro.sugestao}
-                                </p>`;
-                            }
-
-                            if (erro.explicacao) {
-                                mensagem += `<p class="text-slate-300 text-xs italic">${erro.explicacao}</p>`;
-                            }
-
-                            mensagem += `</div>`;
-                        });
-
-                        mensagem += `</div></div>`;
-                    }
+                textoEl.innerHTML = textoEl.innerHTML.replace(regex, (match) => {
+                    // Verificar se já está dentro de uma tag mark
+                    return `<mark class="${corClass} text-black px-1 rounded">${match}</mark>`;
                 });
 
-                mensagem += `</div>`;
+                palavrasJaGrifadas.add(palavra.toLowerCase());
+            }
 
-                if (formMessageEl) {
-                    formMessageEl.innerHTML = mensagem;
+            // Função para adicionar erro à lista
+            function adicionarErroNaLista(erro) {
+                const errosListaEl = document.getElementById('erros-lista');
+                if (!errosListaEl) return;
+
+                // Remover mensagem de "Analisando..." se existir
+                const msgAnalise = errosListaEl.querySelector('.animate-pulse');
+                if (msgAnalise) msgAnalise.remove();
+
+                const erroHtml = `
+                    <div class="bg-slate-700 p-3 rounded-lg text-sm border-l-4" style="border-color: ${erro.corHex}">
+                        ${erro.topico ? `<p class="text-yellow-400 font-semibold mb-2">${erro.topico}</p>` : ''}
+                        <p class="text-red-300 mb-1">
+                            <span class="font-semibold">Errado:</span>
+                            <span class="line-through">${erro.palavra}</span>
+                        </p>
+                        ${erro.sugestao ? `<p class="text-green-300 mb-2">
+                            <span class="font-semibold">Correção:</span>
+                            ${erro.sugestao}
+                        </p>` : ''}
+                        ${erro.explicacao ? `<p class="text-slate-300 text-xs italic">${erro.explicacao}</p>` : ''}
+                    </div>
+                `;
+                errosListaEl.insertAdjacentHTML('beforeend', erroHtml);
+            }
+
+            // Função para extrair valor de um campo no JSON
+            function extrairCampo(objStr, campo) {
+                const regex = new RegExp(`"${campo}"\\s*:\\s*"([^"]*)"`, 'g');
+                const match = regex.exec(objStr);
+                return match ? match[1] : '';
+            }
+
+            // Função para processar erros encontrados no JSON parcial
+            function processarErrosParciais(jsonStr) {
+                // Tentar extrair objetos de erro completos do JSON parcial
+                Object.keys(categorias).forEach(categoria => {
+                    // Regex para encontrar o início do array da categoria
+                    const arrayStartPattern = new RegExp(`"${categoria}"\\s*:\\s*\\[`, 'g');
+                    const arrayStartMatch = arrayStartPattern.exec(jsonStr);
+
+                    if (arrayStartMatch) {
+                        // Encontrar todos os objetos completos (que terminam com })
+                        const startIndex = arrayStartMatch.index + arrayStartMatch[0].length;
+                        const substring = jsonStr.substring(startIndex);
+
+                        // Encontrar objetos completos { ... }
+                        let depth = 0;
+                        let objStart = -1;
+
+                        for (let i = 0; i < substring.length; i++) {
+                            const char = substring[i];
+
+                            if (char === '{') {
+                                if (depth === 0) objStart = i;
+                                depth++;
+                            } else if (char === '}') {
+                                depth--;
+                                if (depth === 0 && objStart !== -1) {
+                                    const objStr = substring.substring(objStart, i + 1);
+
+                                    // Extrair campos do objeto
+                                    const palavraErrada = extrairCampo(objStr, 'palavra_errada').trim();
+                                    const erroKey = `${categoria}-${palavraErrada}`;
+
+                                    if (palavraErrada && !errosProcessados.has(erroKey)) {
+                                        errosProcessados.add(erroKey);
+
+                                        const erro = {
+                                            palavra: palavraErrada,
+                                            sugestao: extrairCampo(objStr, 'sugestao_correcao'),
+                                            explicacao: extrairCampo(objStr, 'descricao_topico_gramatical'),
+                                            topico: extrairCampo(objStr, 'topico_gramatical_nome'),
+                                            categoria: categoria,
+                                            cor: categorias[categoria].cor,
+                                            corHex: categorias[categoria].corHex
+                                        };
+
+                                        todosErros.push(erro);
+
+                                        // Grifar cada palavra do erro
+                                        palavraErrada.split(/\s+/).forEach(p => {
+                                            if (p) grifarPalavra(p, categorias[categoria].cor);
+                                        });
+
+                                        // Adicionar erro na lista
+                                        adicionarErroNaLista(erro);
+                                    }
+
+                                    objStart = -1;
+                                }
+                            } else if (char === ']' && depth === 0) {
+                                // Fim do array desta categoria
+                                break;
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Ler o stream
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                fullJson += chunk;
+
+                // Tentar processar erros a cada chunk
+                processarErrosParciais(fullJson);
+            }
+
+            // Processar JSON completo no final para garantir que todos os erros foram capturados
+            try {
+                const jsonMatch = fullJson.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    const trataerroData = JSON.parse(jsonMatch[0]);
+
+                    // Processar erros que podem não ter sido capturados
+                    Object.keys(categorias).forEach(categoria => {
+                        if (trataerroData[categoria] && Array.isArray(trataerroData[categoria])) {
+                            trataerroData[categoria].forEach(erroObj => {
+                                const palavraErrada = (erroObj.palavra_errada || '').trim();
+                                const erroKey = `${categoria}-${palavraErrada}`;
+
+                                if (palavraErrada && !errosProcessados.has(erroKey)) {
+                                    errosProcessados.add(erroKey);
+
+                                    const erro = {
+                                        palavra: palavraErrada,
+                                        sugestao: erroObj.sugestao_correcao || '',
+                                        explicacao: erroObj.descricao_topico_gramatical || '',
+                                        topico: erroObj.topico_gramatical_nome || '',
+                                        categoria: categoria,
+                                        cor: categorias[categoria].cor,
+                                        corHex: categorias[categoria].corHex
+                                    };
+
+                                    todosErros.push(erro);
+
+                                    palavraErrada.split(/\s+/).forEach(p => {
+                                        if (p) grifarPalavra(p, categorias[categoria].cor);
+                                    });
+
+                                    adicionarErroNaLista(erro);
+                                }
+                            });
+                        }
+                    });
                 }
-            } else {
-                // Fallback: mensagem simples
-                if (formMessageEl) {
-                    formMessageEl.innerHTML = `
-                        <div class="text-green-400">
-                            <p>Redação enviada com sucesso! Você receberá sua correção por e-mail em 5 a 10 minutos.</p>
-                        </div>
-                    `;
+            } catch (parseErr) {
+                console.error('Erro ao parsear JSON final:', parseErr);
+            }
+
+            // Atualizar contador de erros
+            const analiseContainer = document.getElementById('analise-container');
+            if (analiseContainer) {
+                const totalErros = todosErros.length;
+                const titulo = analiseContainer.querySelector('p.font-semibold');
+                if (titulo) {
+                    titulo.textContent = `Análise detalhada (${totalErros} erro${totalErros !== 1 ? 's' : ''}):`;
                 }
             }
 
+            // Se não encontrou nenhum erro
+            const errosListaEl = document.getElementById('erros-lista');
+            if (errosListaEl && todosErros.length === 0) {
+                errosListaEl.innerHTML = '<p class="text-green-400 text-sm">Parabéns! Nenhum erro encontrado na sua redação.</p>';
+            }
+
+            await loadUserProfile(currentUser);
             document.getElementById('correction-form').reset();
             updateWordCount();
+
         } catch (error) {
-            if (formMessageEl) formMessageEl.textContent = error.message;
+            console.error('Erro na correção:', error);
+            if (formMessageEl) {
+                formMessageEl.innerHTML = `<p class="text-red-400">${error.message}</p>`;
+            }
         }
     }
 
