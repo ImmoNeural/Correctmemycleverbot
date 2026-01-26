@@ -79,6 +79,95 @@
             border-color: #166534 !important;
         }
 
+        /* Estilos do Jogo da Forca */
+        .forca-parte {
+            stroke: #ef4444;
+            transition: opacity 0.3s ease;
+        }
+
+        .forca-parte.hidden {
+            opacity: 0;
+        }
+
+        .forca-parte.visible {
+            opacity: 1;
+        }
+
+        .forca-tecla {
+            width: 2.5rem;
+            height: 2.5rem;
+            background-color: #334155;
+            border: 2px solid #475569;
+            border-radius: 0.5rem;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .forca-tecla:hover:not(:disabled) {
+            background-color: #475569;
+            border-color: #f59e0b;
+            transform: scale(1.05);
+        }
+
+        .forca-tecla:disabled {
+            cursor: not-allowed;
+            opacity: 0.4;
+        }
+
+        .forca-tecla.correta {
+            background-color: #166534 !important;
+            border-color: #22c55e !important;
+        }
+
+        .forca-tecla.errada {
+            background-color: #7f1d1d !important;
+            border-color: #ef4444 !important;
+        }
+
+        .forca-letra-slot {
+            width: 2rem;
+            height: 2.5rem;
+            border-bottom: 3px solid #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            text-transform: uppercase;
+        }
+
+        .forca-letra-slot.revelada {
+            color: #22c55e;
+            animation: letraRevela 0.3s ease;
+        }
+
+        .forca-letra-slot.perdeu {
+            color: #ef4444;
+        }
+
+        @keyframes letraRevela {
+            0% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes balanca {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(5deg); }
+            75% { transform: rotate(-5deg); }
+        }
+
+        .forca-balanca {
+            animation: balanca 0.5s ease;
+        }
+
+        .forca-vitoria {
+            animation: correctPulse 0.5s ease;
+        }
+
         /* Responsividade APENAS para Mobile Portrait (vertical) */
         @media (max-width: 768px) and (orientation: portrait) {
             /* Layout Mobile: Perfil no topo, menu na parte inferior */
@@ -1069,7 +1158,7 @@
 
                 <!-- Escolha do tipo de jogo -->
                 <div id="flashcard-type-choice" class="max-w-6xl">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <button id="btn-vocabulario-game" class="bg-slate-800 hover:bg-slate-700 border-2 border-slate-700 hover:border-indigo-500 text-white font-semibold py-8 px-6 rounded-lg transition-all text-left">
                             <div class="text-5xl mb-3">📚</div>
                             <h3 class="text-xl mb-2 text-slate-100">Vocabulário</h3>
@@ -1079,6 +1168,11 @@
                             <div class="text-5xl mb-3">🎯</div>
                             <h3 class="text-xl mb-2 text-slate-100">Artigos</h3>
                             <p class="text-sm text-slate-400">Adivinhe der, die ou das</p>
+                        </button>
+                        <button id="btn-forca-game" class="bg-slate-800 hover:bg-slate-700 border-2 border-slate-700 hover:border-amber-500 text-white font-semibold py-8 px-6 rounded-lg transition-all text-left">
+                            <div class="text-5xl mb-3">🎮</div>
+                            <h3 class="text-xl mb-2 text-slate-100">Jogo da Forca</h3>
+                            <p class="text-sm text-slate-400">Adivinhe a palavra letra por letra</p>
                         </button>
                     </div>
                 </div>
@@ -1127,6 +1221,37 @@
                     </div>
                 </div>
 
+                <!-- Setup do jogo da Forca -->
+                <div id="forca-setup" class="hidden max-w-2xl">
+                    <button id="back-from-forca-setup" class="mb-4 text-slate-400 hover:text-slate-200">← Voltar</button>
+                    <div class="bg-slate-800 border border-slate-700 p-6 rounded-lg">
+                        <h3 class="text-xl font-semibold mb-5 text-slate-100">Configuração - Jogo da Forca</h3>
+                        <div class="space-y-5">
+                            <div>
+                                <label class="block text-slate-300 mb-3 text-sm font-medium">Selecione os cartões para praticar:</label>
+                                <div class="space-y-2">
+                                    <label class="flex items-center p-3 bg-slate-700 rounded hover:bg-slate-600 cursor-pointer">
+                                        <input type="checkbox" id="forca-red" checked class="mr-3">
+                                        <span class="text-slate-200">🔴 Vermelho (difíceis)</span>
+                                    </label>
+                                    <label class="flex items-center p-3 bg-slate-700 rounded hover:bg-slate-600 cursor-pointer">
+                                        <input type="checkbox" id="forca-yellow" checked class="mr-3">
+                                        <span class="text-slate-200">🟡 Amarelo (médios)</span>
+                                    </label>
+                                    <label class="flex items-center p-3 bg-slate-700 rounded hover:bg-slate-600 cursor-pointer">
+                                        <input type="checkbox" id="forca-green" checked class="mr-3">
+                                        <span class="text-slate-200">🟢 Verde (fáceis)</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div id="forca-setup-error" class="text-red-400 text-sm min-h-6"></div>
+                            <button id="start-forca-game" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                                Iniciar Jogo da Forca
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Área do Jogo -->
                 <div id="flashcard-game-area" class="hidden max-w-4xl">
                     <!-- Header com progresso -->
@@ -1172,6 +1297,115 @@
                                 <button class="artigo-btn bg-blue-700 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg text-xl transition-colors" data-artigo="der">der</button>
                                 <button class="artigo-btn bg-pink-700 hover:bg-pink-600 text-white font-semibold py-3 px-6 rounded-lg text-xl transition-colors" data-artigo="die">die</button>
                                 <button class="artigo-btn bg-green-700 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg text-xl transition-colors" data-artigo="das">das</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Jogo da Forca -->
+                    <div id="forca-game-container" class="hidden">
+                        <div class="bg-slate-800 border-2 border-slate-700 rounded-xl p-8">
+                            <!-- Área do desenho da forca -->
+                            <div class="flex flex-col md:flex-row gap-8 items-center justify-center">
+                                <!-- SVG da Forca -->
+                                <div class="flex-shrink-0">
+                                    <svg id="forca-svg" width="200" height="250" viewBox="0 0 200 250" class="stroke-slate-400">
+                                        <!-- Base -->
+                                        <line x1="20" y1="230" x2="100" y2="230" stroke-width="4" stroke-linecap="round"/>
+                                        <!-- Poste vertical -->
+                                        <line x1="60" y1="230" x2="60" y2="20" stroke-width="4" stroke-linecap="round"/>
+                                        <!-- Poste horizontal -->
+                                        <line x1="60" y1="20" x2="140" y2="20" stroke-width="4" stroke-linecap="round"/>
+                                        <!-- Corda -->
+                                        <line x1="140" y1="20" x2="140" y2="50" stroke-width="4" stroke-linecap="round"/>
+
+                                        <!-- Partes do corpo (inicialmente escondidas) -->
+                                        <!-- Cabeça -->
+                                        <circle id="forca-cabeca" cx="140" cy="70" r="20" fill="none" stroke-width="4" class="forca-parte hidden"/>
+                                        <!-- Corpo -->
+                                        <line id="forca-corpo" x1="140" y1="90" x2="140" y2="150" stroke-width="4" stroke-linecap="round" class="forca-parte hidden"/>
+                                        <!-- Braço esquerdo -->
+                                        <line id="forca-braco-esq" x1="140" y1="110" x2="110" y2="130" stroke-width="4" stroke-linecap="round" class="forca-parte hidden"/>
+                                        <!-- Braço direito -->
+                                        <line id="forca-braco-dir" x1="140" y1="110" x2="170" y2="130" stroke-width="4" stroke-linecap="round" class="forca-parte hidden"/>
+                                        <!-- Perna esquerda -->
+                                        <line id="forca-perna-esq" x1="140" y1="150" x2="110" y2="190" stroke-width="4" stroke-linecap="round" class="forca-parte hidden"/>
+                                        <!-- Perna direita -->
+                                        <line id="forca-perna-dir" x1="140" y1="150" x2="170" y2="190" stroke-width="4" stroke-linecap="round" class="forca-parte hidden"/>
+                                    </svg>
+                                </div>
+
+                                <!-- Área da palavra e dica -->
+                                <div class="flex-1 text-center">
+                                    <!-- Dica/Tradução -->
+                                    <p class="text-slate-400 text-sm mb-2">Dica (tradução):</p>
+                                    <p id="forca-dica" class="text-xl text-amber-400 font-semibold mb-6">tradução aqui</p>
+
+                                    <!-- Palavra com espaços -->
+                                    <div id="forca-palavra" class="flex justify-center gap-2 mb-6 flex-wrap">
+                                        <!-- Letras serão inseridas dinamicamente -->
+                                    </div>
+
+                                    <!-- Letras erradas -->
+                                    <div class="mb-4">
+                                        <p class="text-slate-500 text-xs mb-2">Letras erradas:</p>
+                                        <div id="forca-letras-erradas" class="flex justify-center gap-2 flex-wrap min-h-[2rem]">
+                                            <!-- Letras erradas serão mostradas aqui -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Feedback -->
+                                    <p id="forca-feedback" class="text-lg font-semibold mb-4 min-h-[1.75rem]"></p>
+                                </div>
+                            </div>
+
+                            <!-- Teclado virtual -->
+                            <div id="forca-teclado" class="mt-6">
+                                <div class="flex flex-wrap justify-center gap-2 max-w-lg mx-auto">
+                                    <!-- Linha 1: Q-P -->
+                                    <button class="forca-tecla" data-letra="Q">Q</button>
+                                    <button class="forca-tecla" data-letra="W">W</button>
+                                    <button class="forca-tecla" data-letra="E">E</button>
+                                    <button class="forca-tecla" data-letra="R">R</button>
+                                    <button class="forca-tecla" data-letra="T">T</button>
+                                    <button class="forca-tecla" data-letra="Z">Z</button>
+                                    <button class="forca-tecla" data-letra="U">U</button>
+                                    <button class="forca-tecla" data-letra="I">I</button>
+                                    <button class="forca-tecla" data-letra="O">O</button>
+                                    <button class="forca-tecla" data-letra="P">P</button>
+                                    <button class="forca-tecla" data-letra="Ü">Ü</button>
+                                </div>
+                                <div class="flex flex-wrap justify-center gap-2 max-w-lg mx-auto mt-2">
+                                    <!-- Linha 2: A-L -->
+                                    <button class="forca-tecla" data-letra="A">A</button>
+                                    <button class="forca-tecla" data-letra="S">S</button>
+                                    <button class="forca-tecla" data-letra="D">D</button>
+                                    <button class="forca-tecla" data-letra="F">F</button>
+                                    <button class="forca-tecla" data-letra="G">G</button>
+                                    <button class="forca-tecla" data-letra="H">H</button>
+                                    <button class="forca-tecla" data-letra="J">J</button>
+                                    <button class="forca-tecla" data-letra="K">K</button>
+                                    <button class="forca-tecla" data-letra="L">L</button>
+                                    <button class="forca-tecla" data-letra="Ö">Ö</button>
+                                    <button class="forca-tecla" data-letra="Ä">Ä</button>
+                                </div>
+                                <div class="flex flex-wrap justify-center gap-2 max-w-lg mx-auto mt-2">
+                                    <!-- Linha 3: Y-M + ß -->
+                                    <button class="forca-tecla" data-letra="Y">Y</button>
+                                    <button class="forca-tecla" data-letra="X">X</button>
+                                    <button class="forca-tecla" data-letra="C">C</button>
+                                    <button class="forca-tecla" data-letra="V">V</button>
+                                    <button class="forca-tecla" data-letra="B">B</button>
+                                    <button class="forca-tecla" data-letra="N">N</button>
+                                    <button class="forca-tecla" data-letra="M">M</button>
+                                    <button class="forca-tecla" data-letra="ß">ß</button>
+                                </div>
+                            </div>
+
+                            <!-- Botão próxima palavra (aparece após terminar) -->
+                            <div id="forca-proxima-container" class="hidden mt-6 text-center">
+                                <button id="forca-proxima-btn" class="bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors">
+                                    Próxima Palavra →
+                                </button>
                             </div>
                         </div>
                     </div>

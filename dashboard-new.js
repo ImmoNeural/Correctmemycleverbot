@@ -2364,11 +2364,19 @@ async function handleCorrectionSubmit(e) {
 
         // Funções auxiliares
         function showScreen(screenId) {
-            const screens = ['flashcard-type-choice', 'vocabulario-setup', 'artigos-setup', 'flashcard-game-area', 'flashcard-results'];
+            const screens = ['flashcard-type-choice', 'vocabulario-setup', 'artigos-setup', 'forca-setup', 'flashcard-game-area', 'flashcard-results'];
             screens.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
             });
+
+            // Esconder todos os containers de jogo quando não estiver na área de jogo
+            if (screenId !== 'flashcard-game-area') {
+                document.getElementById('vocab-flashcard-container')?.classList.add('hidden');
+                document.getElementById('artigos-flashcard-container')?.classList.add('hidden');
+                document.getElementById('forca-game-container')?.classList.add('hidden');
+            }
+
             const targetScreen = document.getElementById(screenId);
             if (targetScreen) targetScreen.classList.remove('hidden');
         }
@@ -2568,6 +2576,402 @@ async function handleCorrectionSubmit(e) {
         function showResults() {
             document.getElementById('final-correct').textContent = flashcardGameState.correctCount;
             document.getElementById('final-wrong').textContent = flashcardGameState.wrongCount;
+            showScreen('flashcard-results');
+        }
+
+        // =====================================================================
+        // JOGO DA FORCA
+        // =====================================================================
+
+        let forcaGameState = {
+            words: [],
+            currentIndex: 0,
+            currentWord: '',
+            currentHint: '',
+            guessedLetters: [],
+            wrongLetters: [],
+            errors: 0,
+            maxErrors: 6,
+            correctCount: 0,
+            wrongCount: 0,
+            gameOver: false
+        };
+
+        const forcaPartes = [
+            'forca-cabeca',
+            'forca-corpo',
+            'forca-braco-esq',
+            'forca-braco-dir',
+            'forca-perna-esq',
+            'forca-perna-dir'
+        ];
+
+        // Navegação para setup da forca
+        document.getElementById('btn-forca-game')?.addEventListener('click', () => {
+            showScreen('forca-setup');
+        });
+
+        document.getElementById('back-from-forca-setup')?.addEventListener('click', () => {
+            showScreen('flashcard-type-choice');
+        });
+
+        // Iniciar jogo da forca
+        document.getElementById('start-forca-game')?.addEventListener('click', async () => {
+            const includeRed = document.getElementById('forca-red').checked;
+            const includeYellow = document.getElementById('forca-yellow').checked;
+            const includeGreen = document.getElementById('forca-green').checked;
+
+            if (!includeRed && !includeYellow && !includeGreen) {
+                document.getElementById('forca-setup-error').textContent = 'Selecione pelo menos um tipo de cartão!';
+                return;
+            }
+
+            document.getElementById('forca-setup-error').textContent = '';
+
+            // Buscar palavras da tabela palavrasgerais
+            const { data: words, error } = await _supabase
+                .from('palavrasgerais')
+                .select('*')
+                .eq('user_id', currentUser.id);
+
+            if (error) {
+                console.error('Erro ao buscar palavras:', error);
+                document.getElementById('forca-setup-error').textContent = 'Erro ao carregar palavras!';
+                return;
+            }
+
+            if (!words || words.length === 0) {
+                document.getElementById('forca-setup-error').textContent = 'Nenhuma palavra encontrada!';
+                return;
+            }
+
+            // Filtrar por cartão (vermelho/amarelo/verde)
+            let filteredWords = words.filter(word => {
+                const cartao = word.cartao || '';
+                if (cartao === 'vermelho' && includeRed) return true;
+                if (cartao === 'amarelo' && includeYellow) return true;
+                if (cartao === 'verde' && includeGreen) return true;
+                if (!cartao && includeRed) return true;
+                return false;
+            });
+
+            if (filteredWords.length === 0) {
+                document.getElementById('forca-setup-error').textContent = 'Nenhuma palavra com os filtros selecionados!';
+                return;
+            }
+
+            // Embaralhar palavras
+            for (let i = filteredWords.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [filteredWords[i], filteredWords[j]] = [filteredWords[j], filteredWords[i]];
+            }
+
+            // Inicializar estado do jogo
+            forcaGameState = {
+                words: filteredWords,
+                currentIndex: 0,
+                currentWord: '',
+                currentHint: '',
+                guessedLetters: [],
+                wrongLetters: [],
+                errors: 0,
+                maxErrors: 6,
+                correctCount: 0,
+                wrongCount: 0,
+                gameOver: false
+            };
+
+            // Atualizar estado do flashcard game também para manter consistência
+            flashcardGameState = {
+                type: 'forca',
+                words: filteredWords,
+                currentIndex: 0,
+                correctCount: 0,
+                wrongCount: 0,
+                isFlipped: false
+            };
+
+            showScreen('flashcard-game-area');
+            document.getElementById('vocab-flashcard-container').classList.add('hidden');
+            document.getElementById('artigos-flashcard-container').classList.add('hidden');
+            document.getElementById('forca-game-container').classList.remove('hidden');
+
+            initForcaWord();
+        });
+
+        function initForcaWord() {
+            const word = forcaGameState.words[forcaGameState.currentIndex];
+            if (!word) {
+                showForcaResults();
+                return;
+            }
+
+            // Resetar estado para nova palavra
+            forcaGameState.currentWord = word.palavra.toUpperCase();
+            forcaGameState.currentHint = word.descricao || 'Sem dica';
+            forcaGameState.guessedLetters = [];
+            forcaGameState.wrongLetters = [];
+            forcaGameState.errors = 0;
+            forcaGameState.gameOver = false;
+
+            // Atualizar progresso
+            document.getElementById('game-progress-text').textContent = `Palavra ${forcaGameState.currentIndex + 1} de ${forcaGameState.words.length}`;
+            document.getElementById('game-correct-count').textContent = forcaGameState.correctCount;
+            document.getElementById('game-wrong-count').textContent = forcaGameState.wrongCount;
+            const progress = ((forcaGameState.currentIndex + 1) / forcaGameState.words.length) * 100;
+            document.getElementById('game-progress-bar').style.width = `${progress}%`;
+
+            // Resetar visual
+            resetForcaVisual();
+
+            // Mostrar dica
+            document.getElementById('forca-dica').textContent = forcaGameState.currentHint;
+
+            // Criar slots da palavra
+            renderForcaPalavra();
+
+            // Resetar teclado
+            resetForcaTeclado();
+
+            // Esconder botão próxima
+            document.getElementById('forca-proxima-container').classList.add('hidden');
+
+            // Limpar feedback
+            document.getElementById('forca-feedback').textContent = '';
+            document.getElementById('forca-feedback').style.color = '';
+        }
+
+        function resetForcaVisual() {
+            // Esconder todas as partes do corpo
+            forcaPartes.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.classList.add('hidden');
+                    el.classList.remove('visible');
+                }
+            });
+
+            // Limpar letras erradas
+            document.getElementById('forca-letras-erradas').innerHTML = '';
+
+            // Remover animações
+            document.getElementById('forca-svg').classList.remove('forca-balanca', 'forca-vitoria');
+        }
+
+        function renderForcaPalavra() {
+            const container = document.getElementById('forca-palavra');
+            container.innerHTML = '';
+
+            for (const letra of forcaGameState.currentWord) {
+                const slot = document.createElement('div');
+                slot.className = 'forca-letra-slot';
+
+                // Verificar se é letra ou caractere especial
+                if (/[A-ZÄÖÜß]/i.test(letra)) {
+                    if (forcaGameState.guessedLetters.includes(letra)) {
+                        slot.textContent = letra;
+                        slot.classList.add('revelada');
+                    } else {
+                        slot.textContent = '';
+                    }
+                } else {
+                    // Espaços, hífens, etc - mostrar diretamente
+                    slot.textContent = letra;
+                    slot.style.borderBottom = 'none';
+                }
+
+                container.appendChild(slot);
+            }
+        }
+
+        function resetForcaTeclado() {
+            document.querySelectorAll('.forca-tecla').forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('correta', 'errada');
+            });
+        }
+
+        // Event listeners para teclas
+        document.querySelectorAll('.forca-tecla').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                if (forcaGameState.gameOver) return;
+
+                const letra = e.target.dataset.letra;
+                handleForcaGuess(letra, e.target);
+            });
+        });
+
+        // Também aceitar input do teclado físico
+        document.addEventListener('keydown', (e) => {
+            // Só funcionar se o jogo da forca estiver ativo (container visível)
+            const forcaContainer = document.getElementById('forca-game-container');
+            if (!forcaContainer || forcaContainer.classList.contains('hidden')) return;
+            if (forcaGameState.gameOver) return;
+
+            const key = e.key.toUpperCase();
+            // Aceitar letras alemãs e normais
+            if (/^[A-ZÄÖÜß]$/.test(key)) {
+                const btn = document.querySelector(`.forca-tecla[data-letra="${key}"]`);
+                if (btn && !btn.disabled) {
+                    handleForcaGuess(key, btn);
+                }
+            }
+        });
+
+        async function handleForcaGuess(letra, btnElement) {
+            if (forcaGameState.guessedLetters.includes(letra) || forcaGameState.wrongLetters.includes(letra)) {
+                return; // Já tentou esta letra
+            }
+
+            btnElement.disabled = true;
+
+            // Normalizar letra para comparação (ä=Ä, ö=Ö, ü=Ü, ß=ß)
+            const letraUpper = letra.toUpperCase();
+
+            if (forcaGameState.currentWord.includes(letraUpper)) {
+                // Acertou!
+                forcaGameState.guessedLetters.push(letraUpper);
+                btnElement.classList.add('correta');
+                renderForcaPalavra();
+
+                // Verificar se ganhou
+                if (checkForcaVitoria()) {
+                    await handleForcaVitoria();
+                }
+            } else {
+                // Errou!
+                forcaGameState.wrongLetters.push(letraUpper);
+                btnElement.classList.add('errada');
+
+                // Mostrar letra errada
+                const erradasContainer = document.getElementById('forca-letras-erradas');
+                const span = document.createElement('span');
+                span.textContent = letraUpper;
+                span.className = 'text-red-400 font-bold text-lg';
+                erradasContainer.appendChild(span);
+
+                // Mostrar próxima parte do corpo
+                if (forcaGameState.errors < forcaPartes.length) {
+                    const parteId = forcaPartes[forcaGameState.errors];
+                    const parteEl = document.getElementById(parteId);
+                    if (parteEl) {
+                        parteEl.classList.remove('hidden');
+                        parteEl.classList.add('visible');
+                    }
+                }
+
+                forcaGameState.errors++;
+
+                // Animação de balançar
+                document.getElementById('forca-svg').classList.add('forca-balanca');
+                setTimeout(() => {
+                    document.getElementById('forca-svg').classList.remove('forca-balanca');
+                }, 500);
+
+                // Verificar se perdeu
+                if (forcaGameState.errors >= forcaGameState.maxErrors) {
+                    await handleForcaDerrota();
+                }
+            }
+        }
+
+        function checkForcaVitoria() {
+            for (const letra of forcaGameState.currentWord) {
+                if (/[A-ZÄÖÜß]/i.test(letra) && !forcaGameState.guessedLetters.includes(letra)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        async function handleForcaVitoria() {
+            forcaGameState.gameOver = true;
+            forcaGameState.correctCount++;
+
+            // Atualizar contadores
+            document.getElementById('game-correct-count').textContent = forcaGameState.correctCount;
+            flashcardGameState.correctCount = forcaGameState.correctCount;
+
+            // Feedback visual
+            document.getElementById('forca-feedback').textContent = '🎉 Parabéns! Você acertou!';
+            document.getElementById('forca-feedback').style.color = '#86efac';
+
+            // Animação de vitória
+            document.getElementById('forca-svg').classList.add('forca-vitoria');
+
+            // Atualizar estatísticas no banco
+            const word = forcaGameState.words[forcaGameState.currentIndex];
+            await updateWordStats(word.id, true, 'palavrasgerais');
+
+            // Desabilitar teclado
+            document.querySelectorAll('.forca-tecla').forEach(btn => btn.disabled = true);
+
+            // Mostrar botão próxima
+            showForcaProximaBtn();
+        }
+
+        async function handleForcaDerrota() {
+            forcaGameState.gameOver = true;
+            forcaGameState.wrongCount++;
+
+            // Atualizar contadores
+            document.getElementById('game-wrong-count').textContent = forcaGameState.wrongCount;
+            flashcardGameState.wrongCount = forcaGameState.wrongCount;
+
+            // Revelar palavra completa
+            const container = document.getElementById('forca-palavra');
+            const slots = container.querySelectorAll('.forca-letra-slot');
+            const wordArray = forcaGameState.currentWord.split('');
+
+            slots.forEach((slot, i) => {
+                if (!slot.textContent && /[A-ZÄÖÜß]/i.test(wordArray[i])) {
+                    slot.textContent = wordArray[i];
+                    slot.classList.add('perdeu');
+                }
+            });
+
+            // Feedback visual
+            document.getElementById('forca-feedback').textContent = `😢 Que pena! A palavra era: ${forcaGameState.currentWord}`;
+            document.getElementById('forca-feedback').style.color = '#fca5a5';
+
+            // Atualizar estatísticas no banco
+            const word = forcaGameState.words[forcaGameState.currentIndex];
+            await updateWordStats(word.id, false, 'palavrasgerais');
+
+            // Desabilitar teclado
+            document.querySelectorAll('.forca-tecla').forEach(btn => btn.disabled = true);
+
+            // Mostrar botão próxima
+            showForcaProximaBtn();
+        }
+
+        function showForcaProximaBtn() {
+            const container = document.getElementById('forca-proxima-container');
+            container.classList.remove('hidden');
+
+            // Verificar se é a última palavra
+            if (forcaGameState.currentIndex >= forcaGameState.words.length - 1) {
+                document.getElementById('forca-proxima-btn').textContent = 'Ver Resultados';
+            } else {
+                document.getElementById('forca-proxima-btn').textContent = 'Próxima Palavra →';
+            }
+        }
+
+        document.getElementById('forca-proxima-btn')?.addEventListener('click', () => {
+            forcaGameState.currentIndex++;
+            flashcardGameState.currentIndex = forcaGameState.currentIndex;
+
+            if (forcaGameState.currentIndex >= forcaGameState.words.length) {
+                showForcaResults();
+            } else {
+                initForcaWord();
+            }
+        });
+
+        function showForcaResults() {
+            // Usar a tela de resultados existente
+            document.getElementById('final-correct').textContent = forcaGameState.correctCount;
+            document.getElementById('final-wrong').textContent = forcaGameState.wrongCount;
             showScreen('flashcard-results');
         }
 
