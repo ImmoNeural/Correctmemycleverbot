@@ -24,7 +24,7 @@ exports.handler = async (event) => {
 
     try {
         const body = JSON.parse(event.body);
-        const { palavra, nivel } = body;
+        const { palavra, traducao, nivel } = body;
 
         if (!palavra) {
             return {
@@ -46,6 +46,11 @@ exports.handler = async (event) => {
             instrucaoDica = 'Dê uma dica CLARA com um exemplo de frase em alemão usando a palavra (substituindo a palavra por "___").';
         }
 
+        // Incluir tradução no prompt se disponível para garantir precisão
+        const contextoTraducao = traducao
+            ? `\n\nCONTEXTO IMPORTANTE: O significado correto desta palavra é "${traducao}". Use este significado como base para criar a dica, mas NÃO revele a tradução diretamente.`
+            : '';
+
         const systemPrompt = `Você é um assistente para um jogo da forca em alemão. Sua tarefa é criar dicas para ajudar o jogador a adivinhar uma palavra alemã.
 
 REGRAS IMPORTANTES:
@@ -54,8 +59,9 @@ REGRAS IMPORTANTES:
 3. A dica deve ser em português
 4. A dica deve ter no máximo 50 palavras
 5. Seja criativo e útil
+6. Use SEMPRE o significado correto fornecido no contexto (se disponível)
 
-${instrucaoDica}`;
+${instrucaoDica}${contextoTraducao}`;
 
         const userPrompt = `Crie uma dica para a palavra alemã: "${palavra}"
 

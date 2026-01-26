@@ -2879,6 +2879,7 @@ async function handleCorrectionSubmit(e) {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         palavra: forcaGameState.originalWord, // Usar palavra original (não uppercase) para melhor reconhecimento pela IA
+                        traducao: forcaGameState.currentHint, // Enviar tradução/descrição para IA gerar dicas corretas
                         nivel: nivel
                     })
                 });
