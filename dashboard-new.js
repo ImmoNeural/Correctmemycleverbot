@@ -2809,16 +2809,13 @@ async function handleCorrectionSubmit(e) {
             // Contar apenas letras válidas para ajustar tamanho
             const letrasValidas = palavra.replace(/[^A-ZÄÖÜß-]/gi, '').length;
 
-            // Ajustar tamanho das letras para palavras longas
-            let slotSize = '2rem';
-            let fontSize = '1.5rem';
+            // Determinar classe de tamanho baseada no comprimento da palavra
+            let sizeClass = 'slot-normal';
             if (letrasValidas > 12) {
-                slotSize = '1.5rem';
-                fontSize = '1.1rem';
+                sizeClass = 'slot-medium';
             }
             if (letrasValidas > 16) {
-                slotSize = '1.2rem';
-                fontSize = '0.9rem';
+                sizeClass = 'slot-small';
             }
 
             for (const letra of palavra) {
@@ -2831,9 +2828,7 @@ async function handleCorrectionSubmit(e) {
                 }
 
                 const slot = document.createElement('span');
-                slot.className = 'forca-letra-slot';
-                slot.style.width = slotSize;
-                slot.style.fontSize = fontSize;
+                slot.className = 'forca-letra-slot ' + sizeClass;
 
                 // Verificar se é letra válida (incluindo umlauts alemães)
                 if (/[A-ZÄÖÜß]/i.test(letra)) {
