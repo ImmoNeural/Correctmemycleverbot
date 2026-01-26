@@ -85,7 +85,7 @@ REGRAS CRÍTICAS:
                     { role: 'system', content: systemPrompt },
                     { role: 'user', content: userPrompt }
                 ],
-                temperature: 0.3,
+                temperature: 0,
                 max_tokens: 100
             })
         });

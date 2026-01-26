@@ -169,6 +169,224 @@
             animation: correctPulse 0.5s ease;
         }
 
+        /* =============================================
+           RESPONSIVIDADE DO JOGO DA FORCA
+           ============================================= */
+
+        /* Mobile Portrait - Jogo da Forca compacto */
+        @media (max-width: 768px) and (orientation: portrait) {
+            #forca-game-container {
+                padding: 0 !important;
+            }
+
+            #forca-game-container > div {
+                padding: 1rem !important;
+            }
+
+            /* Layout vertical: forca em cima, palavra/teclado embaixo */
+            #forca-game-container .flex.flex-col.md\\:flex-row {
+                flex-direction: column !important;
+                gap: 1rem !important;
+            }
+
+            /* SVG da forca menor */
+            #forca-svg {
+                width: 140px !important;
+                height: 175px !important;
+            }
+
+            /* Área da palavra */
+            #forca-palavra {
+                gap: 0.25rem !important;
+                margin-bottom: 0.75rem !important;
+            }
+
+            .forca-letra-slot {
+                width: 1.4rem !important;
+                height: 2rem !important;
+                font-size: 1rem !important;
+            }
+
+            .forca-espacador {
+                width: 0.75rem !important;
+            }
+
+            /* Botão de dica menor */
+            #forca-dica-btn {
+                padding: 0.4rem 0.75rem !important;
+                font-size: 0.75rem !important;
+            }
+
+            #forca-dica-btn svg {
+                width: 1rem !important;
+                height: 1rem !important;
+            }
+
+            /* Área de dica compacta */
+            #forca-dica-container {
+                min-height: 2rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+
+            #forca-dica {
+                font-size: 0.85rem !important;
+            }
+
+            /* Teclado compacto */
+            #forca-teclado {
+                margin-top: 0.5rem !important;
+            }
+
+            .forca-tecla {
+                width: 1.8rem !important;
+                height: 2rem !important;
+                font-size: 0.7rem !important;
+            }
+
+            #forca-teclado > div {
+                gap: 0.2rem !important;
+            }
+
+            /* Feedback menor */
+            #forca-feedback {
+                font-size: 0.9rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+
+            /* Letras erradas */
+            #forca-letras-erradas {
+                min-height: 1.5rem !important;
+            }
+
+            #forca-letras-erradas span {
+                font-size: 0.9rem !important;
+            }
+
+            /* Botão próxima */
+            #forca-proxima-btn {
+                padding: 0.5rem 1rem !important;
+                font-size: 0.85rem !important;
+            }
+        }
+
+        /* Mobile Landscape - Jogo da Forca otimizado para tela larga */
+        @media (max-width: 900px) and (orientation: landscape) {
+            #forca-game-container {
+                padding: 0 !important;
+            }
+
+            #forca-game-container > div {
+                padding: 0.5rem !important;
+            }
+
+            /* Layout horizontal: forca à esquerda, conteúdo à direita */
+            #forca-game-container .flex.flex-col.md\\:flex-row {
+                flex-direction: row !important;
+                gap: 0.75rem !important;
+                align-items: flex-start !important;
+            }
+
+            /* SVG da forca compacto */
+            #forca-svg {
+                width: 120px !important;
+                height: 150px !important;
+            }
+
+            /* Área da palavra/teclado ocupa resto do espaço */
+            #forca-game-container .flex-1 {
+                flex: 1 !important;
+            }
+
+            /* Área da palavra */
+            #forca-palavra {
+                gap: 0.2rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+
+            .forca-letra-slot {
+                width: 1.3rem !important;
+                height: 1.8rem !important;
+                font-size: 0.9rem !important;
+                border-bottom-width: 2px !important;
+            }
+
+            .forca-espacador {
+                width: 0.6rem !important;
+            }
+
+            /* Botão de dica menor */
+            #forca-dica-btn {
+                padding: 0.3rem 0.5rem !important;
+                font-size: 0.65rem !important;
+            }
+
+            #forca-dica-btn svg {
+                width: 0.875rem !important;
+                height: 0.875rem !important;
+            }
+
+            /* Área de dica super compacta */
+            #forca-dica-container {
+                min-height: 1.5rem !important;
+                margin-bottom: 0.35rem !important;
+            }
+
+            #forca-dica {
+                font-size: 0.7rem !important;
+                line-height: 1.2 !important;
+            }
+
+            /* Texto de letras erradas */
+            #forca-game-container .mb-4 p.text-slate-500 {
+                font-size: 0.6rem !important;
+                margin-bottom: 0.15rem !important;
+            }
+
+            /* Letras erradas compactas */
+            #forca-letras-erradas {
+                min-height: 1.2rem !important;
+                gap: 0.2rem !important;
+            }
+
+            #forca-letras-erradas span {
+                font-size: 0.75rem !important;
+            }
+
+            /* Teclado super compacto */
+            #forca-teclado {
+                margin-top: 0.35rem !important;
+            }
+
+            .forca-tecla {
+                width: 1.6rem !important;
+                height: 1.6rem !important;
+                font-size: 0.6rem !important;
+                border-radius: 0.25rem !important;
+            }
+
+            #forca-teclado > div {
+                gap: 0.15rem !important;
+                margin-top: 0.15rem !important;
+            }
+
+            /* Feedback compacto */
+            #forca-feedback {
+                font-size: 0.75rem !important;
+                margin-bottom: 0.35rem !important;
+                min-height: 1.25rem !important;
+            }
+
+            /* Botão próxima compacto */
+            #forca-proxima-container {
+                margin-top: 0.35rem !important;
+            }
+
+            #forca-proxima-btn {
+                padding: 0.35rem 0.75rem !important;
+                font-size: 0.7rem !important;
+            }
+        }
+
         /* Responsividade APENAS para Mobile Portrait (vertical) */
         @media (max-width: 768px) and (orientation: portrait) {
             /* Layout Mobile: Perfil no topo, menu na parte inferior */
@@ -685,6 +903,89 @@
             #wordlist-content .color-flags-container div {
                 width: 1rem !important;
                 height: 1rem !important;
+            }
+
+            /* Jogo da Forca em tablets/landscape */
+            #forca-game-container > div {
+                padding: 0.75rem !important;
+            }
+
+            #forca-game-container .flex.flex-col.md\\:flex-row {
+                flex-direction: row !important;
+                gap: 1rem !important;
+                align-items: flex-start !important;
+            }
+
+            #forca-svg {
+                width: 140px !important;
+                height: 175px !important;
+            }
+
+            #forca-palavra {
+                gap: 0.2rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+
+            .forca-letra-slot {
+                width: 1.4rem !important;
+                height: 1.8rem !important;
+                font-size: 1rem !important;
+            }
+
+            .forca-espacador {
+                width: 0.75rem !important;
+            }
+
+            #forca-dica-btn {
+                padding: 0.35rem 0.6rem !important;
+                font-size: 0.7rem !important;
+            }
+
+            #forca-dica-btn svg {
+                width: 0.9rem !important;
+                height: 0.9rem !important;
+            }
+
+            #forca-dica-container {
+                min-height: 1.75rem !important;
+                margin-bottom: 0.4rem !important;
+            }
+
+            #forca-dica {
+                font-size: 0.75rem !important;
+            }
+
+            .forca-tecla {
+                width: 1.75rem !important;
+                height: 1.75rem !important;
+                font-size: 0.65rem !important;
+            }
+
+            #forca-teclado {
+                margin-top: 0.4rem !important;
+            }
+
+            #forca-teclado > div {
+                gap: 0.2rem !important;
+                margin-top: 0.2rem !important;
+            }
+
+            #forca-feedback {
+                font-size: 0.8rem !important;
+                margin-bottom: 0.4rem !important;
+            }
+
+            #forca-letras-erradas {
+                min-height: 1.25rem !important;
+            }
+
+            #forca-letras-erradas span {
+                font-size: 0.8rem !important;
+            }
+
+            #forca-proxima-btn {
+                padding: 0.4rem 0.8rem !important;
+                font-size: 0.75rem !important;
             }
 
             /* Chatbot em landscape - altura automática, sem posição fixa */
