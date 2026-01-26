@@ -54,23 +54,25 @@ exports.handler = async (event) => {
 
         const traducaoLimpa = traducao.trim();
 
-        // Prompt para gerar as 3 dicas de uma vez
-        const systemPrompt = `Você gera dicas para um jogo da forca em português.
-Você receberá uma TRADUÇÃO em português e deve criar EXATAMENTE 3 dicas progressivas.
+        // Prompt para gerar as 3 dicas de uma vez - muito explícito para evitar alucinações
+        const systemPrompt = `Você é um gerador de dicas para jogo da forca.
+TAREFA: Gerar 3 dicas para ajudar alguém a adivinhar a palavra "${traducaoLimpa}".
 
-REGRAS IMPORTANTES:
-1. Responda APENAS em formato JSON: {"dica1": "...", "dica2": "...", "dica3": "..."}
-2. Cada dica deve ter no máximo 15 palavras
-3. NÃO use a palavra "${traducaoLimpa}" diretamente nas dicas 1 e 2
-4. As dicas devem ser progressivamente mais reveladoras:
-   - dica1: VAGA - categoria ou contexto geral
-   - dica2: MÉDIA - quando/onde/como é usado
-   - dica3: DIRETA - frase de exemplo com "___" no lugar da palavra`;
+ATENÇÃO: A palavra que o jogador deve adivinhar é "${traducaoLimpa}".
+TODAS as dicas DEVEM ser sobre "${traducaoLimpa}" e nada mais.
 
-        const userPrompt = `TRADUÇÃO: "${traducaoLimpa}"
+Formato de resposta (APENAS JSON):
+{"dica1": "...", "dica2": "...", "dica3": "..."}
 
-Gere 3 dicas progressivas para esta palavra.
-Responda APENAS com o JSON, sem explicações.`;
+Níveis das dicas:
+- dica1: Categoria geral (ex: se for "cachorro", diga "animal doméstico de estimação")
+- dica2: Característica ou uso (ex: se for "cachorro", diga "late e abana o rabo")
+- dica3: Frase com lacuna (ex: se for "cachorro", diga "O ___ é o melhor amigo do homem")`;
+
+        const userPrompt = `A palavra para o jogo da forca é: "${traducaoLimpa}"
+
+Gere EXATAMENTE 3 dicas sobre "${traducaoLimpa}".
+Responda SOMENTE com JSON, nada mais.`;
 
         const deepseekResponse = await fetch(DEEPSEEK_API_URL, {
             method: 'POST',
@@ -84,7 +86,7 @@ Responda APENAS com o JSON, sem explicações.`;
                     { role: 'system', content: systemPrompt },
                     { role: 'user', content: userPrompt }
                 ],
-                temperature: 0.3,
+                temperature: 0,
                 max_tokens: 300
             })
         });
