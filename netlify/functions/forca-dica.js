@@ -26,6 +26,12 @@ exports.handler = async (event) => {
         const body = JSON.parse(event.body);
         const { palavra, traducao, nivel } = body;
 
+        // DEBUG: Log dos dados recebidos
+        console.log('[FORCA-DICA] Dados recebidos:');
+        console.log('[FORCA-DICA] Palavra:', palavra);
+        console.log('[FORCA-DICA] Tradução:', traducao);
+        console.log('[FORCA-DICA] Nível:', nivel);
+
         if (!palavra) {
             return {
                 statusCode: 400,
@@ -50,26 +56,38 @@ exports.handler = async (event) => {
         // Nível da dica: 1 = vaga, 2 = média, 3 = mais direta
         const nivelDica = nivel || 1;
 
-        // IMPORTANTE: Usar SOMENTE a tradução, não mencionar a palavra alemã para evitar que a IA tente adivinhar
+        // IMPORTANTE: Usar SOMENTE a tradução, de forma bem explícita
+        const traducaoLimpa = traducao.trim();
+
+        console.log('[FORCA-DICA] Gerando dica para tradução:', traducaoLimpa);
+
         let instrucaoDica;
         if (nivelDica === 1) {
-            instrucaoDica = `A palavra em português é "${traducao}". Crie uma dica MUITO VAGA sobre a categoria ou contexto geral. Exemplos: "relacionado a sentimentos", "usado na cozinha", "algo abstrato". NÃO use a palavra "${traducao}" nem sinônimos diretos na dica.`;
+            instrucaoDica = `TRADUÇÃO A USAR: "${traducaoLimpa}"
+
+Crie UMA dica VAGA sobre a categoria ou contexto geral desta tradução.
+Exemplo: se a tradução fosse "carro", a dica seria "meio de transporte terrestre".
+NÃO use "${traducaoLimpa}" na dica.`;
         } else if (nivelDica === 2) {
-            instrucaoDica = `A palavra em português é "${traducao}". Crie uma dica MÉDIA explicando situações onde esse conceito é usado. Exemplos: "você sente isso quando a rotina cansa", "algo que todo mundo busca no dia a dia". NÃO use a palavra "${traducao}" nem sinônimos diretos na dica.`;
+            instrucaoDica = `TRADUÇÃO A USAR: "${traducaoLimpa}"
+
+Crie UMA dica MÉDIA explicando quando/onde este conceito é usado.
+Exemplo: se a tradução fosse "carro", a dica seria "você usa isso para ir ao trabalho".
+NÃO use "${traducaoLimpa}" na dica.`;
         } else {
-            instrucaoDica = `A palavra em português é "${traducao}". Crie uma dica BEM CLARA com uma frase de exemplo usando "___" no lugar da palavra. Exemplo para "variedade": "Ter ___ na alimentação é importante para a saúde". Pode usar sinônimos ou explicações diretas.`;
+            instrucaoDica = `TRADUÇÃO A USAR: "${traducaoLimpa}"
+
+Crie UMA frase de exemplo usando "___" no lugar da tradução.
+Exemplo: se a tradução fosse "carro", a dica seria "Comprei um ___ novo ontem".`;
         }
 
-        const systemPrompt = `Você é um assistente para um jogo da forca em português. Você receberá uma TRADUÇÃO em português e deve criar UMA dica baseada EXCLUSIVAMENTE nessa tradução.
+        const systemPrompt = `Você gera dicas para um jogo da forca. Você receberá uma TRADUÇÃO em português e deve criar EXATAMENTE UMA dica baseada nela.
 
-REGRAS CRÍTICAS:
-1. Use SOMENTE a tradução fornecida como base - NÃO tente adivinhar outros significados
-2. A dica deve ser em português
-3. Máximo de 15 palavras
-4. Responda APENAS com a dica, sem prefixos como "Dica:" ou explicações
-5. Para nível 1 e 2: NÃO revele a tradução direta nem sinônimos óbvios
-6. Para nível 3: Pode ser mais direto, usar sinônimos ou frases de exemplo
-7. IGNORE qualquer palavra em alemão - foque APENAS na tradução portuguesa fornecida`;
+REGRAS:
+1. Use SOMENTE a tradução fornecida - ela está marcada como "TRADUÇÃO A USAR:"
+2. Responda APENAS com a dica, sem prefixos
+3. Máximo 15 palavras
+4. A dica deve fazer sentido para a tradução fornecida`;
 
         const userPrompt = instrucaoDica;
 
@@ -103,13 +121,22 @@ REGRAS CRÍTICAS:
         const deepseekData = await deepseekResponse.json();
         const dica = deepseekData.choices[0]?.message?.content || 'Não foi possível gerar uma dica.';
 
+        console.log('[FORCA-DICA] Dica gerada:', dica.trim());
+        console.log('[FORCA-DICA] Para tradução:', traducaoLimpa);
+
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({
                 success: true,
                 dica: dica.trim(),
-                nivel: nivelDica
+                nivel: nivelDica,
+                // Debug info
+                debug: {
+                    palavraRecebida: palavra,
+                    traducaoRecebida: traducao,
+                    traducaoUsada: traducaoLimpa
+                }
             })
         };
 

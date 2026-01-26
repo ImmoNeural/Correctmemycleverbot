@@ -2861,10 +2861,26 @@ async function handleCorrectionSubmit(e) {
             });
         }
 
+        // Flag para evitar chamadas duplicadas
+        let pedindoDica = false;
+
         // Função para pedir dica via IA
         async function pedirDicaForca() {
+            // Evitar chamadas duplicadas
+            if (pedindoDica) {
+                console.log('[DICA] Chamada duplicada bloqueada');
+                return;
+            }
             if (forcaGameState.gameOver) return;
             if (forcaGameState.dicasRestantes <= 0) return;
+
+            pedindoDica = true; // Marcar como em andamento
+
+            // DEBUG: Log dos dados que serão enviados
+            console.log('[DICA] Iniciando pedido de dica:');
+            console.log('[DICA] Palavra original:', forcaGameState.originalWord);
+            console.log('[DICA] Tradução (currentHint):', forcaGameState.currentHint);
+            console.log('[DICA] Nível atual:', forcaGameState.dicaNivel + 1);
 
             const dicaBtn = document.getElementById('forca-dica-btn');
             const dicaBtnMobile = document.getElementById('forca-dica-btn-mobile');
@@ -2926,10 +2942,15 @@ async function handleCorrectionSubmit(e) {
 
                 const data = await response.json();
 
+                // DEBUG: Log da resposta
+                console.log('[DICA] Resposta da API:', data);
+
                 if (data.success && data.dica) {
                     // Atualizar contador de dicas
                     forcaGameState.dicasRestantes--;
                     forcaGameState.dicasUsadas.push(data.dica);
+
+                    console.log('[DICA] Dica recebida:', data.dica);
 
                     // Mostrar todas as dicas (anteriores + nova) em ambos os elementos
                     const dicasHtml = forcaGameState.dicasUsadas.map((d, i) =>
@@ -2950,6 +2971,9 @@ async function handleCorrectionSubmit(e) {
                 updateDicaText('Erro de conexão. Tente novamente.');
                 forcaGameState.dicaNivel--; // Reverter incremento se falhou
             } finally {
+                // Resetar flag de chamada
+                pedindoDica = false;
+
                 // Restaurar botões (desktop e mobile)
                 const desktopBtnHtml = `
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
