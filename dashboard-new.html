@@ -217,22 +217,48 @@
             flex-shrink: 0;
         }
 
-        /* FORÇAR LAYOUT HORIZONTAL DAS LETRAS - BASE (sempre aplicado) */
+        /* =============================================
+           LAYOUT DO JOGO DA FORCA - DESKTOP (base)
+           ============================================= */
+
+        /* Layout principal: horizontal (forca à esquerda, conteúdo à direita) */
+        #forca-main-area {
+            display: flex;
+            flex-direction: row;
+            gap: 4rem;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Container do SVG */
+        #forca-svg-container {
+            flex-shrink: 0;
+        }
+
+        /* Container do conteúdo (palavra, teclado, etc) */
+        #forca-content-area {
+            flex: 1;
+            text-align: center;
+        }
+
+        /* Container das letras da palavra */
         #forca-palavra {
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: wrap !important;
-            justify-content: center !important;
-            align-items: center !important;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
         }
 
         .forca-letra-slot {
-            display: inline-flex !important;
-            flex-shrink: 0 !important;
+            display: inline-flex;
+            flex-shrink: 0;
         }
 
         /* =============================================
-           RESPONSIVIDADE DO JOGO DA FORCA
+           RESPONSIVIDADE DO JOGO DA FORCA - MOBILE
            ============================================= */
 
         /* Mobile - Regras gerais para qualquer orientação */
@@ -256,9 +282,10 @@
             }
 
             /* Conteúdo à direita */
-            #forca-game-container .flex-1 {
+            #forca-content-area {
                 flex: 1 !important;
                 min-width: 0 !important;
+                text-align: center !important;
             }
 
             /* FORÇAR letras na HORIZONTAL */
@@ -366,9 +393,9 @@
                 text-align: left !important;
             }
 
-            /* Esconder a dica desktop */
-            #forca-game-container .flex-1 .flex.items-center.justify-center.gap-3.mb-4,
-            #forca-dica-container {
+            /* Esconder a dica desktop no mobile */
+            #forca-dica-container,
+            #forca-dica-btn-container {
                 display: none !important;
             }
 
@@ -393,7 +420,7 @@
             }
 
             /* Container da palavra - à direita, ocupa resto do espaço */
-            #forca-game-container .flex-1 {
+            #forca-content-area {
                 flex: 1 !important;
                 display: flex !important;
                 flex-direction: column !important;
@@ -611,8 +638,9 @@
             }
 
             /* Área da palavra/teclado ocupa resto do espaço */
-            #forca-game-container .flex-1 {
+            #forca-content-area {
                 flex: 1 !important;
+                text-align: center !important;
             }
 
             /* PALAVRA HORIZONTAL */
@@ -1981,9 +2009,9 @@
                             </div>
 
                             <!-- Área principal do jogo (forca + palavra) -->
-                            <div id="forca-main-area" class="flex flex-col md:flex-row gap-8 items-center justify-center">
+                            <div id="forca-main-area">
                                 <!-- SVG da Forca (esquerda) -->
-                                <div class="flex-shrink-0" id="forca-svg-container">
+                                <div id="forca-svg-container">
                                     <svg id="forca-svg" width="200" height="250" viewBox="0 0 200 250" class="stroke-slate-400">
                                         <!-- Base de madeira estilizada -->
                                         <rect x="15" y="225" width="90" height="8" rx="2" fill="#8B4513" stroke="none"/>
@@ -2071,9 +2099,9 @@
                                 </div>
 
                                 <!-- Área da palavra e dica -->
-                                <div class="flex-1 text-center">
-                                    <!-- Botão de Dica com IA -->
-                                    <div class="flex items-center justify-center gap-3 mb-4">
+                                <div id="forca-content-area">
+                                    <!-- Botão de Dica com IA (desktop) -->
+                                    <div id="forca-dica-btn-container" class="flex items-center justify-center gap-3 mb-4">
                                         <button id="forca-dica-btn" class="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                                 <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/>
@@ -2088,7 +2116,7 @@
                                     </div>
 
                                     <!-- Palavra com espaços -->
-                                    <div id="forca-palavra" class="flex justify-center gap-2 mb-6 flex-wrap">
+                                    <div id="forca-palavra">
                                         <!-- Letras serão inseridas dinamicamente -->
                                     </div>
 
