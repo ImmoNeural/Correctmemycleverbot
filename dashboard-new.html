@@ -257,12 +257,53 @@
             flex-shrink: 0;
         }
 
+        /* Container de letras erradas - DESKTOP */
+        #forca-letras-erradas-container {
+            margin-bottom: 1rem;
+        }
+
+        #forca-letras-erradas {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+            min-height: 2rem;
+        }
+
+        /* Botão de dica - DESKTOP */
+        #forca-dica-btn-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        #forca-dica-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        #forca-dica-btn:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+        }
+
         /* =============================================
            RESPONSIVIDADE DO JOGO DA FORCA - MOBILE
            ============================================= */
 
         /* Mobile - Regras gerais para qualquer orientação */
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
             /* LAYOUT PRINCIPAL HORIZONTAL - forca à esquerda, conteúdo à direita */
             #forca-main-area {
                 display: flex !important;
@@ -351,7 +392,7 @@
         }
 
         /* Mobile Portrait - Jogo da Forca - Layout Horizontal */
-        @media (max-width: 768px) and (orientation: portrait) {
+        @media (max-width: 900px) and (orientation: portrait) {
             /* Container principal */
             #forca-game-container {
                 padding: 0.25rem !important;
@@ -793,7 +834,7 @@
         }
 
         /* Responsividade APENAS para Mobile Portrait (vertical) */
-        @media (max-width: 768px) and (orientation: portrait) {
+        @media (max-width: 900px) and (orientation: portrait) {
             /* Layout Mobile: Perfil no topo, menu na parte inferior */
             .sidebar {
                 width: 100% !important;
@@ -2115,9 +2156,9 @@
 
                                 <!-- Área da palavra e dica -->
                                 <div id="forca-content-area">
-                                    <!-- Botão de Dica com IA (desktop) -->
-                                    <div id="forca-dica-btn-container" class="flex items-center justify-center gap-3 mb-4">
-                                        <button id="forca-dica-btn" class="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                                    <!-- Botão de Dica com IA (APENAS DESKTOP - escondido no mobile via CSS) -->
+                                    <div id="forca-dica-btn-container">
+                                        <button id="forca-dica-btn">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                                 <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/>
                                             </svg>
@@ -2136,9 +2177,9 @@
                                     </div>
 
                                     <!-- Letras erradas -->
-                                    <div class="mb-4">
+                                    <div id="forca-letras-erradas-container">
                                         <p class="text-slate-500 text-xs mb-2">Letras erradas:</p>
-                                        <div id="forca-letras-erradas" class="flex justify-center gap-2 flex-wrap min-h-[2rem]">
+                                        <div id="forca-letras-erradas">
                                             <!-- Letras erradas serão mostradas aqui -->
                                         </div>
                                     </div>
