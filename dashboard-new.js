@@ -511,7 +511,7 @@ async function handleCorrectionSubmit(e) {
                 </div>
 
                 <div style="padding: 16px; background-color: #1e293b; border-radius: 8px; margin-bottom: 20px;">
-                    <h3 style="font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 10px;">Texto Corrigido:</h3>
+                    <h3 style="font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 10px;">Análise do seu texto:</h3>
                     <div id="texto-corrigido-container" style="padding: 12px; background-color: #0f172a; border-radius: 6px; font-size: 15px; line-height: 1.7; color: #e2e8f0;">${escapeHtml(text)}</div>
                 </div>
 
