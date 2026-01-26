@@ -3140,8 +3140,8 @@ async function handleCorrectionSubmit(e) {
                 }
             });
 
-            // Feedback visual
-            document.getElementById('forca-feedback').textContent = `😢 Que pena! A palavra era: ${forcaGameState.currentWord}`;
+            // Feedback visual - mostrar palavra E tradução para debug
+            document.getElementById('forca-feedback').innerHTML = `😢 Que pena! A palavra era: <strong>${forcaGameState.currentWord}</strong><br><small style="color:#94a3b8">Tradução: ${forcaGameState.currentHint}</small>`;
             document.getElementById('forca-feedback').style.color = '#fca5a5';
 
             // Atualizar estatísticas no banco

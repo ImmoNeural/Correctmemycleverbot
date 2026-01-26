@@ -298,6 +298,27 @@
             background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
         }
 
+        /* Teclado - DESKTOP */
+        #forca-teclado {
+            margin-top: 1.5rem;
+        }
+
+        .teclado-linha {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            max-width: 32rem;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .teclado-linha:first-child {
+            margin-top: 0;
+        }
+
         /* =============================================
            RESPONSIVIDADE DO JOGO DA FORCA - MOBILE
            ============================================= */
@@ -388,6 +409,25 @@
                 flex-wrap: wrap !important;
                 justify-content: center !important;
                 gap: 0.5rem !important;
+            }
+
+            /* TECLADO na HORIZONTAL */
+            #forca-teclado {
+                margin-top: 0.5rem !important;
+                width: 100% !important;
+            }
+
+            .teclado-linha {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: wrap !important;
+                justify-content: center !important;
+                gap: 3px !important;
+                margin-top: 3px !important;
+            }
+
+            .teclado-linha:first-child {
+                margin-top: 0 !important;
             }
         }
 
@@ -589,14 +629,14 @@
                 border-radius: 0.75rem !important;
             }
 
-            #forca-teclado > div {
+            .teclado-linha {
                 gap: 2px !important;
                 margin-top: 2px !important;
                 max-width: 100% !important;
                 justify-content: center !important;
             }
 
-            #forca-teclado > div:first-child {
+            .teclado-linha:first-child {
                 margin-top: 0 !important;
             }
 
@@ -810,7 +850,7 @@
                 box-shadow: 0 2px 0 #0f172a !important;
             }
 
-            #forca-teclado > div {
+            .teclado-linha {
                 gap: 2px !important;
                 margin-top: 2px !important;
             }
@@ -1411,7 +1451,7 @@
                 margin-top: 0.4rem !important;
             }
 
-            #forca-teclado > div {
+            .teclado-linha {
                 gap: 0.2rem !important;
                 margin-top: 0.2rem !important;
             }
@@ -2190,8 +2230,8 @@
                             </div>
 
                             <!-- Teclado virtual -->
-                            <div id="forca-teclado" class="mt-6">
-                                <div class="flex flex-wrap justify-center gap-2 max-w-lg mx-auto">
+                            <div id="forca-teclado">
+                                <div class="teclado-linha">
                                     <!-- Linha 1: Q-P -->
                                     <button class="forca-tecla" data-letra="Q">Q</button>
                                     <button class="forca-tecla" data-letra="W">W</button>
@@ -2205,7 +2245,7 @@
                                     <button class="forca-tecla" data-letra="P">P</button>
                                     <button class="forca-tecla" data-letra="Ü">Ü</button>
                                 </div>
-                                <div class="flex flex-wrap justify-center gap-2 max-w-lg mx-auto mt-2">
+                                <div class="teclado-linha">
                                     <!-- Linha 2: A-L -->
                                     <button class="forca-tecla" data-letra="A">A</button>
                                     <button class="forca-tecla" data-letra="S">S</button>
@@ -2219,7 +2259,7 @@
                                     <button class="forca-tecla" data-letra="Ö">Ö</button>
                                     <button class="forca-tecla" data-letra="Ä">Ä</button>
                                 </div>
-                                <div class="flex flex-wrap justify-center gap-2 max-w-lg mx-auto mt-2">
+                                <div class="teclado-linha">
                                     <!-- Linha 3: Y-M + ß -->
                                     <button class="forca-tecla" data-letra="Y">Y</button>
                                     <button class="forca-tecla" data-letra="X">X</button>
