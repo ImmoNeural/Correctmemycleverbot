@@ -2600,7 +2600,9 @@ async function handleCorrectionSubmit(e) {
             gameOver: false,
             dicasRestantes: 3,
             dicaNivel: 0,
-            dicasUsadas: []
+            dicasUsadas: [],
+            dicasGeradas: [], // Array com as 3 dicas pré-geradas pela IA
+            dicasCarregando: false // Flag para saber se está carregando as dicas
         };
 
         const forcaPartes = [
@@ -2688,7 +2690,9 @@ async function handleCorrectionSubmit(e) {
                 gameOver: false,
                 dicasRestantes: 3,
                 dicaNivel: 0,
-                dicasUsadas: []
+                dicasUsadas: [],
+                dicasGeradas: [], // Array com as 3 dicas pré-geradas pela IA
+                dicasCarregando: false // Flag para saber se está carregando as dicas
             };
 
             // Atualizar estado do flashcard game também para manter consistência
@@ -2737,6 +2741,8 @@ async function handleCorrectionSubmit(e) {
             forcaGameState.dicasRestantes = 3;
             forcaGameState.dicaNivel = 0;
             forcaGameState.dicasUsadas = [];
+            forcaGameState.dicasGeradas = []; // Resetar dicas pré-geradas para nova palavra
+            forcaGameState.dicasCarregando = false;
 
             // Atualizar progresso
             document.getElementById('game-progress-text').textContent = `Palavra ${forcaGameState.currentIndex + 1} de ${forcaGameState.words.length}`;
@@ -2861,26 +2867,17 @@ async function handleCorrectionSubmit(e) {
             });
         }
 
-        // Flag para evitar chamadas duplicadas
-        let pedindoDica = false;
-
-        // Função para pedir dica via IA
+        // Função para pedir dica - usa sistema de batch (gera todas as 3 dicas de uma vez)
         async function pedirDicaForca() {
-            // Evitar chamadas duplicadas
-            if (pedindoDica) {
-                console.log('[DICA] Chamada duplicada bloqueada');
-                return;
-            }
+            // Evitar chamadas se já terminou ou não tem dicas
             if (forcaGameState.gameOver) return;
             if (forcaGameState.dicasRestantes <= 0) return;
 
-            pedindoDica = true; // Marcar como em andamento
-
-            // DEBUG: Log dos dados que serão enviados
-            console.log('[DICA] Iniciando pedido de dica:');
-            console.log('[DICA] Palavra original:', forcaGameState.originalWord);
-            console.log('[DICA] Tradução (currentHint):', forcaGameState.currentHint);
-            console.log('[DICA] Nível atual:', forcaGameState.dicaNivel + 1);
+            // Se está carregando as dicas, não faz nada
+            if (forcaGameState.dicasCarregando) {
+                console.log('[DICA] Carregamento em andamento, ignorando clique');
+                return;
+            }
 
             const dicaBtn = document.getElementById('forca-dica-btn');
             const dicaBtnMobile = document.getElementById('forca-dica-btn-mobile');
@@ -2909,72 +2906,8 @@ async function handleCorrectionSubmit(e) {
                 });
             }
 
-            // Desabilitar botão durante carregamento
-            const loadingHtml = `
-                <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Gerando...
-            `;
-            updateDicaBtns(true, loadingHtml);
-
-            // Mostrar dicas anteriores + loading para nova dica
-            const dicasAnteriores = forcaGameState.dicasUsadas.map((d, i) =>
-                `<span class="block mb-1"><strong>Dica ${i + 1}:</strong> ${d}</span>`
-            ).join('');
-            updateDicaText(dicasAnteriores + `<span class="block mb-1 text-gray-400 animate-pulse"><strong>Dica ${forcaGameState.dicasUsadas.length + 1}:</strong> Gerando...</span>`);
-
-            try {
-                // Incrementar nível da dica (1, 2, 3)
-                forcaGameState.dicaNivel++;
-                const nivel = forcaGameState.dicaNivel;
-
-                const response = await fetch('/.netlify/functions/forca-dica', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        palavra: forcaGameState.originalWord, // Usar palavra original (não uppercase) para melhor reconhecimento pela IA
-                        traducao: forcaGameState.currentHint, // Enviar tradução/descrição para IA gerar dicas corretas
-                        nivel: nivel
-                    })
-                });
-
-                const data = await response.json();
-
-                // DEBUG: Log da resposta
-                console.log('[DICA] Resposta da API:', data);
-
-                if (data.success && data.dica) {
-                    // Atualizar contador de dicas
-                    forcaGameState.dicasRestantes--;
-                    forcaGameState.dicasUsadas.push(data.dica);
-
-                    console.log('[DICA] Dica recebida:', data.dica);
-
-                    // Mostrar todas as dicas (anteriores + nova) em ambos os elementos
-                    const dicasHtml = forcaGameState.dicasUsadas.map((d, i) =>
-                        `<span class="block mb-1"><strong>Dica ${i + 1}:</strong> ${d}</span>`
-                    ).join('');
-                    updateDicaText(dicasHtml);
-
-                    // Atualizar contador visual em ambos os elementos
-                    [dicasRestantesEl, dicasRestantesMobileEl].forEach(el => {
-                        if (el) el.textContent = forcaGameState.dicasRestantes;
-                    });
-                } else {
-                    updateDicaText('Erro ao gerar dica. Tente novamente.');
-                    forcaGameState.dicaNivel--; // Reverter incremento se falhou
-                }
-            } catch (error) {
-                console.error('Erro ao pedir dica:', error);
-                updateDicaText('Erro de conexão. Tente novamente.');
-                forcaGameState.dicaNivel--; // Reverter incremento se falhou
-            } finally {
-                // Resetar flag de chamada
-                pedindoDica = false;
-
-                // Restaurar botões (desktop e mobile)
+            // Função para restaurar botões após ação
+            function restaurarBotoes() {
                 const desktopBtnHtml = `
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/>
@@ -3003,6 +2936,86 @@ async function handleCorrectionSubmit(e) {
                     if (forcaGameState.dicasRestantes <= 0) {
                         dicaBtnMobile.classList.add('opacity-50', 'cursor-not-allowed');
                     }
+                }
+            }
+
+            // Se ainda não tem dicas geradas, buscar todas as 3 de uma vez
+            if (forcaGameState.dicasGeradas.length === 0) {
+                console.log('[DICA] Gerando batch de 3 dicas...');
+                forcaGameState.dicasCarregando = true;
+
+                // Mostrar loading
+                const loadingHtml = `
+                    <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Gerando...
+                `;
+                updateDicaBtns(true, loadingHtml);
+                updateDicaText('<span class="text-gray-400 animate-pulse">Gerando dicas...</span>');
+
+                try {
+                    const response = await fetch('/.netlify/functions/forca-dicas-batch', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            palavra: forcaGameState.originalWord,
+                            traducao: forcaGameState.currentHint
+                        })
+                    });
+
+                    const data = await response.json();
+                    console.log('[DICA] Batch recebido:', data);
+
+                    if (data.success && data.dicas && data.dicas.length >= 3) {
+                        // Armazenar as 3 dicas geradas
+                        forcaGameState.dicasGeradas = data.dicas;
+                        console.log('[DICA] Dicas armazenadas:', forcaGameState.dicasGeradas);
+
+                        // Mostrar a primeira dica
+                        mostrarProximaDica();
+                    } else {
+                        updateDicaText('Erro ao gerar dicas. Tente novamente.');
+                    }
+                } catch (error) {
+                    console.error('[DICA] Erro ao buscar dicas:', error);
+                    updateDicaText('Erro de conexão. Tente novamente.');
+                } finally {
+                    forcaGameState.dicasCarregando = false;
+                    restaurarBotoes();
+                }
+            } else {
+                // Já tem dicas geradas, só mostrar a próxima
+                mostrarProximaDica();
+                restaurarBotoes();
+            }
+
+            // Função interna para mostrar a próxima dica do array
+            function mostrarProximaDica() {
+                if (forcaGameState.dicasRestantes <= 0) return;
+
+                // Pegar a próxima dica (índice = 3 - dicasRestantes)
+                const indiceDica = 3 - forcaGameState.dicasRestantes;
+                const novaDica = forcaGameState.dicasGeradas[indiceDica];
+
+                if (novaDica) {
+                    // Atualizar contador e lista de dicas usadas
+                    forcaGameState.dicasRestantes--;
+                    forcaGameState.dicasUsadas.push(novaDica);
+
+                    console.log('[DICA] Mostrando dica', indiceDica + 1, ':', novaDica);
+
+                    // Mostrar todas as dicas usadas
+                    const dicasHtml = forcaGameState.dicasUsadas.map((d, i) =>
+                        `<span class="block mb-1"><strong>Dica ${i + 1}:</strong> ${d}</span>`
+                    ).join('');
+                    updateDicaText(dicasHtml);
+
+                    // Atualizar contador visual
+                    [dicasRestantesEl, dicasRestantesMobileEl].forEach(el => {
+                        if (el) el.textContent = forcaGameState.dicasRestantes;
+                    });
                 }
             }
         }
