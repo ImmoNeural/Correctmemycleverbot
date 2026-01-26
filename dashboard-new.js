@@ -2653,8 +2653,12 @@ async function handleCorrectionSubmit(e) {
                 return;
             }
 
-            // Filtrar por cartão (vermelho/amarelo/verde)
+            // Filtrar por cartão (vermelho/amarelo/verde) E que tenha exemplos cadastrados
             let filteredWords = words.filter(word => {
+                // IMPORTANTE: Só incluir palavras que têm exemplos cadastrados
+                const temExemplo = word.exemplos && word.exemplos.trim().length > 0;
+                if (!temExemplo) return false;
+
                 const cartao = word.cartao || '';
                 if (cartao === 'vermelho' && includeRed) return true;
                 if (cartao === 'amarelo' && includeYellow) return true;
@@ -2664,7 +2668,7 @@ async function handleCorrectionSubmit(e) {
             });
 
             if (filteredWords.length === 0) {
-                document.getElementById('forca-setup-error').textContent = 'Nenhuma palavra com os filtros selecionados!';
+                document.getElementById('forca-setup-error').textContent = 'Nenhuma palavra com exemplos encontrada! Adicione exemplos às suas palavras.';
                 return;
             }
 
@@ -2732,6 +2736,7 @@ async function handleCorrectionSubmit(e) {
             // Converter para maiúsculas apenas para o jogo (comparação de letras)
             forcaGameState.currentWord = palavraOriginal.toUpperCase();
             forcaGameState.currentHint = word.descricao || '';
+            forcaGameState.currentExample = word.exemplos || ''; // Guardar exemplo para usar nas dicas
             forcaGameState.guessedLetters = [];
             forcaGameState.wrongLetters = [];
             forcaGameState.errors = 0;
@@ -2976,7 +2981,8 @@ async function handleCorrectionSubmit(e) {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             palavra: forcaGameState.originalWord,
-                            traducao: forcaGameState.currentHint
+                            traducao: forcaGameState.currentHint,
+                            exemplo: forcaGameState.currentExample
                         })
                     });
 
