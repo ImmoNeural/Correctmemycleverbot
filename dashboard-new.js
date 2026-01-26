@@ -2811,8 +2811,10 @@ async function handleCorrectionSubmit(e) {
 
                 // Verificar se é letra válida (incluindo umlauts alemães)
                 if (/[A-ZÄÖÜß]/i.test(letra)) {
-                    if (forcaGameState.guessedLetters.includes(letra)) {
-                        slot.textContent = letra;
+                    // Comparar sempre em maiúsculas para consistência
+                    const letraUpper = letra.toUpperCase();
+                    if (forcaGameState.guessedLetters.includes(letraUpper)) {
+                        slot.textContent = letraUpper;
                         slot.classList.add('revelada');
                     } else {
                         slot.textContent = '';
@@ -2927,11 +2929,12 @@ async function handleCorrectionSubmit(e) {
 
         // Event listeners para teclas
         document.querySelectorAll('.forca-tecla').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('click', () => {
                 if (forcaGameState.gameOver) return;
+                if (btn.disabled) return; // Evitar cliques duplicados
 
-                const letra = e.target.dataset.letra;
-                handleForcaGuess(letra, e.target);
+                const letra = btn.dataset.letra;
+                handleForcaGuess(letra, btn);
             });
         });
 
@@ -2953,14 +2956,17 @@ async function handleCorrectionSubmit(e) {
         });
 
         async function handleForcaGuess(letra, btnElement) {
-            if (forcaGameState.guessedLetters.includes(letra) || forcaGameState.wrongLetters.includes(letra)) {
-                return; // Já tentou esta letra
-            }
-
+            // Desabilitar botão IMEDIATAMENTE para evitar cliques duplos
+            if (btnElement.disabled) return;
             btnElement.disabled = true;
 
             // Normalizar letra para comparação (ä=Ä, ö=Ö, ü=Ü, ß=ß)
             const letraUpper = letra.toUpperCase();
+
+            // Verificar se já tentou esta letra (verificação adicional de segurança)
+            if (forcaGameState.guessedLetters.includes(letraUpper) || forcaGameState.wrongLetters.includes(letraUpper)) {
+                return; // Já tentou esta letra
+            }
 
             if (forcaGameState.currentWord.includes(letraUpper)) {
                 // Acertou!
@@ -3011,7 +3017,8 @@ async function handleCorrectionSubmit(e) {
 
         function checkForcaVitoria() {
             for (const letra of forcaGameState.currentWord) {
-                if (/[A-ZÄÖÜß]/i.test(letra) && !forcaGameState.guessedLetters.includes(letra)) {
+                // Comparar sempre em maiúsculas para consistência
+                if (/[A-ZÄÖÜß]/i.test(letra) && !forcaGameState.guessedLetters.includes(letra.toUpperCase())) {
                     return false;
                 }
             }
