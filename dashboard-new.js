@@ -2867,6 +2867,9 @@ async function handleCorrectionSubmit(e) {
             });
         }
 
+        // Timestamp do último clique em dica (debounce)
+        let ultimoCliqueDica = 0;
+
         // Função para pedir dica - usa sistema de batch (gera todas as 3 dicas de uma vez)
         async function pedirDicaForca() {
             // Evitar chamadas se já terminou ou não tem dicas
@@ -2879,8 +2882,20 @@ async function handleCorrectionSubmit(e) {
                 return;
             }
 
+            // Debounce: ignorar cliques muito rápidos (500ms)
+            const agora = Date.now();
+            if (agora - ultimoCliqueDica < 500) {
+                console.log('[DICA] Clique muito rápido, ignorando (debounce)');
+                return;
+            }
+            ultimoCliqueDica = agora;
+
             const dicaBtn = document.getElementById('forca-dica-btn');
             const dicaBtnMobile = document.getElementById('forca-dica-btn-mobile');
+
+            // IMPORTANTE: Desabilitar botões IMEDIATAMENTE para evitar cliques duplos
+            if (dicaBtn) dicaBtn.disabled = true;
+            if (dicaBtnMobile) dicaBtnMobile.disabled = true;
             const dicasRestantesEl = document.getElementById('forca-dicas-restantes');
             const dicasRestantesMobileEl = document.getElementById('forca-dicas-restantes-mobile');
             const dicaEl = document.getElementById('forca-dica');
