@@ -207,6 +207,30 @@
 
         /* Mobile - Regras gerais para qualquer orientação */
         @media (max-width: 768px) {
+            /* LAYOUT PRINCIPAL HORIZONTAL - forca à esquerda, conteúdo à direita */
+            #forca-main-area {
+                display: flex !important;
+                flex-direction: row !important;
+                gap: 0.5rem !important;
+                align-items: flex-start !important;
+            }
+
+            /* SVG da forca compacto */
+            #forca-svg-container {
+                flex-shrink: 0 !important;
+            }
+
+            #forca-svg {
+                width: 90px !important;
+                height: 115px !important;
+            }
+
+            /* Conteúdo à direita */
+            #forca-game-container .flex-1 {
+                flex: 1 !important;
+                min-width: 0 !important;
+            }
+
             /* FORÇAR letras na HORIZONTAL */
             #forca-palavra {
                 display: flex !important;
