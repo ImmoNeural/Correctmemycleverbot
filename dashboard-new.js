@@ -480,8 +480,13 @@ async function handleCorrectionSubmit(e) {
      }
 
     try {
-        // Variável para armazenar os erros extraídos para processamento posterior
-        let errosExtraidos = null;
+        // Inicia extração de substantivos em paralelo (não precisa esperar)
+        // Extrai todos os substantivos da redação com artigos corretos e traduções
+        fetch('/.netlify/functions/flashcard', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: dataToSend.email, redacao: dataToSend.redacao })
+        }).catch(err => console.warn('Flashcard error (não crítico):', err));
 
         // Definição das categorias (precisa estar acessível antes)
         const categorias = {
@@ -776,30 +781,6 @@ async function handleCorrectionSubmit(e) {
         tentarExtrairErros(fullResponse);
 
         console.log('trataerro-stream raw response:', fullResponse);
-
-        // Extrai erros do JSON para enviar ao extract-article-errors
-        try {
-            const jsonMatch = fullResponse.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-                errosExtraidos = JSON.parse(jsonMatch[0]);
-                console.log('Erros extraídos para artigos:', errosExtraidos);
-
-                // Chama a função para extrair erros de artigos (der/die/das)
-                fetch('/.netlify/functions/extract-article-errors', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: dataToSend.email,
-                        erros: errosExtraidos
-                    })
-                })
-                .then(res => res.json())
-                .then(data => console.log('Extract article errors result:', data))
-                .catch(err => console.warn('Extract article errors (não crítico):', err));
-            }
-        } catch (parseErr) {
-            console.warn('Não foi possível extrair erros para artigos:', parseErr);
-        }
 
         // Mantém reload do perfil
         await loadUserProfile(currentUser);
@@ -1272,38 +1253,37 @@ async function handleCorrectionSubmit(e) {
             return;
         }
 
-        contentDiv.innerHTML = '<p class="text-slate-400 text-center py-8">Carregando erros de artigos...</p>';
+        contentDiv.innerHTML = '<p class="text-slate-400 text-center py-8">Carregando palavras com artigos...</p>';
 
         try {
-            console.log('Buscando erros de artigos do Supabase para user_id:', currentUser.id);
+            console.log('Buscando flashcards do Supabase para user_id:', currentUser.id);
 
-            // Busca apenas flashcards que são erros de artigos (is_error = true)
+            // Busca todos os flashcards do usuário (substantivos das redações)
             const { data: flashcards, error } = await _supabase
                 .from('flashcards')
                 .select('*')
-                .eq('user_id', currentUser.id)
-                .eq('is_error', true);
+                .eq('user_id', currentUser.id);
 
-            console.log('Resposta do Supabase (erros de artigos):', { flashcards, error });
+            console.log('Resposta do Supabase (flashcards):', { flashcards, error });
 
             if (error) {
-                console.error('ERRO ao buscar erros de artigos:', error);
+                console.error('ERRO ao buscar flashcards:', error);
                 throw error;
             }
 
-            console.log('Total de erros de artigos encontrados:', flashcards ? flashcards.length : 0);
+            console.log('Total de flashcards encontrados:', flashcards ? flashcards.length : 0);
 
             if (!flashcards || flashcards.length === 0) {
                 contentDiv.innerHTML = `
                     <div class="text-center py-8">
-                        <p class="text-slate-400 mb-4">Nenhum erro de artigo encontrado nas suas redações.</p>
-                        <p class="text-slate-500 text-sm">Quando você cometer erros de artigo (der/die/das) nas redações, eles aparecerão aqui com a forma correta para você praticar!</p>
+                        <p class="text-slate-400 mb-4">Nenhuma palavra com artigo encontrada.</p>
+                        <p class="text-slate-500 text-sm">Envie redações na seção "Corrigir Redação" para construir seu vocabulário de artigos!</p>
                     </div>
                 `;
                 return;
             }
 
-            // Agrupar por artigo correto
+            // Agrupar por artigo
             const byArtigo = {
                 'der': flashcards.filter(f => f.artigo === 'der'),
                 'die': flashcards.filter(f => f.artigo === 'die'),
@@ -1314,17 +1294,13 @@ async function handleCorrectionSubmit(e) {
             const renderWord = (word, index, artigo, borderColor) => {
                 const palavraTexto = word.palavra ? escapeHtml(word.palavra) : '';
                 const traducaoTexto = word.traducao ? escapeHtml(word.traducao) : '';
-                const artigoErrado = word.artigo_errado ? escapeHtml(word.artigo_errado) : '';
 
                 return `
                     <div class="bg-slate-700 hover:bg-slate-600 p-3 rounded-lg border-l-4 ${borderColor} cursor-pointer transition-all"
                          onclick="window.toggleTraducao('${artigo}-${index}')">
-                        <div class="flex items-center justify-between">
-                            <p class="text-white font-semibold">${artigo} ${palavraTexto}</p>
-                            ${artigoErrado ? `<span class="text-xs text-red-400 bg-red-900/30 px-2 py-1 rounded">você usou: ${artigoErrado}</span>` : ''}
-                        </div>
+                        <p class="text-white font-semibold">${artigo} ${palavraTexto}</p>
                         <div id="${artigo}-${index}" class="text-slate-300 text-sm mt-2 hidden">
-                            ${traducaoTexto ? `<p class="text-emerald-400">📚 ${traducaoTexto}</p>` : '<p class="text-slate-500 italic">Tradução não disponível</p>'}
+                            ${traducaoTexto ? `<p class="text-emerald-400">📚 ${traducaoTexto}</p>` : '<p class="text-slate-500 italic">Clique em Atualizar para obter a tradução</p>'}
                         </div>
                     </div>
                 `;
@@ -1339,12 +1315,12 @@ async function handleCorrectionSubmit(e) {
                     <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-4 text-center">
                         <h3 class="text-5xl font-bold text-white mb-1">DER</h3>
                         <p class="text-blue-100 text-sm">Masculino</p>
-                        <p class="text-blue-200 text-xs mt-1">${byArtigo.der.length} erro(s)</p>
+                        <p class="text-blue-200 text-xs mt-1">${byArtigo.der.length} palavra(s)</p>
                     </div>
                     <div class="p-4 space-y-2 max-h-96 overflow-y-auto">
             `;
             if (byArtigo.der.length === 0) {
-                html += `<p class="text-slate-500 text-center text-sm py-4">Nenhum erro com DER</p>`;
+                html += `<p class="text-slate-500 text-center text-sm py-4">Nenhuma palavra com DER</p>`;
             } else {
                 byArtigo.der.forEach((word, index) => {
                     html += renderWord(word, index, 'der', 'border-blue-500');
@@ -1358,12 +1334,12 @@ async function handleCorrectionSubmit(e) {
                     <div class="bg-gradient-to-r from-pink-600 to-pink-700 p-4 text-center">
                         <h3 class="text-5xl font-bold text-white mb-1">DIE</h3>
                         <p class="text-pink-100 text-sm">Feminino</p>
-                        <p class="text-pink-200 text-xs mt-1">${byArtigo.die.length} erro(s)</p>
+                        <p class="text-pink-200 text-xs mt-1">${byArtigo.die.length} palavra(s)</p>
                     </div>
                     <div class="p-4 space-y-2 max-h-96 overflow-y-auto">
             `;
             if (byArtigo.die.length === 0) {
-                html += `<p class="text-slate-500 text-center text-sm py-4">Nenhum erro com DIE</p>`;
+                html += `<p class="text-slate-500 text-center text-sm py-4">Nenhuma palavra com DIE</p>`;
             } else {
                 byArtigo.die.forEach((word, index) => {
                     html += renderWord(word, index, 'die', 'border-pink-500');
@@ -1377,12 +1353,12 @@ async function handleCorrectionSubmit(e) {
                     <div class="bg-gradient-to-r from-green-600 to-green-700 p-4 text-center">
                         <h3 class="text-5xl font-bold text-white mb-1">DAS</h3>
                         <p class="text-green-100 text-sm">Neutro</p>
-                        <p class="text-green-200 text-xs mt-1">${byArtigo.das.length} erro(s)</p>
+                        <p class="text-green-200 text-xs mt-1">${byArtigo.das.length} palavra(s)</p>
                     </div>
                     <div class="p-4 space-y-2 max-h-96 overflow-y-auto">
             `;
             if (byArtigo.das.length === 0) {
-                html += `<p class="text-slate-500 text-center text-sm py-4">Nenhum erro com DAS</p>`;
+                html += `<p class="text-slate-500 text-center text-sm py-4">Nenhuma palavra com DAS</p>`;
             } else {
                 byArtigo.das.forEach((word, index) => {
                     html += renderWord(word, index, 'das', 'border-green-500');
@@ -1393,9 +1369,9 @@ async function handleCorrectionSubmit(e) {
             html += '</div>';
 
             console.log('HTML de artigos gerado, tamanho:', html.length);
-            console.log('DER:', byArtigo.der.length, 'erros');
-            console.log('DIE:', byArtigo.die.length, 'erros');
-            console.log('DAS:', byArtigo.das.length, 'erros');
+            console.log('DER:', byArtigo.der.length, 'palavras');
+            console.log('DIE:', byArtigo.die.length, 'palavras');
+            console.log('DAS:', byArtigo.das.length, 'palavras');
             console.log('Injetando HTML de artigos no contentDiv...');
 
             contentDiv.innerHTML = html;
@@ -2295,25 +2271,24 @@ async function handleCorrectionSubmit(e) {
             showCurrentCard();
         });
 
-        // Iniciar jogo de Artigos (usando erros de artigos das redações)
+        // Iniciar jogo de Artigos (usando substantivos das redações)
         document.getElementById('start-artigos-game')?.addEventListener('click', async () => {
             document.getElementById('artigos-setup-error').textContent = '';
 
-            // Buscar apenas erros de artigos (is_error = true) da tabela flashcards
+            // Buscar todos os flashcards de artigos das redações
             const { data: artigos, error } = await _supabase
                 .from('flashcards')
                 .select('*')
-                .eq('user_id', currentUser.id)
-                .eq('is_error', true);
+                .eq('user_id', currentUser.id);
 
             if (error) {
-                console.error('Erro ao buscar erros de artigos:', error);
+                console.error('Erro ao buscar artigos:', error);
                 document.getElementById('artigos-setup-error').textContent = 'Erro ao carregar artigos!';
                 return;
             }
 
             if (!artigos || artigos.length === 0) {
-                document.getElementById('artigos-setup-error').textContent = 'Nenhum erro de artigo encontrado! Envie redações para começar.';
+                document.getElementById('artigos-setup-error').textContent = 'Nenhuma palavra encontrada! Envie redações para começar.';
                 return;
             }
 

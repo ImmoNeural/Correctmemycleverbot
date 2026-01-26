@@ -71,29 +71,32 @@ exports.handler = async (event) => {
 
         console.log('Found user_id:', userId);
 
-        // 3. Call DeepSeek to extract nouns with articles
+        // 3. Call DeepSeek to extract nouns with articles AND translations
         const systemPrompt = `Você é um especialista em gramática alemã que funciona como uma API. Sua única função é analisar um texto e retornar um array de objetos JSON. Siga estas regras estritamente:
 1.  Identifique apenas substantivos verdadeiros (Nomen).
 2.  Ignore advérbios (como "Heute"), pronomes ou outras classes de palavras, mesmo que estejam capitalizadas.
 3.  Para cada substantivo, forneça seu artigo definido no caso nominativo singular (der, die, das).
-4.  Sua resposta DEVE ser um array JSON válido, começando com \`[\` e terminando com \`]\`.
-5.  Se nenhum substantivo for encontrado, retorne um array vazio \`[]\`.
-6.  Não inclua explicações, comentários ou qualquer outro texto fora do array JSON.
+4.  Para cada substantivo, forneça também a tradução em português brasileiro.
+5.  Sua resposta DEVE ser um array JSON válido, começando com \`[\` e terminando com \`]\`.
+6.  Se nenhum substantivo for encontrado, retorne um array vazio \`[]\`.
+7.  Não inclua explicações, comentários ou qualquer outro texto fora do array JSON.
 Texto de entrada:
 ${redacao}`;
 
-        const userPrompt = `Analise o texto fornecido e extraia os substantivos e seus artigos.
+        const userPrompt = `Analise o texto fornecido e extraia os substantivos, seus artigos e traduções para português.
 
 Exemplo de tarefa:
 Texto de entrada: "Heute geht der Hund in den Garten."
 Sua saída esperada: [
   {
     "substantivo": "Hund",
-    "artigo_correto": "der"
+    "artigo_correto": "der",
+    "traducao": "cachorro"
   },
   {
     "substantivo": "Garten",
-    "artigo_correto": "der"
+    "artigo_correto": "der",
+    "traducao": "jardim"
   }
 ]
 
@@ -166,12 +169,13 @@ IMPORTANTE: APENAS JSON válido. Não inclua a marcação \`\`\`json, comentári
         for (const noun of nouns) {
             const palavra = noun.substantivo;
             const artigo = noun.artigo_correto;
+            const traducao = noun.traducao || '';
 
             if (!palavra || !artigo) continue;
 
             // Check if flashcard already exists
             const checkResponse = await fetch(
-                `${SUPABASE_URL}/rest/v1/flashcards?user_id=eq.${userId}&palavra=eq.${encodeURIComponent(palavra)}&select=id`,
+                `${SUPABASE_URL}/rest/v1/flashcards?user_id=eq.${userId}&palavra=eq.${encodeURIComponent(palavra)}&select=id,traducao`,
                 {
                     method: 'GET',
                     headers: {
@@ -184,7 +188,7 @@ IMPORTANTE: APENAS JSON válido. Não inclua a marcação \`\`\`json, comentári
             const existingCards = await checkResponse.json();
 
             if (!existingCards || existingCards.length === 0) {
-                // Insert new flashcard
+                // Insert new flashcard with translation
                 const insertResponse = await fetch(`${SUPABASE_URL}/rest/v1/flashcards`, {
                     method: 'POST',
                     headers: {
@@ -196,17 +200,33 @@ IMPORTANTE: APENAS JSON válido. Não inclua a marcação \`\`\`json, comentári
                     body: JSON.stringify({
                         user_id: userId,
                         palavra: palavra,
-                        artigo: artigo
+                        artigo: artigo,
+                        traducao: traducao
                     })
                 });
 
                 if (insertResponse.ok) {
                     insertedCount++;
-                    console.log(`Inserted: ${artigo} ${palavra}`);
+                    console.log(`Inserted: ${artigo} ${palavra} (${traducao})`);
                 } else {
                     console.error(`Failed to insert: ${palavra}`, await insertResponse.text());
                 }
             } else {
+                // Update translation if it's missing
+                const existing = existingCards[0];
+                if (!existing.traducao && traducao) {
+                    await fetch(`${SUPABASE_URL}/rest/v1/flashcards?id=eq.${existing.id}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+                            'apikey': SUPABASE_SERVICE_KEY,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify({ traducao: traducao })
+                    });
+                    console.log(`Updated translation for: ${palavra}`);
+                }
                 skippedCount++;
                 console.log(`Skipped (exists): ${palavra}`);
             }
