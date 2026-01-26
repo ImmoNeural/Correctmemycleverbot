@@ -2869,6 +2869,14 @@ async function handleCorrectionSubmit(e) {
                 `;
             }
 
+            // Mostrar dicas anteriores + loading para nova dica
+            if (dicaEl) {
+                const dicasAnteriores = forcaGameState.dicasUsadas.map((d, i) =>
+                    `<span class="block mb-1"><strong>Dica ${i + 1}:</strong> ${d}</span>`
+                ).join('');
+                dicaEl.innerHTML = dicasAnteriores + `<span class="block mb-1 text-gray-400 animate-pulse"><strong>Dica ${forcaGameState.dicasUsadas.length + 1}:</strong> Gerando...</span>`;
+            }
+
             try {
                 // Incrementar nível da dica (1, 2, 3)
                 forcaGameState.dicaNivel++;
@@ -2891,10 +2899,10 @@ async function handleCorrectionSubmit(e) {
                     forcaGameState.dicasRestantes--;
                     forcaGameState.dicasUsadas.push(data.dica);
 
-                    // Mostrar dica
+                    // Mostrar todas as dicas (anteriores + nova)
                     if (dicaEl) {
                         dicaEl.innerHTML = forcaGameState.dicasUsadas.map((d, i) =>
-                            `<span class="block mb-1">Dica ${i + 1}: ${d}</span>`
+                            `<span class="block mb-1"><strong>Dica ${i + 1}:</strong> ${d}</span>`
                         ).join('');
                     }
 

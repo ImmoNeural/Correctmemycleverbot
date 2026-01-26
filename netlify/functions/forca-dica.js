@@ -1,5 +1,5 @@
 // Função para gerar dicas do jogo da forca usando DeepSeek
-// A dica é gerada em alemão/português, descrevendo o contexto ou uso da palavra
+// A dica é baseada na tradução do banco de dados para ser consistente
 
 const DEEPSEEK_API_KEY = 'sk-e080234eab8b442fb65fe8955d8947de';
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
@@ -34,38 +34,42 @@ exports.handler = async (event) => {
             };
         }
 
+        // Se não tiver tradução, retornar erro pedindo para usar a tradução
+        if (!traducao) {
+            return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({
+                    success: true,
+                    dica: `Esta palavra tem ${palavra.length} letras.`,
+                    nivel: nivel || 1
+                })
+            };
+        }
+
         // Nível da dica: 1 = vaga, 2 = média, 3 = mais direta
         const nivelDica = nivel || 1;
 
         let instrucaoDica;
         if (nivelDica === 1) {
-            instrucaoDica = 'Dê uma dica MUITO VAGA sobre o contexto geral onde essa palavra é usada. Seja misterioso e não revele muito.';
+            instrucaoDica = `Com base no significado "${traducao}", dê uma dica MUITO VAGA sobre a categoria ou contexto geral (ex: "relacionado a sentimentos", "usado na cozinha"). NÃO use a palavra "${traducao}" nem sinônimos diretos.`;
         } else if (nivelDica === 2) {
-            instrucaoDica = 'Dê uma dica MÉDIA, indicando a categoria ou situação onde a palavra é comumente usada.';
+            instrucaoDica = `Com base no significado "${traducao}", dê uma dica MÉDIA explicando quando ou onde a palavra é usada (ex: "você usa isso quando está com fome", "encontrado em escritórios"). NÃO use a palavra "${traducao}" nem sinônimos diretos.`;
         } else {
-            instrucaoDica = 'Dê uma dica CLARA com um exemplo de frase em alemão usando a palavra (substituindo a palavra por "___").';
+            instrucaoDica = `Com base no significado "${traducao}", dê uma dica BEM CLARA com uma frase de exemplo usando "___" no lugar da palavra (ex: "Eu ___ muito café de manhã" para "beber"). Pode dar sinônimos ou explicações mais diretas.`;
         }
 
-        // Incluir tradução no prompt se disponível para garantir precisão
-        const contextoTraducao = traducao
-            ? `\n\nCONTEXTO IMPORTANTE: O significado correto desta palavra é "${traducao}". Use este significado como base para criar a dica, mas NÃO revele a tradução diretamente.`
-            : '';
+        const systemPrompt = `Você é um assistente para um jogo da forca. Sua tarefa é criar UMA dica curta e útil.
 
-        const systemPrompt = `Você é um assistente para um jogo da forca em alemão. Sua tarefa é criar dicas para ajudar o jogador a adivinhar uma palavra alemã.
+REGRAS OBRIGATÓRIAS:
+1. A dica deve ser em português
+2. Máximo de 20 palavras
+3. Seja direto e claro
+4. Responda APENAS com a dica, sem explicações
+5. Para nível 1 e 2: NÃO revele a tradução direta nem sinônimos óbvios
+6. Para nível 3: Pode ser mais direto, usar sinônimos ou frases de exemplo`;
 
-REGRAS IMPORTANTES:
-1. NUNCA revele a tradução direta da palavra em português
-2. NUNCA diga a palavra em alemão
-3. A dica deve ser em português
-4. A dica deve ter no máximo 50 palavras
-5. Seja criativo e útil
-6. Use SEMPRE o significado correto fornecido no contexto (se disponível)
-
-${instrucaoDica}${contextoTraducao}`;
-
-        const userPrompt = `Crie uma dica para a palavra alemã: "${palavra}"
-
-Responda APENAS com a dica, sem explicações adicionais.`;
+        const userPrompt = instrucaoDica;
 
         const deepseekResponse = await fetch(DEEPSEEK_API_URL, {
             method: 'POST',
@@ -79,8 +83,8 @@ Responda APENAS com a dica, sem explicações adicionais.`;
                     { role: 'system', content: systemPrompt },
                     { role: 'user', content: userPrompt }
                 ],
-                temperature: 0.7,
-                max_tokens: 150
+                temperature: 0.3,
+                max_tokens: 100
             })
         });
 
