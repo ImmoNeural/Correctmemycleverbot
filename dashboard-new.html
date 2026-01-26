@@ -333,6 +333,21 @@
                 display: inline-block !important;
                 flex-shrink: 0 !important;
             }
+
+            /* ESCONDER botão de dica DESKTOP no mobile (já tem o mobile no topo) */
+            #forca-dica-btn-container,
+            #forca-dica-container {
+                display: none !important;
+            }
+
+            /* LETRAS ERRADAS na HORIZONTAL */
+            #forca-letras-erradas {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: wrap !important;
+                justify-content: center !important;
+                gap: 0.5rem !important;
+            }
         }
 
         /* Mobile Portrait - Jogo da Forca - Layout Horizontal */
