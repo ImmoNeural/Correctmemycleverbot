@@ -492,11 +492,10 @@ async function handleCorrectionSubmit(e) {
             formMessageEl.innerHTML = `
                 <div class="text-yellow-400">
                     <p>🤖 Analisando sua redação...</p>
-                    <div id="streaming-output" style="margin-top: 12px; padding: 12px; background: #1e293b; border-radius: 8px; font-family: monospace; font-size: 13px; color: #94a3b8; max-height: 200px; overflow-y: auto; white-space: pre-wrap;"></div>
+                    <p class="text-sm text-gray-400 mt-2">Por favor, aguarde enquanto processamos sua correção.</p>
                 </div>`;
         }
 
-        const streamingOutput = document.getElementById('streaming-output');
         let fullResponse = '';
 
         // Chama a Edge Function com streaming
@@ -525,12 +524,6 @@ async function handleCorrectionSubmit(e) {
 
             const chunk = decoder.decode(value, { stream: true });
             fullResponse += chunk;
-
-            // Mostra o texto sendo recebido em tempo real
-            if (streamingOutput) {
-                streamingOutput.textContent = fullResponse;
-                streamingOutput.scrollTop = streamingOutput.scrollHeight;
-            }
         }
 
         console.log('trataerro-stream raw response:', fullResponse);
