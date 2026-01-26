@@ -487,13 +487,47 @@ async function handleCorrectionSubmit(e) {
             body: JSON.stringify({ email: dataToSend.email, redacao: dataToSend.redacao })
         }).catch(err => console.warn('Flashcard error (não crítico):', err));
 
-        // Usa streaming para trataerro
+        // Definição das categorias (precisa estar acessível antes)
+        const categorias = {
+            declinacao: { corHex: '#f472b6', nome: 'Declinação' },
+            conjugacao: { corHex: '#c084fc', nome: 'Conjugação' },
+            preposicoes: { corHex: '#60a5fa', nome: 'Preposições' },
+            sintaxe: { corHex: '#fb923c', nome: 'Sintaxe' },
+            vocabulario: { corHex: '#4ade80', nome: 'Vocabulário' }
+        };
+
+        // IMEDIATAMENTE: Mostra legenda + texto do usuário
         if (formMessageEl) {
             formMessageEl.innerHTML = `
-                <div class="text-yellow-400">
-                    <p>🤖 Analisando sua redação...</p>
-                    <p class="text-sm text-gray-400 mt-2">Por favor, aguarde enquanto processamos sua correção.</p>
-                </div>`;
+                <div style="padding: 16px; background-color: #1e293b; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 12px;">Legenda de Cores:</h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        ${Object.values(categorias).map(c => `
+                            <span style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background-color: #334155; border-radius: 6px;">
+                                <span style="display: inline-block; width: 14px; height: 14px; background: ${c.corHex}; border-radius: 3px;"></span>
+                                <span style="color: #e2e8f0; font-size: 14px;">${c.nome}</span>
+                            </span>`).join('')}
+                    </div>
+                </div>
+
+                <div style="padding: 16px; background-color: #1e293b; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 10px;">Texto Corrigido:</h3>
+                    <div id="texto-corrigido-container" style="padding: 12px; background-color: #0f172a; border-radius: 6px; font-size: 15px; line-height: 1.7; color: #e2e8f0;">${escapeHtml(text)}</div>
+                </div>
+
+                <div id="status-analise" style="padding: 16px; background-color: #1e293b; border-radius: 8px; margin-bottom: 20px;">
+                    <div class="text-yellow-400" style="display: flex; align-items: center; gap: 10px;">
+                        <span class="loading-spinner" style="width: 20px; height: 20px; border: 2px solid #fbbf24; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span>
+                        <span>Analisando erros gramaticais...</span>
+                    </div>
+                </div>
+
+                <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+
+                <h3 style="font-size: 18px; font-weight: 600; color: #cbd5e1; margin-bottom: 16px;">Detalhes dos Erros:</h3>
+                <div id="detalhes-erros-container"></div>
+            `;
+            formMessageEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         let fullResponse = '';
@@ -547,8 +581,15 @@ async function handleCorrectionSubmit(e) {
                     <p> Redação enviada com sucesso! </p>
                 </div>`;
 
+        // Referências aos elementos que já estão na tela
+        const textoContainer = document.getElementById('texto-corrigido-container');
+        const statusAnalise = document.getElementById('status-analise');
+        const detalhesContainer = document.getElementById('detalhes-erros-container');
+
         if (!trataerroData || typeof trataerroData !== 'object') {
-            if (formMessageEl) formMessageEl.innerHTML = successHtml;
+            if (statusAnalise) {
+                statusAnalise.innerHTML = `<div class="text-green-400"><p>Redação sem erros! Parabéns!</p></div>`;
+            }
             return;
         }
 
@@ -566,14 +607,6 @@ async function handleCorrectionSubmit(e) {
         if (trataerroData.erros && typeof trataerroData.erros === 'object') {
             trataerroData = trataerroData.erros;
         }
-
-        const categorias = {
-            declinacao: { corHex: '#f472b6', nome: 'Declinação' },
-            conjugacao: { corHex: '#c084fc', nome: 'Conjugação' },
-            preposicoes: { corHex: '#60a5fa', nome: 'Preposições' }, // Corrigido
-            sintaxe: { corHex: '#fb923c', nome: 'Sintaxe' },
-            vocabulario: { corHex: '#4ade80', nome: 'Vocabulário' }
-        };
 
         const camposComConteudo = ['palavra_errada', 'palavra', 'sugestao_correcao', 'sugestao', 'gramatica', 'descricao_topico_gramatical', 'descricao', 'explicacao', 'explanation'];
         const errosPorCategoria = {};
@@ -594,12 +627,18 @@ async function handleCorrectionSubmit(e) {
         });
 
         if (totalErros === 0) {
-            if (formMessageEl) formMessageEl.innerHTML = successHtml;
+            if (statusAnalise) {
+                statusAnalise.innerHTML = `<div class="text-green-400"><p>Redação sem erros! Parabéns!</p></div>`;
+            }
             return;
         }
 
-        // Gera texto grifado (substitui palavras por mark)
-        let textoGrifado = text;
+        // Remove o status de "analisando" - agora vamos mostrar os erros
+        if (statusAnalise) {
+            statusAnalise.remove();
+        }
+
+        // Prepara lista de palavras para pintar progressivamente
         const palavrasSet = new Map();
         Object.entries(errosPorCategoria).forEach(([catKey, lista]) => {
             const cor = categorias[catKey].corHex;
@@ -607,118 +646,153 @@ async function handleCorrectionSubmit(e) {
                 const raw = (obj.palavra_errada || obj.palavra || '').trim();
                 if (!raw) return;
                 const lower = raw.toLowerCase();
-                if (!palavrasSet.has(lower)) palavrasSet.set(lower, { palavra: raw, corHex: cor });
+                if (!palavrasSet.has(lower)) palavrasSet.set(lower, { palavra: raw, corHex: cor, categoria: catKey });
             });
         });
 
         const palavrasParaGrifar = Array.from(palavrasSet.values()).sort((a,b) => b.palavra.length - a.palavra.length);
-        const boundaryRegex = /[0-9A-Za-zÀ-ÖØ-öø-ÿÄÖÜäöüßẞ]/;
 
-        palavrasParaGrifar.forEach(item => {
-            // Verifica se tem "..." na palavra (ex: "habe ... gegangen")
+        // Função para pintar uma palavra no texto
+        function pintarPalavra(textoAtual, item) {
             if (item.palavra.includes('...')) {
-                // Separa as partes e pinta cada uma individualmente
                 const partes = item.palavra.split('...').map(p => p.trim()).filter(p => p);
                 partes.forEach(parte => {
                     const escaped = parte.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    textoGrifado = textoGrifado.replace(new RegExp(`\\b${escaped}\\b`, 'gi'), (match) => {
-                        return `<mark style="background-color:${item.corHex}; color:#000000; padding:2px 4px; border-radius:3px;">${match}</mark>`;
+                    textoAtual = textoAtual.replace(new RegExp(`\\b${escaped}\\b`, 'gi'), (match) => {
+                        return `<mark style="background-color:${item.corHex}; color:#000000; padding:2px 4px; border-radius:3px; animation: fadeInMark 0.3s ease;">${match}</mark>`;
                     });
                 });
             } else {
-                // Palavra única - comportamento normal
                 const escaped = item.palavra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                textoGrifado = textoGrifado.replace(new RegExp(`\\b${escaped}\\b`, 'gi'), (match) => {
-                    return `<mark style="background-color:${item.corHex}; color:#000000; padding:2px 4px; border-radius:3px;">${match}</mark>`;
+                textoAtual = textoAtual.replace(new RegExp(`\\b${escaped}\\b`, 'gi'), (match) => {
+                    return `<mark style="background-color:${item.corHex}; color:#000000; padding:2px 4px; border-radius:3px; animation: fadeInMark 0.3s ease;">${match}</mark>`;
                 });
             }
-        });
+            return textoAtual;
+        }
 
-        // Monta HTML final com design limpo e legível
-        let html = `
-            <div style="padding: 16px; background-color: #1e293b; border-radius: 8px; margin-bottom: 20px;">
-                <h3 style="font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 12px;">Legenda de Cores:</h3>
-                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                    ${Object.values(categorias).map(c => `
-                        <span style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background-color: #334155; border-radius: 6px;">
-                            <span style="display: inline-block; width: 14px; height: 14px; background: ${c.corHex}; border-radius: 3px;"></span>
-                            <span style="color: #e2e8f0; font-size: 14px;">${c.nome}</span>
-                        </span>`).join('')}
-                </div>
-            </div>
-
-            <div style="padding: 16px; background-color: #1e293b; border-radius: 8px; margin-bottom: 20px;">
-                <h3 style="font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 10px;">Texto Corrigido:</h3>
-                <div style="padding: 12px; background-color: #0f172a; border-radius: 6px; font-size: 15px; line-height: 1.7; color: #e2e8f0;">${textoGrifado}</div>
-            </div>
-
-            <h3 style="font-size: 18px; font-weight: 600; color: #cbd5e1; margin-bottom: 16px;">Detalhes dos Erros:</h3>
+        // Adiciona CSS para animação
+        const styleEl = document.createElement('style');
+        styleEl.textContent = `
+            @keyframes fadeInMark { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+            @keyframes slideInCard { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         `;
+        document.head.appendChild(styleEl);
 
-        // Para cada categoria: título com contador e itens
-        for (const [catKey, cat] of Object.entries(categorias)) {
-            const lista = errosPorCategoria[catKey] || [];
-            if (!lista.length) continue;
+        // ANIMAÇÃO PROGRESSIVA: Pintar palavras uma a uma
+        let textoAtual = escapeHtml(text);
+        let indexPalavra = 0;
 
-            html += `<div style="margin-bottom: 24px;">
-                        <h4 style="font-size: 16px; font-weight: 600; color: ${cat.corHex}; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid ${cat.corHex}40;">${cat.nome} (${lista.length})</h4>`;
+        async function pintarProximaPalavra() {
+            if (indexPalavra >= palavrasParaGrifar.length) {
+                // Terminou de pintar, agora mostra os detalhes
+                mostrarDetalhesProgressivamente();
+                return;
+            }
 
-            lista.forEach(errObj => {
-                // 1. Título do erro (topico_grammatical_nome) - em negrito com cor padrão
-                const tituloErro = escapeHtml((errObj.topico_grammatical_nome || errObj.topico_gramatical_nome || '').trim());
+            const item = palavrasParaGrifar[indexPalavra];
+            textoAtual = pintarPalavra(textoAtual, item);
+            if (textoContainer) {
+                textoContainer.innerHTML = textoAtual;
+            }
 
-                // 2. Palavra errada
-                const palavraErrada = escapeHtml((errObj.palavra_errada || '').trim());
-
-                // 3. Sugestão de correção
-                const sugestaoCorrecao = escapeHtml((errObj.sugestao_correcao || '').trim());
-
-                // 4. Justificativa (propriedade gramatica)
-                const gramatica = escapeHtml((errObj.gramatica || '').trim());
-
-                html += `
-                    <div style="background-color: #1e293b; border: 1px solid #475569; border-left: 4px solid ${cat.corHex}; border-radius: 8px; padding: 16px; margin-bottom: 12px;">
-                        ${tituloErro ? `
-                            <div style="margin-bottom: 12px;">
-                                <strong style="color: #a78bfa; font-size: 15px;">${tituloErro}</strong>
-                            </div>` : ''}
-
-                        ${palavraErrada ? `
-                            <p style="margin: 0 0 8px 0; font-size: 14px;">
-                                <span style="color: #94a3b8;">Palavra Errada:</span>
-                                <span style="color: #fca5a5; font-weight: 600;">${palavraErrada}</span>
-                            </p>` : ''}
-
-                        ${sugestaoCorrecao ? `
-                            <p style="margin: 0 0 8px 0; font-size: 14px;">
-                                <span style="color: #94a3b8;">Correção:</span>
-                                <span style="color: #86efac; font-weight: 600;">${sugestaoCorrecao}</span>
-                            </p>` : ''}
-
-                        ${gramatica ? `
-                            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #334155;">
-                                <p style="margin: 0; color: #cbd5e1; font-size: 14px; line-height: 1.6;">${gramatica}</p>
-                            </div>` : ''}
-                    </div>
-                `;
-            });
-
-            html += `</div>`;
+            indexPalavra++;
+            setTimeout(pintarProximaPalavra, 150); // 150ms entre cada palavra
         }
 
-        html += `</div>`; // fecha container principal
+        // ANIMAÇÃO PROGRESSIVA: Mostrar detalhes dos erros
+        async function mostrarDetalhesProgressivamente() {
+            const todosErros = [];
 
-        // Armazena a correção para persistir na tela
-        ultimaCorrecaoHTML = html;
-        localStorage.setItem('ultimaCorrecaoHTML', html);
+            // Coleta todos os erros com sua categoria
+            for (const [catKey, cat] of Object.entries(categorias)) {
+                const lista = errosPorCategoria[catKey] || [];
+                lista.forEach(errObj => {
+                    todosErros.push({ errObj, catKey, cat });
+                });
+            }
 
-        if (formMessageEl) {
-            formMessageEl.innerHTML = html;
-            formMessageEl.setAttribute('data-correcao-salva', html);
-            formMessageEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Agrupa por categoria para exibir
+            const categoriasComErros = {};
+            for (const [catKey, cat] of Object.entries(categorias)) {
+                const lista = errosPorCategoria[catKey] || [];
+                if (lista.length > 0) {
+                    categoriasComErros[catKey] = { cat, lista };
+                }
+            }
+
+            let indexCategoria = 0;
+            const categoriasKeys = Object.keys(categoriasComErros);
+
+            async function mostrarProximaCategoria() {
+                if (indexCategoria >= categoriasKeys.length) {
+                    // Terminou! Salva no localStorage
+                    salvarCorrecaoFinal();
+                    return;
+                }
+
+                const catKey = categoriasKeys[indexCategoria];
+                const { cat, lista } = categoriasComErros[catKey];
+
+                // Cria container da categoria
+                const catContainer = document.createElement('div');
+                catContainer.style.cssText = 'margin-bottom: 24px; animation: slideInCard 0.3s ease;';
+                catContainer.innerHTML = `<h4 style="font-size: 16px; font-weight: 600; color: ${cat.corHex}; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid ${cat.corHex}40;">${cat.nome} (${lista.length})</h4>`;
+
+                if (detalhesContainer) {
+                    detalhesContainer.appendChild(catContainer);
+                }
+
+                // Mostra erros dessa categoria um por um
+                let indexErro = 0;
+
+                function mostrarProximoErro() {
+                    if (indexErro >= lista.length) {
+                        // Próxima categoria
+                        indexCategoria++;
+                        setTimeout(mostrarProximaCategoria, 200);
+                        return;
+                    }
+
+                    const errObj = lista[indexErro];
+                    const tituloErro = escapeHtml((errObj.topico_grammatical_nome || errObj.topico_gramatical_nome || '').trim());
+                    const palavraErrada = escapeHtml((errObj.palavra_errada || '').trim());
+                    const sugestaoCorrecao = escapeHtml((errObj.sugestao_correcao || '').trim());
+                    const gramatica = escapeHtml((errObj.gramatica || '').trim());
+
+                    const cardHtml = `
+                        <div style="background-color: #1e293b; border: 1px solid #475569; border-left: 4px solid ${cat.corHex}; border-radius: 8px; padding: 16px; margin-bottom: 12px; animation: slideInCard 0.3s ease;">
+                            ${tituloErro ? `<div style="margin-bottom: 12px;"><strong style="color: #a78bfa; font-size: 15px;">${tituloErro}</strong></div>` : ''}
+                            ${palavraErrada ? `<p style="margin: 0 0 8px 0; font-size: 14px;"><span style="color: #94a3b8;">Palavra Errada:</span> <span style="color: #fca5a5; font-weight: 600;">${palavraErrada}</span></p>` : ''}
+                            ${sugestaoCorrecao ? `<p style="margin: 0 0 8px 0; font-size: 14px;"><span style="color: #94a3b8;">Correção:</span> <span style="color: #86efac; font-weight: 600;">${sugestaoCorrecao}</span></p>` : ''}
+                            ${gramatica ? `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #334155;"><p style="margin: 0; color: #cbd5e1; font-size: 14px; line-height: 1.6;">${gramatica}</p></div>` : ''}
+                        </div>
+                    `;
+
+                    catContainer.insertAdjacentHTML('beforeend', cardHtml);
+                    indexErro++;
+                    setTimeout(mostrarProximoErro, 100); // 100ms entre cada erro
+                }
+
+                setTimeout(mostrarProximoErro, 100);
+            }
+
+            mostrarProximaCategoria();
         }
 
-        console.log('✅ Renderizado com prioridade nas chaves de descrição.');
+        // Função para salvar a correção final no localStorage
+        function salvarCorrecaoFinal() {
+            const htmlFinal = formMessageEl ? formMessageEl.innerHTML : '';
+            ultimaCorrecaoHTML = htmlFinal;
+            localStorage.setItem('ultimaCorrecaoHTML', htmlFinal);
+            if (formMessageEl) {
+                formMessageEl.setAttribute('data-correcao-salva', htmlFinal);
+            }
+            console.log('✅ Correção completa e salva.');
+        }
+
+        // Inicia a animação!
+        pintarProximaPalavra();
 
     } catch (err) {
         console.error('Erro ao corrigir:', err);
