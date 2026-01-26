@@ -548,126 +548,16 @@ async function handleCorrectionSubmit(e) {
             return;
         }
 
-        // Processa o stream
-        const reader = trataRes.body.getReader();
-        const decoder = new TextDecoder();
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value, { stream: true });
-            fullResponse += chunk;
-        }
-
-        console.log('trataerro-stream raw response:', fullResponse);
-
-        // Tenta parsear o JSON da resposta completa
-        let trataerroData = null;
-        try {
-            const jsonMatch = fullResponse.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-                trataerroData = JSON.parse(jsonMatch[0]);
-            }
-        } catch (parseErr) {
-            console.warn('trataerro: retorno não-JSON:', fullResponse);
-        }
-
-                // Mantém reload do perfil
-        await loadUserProfile(currentUser);
-
-        const successHtml = `
-                <div class="text-green-400">
-                    <p> Redação enviada com sucesso! </p>
-                </div>`;
-
         // Referências aos elementos que já estão na tela
         const textoContainer = document.getElementById('texto-corrigido-container');
         const statusAnalise = document.getElementById('status-analise');
         const detalhesContainer = document.getElementById('detalhes-erros-container');
 
-        if (!trataerroData || typeof trataerroData !== 'object') {
-            if (statusAnalise) {
-                statusAnalise.innerHTML = `<div class="text-green-400"><p>Redação sem erros! Parabéns!</p></div>`;
-            }
-            return;
-        }
-
-        if (Array.isArray(trataerroData)) {
-            const itemComErros = trataerroData.find(item => item && typeof item === 'object' && item.erros);
-            if (itemComErros && typeof itemComErros.erros === 'object') {
-                trataerroData = itemComErros.erros;
-            } else {
-                trataerroData = itemComErros || trataerroData[0] || {};
-            }
-        }
-        if (trataerroData.data && typeof trataerroData.data === 'object') {
-            trataerroData = trataerroData.data;
-        }
-        if (trataerroData.erros && typeof trataerroData.erros === 'object') {
-            trataerroData = trataerroData.erros;
-        }
-
-        const camposComConteudo = ['palavra_errada', 'palavra', 'sugestao_correcao', 'sugestao', 'gramatica', 'descricao_topico_gramatical', 'descricao', 'explicacao', 'explanation'];
-        const errosPorCategoria = {};
-        let totalErros = 0;
-
-        Object.keys(categorias).forEach((k) => {
-            const arr = Array.isArray(trataerroData?.[k]) ? trataerroData[k] : [];
-            const normalizados = arr
-                .map((item) => {
-                    if (typeof item === 'string') return { palavra_errada: item };
-                    if (!item || typeof item !== 'object') return {};
-                    return { ...item };
-                })
-                .filter((obj) => camposComConteudo.some((field) => typeof obj[field] === 'string' && obj[field].trim().length > 0));
-
-            errosPorCategoria[k] = normalizados;
-            totalErros += normalizados.length;
-        });
-
-        if (totalErros === 0) {
-            if (statusAnalise) {
-                statusAnalise.innerHTML = `<div class="text-green-400"><p>Redação sem erros! Parabéns!</p></div>`;
-            }
-            return;
-        }
-
-        // Prepara lista de palavras para pintar progressivamente
-        const palavrasSet = new Map();
-        Object.entries(errosPorCategoria).forEach(([catKey, lista]) => {
-            const cor = categorias[catKey].corHex;
-            lista.forEach(obj => {
-                const raw = (obj.palavra_errada || obj.palavra || '').trim();
-                if (!raw) return;
-                const lower = raw.toLowerCase();
-                if (!palavrasSet.has(lower)) palavrasSet.set(lower, { palavra: raw, corHex: cor, categoria: catKey });
-            });
-        });
-
-        const palavrasParaGrifar = Array.from(palavrasSet.values()).sort((a,b) => b.palavra.length - a.palavra.length);
-
-        // Função para pintar uma palavra no texto
-        function pintarPalavra(textoAtual, item, markId) {
-            const markStyle = `background-color:${item.corHex}; color:#000000; padding:2px 6px; border-radius:4px; font-weight:500;`;
-            const markClass = 'mark-highlight';
-
-            if (item.palavra.includes('...')) {
-                const partes = item.palavra.split('...').map(p => p.trim()).filter(p => p);
-                partes.forEach(parte => {
-                    const escaped = parte.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    textoAtual = textoAtual.replace(new RegExp(`\\b${escaped}\\b`, 'gi'), (match) => {
-                        return `<mark class="${markClass}" style="${markStyle}">${match}</mark>`;
-                    });
-                });
-            } else {
-                const escaped = item.palavra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                textoAtual = textoAtual.replace(new RegExp(`\\b${escaped}\\b`, 'gi'), (match) => {
-                    return `<mark class="${markClass}" style="${markStyle}">${match}</mark>`;
-                });
-            }
-            return textoAtual;
-        }
+        // Estado para processamento em tempo real
+        let textoAtual = escapeHtml(text);
+        const errosProcessados = new Set();
+        const categoriasExibidas = new Set();
+        let totalErrosExibidos = 0;
 
         // Adiciona CSS para animação
         const styleEl = document.createElement('style');
@@ -693,160 +583,228 @@ async function handleCorrectionSubmit(e) {
         `;
         document.head.appendChild(styleEl);
 
-        // ANIMAÇÃO PROGRESSIVA: Pintar palavras uma a uma
-        let textoAtual = escapeHtml(text);
-        let indexPalavra = 0;
+        // Função para pintar uma palavra no texto
+        function pintarPalavraNoTexto(palavra, corHex) {
+            const markStyle = `background-color:${corHex}; color:#000000; padding:2px 4px; border-radius:3px;`;
+            const markClass = 'mark-highlight';
 
-        // Atualiza contador de erros durante a animação
-        function atualizarContador() {
-            const statusDiv = document.getElementById('status-analise');
-            if (statusDiv && indexPalavra < palavrasParaGrifar.length) {
-                statusDiv.innerHTML = `
+            if (palavra.includes('...')) {
+                const partes = palavra.split('...').map(p => p.trim()).filter(p => p);
+                partes.forEach(parte => {
+                    const escaped = parte.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    textoAtual = textoAtual.replace(new RegExp(`\\b${escaped}\\b`, 'gi'), (match) => {
+                        return `<mark class="${markClass}" style="${markStyle}">${match}</mark>`;
+                    });
+                });
+            } else {
+                const escaped = palavra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                textoAtual = textoAtual.replace(new RegExp(`\\b${escaped}\\b`, 'gi'), (match) => {
+                    return `<mark class="${markClass}" style="${markStyle}">${match}</mark>`;
+                });
+            }
+
+            if (textoContainer) {
+                textoContainer.innerHTML = textoAtual;
+            }
+        }
+
+        // Função para criar/obter container da categoria
+        function getOrCreateCategoryContainer(catKey) {
+            const existingContainer = document.getElementById(`cat-container-${catKey}`);
+            if (existingContainer) return existingContainer;
+
+            const cat = categorias[catKey];
+            const catContainer = document.createElement('div');
+            catContainer.id = `cat-container-${catKey}`;
+            catContainer.className = 'error-card-appear';
+            catContainer.style.cssText = 'margin-bottom: 24px;';
+            catContainer.innerHTML = `
+                <h4 style="font-size: 18px; font-weight: 700; color: ${cat.corHex}; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 3px solid ${cat.corHex}; display: flex; align-items: center; gap: 10px;">
+                    <span style="display: inline-block; width: 12px; height: 12px; background: ${cat.corHex}; border-radius: 50%;"></span>
+                    ${cat.nome}
+                </h4>
+                <div id="cat-errors-${catKey}"></div>
+            `;
+
+            if (detalhesContainer) {
+                detalhesContainer.appendChild(catContainer);
+            }
+            categoriasExibidas.add(catKey);
+            return catContainer;
+        }
+
+        // Função para exibir um erro (pintar palavra + mostrar card)
+        function exibirErro(catKey, errObj) {
+            const cat = categorias[catKey];
+            const palavraErrada = (errObj.palavra_errada || errObj.palavra || '').trim();
+
+            // Gera ID único para evitar duplicatas
+            const erroId = `${catKey}-${palavraErrada}-${errObj.sugestao_correcao || ''}`;
+            if (errosProcessados.has(erroId)) return;
+            errosProcessados.add(erroId);
+
+            // 1. Pinta a palavra no texto IMEDIATAMENTE
+            if (palavraErrada) {
+                pintarPalavraNoTexto(palavraErrada, cat.corHex);
+            }
+
+            // 2. Cria/obtém container da categoria
+            getOrCreateCategoryContainer(catKey);
+            const errorsContainer = document.getElementById(`cat-errors-${catKey}`);
+
+            // 3. Extrai dados do erro
+            const tituloErro = escapeHtml((errObj.topico_grammatical_nome || errObj.topico_gramatical_nome || '').trim());
+            const palavraErradaEscaped = escapeHtml(palavraErrada);
+            const sugestaoCorrecao = escapeHtml((errObj.sugestao_correcao || '').trim());
+            const gramatica = escapeHtml((errObj.gramatica || '').trim());
+
+            // 4. Cria o card do erro (formato anterior - mais simples)
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'error-card-appear';
+            cardDiv.style.cssText = `background-color: #1e293b; border: 1px solid #475569; border-left: 4px solid ${cat.corHex}; border-radius: 8px; padding: 16px; margin-bottom: 12px;`;
+            cardDiv.innerHTML = `
+                ${tituloErro ? `
+                    <div style="margin-bottom: 12px;">
+                        <strong style="color: #a78bfa; font-size: 15px;">${tituloErro}</strong>
+                    </div>` : ''}
+
+                ${palavraErradaEscaped ? `
+                    <p style="margin: 0 0 8px 0; font-size: 14px;">
+                        <span style="color: #94a3b8;">Palavra Errada:</span>
+                        <span style="color: #fca5a5; font-weight: 600;">${palavraErradaEscaped}</span>
+                    </p>` : ''}
+
+                ${sugestaoCorrecao ? `
+                    <p style="margin: 0 0 8px 0; font-size: 14px;">
+                        <span style="color: #94a3b8;">Correção:</span>
+                        <span style="color: #86efac; font-weight: 600;">${sugestaoCorrecao}</span>
+                    </p>` : ''}
+
+                ${gramatica ? `
+                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #334155;">
+                        <p style="margin: 0; color: #cbd5e1; font-size: 14px; line-height: 1.6;">${gramatica}</p>
+                    </div>` : ''}
+            `;
+
+            if (errorsContainer) {
+                errorsContainer.appendChild(cardDiv);
+                cardDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            totalErrosExibidos++;
+
+            // Atualiza status
+            if (statusAnalise) {
+                statusAnalise.innerHTML = `
                     <div class="text-yellow-400" style="display: flex; align-items: center; gap: 10px;">
                         <span class="loading-spinner" style="width: 20px; height: 20px; border: 2px solid #fbbf24; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span>
-                        <span>Destacando erro ${indexPalavra + 1} de ${palavrasParaGrifar.length}...</span>
+                        <span>Analisando... ${totalErrosExibidos} erro(s) encontrado(s)</span>
                     </div>
                 `;
             }
         }
 
-        async function pintarProximaPalavra() {
-            if (indexPalavra >= palavrasParaGrifar.length) {
-                // Terminou de pintar, agora mostra os detalhes
-                const statusDiv = document.getElementById('status-analise');
-                if (statusDiv) {
-                    statusDiv.innerHTML = `
-                        <div class="text-green-400" style="display: flex; align-items: center; gap: 10px;">
-                            <span>Erros destacados! Mostrando explicações...</span>
-                        </div>
-                    `;
-                }
-                setTimeout(mostrarDetalhesProgressivamente, 500);
-                return;
-            }
+        // Parser incremental para extrair erros do JSON em streaming
+        const camposComConteudo = ['palavra_errada', 'palavra', 'sugestao_correcao', 'sugestao', 'gramatica', 'descricao_topico_gramatical', 'descricao', 'explicacao', 'explanation'];
+        const categoryKeys = Object.keys(categorias);
+        let lastProcessedLength = 0;
 
-            atualizarContador();
-            const item = palavrasParaGrifar[indexPalavra];
-            textoAtual = pintarPalavra(textoAtual, item, indexPalavra);
-            if (textoContainer) {
-                textoContainer.innerHTML = textoAtual;
-                // Scroll suave para manter o texto visível
-                textoContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
+        function tentarExtrairErros(jsonStr) {
+            // Para cada categoria, tenta extrair objetos de erro completos
+            for (const catKey of categoryKeys) {
+                // Procura pelo padrão "categoria": [...]
+                const catPattern = new RegExp(`"${catKey}"\\s*:\\s*\\[`, 'g');
+                let match;
 
-            indexPalavra++;
-            setTimeout(pintarProximaPalavra, 400); // 400ms entre cada palavra para melhor visualização
-        }
+                while ((match = catPattern.exec(jsonStr)) !== null) {
+                    const startIdx = match.index + match[0].length;
+                    let depth = 1;
+                    let objStart = -1;
+                    let i = startIdx;
 
-        // ANIMAÇÃO PROGRESSIVA: Mostrar detalhes dos erros
-        async function mostrarDetalhesProgressivamente() {
-            // Remove o status de análise pois vamos mostrar os detalhes
-            const statusDiv = document.getElementById('status-analise');
-            if (statusDiv) {
-                statusDiv.remove();
-            }
+                    while (i < jsonStr.length && depth > 0) {
+                        const char = jsonStr[i];
 
-            // Agrupa por categoria para exibir
-            const categoriasComErros = {};
-            for (const [catKey, cat] of Object.entries(categorias)) {
-                const lista = errosPorCategoria[catKey] || [];
-                if (lista.length > 0) {
-                    categoriasComErros[catKey] = { cat, lista };
-                }
-            }
-
-            let indexCategoria = 0;
-            const categoriasKeys = Object.keys(categoriasComErros);
-            let erroGlobalIndex = 0;
-
-            async function mostrarProximaCategoria() {
-                if (indexCategoria >= categoriasKeys.length) {
-                    // Terminou! Salva no localStorage
-                    salvarCorrecaoFinal();
-                    return;
-                }
-
-                const catKey = categoriasKeys[indexCategoria];
-                const { cat, lista } = categoriasComErros[catKey];
-
-                // Cria container da categoria com animação
-                const catContainer = document.createElement('div');
-                catContainer.className = 'error-card-appear';
-                catContainer.style.cssText = 'margin-bottom: 24px; opacity: 0;';
-                catContainer.innerHTML = `
-                    <h4 style="font-size: 18px; font-weight: 700; color: ${cat.corHex}; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 3px solid ${cat.corHex}; display: flex; align-items: center; gap: 10px;">
-                        <span style="display: inline-block; width: 12px; height: 12px; background: ${cat.corHex}; border-radius: 50%;"></span>
-                        ${cat.nome} <span style="font-weight: 400; font-size: 14px; color: #94a3b8;">(${lista.length} ${lista.length === 1 ? 'erro' : 'erros'})</span>
-                    </h4>
-                `;
-
-                if (detalhesContainer) {
-                    detalhesContainer.appendChild(catContainer);
-                    // Força reflow para animação funcionar
-                    catContainer.offsetHeight;
-                    catContainer.style.opacity = '1';
-                }
-
-                // Mostra erros dessa categoria um por um
-                let indexErro = 0;
-
-                function mostrarProximoErro() {
-                    if (indexErro >= lista.length) {
-                        // Próxima categoria após delay
-                        indexCategoria++;
-                        setTimeout(mostrarProximaCategoria, 600);
-                        return;
+                        if (char === '{') {
+                            if (objStart === -1) objStart = i;
+                            depth++;
+                        } else if (char === '}') {
+                            depth--;
+                            if (depth === 1 && objStart !== -1) {
+                                // Objeto completo encontrado
+                                const objStr = jsonStr.substring(objStart, i + 1);
+                                try {
+                                    const errObj = JSON.parse(objStr);
+                                    // Verifica se tem conteúdo válido
+                                    const hasContent = camposComConteudo.some((field) =>
+                                        typeof errObj[field] === 'string' && errObj[field].trim().length > 0
+                                    );
+                                    if (hasContent) {
+                                        exibirErro(catKey, errObj);
+                                    }
+                                } catch (e) {
+                                    // Objeto ainda incompleto, ignora
+                                }
+                                objStart = -1;
+                            }
+                        } else if (char === '[') {
+                            depth++;
+                        } else if (char === ']') {
+                            depth--;
+                        }
+                        i++;
                     }
-
-                    const errObj = lista[indexErro];
-                    erroGlobalIndex++;
-                    const tituloErro = escapeHtml((errObj.topico_grammatical_nome || errObj.topico_gramatical_nome || '').trim());
-                    const palavraErrada = escapeHtml((errObj.palavra_errada || '').trim());
-                    const sugestaoCorrecao = escapeHtml((errObj.sugestao_correcao || '').trim());
-                    const gramatica = escapeHtml((errObj.gramatica || '').trim());
-
-                    const cardDiv = document.createElement('div');
-                    cardDiv.className = 'error-card-appear';
-                    cardDiv.style.cssText = `background-color: #1e293b; border: 1px solid #475569; border-left: 5px solid ${cat.corHex}; border-radius: 8px; padding: 16px; margin-bottom: 14px; opacity: 0; transform: translateX(-20px);`;
-                    cardDiv.innerHTML = `
-                        ${tituloErro ? `<div style="margin-bottom: 12px;"><strong style="color: #a78bfa; font-size: 15px;">${tituloErro}</strong></div>` : ''}
-                        ${palavraErrada ? `<p style="margin: 0 0 10px 0; font-size: 14px;"><span style="color: #94a3b8;">Palavra Errada:</span> <span style="color: #fca5a5; font-weight: 600; background: #7f1d1d; padding: 2px 8px; border-radius: 4px;">${palavraErrada}</span></p>` : ''}
-                        ${sugestaoCorrecao ? `<p style="margin: 0 0 10px 0; font-size: 14px;"><span style="color: #94a3b8;">Correção:</span> <span style="color: #86efac; font-weight: 600; background: #14532d; padding: 2px 8px; border-radius: 4px;">${sugestaoCorrecao}</span></p>` : ''}
-                        ${gramatica ? `<div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid #334155;"><p style="margin: 0; color: #e2e8f0; font-size: 14px; line-height: 1.7;"><strong style="color: #fbbf24;">Explicação:</strong> ${gramatica}</p></div>` : ''}
-                    `;
-
-                    catContainer.appendChild(cardDiv);
-                    // Força reflow e anima
-                    cardDiv.offsetHeight;
-                    cardDiv.style.opacity = '1';
-                    cardDiv.style.transform = 'translateX(0)';
-
-                    // Scroll suave para mostrar o card
-                    cardDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-                    indexErro++;
-                    setTimeout(mostrarProximoErro, 500); // 500ms entre cada erro para visualização clara
                 }
-
-                setTimeout(mostrarProximoErro, 300);
             }
-
-            mostrarProximaCategoria();
         }
 
-        // Função para salvar a correção final no localStorage
-        function salvarCorrecaoFinal() {
-            const htmlFinal = formMessageEl ? formMessageEl.innerHTML : '';
-            ultimaCorrecaoHTML = htmlFinal;
-            localStorage.setItem('ultimaCorrecaoHTML', htmlFinal);
-            if (formMessageEl) {
-                formMessageEl.setAttribute('data-correcao-salva', htmlFinal);
+        // Processa o stream em tempo real
+        const reader = trataRes.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            fullResponse += chunk;
+
+            // Tenta extrair erros do JSON acumulado
+            if (fullResponse.length > lastProcessedLength + 50) {
+                tentarExtrairErros(fullResponse);
+                lastProcessedLength = fullResponse.length;
             }
-            console.log('✅ Correção completa e salva.');
         }
 
-        // Inicia a animação!
-        pintarProximaPalavra();
+        // Processamento final - garante que todos os erros foram capturados
+        tentarExtrairErros(fullResponse);
+
+        console.log('trataerro-stream raw response:', fullResponse);
+
+        // Mantém reload do perfil
+        await loadUserProfile(currentUser);
+
+        // Atualiza status final
+        if (statusAnalise) {
+            if (totalErrosExibidos === 0) {
+                statusAnalise.innerHTML = `<div class="text-green-400"><p>Redação sem erros! Parabéns!</p></div>`;
+            } else {
+                statusAnalise.innerHTML = `
+                    <div class="text-green-400" style="display: flex; align-items: center; gap: 10px;">
+                        <span>✓ Análise completa! ${totalErrosExibidos} erro(s) encontrado(s).</span>
+                    </div>
+                `;
+            }
+        }
+
+        // Salva a correção final no localStorage
+        const htmlFinal = formMessageEl ? formMessageEl.innerHTML : '';
+        ultimaCorrecaoHTML = htmlFinal;
+        localStorage.setItem('ultimaCorrecaoHTML', htmlFinal);
+        if (formMessageEl) {
+            formMessageEl.setAttribute('data-correcao-salva', htmlFinal);
+        }
+        console.log('✅ Correção completa e salva.');
 
     } catch (err) {
         console.error('Erro ao corrigir:', err);
