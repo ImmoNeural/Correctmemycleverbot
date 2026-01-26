@@ -2587,6 +2587,7 @@ async function handleCorrectionSubmit(e) {
             words: [],
             currentIndex: 0,
             currentWord: '',
+            originalWord: '', // Palavra original para usar nas dicas da IA
             currentHint: '',
             guessedLetters: [],
             wrongLetters: [],
@@ -2674,6 +2675,7 @@ async function handleCorrectionSubmit(e) {
                 words: filteredWords,
                 currentIndex: 0,
                 currentWord: '',
+                originalWord: '', // Palavra original para usar nas dicas da IA
                 currentHint: '',
                 guessedLetters: [],
                 wrongLetters: [],
@@ -2681,7 +2683,10 @@ async function handleCorrectionSubmit(e) {
                 maxErrors: 6,
                 correctCount: 0,
                 wrongCount: 0,
-                gameOver: false
+                gameOver: false,
+                dicasRestantes: 3,
+                dicaNivel: 0,
+                dicasUsadas: []
             };
 
             // Atualizar estado do flashcard game também para manter consistência
@@ -2711,12 +2716,15 @@ async function handleCorrectionSubmit(e) {
 
             // Resetar estado para nova palavra
             // Limpar a palavra: remover espaços, quebras de linha e caracteres especiais desnecessários
-            let palavraLimpa = word.palavra
+            let palavraOriginal = word.palavra
                 .trim()
                 .replace(/[\r\n\t]/g, '') // Remove quebras de linha e tabs
-                .replace(/\s+/g, '') // Remove espaços extras
-                .toUpperCase();
-            forcaGameState.currentWord = palavraLimpa;
+                .replace(/\s+/g, ''); // Remove espaços extras
+
+            // Guardar palavra original para as dicas da IA (sem uppercase)
+            forcaGameState.originalWord = palavraOriginal;
+            // Converter para maiúsculas apenas para o jogo (comparação de letras)
+            forcaGameState.currentWord = palavraOriginal.toUpperCase();
             forcaGameState.currentHint = word.descricao || '';
             forcaGameState.guessedLetters = [];
             forcaGameState.wrongLetters = [];
@@ -2870,7 +2878,7 @@ async function handleCorrectionSubmit(e) {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        palavra: forcaGameState.currentWord,
+                        palavra: forcaGameState.originalWord, // Usar palavra original (não uppercase) para melhor reconhecimento pela IA
                         nivel: nivel
                     })
                 });
