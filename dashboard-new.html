@@ -205,6 +205,55 @@
            RESPONSIVIDADE DO JOGO DA FORCA
            ============================================= */
 
+        /* Mobile - Regras gerais para qualquer orientação */
+        @media (max-width: 768px) {
+            /* FORÇAR letras na HORIZONTAL */
+            #forca-palavra {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: wrap !important;
+                justify-content: center !important;
+                gap: 4px !important;
+            }
+
+            /* Área de dica HORIZONTAL */
+            #forca-dica-area {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                gap: 0.5rem !important;
+                padding: 0.4rem 0.6rem !important;
+                background: rgba(245, 158, 11, 0.15) !important;
+                border-radius: 1.5rem !important;
+                border: 1px solid rgba(245, 158, 11, 0.3) !important;
+                margin-bottom: 0.5rem !important;
+            }
+
+            #forca-dica-area button {
+                display: inline-flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                gap: 0.3rem !important;
+                white-space: nowrap !important;
+                flex-shrink: 0 !important;
+            }
+
+            #forca-dica-mobile {
+                flex: 1 !important;
+                text-align: left !important;
+            }
+
+            .forca-letra-slot {
+                display: inline-flex !important;
+                flex-shrink: 0 !important;
+            }
+
+            .forca-espacador {
+                display: inline-block !important;
+                flex-shrink: 0 !important;
+            }
+        }
+
         /* Mobile Portrait - Jogo da Forca - Layout Horizontal */
         @media (max-width: 768px) and (orientation: portrait) {
             /* Container principal */
@@ -1836,7 +1885,7 @@
                     <div id="forca-game-container" class="hidden">
                         <div class="bg-slate-800 border-2 border-slate-700 rounded-xl p-8" id="forca-inner-box">
                             <!-- Área de Dica (mobile: topo) - Design Pill Moderno -->
-                            <div id="forca-dica-area" class="hidden md:hidden">
+                            <div id="forca-dica-area" class="md:hidden">
                                 <button id="forca-dica-btn-mobile" class="flex items-center gap-2 text-white font-semibold transition-all text-sm">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                         <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/>
