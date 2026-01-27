@@ -2701,6 +2701,7 @@ async function handleCorrectionSubmit(e) {
                 dicasUsadas: [],
                 dicasGeradas: [], // Array com as 3 dicas pré-geradas pela IA
                 dicasCarregando: false, // Flag para saber se está carregando as dicas
+                dicaRequestIdCarregando: 0, // ID da requisição que está carregando (para verificar se é a mesma)
                 dicaRequestId: 0, // ID da requisição atual para evitar race conditions
                 dicaPalavraAtual: '' // Palavra para verificação contra race conditions
             };
@@ -2772,7 +2773,10 @@ async function handleCorrectionSubmit(e) {
             forcaGameState.dicaNivel = 0;
             forcaGameState.dicasUsadas = [];
             forcaGameState.dicasGeradas = []; // Resetar dicas pré-geradas para nova palavra
-            forcaGameState.dicasCarregando = false;
+            // IMPORTANTE: NÃO resetar dicasCarregando aqui!
+            // Se uma requisição estiver em andamento, ela será invalidada pelo requestId
+            // Resetar aqui causava race condition onde duas requisições podiam ser feitas simultaneamente
+            // forcaGameState.dicasCarregando = false; <- REMOVIDO - era a causa do bug
             // IMPORTANTE: Incrementar requestId ao invés de resetar para 0
             // Isso invalida qualquer requisição pendente de palavras anteriores
             forcaGameState.dicaRequestId++;
@@ -2922,10 +2926,15 @@ async function handleCorrectionSubmit(e) {
                 return;
             }
 
-            // Se está carregando as dicas, não faz nada
+            // Se está carregando as dicas para a palavra ATUAL, não faz nada
+            // Mas se o requestId mudou (palavra mudou), permitir nova requisição
             if (forcaGameState.dicasCarregando) {
-                console.log('[DICA] Carregamento em andamento, ignorando clique');
-                return;
+                if (forcaGameState.dicaRequestIdCarregando === forcaGameState.dicaRequestId) {
+                    console.log('[DICA] Carregamento em andamento para esta palavra, ignorando clique');
+                    return;
+                } else {
+                    console.log('[DICA] Requisição anterior (', forcaGameState.dicaRequestIdCarregando, ') ainda em andamento, mas palavra mudou. Permitindo nova requisição para requestId:', forcaGameState.dicaRequestId);
+                }
             }
 
             // Debounce: ignorar cliques muito rápidos (500ms)
@@ -3011,6 +3020,7 @@ async function handleCorrectionSubmit(e) {
 
                 console.log('[DICA] Gerando batch de 3 dicas... (requestId:', currentRequestId, ', wordIndex:', currentWordIndex, ', word:', currentWord, ')');
                 forcaGameState.dicasCarregando = true;
+                forcaGameState.dicaRequestIdCarregando = currentRequestId; // Marcar qual requisição está ativa
 
                 // Mostrar loading
                 const loadingHtml = `
@@ -3084,11 +3094,19 @@ async function handleCorrectionSubmit(e) {
                         updateDicaText('Erro de conexão. Tente novamente.');
                     }
                 } finally {
-                    // Só resetar o estado se ainda for a mesma requisição e palavra
+                    // Só resetar dicasCarregando se ESTA é a requisição que está marcada como ativa
+                    // Isso evita que uma requisição antiga (invalidada) resete o flag de uma requisição nova
+                    if (currentRequestId === forcaGameState.dicaRequestIdCarregando) {
+                        forcaGameState.dicasCarregando = false;
+                        console.log('[DICA] Requisição', currentRequestId, 'finalizada, dicasCarregando = false');
+                    } else {
+                        console.log('[DICA] Requisição', currentRequestId, 'finalizada (ignorada, não é a requisição ativa:', forcaGameState.dicaRequestIdCarregando, ')');
+                    }
+
+                    // Só restaurar os botões se ainda for a mesma requisição e palavra
                     if (currentRequestId === forcaGameState.dicaRequestId &&
                         currentWordIndex === forcaGameState.currentIndex &&
                         currentWord === forcaGameState.originalWord) {
-                        forcaGameState.dicasCarregando = false;
                         restaurarBotoes();
                     }
                 }
