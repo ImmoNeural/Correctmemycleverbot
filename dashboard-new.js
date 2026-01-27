@@ -2204,6 +2204,10 @@ async function handleCorrectionSubmit(e) {
         document.getElementById('restart-game-btn')?.addEventListener('click', () => {
             clearSavedGameState();
             resetGame();
+            // Resetar flag de inicialização para permitir novo jogo
+            if (typeof forcaGameState !== 'undefined') {
+                forcaGameState.gameStarting = false;
+            }
             showScreen('flashcard-type-choice');
         });
 
@@ -2605,7 +2609,8 @@ async function handleCorrectionSubmit(e) {
             dicasGeradas: [], // Array com as 3 dicas pré-geradas pela IA
             dicasCarregando: false, // Flag para saber se está carregando as dicas
             dicaRequestId: 0, // ID da requisição atual para evitar race conditions
-            dicaPalavraAtual: '' // Palavra para verificação contra race conditions
+            dicaPalavraAtual: '', // Palavra para verificação contra race conditions
+            gameStarting: false // Flag para evitar cliques duplos no botão iniciar
         };
 
         const forcaPartes = [
@@ -2628,12 +2633,20 @@ async function handleCorrectionSubmit(e) {
 
         // Iniciar jogo da forca
         document.getElementById('start-forca-game')?.addEventListener('click', async () => {
+            // Proteção contra clique duplo - evita inicialização duplicada
+            if (forcaGameState.gameStarting) {
+                console.log('[FORCA] Ignorando clique duplo - jogo já está iniciando');
+                return;
+            }
+            forcaGameState.gameStarting = true;
+
             const includeRed = document.getElementById('forca-red').checked;
             const includeYellow = document.getElementById('forca-yellow').checked;
             const includeGreen = document.getElementById('forca-green').checked;
 
             if (!includeRed && !includeYellow && !includeGreen) {
                 document.getElementById('forca-setup-error').textContent = 'Selecione pelo menos um tipo de cartão!';
+                forcaGameState.gameStarting = false;
                 return;
             }
 
@@ -2648,11 +2661,13 @@ async function handleCorrectionSubmit(e) {
             if (error) {
                 console.error('Erro ao buscar palavras:', error);
                 document.getElementById('forca-setup-error').textContent = 'Erro ao carregar palavras!';
+                forcaGameState.gameStarting = false;
                 return;
             }
 
             if (!words || words.length === 0) {
                 document.getElementById('forca-setup-error').textContent = 'Nenhuma palavra encontrada!';
+                forcaGameState.gameStarting = false;
                 return;
             }
 
@@ -2672,6 +2687,7 @@ async function handleCorrectionSubmit(e) {
 
             if (filteredWords.length === 0) {
                 document.getElementById('forca-setup-error').textContent = 'Nenhuma palavra com exemplos encontrada! Adicione exemplos às suas palavras.';
+                forcaGameState.gameStarting = false;
                 return;
             }
 
@@ -2703,7 +2719,8 @@ async function handleCorrectionSubmit(e) {
                 dicasCarregando: false, // Flag para saber se está carregando as dicas
                 dicaRequestIdCarregando: 0, // ID da requisição que está carregando (para verificar se é a mesma)
                 dicaRequestId: 0, // ID da requisição atual para evitar race conditions
-                dicaPalavraAtual: '' // Palavra para verificação contra race conditions
+                dicaPalavraAtual: '', // Palavra para verificação contra race conditions
+                gameStarting: false // Flag resetada após inicialização bem-sucedida
             };
 
             // Atualizar estado do flashcard game também para manter consistência
