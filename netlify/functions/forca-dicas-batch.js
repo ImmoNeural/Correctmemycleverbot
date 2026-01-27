@@ -26,7 +26,9 @@ exports.handler = async (event) => {
         const body = JSON.parse(event.body);
         const { palavra, traducao, exemplo } = body;
 
-        console.log('[FORCA-DICAS-BATCH] Gerando 3 dicas para:', { palavra, traducao, exemplo });
+        console.log('[FORCA-DICAS-BATCH] Gerando 3 dicas para palavra:', palavra);
+        console.log('[FORCA-DICAS-BATCH] TRADUÇÃO RECEBIDA:', traducao);
+        console.log('[FORCA-DICAS-BATCH] Exemplo:', exemplo);
 
         if (!palavra) {
             return {
@@ -55,29 +57,29 @@ exports.handler = async (event) => {
         const traducaoLimpa = (traducao || '').trim();
         const exemploLimpo = (exemplo || '').trim();
 
-        // Prompt usando PRINCIPALMENTE o exemplo (que é uma frase real de uso)
-        const systemPrompt = `Você gera dicas para jogo da forca. O jogador precisa adivinhar uma palavra em ALEMÃO.
+        // IMPORTANTE: NÃO enviar a palavra alemã para a IA para evitar que ela tente traduzir por conta própria
+        // O prompt deve focar APENAS na tradução em português fornecida
+        const systemPrompt = `Você é um gerador de dicas para jogo da forca. Você receberá uma PALAVRA EM PORTUGUÊS e deve criar dicas sobre ela.
 
-DADOS DA PALAVRA:
-- Palavra em alemão: "${palavra}"
-- Tradução em português: "${traducaoLimpa}"
-- Frase de exemplo: "${exemploLimpo}"
+REGRAS CRÍTICAS:
+- Use SOMENTE a palavra em português fornecida: "${traducaoLimpa}"
+- NÃO tente traduzir ou adivinhar significados de outras línguas
+- As dicas devem descrever EXATAMENTE o significado de "${traducaoLimpa}" em português
+- Se não souber o significado exato, use dicas genéricas sobre a palavra
 
-TAREFA: Criar 3 dicas em português que ajudem a descobrir a tradução "${traducaoLimpa}".
+FORMATO DE RESPOSTA:
+Responda APENAS em JSON: {"dica1": "...", "dica2": "...", "dica3": "..."}
 
-REGRAS:
-1. Responda APENAS em JSON: {"dica1": "...", "dica2": "...", "dica3": "..."}
-2. As dicas devem ser sobre o SIGNIFICADO em português ("${traducaoLimpa}")
-3. Use o exemplo "${exemploLimpo}" como contexto para entender o significado
-4. dica1: Categoria geral da palavra
-5. dica2: Quando/como se usa
-6. dica3: Uma frase com ___ no lugar da palavra`;
+ESTRUTURA DAS DICAS:
+- dica1: Categoria ou tipo da palavra (ex: "É um adjetivo que descreve estado de limpeza")
+- dica2: Quando ou como se usa essa palavra
+- dica3: Uma frase de exemplo usando "___" no lugar da palavra`;
 
-        const userPrompt = `Palavra alemã: "${palavra}"
-Tradução: "${traducaoLimpa}"
-Exemplo de uso: "${exemploLimpo}"
+        const userPrompt = `PALAVRA EM PORTUGUÊS: "${traducaoLimpa}"
 
-Gere 3 dicas sobre "${traducaoLimpa}". Apenas JSON.`;
+Crie 3 dicas que ajudem alguém a adivinhar a palavra "${traducaoLimpa}".
+As dicas devem ser sobre o significado de "${traducaoLimpa}" em português.
+Responda apenas em JSON.`;
 
         const deepseekResponse = await fetch(DEEPSEEK_API_URL, {
             method: 'POST',
