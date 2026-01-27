@@ -56,30 +56,46 @@ exports.handler = async (event) => {
 
         const traducaoLimpa = (traducao || '').trim();
         const exemploLimpo = (exemplo || '').trim();
+        const palavraLimpa = (palavra || '').trim();
 
-        // IMPORTANTE: NÃO enviar a palavra alemã para a IA para evitar que ela tente traduzir por conta própria
-        // O prompt deve focar APENAS na tradução em português fornecida
-        const systemPrompt = `Você é um gerador de dicas para jogo da forca. Você receberá uma PALAVRA EM PORTUGUÊS e deve criar dicas sobre ela.
+        // Construir o prompt usando TRADUÇÃO + EXEMPLO para dicas contextualizadas
+        // O exemplo de uso é a chave para gerar dicas relevantes e precisas
+        const systemPrompt = `Você é um assistente que cria dicas para um jogo da forca de aprendizado de alemão.
 
-REGRAS CRÍTICAS:
-- Use SOMENTE a palavra em português fornecida: "${traducaoLimpa}"
-- NÃO tente traduzir ou adivinhar significados de outras línguas
-- As dicas devem descrever EXATAMENTE o significado de "${traducaoLimpa}" em português
-- Se não souber o significado exato, use dicas genéricas sobre a palavra
+CONTEXTO DO JOGO:
+- O jogador está aprendendo alemão
+- Ele vê a tradução/significado em português e precisa adivinhar qual é a palavra alemã
+- Suas dicas devem ajudar o jogador a LEMBRAR da palavra alemã através do contexto de uso
+
+INFORMAÇÕES FORNECIDAS:
+- Tradução/Significado em português: "${traducaoLimpa}"
+${exemploLimpo ? `- Exemplo de uso: "${exemploLimpo}"` : ''}
+
+REGRAS PARA CRIAR DICAS:
+1. Use o EXEMPLO DE USO como base principal para contextualizar as dicas
+2. As dicas devem ajudar o jogador a entender o CONTEXTO em que a palavra é usada
+3. NÃO revele a palavra diretamente nem dê dicas sobre as letras
+4. Foque em situações, contextos e associações que ajudem a lembrar do significado
+5. Se houver exemplo, extraia o contexto dele para criar dicas mais precisas
 
 FORMATO DE RESPOSTA:
-Responda APENAS em JSON: {"dica1": "...", "dica2": "...", "dica3": "..."}
+Responda APENAS em JSON válido: {"dica1": "...", "dica2": "...", "dica3": "..."}
 
-ESTRUTURA DAS DICAS:
-- dica1: Categoria ou tipo da palavra (ex: "É um adjetivo que descreve estado de limpeza")
-- dica2: Quando ou como se usa essa palavra
-- dica3: Uma frase de exemplo usando "___" no lugar da palavra`;
+ESTRUTURA DAS DICAS (do mais fácil ao mais difícil):
+- dica1: Uma dica vaga sobre a categoria ou campo semântico (ex: "Relacionado a sentimentos" ou "Usado em contexto profissional")
+- dica2: Uma dica mais específica sobre quando/como essa palavra é usada, baseada no exemplo se disponível
+- dica3: Uma dica bem direta, quase revelando o significado ou dando um contexto muito específico`;
 
-        const userPrompt = `PALAVRA EM PORTUGUÊS: "${traducaoLimpa}"
+        const userPrompt = exemploLimpo
+            ? `A tradução é: "${traducaoLimpa}"
+O exemplo de uso é: "${exemploLimpo}"
 
-Crie 3 dicas que ajudem alguém a adivinhar a palavra "${traducaoLimpa}".
-As dicas devem ser sobre o significado de "${traducaoLimpa}" em português.
-Responda apenas em JSON.`;
+Crie 3 dicas progressivas (da mais vaga à mais específica) que ajudem o jogador a lembrar desta palavra. Use o exemplo de uso para contextualizar as dicas.
+Responda APENAS em JSON.`
+            : `A tradução é: "${traducaoLimpa}"
+
+Crie 3 dicas progressivas (da mais vaga à mais específica) que ajudem o jogador a lembrar desta palavra.
+Responda APENAS em JSON.`;
 
         const deepseekResponse = await fetch(DEEPSEEK_API_URL, {
             method: 'POST',
