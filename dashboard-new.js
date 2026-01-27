@@ -1,4 +1,8 @@
-﻿document.addEventListener('DOMContentLoaded', () => {
+﻿// Flag GLOBAL para evitar inicializações duplicadas do jogo da forca
+// (fora do closure para funcionar mesmo se DOMContentLoaded executar múltiplas vezes)
+let _forcaGameInitializing = false;
+
+document.addEventListener('DOMContentLoaded', () => {
     // =================================================================
     // CONFIGURAÇÃO E INICIALIZAÇÃO
     // =================================================================
@@ -2204,7 +2208,8 @@ async function handleCorrectionSubmit(e) {
         document.getElementById('restart-game-btn')?.addEventListener('click', () => {
             clearSavedGameState();
             resetGame();
-            // Resetar flag de inicialização para permitir novo jogo
+            // Resetar flags de inicialização para permitir novo jogo
+            _forcaGameInitializing = false;
             if (typeof forcaGameState !== 'undefined') {
                 forcaGameState.gameStarting = false;
             }
@@ -2633,12 +2638,14 @@ async function handleCorrectionSubmit(e) {
 
         // Iniciar jogo da forca
         document.getElementById('start-forca-game')?.addEventListener('click', async () => {
-            // Proteção contra clique duplo - evita inicialização duplicada
-            if (forcaGameState.gameStarting) {
-                console.log('[FORCA] Ignorando clique duplo - jogo já está iniciando');
+            // Proteção contra clique duplo usando flag GLOBAL (fora do closure)
+            // Isso garante sincronização mesmo se houver múltiplos event listeners
+            if (_forcaGameInitializing) {
+                console.log('[FORCA] Ignorando clique/listener duplicado - jogo já está iniciando (flag global)');
                 return;
             }
-            forcaGameState.gameStarting = true;
+            _forcaGameInitializing = true;
+            console.log('[FORCA] Iniciando jogo - flag global ativada');
 
             const includeRed = document.getElementById('forca-red').checked;
             const includeYellow = document.getElementById('forca-yellow').checked;
@@ -2646,7 +2653,7 @@ async function handleCorrectionSubmit(e) {
 
             if (!includeRed && !includeYellow && !includeGreen) {
                 document.getElementById('forca-setup-error').textContent = 'Selecione pelo menos um tipo de cartão!';
-                forcaGameState.gameStarting = false;
+                _forcaGameInitializing = false;
                 return;
             }
 
@@ -2661,13 +2668,13 @@ async function handleCorrectionSubmit(e) {
             if (error) {
                 console.error('Erro ao buscar palavras:', error);
                 document.getElementById('forca-setup-error').textContent = 'Erro ao carregar palavras!';
-                forcaGameState.gameStarting = false;
+                _forcaGameInitializing = false;
                 return;
             }
 
             if (!words || words.length === 0) {
                 document.getElementById('forca-setup-error').textContent = 'Nenhuma palavra encontrada!';
-                forcaGameState.gameStarting = false;
+                _forcaGameInitializing = false;
                 return;
             }
 
@@ -2687,7 +2694,7 @@ async function handleCorrectionSubmit(e) {
 
             if (filteredWords.length === 0) {
                 document.getElementById('forca-setup-error').textContent = 'Nenhuma palavra com exemplos encontrada! Adicione exemplos às suas palavras.';
-                forcaGameState.gameStarting = false;
+                _forcaGameInitializing = false;
                 return;
             }
 
@@ -2739,6 +2746,10 @@ async function handleCorrectionSubmit(e) {
             document.getElementById('forca-game-container').classList.remove('hidden');
 
             initForcaWord();
+
+            // Resetar flag global após inicialização bem-sucedida
+            _forcaGameInitializing = false;
+            console.log('[FORCA] Jogo iniciado com sucesso - flag global resetada');
         });
 
         function initForcaWord() {
