@@ -2604,7 +2604,8 @@ async function handleCorrectionSubmit(e) {
             dicasUsadas: [],
             dicasGeradas: [], // Array com as 3 dicas pré-geradas pela IA
             dicasCarregando: false, // Flag para saber se está carregando as dicas
-            dicaRequestId: 0 // ID da requisição atual para evitar race conditions
+            dicaRequestId: 0, // ID da requisição atual para evitar race conditions
+            dicaPalavraAtual: '' // Palavra para verificação contra race conditions
         };
 
         const forcaPartes = [
@@ -2700,7 +2701,8 @@ async function handleCorrectionSubmit(e) {
                 dicasUsadas: [],
                 dicasGeradas: [], // Array com as 3 dicas pré-geradas pela IA
                 dicasCarregando: false, // Flag para saber se está carregando as dicas
-                dicaRequestId: 0 // ID da requisição atual para evitar race conditions
+                dicaRequestId: 0, // ID da requisição atual para evitar race conditions
+                dicaPalavraAtual: '' // Palavra para verificação contra race conditions
             };
 
             // Atualizar estado do flashcard game também para manter consistência
@@ -2752,7 +2754,11 @@ async function handleCorrectionSubmit(e) {
             forcaGameState.dicasUsadas = [];
             forcaGameState.dicasGeradas = []; // Resetar dicas pré-geradas para nova palavra
             forcaGameState.dicasCarregando = false;
-            forcaGameState.dicaRequestId = 0; // Resetar ID da requisição
+            // IMPORTANTE: Incrementar requestId ao invés de resetar para 0
+            // Isso invalida qualquer requisição pendente de palavras anteriores
+            forcaGameState.dicaRequestId++;
+            // Guardar a palavra atual para verificação adicional contra race conditions
+            forcaGameState.dicaPalavraAtual = forcaGameState.originalWord;
 
             // Atualizar progresso
             document.getElementById('game-progress-text').textContent = `Palavra ${forcaGameState.currentIndex + 1} de ${forcaGameState.words.length}`;
@@ -2970,8 +2976,10 @@ async function handleCorrectionSubmit(e) {
                 forcaGameState.dicaRequestId++;
                 const currentRequestId = forcaGameState.dicaRequestId;
                 const currentWordIndex = forcaGameState.currentIndex;
+                // Capturar a palavra atual para verificação robusta contra race conditions
+                const currentWord = forcaGameState.originalWord;
 
-                console.log('[DICA] Gerando batch de 3 dicas... (requestId:', currentRequestId, ', wordIndex:', currentWordIndex, ')');
+                console.log('[DICA] Gerando batch de 3 dicas... (requestId:', currentRequestId, ', wordIndex:', currentWordIndex, ', word:', currentWord, ')');
                 forcaGameState.dicasCarregando = true;
 
                 // Mostrar loading
@@ -3001,9 +3009,11 @@ async function handleCorrectionSubmit(e) {
 
                     // PROTEÇÃO CONTRA RACE CONDITIONS:
                     // Verificar se ainda estamos na mesma palavra e se é a mesma requisição
+                    // Usar TRÊS verificações: requestId, índice e a palavra em si
                     if (currentRequestId !== forcaGameState.dicaRequestId ||
-                        currentWordIndex !== forcaGameState.currentIndex) {
-                        console.log('[DICA] Resposta descartada: palavra ou requisição mudou');
+                        currentWordIndex !== forcaGameState.currentIndex ||
+                        currentWord !== forcaGameState.originalWord) {
+                        console.log('[DICA] Resposta descartada: palavra ou requisição mudou (expected:', currentWord, ', current:', forcaGameState.originalWord, ')');
                         return;
                     }
 
@@ -3019,15 +3029,17 @@ async function handleCorrectionSubmit(e) {
                     }
                 } catch (error) {
                     console.error('[DICA] Erro ao buscar dicas:', error);
-                    // Só mostrar erro se ainda for a mesma requisição
+                    // Só mostrar erro se ainda for a mesma requisição e palavra
                     if (currentRequestId === forcaGameState.dicaRequestId &&
-                        currentWordIndex === forcaGameState.currentIndex) {
+                        currentWordIndex === forcaGameState.currentIndex &&
+                        currentWord === forcaGameState.originalWord) {
                         updateDicaText('Erro de conexão. Tente novamente.');
                     }
                 } finally {
-                    // Só resetar o estado se ainda for a mesma requisição
+                    // Só resetar o estado se ainda for a mesma requisição e palavra
                     if (currentRequestId === forcaGameState.dicaRequestId &&
-                        currentWordIndex === forcaGameState.currentIndex) {
+                        currentWordIndex === forcaGameState.currentIndex &&
+                        currentWord === forcaGameState.originalWord) {
                         forcaGameState.dicasCarregando = false;
                         restaurarBotoes();
                     }
