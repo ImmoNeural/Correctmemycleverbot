@@ -2994,18 +2994,29 @@ async function handleCorrectionSubmit(e) {
                 updateDicaText('<span class="text-gray-400 animate-pulse">Gerando dicas...</span>');
 
                 try {
+                    // LOG DETALHADO para debug
+                    const dadosEnvio = {
+                        palavra: forcaGameState.originalWord,
+                        traducao: forcaGameState.currentHint
+                    };
+                    console.log('[DICA] ===== ENVIANDO PARA API =====');
+                    console.log('[DICA] Palavra:', dadosEnvio.palavra);
+                    console.log('[DICA] Tradução:', dadosEnvio.traducao);
+                    console.log('[DICA] currentWord capturado:', currentWord);
+                    console.log('[DICA] ================================');
+
                     const response = await fetch('/.netlify/functions/forca-dicas-batch', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            palavra: forcaGameState.originalWord,
-                            traducao: forcaGameState.currentHint,
-                            exemplo: forcaGameState.currentExample
-                        })
+                        body: JSON.stringify(dadosEnvio)
                     });
 
                     const data = await response.json();
-                    console.log('[DICA] Batch recebido:', data, '(requestId:', currentRequestId, ')');
+                    console.log('[DICA] ===== RESPOSTA DA API =====');
+                    console.log('[DICA] Dicas:', data.dicas);
+                    console.log('[DICA] palavraOrigem:', data.palavraOrigem);
+                    console.log('[DICA] traducaoOrigem:', data.traducaoOrigem);
+                    console.log('[DICA] ==============================');
 
                     // PROTEÇÃO CONTRA RACE CONDITIONS:
                     // Verificar se ainda estamos na mesma palavra e se é a mesma requisição
