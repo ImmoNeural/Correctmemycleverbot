@@ -58,44 +58,46 @@ exports.handler = async (event) => {
         const exemploLimpo = (exemplo || '').trim();
         const palavraLimpa = (palavra || '').trim();
 
-        // Construir o prompt usando TRADUÇÃO + EXEMPLO para dicas contextualizadas
-        // O exemplo de uso é a chave para gerar dicas relevantes e precisas
+        // Construir o prompt usando PALAVRA ALEMÃ + TRADUÇÃO + EXEMPLO para dicas contextualizadas
+        // IMPORTANTE: Incluir a palavra alemã para que a IA saiba exatamente para qual palavra gerar dicas
         const systemPrompt = `Você é um assistente que cria dicas para um jogo da forca de aprendizado de alemão.
+
+PALAVRA ALEMÃ A SER ADIVINHADA: "${palavraLimpa}"
+TRADUÇÃO EM PORTUGUÊS: "${traducaoLimpa}"
+${exemploLimpo ? `EXEMPLO DE USO: "${exemploLimpo}"` : ''}
 
 CONTEXTO DO JOGO:
 - O jogador está aprendendo alemão
-- Ele vê a tradução/significado em português e precisa adivinhar qual é a palavra alemã
-- Suas dicas devem ajudar o jogador a LEMBRAR da palavra alemã através do contexto de uso
+- Ele precisa adivinhar a palavra "${palavraLimpa}" que significa "${traducaoLimpa}"
+- Suas dicas devem ajudar o jogador a LEMBRAR desta palavra específica
 
-INFORMAÇÕES FORNECIDAS:
-- Tradução/Significado em português: "${traducaoLimpa}"
-${exemploLimpo ? `- Exemplo de uso: "${exemploLimpo}"` : ''}
-
-REGRAS PARA CRIAR DICAS:
-1. Use o EXEMPLO DE USO como base principal para contextualizar as dicas
-2. As dicas devem ajudar o jogador a entender o CONTEXTO em que a palavra é usada
-3. NÃO revele a palavra diretamente nem dê dicas sobre as letras
-4. Foque em situações, contextos e associações que ajudem a lembrar do significado
-5. Se houver exemplo, extraia o contexto dele para criar dicas mais precisas
+REGRAS OBRIGATÓRIAS:
+1. Crie dicas APENAS sobre "${traducaoLimpa}" - NÃO sobre outras palavras
+2. NÃO mencione a palavra alemã "${palavraLimpa}" nas dicas
+3. NÃO dê dicas sobre letras específicas
+4. As dicas devem descrever o SIGNIFICADO "${traducaoLimpa}", não outra coisa
+5. Se houver exemplo, use-o apenas para contextualizar, mas foque no significado "${traducaoLimpa}"
 
 FORMATO DE RESPOSTA:
 Responda APENAS em JSON válido: {"dica1": "...", "dica2": "...", "dica3": "..."}
 
-ESTRUTURA DAS DICAS (do mais fácil ao mais difícil):
-- dica1: Uma dica vaga sobre a categoria ou campo semântico (ex: "Relacionado a sentimentos" ou "Usado em contexto profissional")
-- dica2: Uma dica mais específica sobre quando/como essa palavra é usada, baseada no exemplo se disponível
-- dica3: Uma dica bem direta, quase revelando o significado ou dando um contexto muito específico`;
+ESTRUTURA DAS DICAS (do mais vago ao mais específico):
+- dica1: Categoria geral do significado "${traducaoLimpa}"
+- dica2: Contexto ou uso comum de "${traducaoLimpa}"
+- dica3: Descrição mais direta de "${traducaoLimpa}" sem revelar a palavra`;
 
-        const userPrompt = exemploLimpo
-            ? `A tradução é: "${traducaoLimpa}"
-O exemplo de uso é: "${exemploLimpo}"
+        const userPrompt = `ATENÇÃO: Gere dicas SOMENTE para a tradução "${traducaoLimpa}".
 
-Crie 3 dicas progressivas (da mais vaga à mais específica) que ajudem o jogador a lembrar desta palavra. Use o exemplo de uso para contextualizar as dicas.
-Responda APENAS em JSON.`
-            : `A tradução é: "${traducaoLimpa}"
+A palavra alemã é "${palavraLimpa}" e significa "${traducaoLimpa}" em português.
+${exemploLimpo ? `Exemplo de uso: "${exemploLimpo}"` : ''}
 
-Crie 3 dicas progressivas (da mais vaga à mais específica) que ajudem o jogador a lembrar desta palavra.
-Responda APENAS em JSON.`;
+Crie 3 dicas progressivas que descrevam o significado "${traducaoLimpa}":
+- Dica 1: Categoria geral
+- Dica 2: Contexto de uso
+- Dica 3: Descrição mais direta
+
+IMPORTANTE: As dicas devem ser sobre "${traducaoLimpa}", não sobre outras palavras!
+Responda APENAS em JSON: {"dica1": "...", "dica2": "...", "dica3": "..."}`;
 
         const deepseekResponse = await fetch(DEEPSEEK_API_URL, {
             method: 'POST',
@@ -155,14 +157,15 @@ Responda APENAS em JSON.`;
             dicas.push(`Dica adicional: pense em "${traducaoLimpa.substring(0, 2)}..."`);
         }
 
-        console.log('[FORCA-DICAS-BATCH] Dicas geradas:', dicas);
+        console.log('[FORCA-DICAS-BATCH] Dicas geradas para', palavraLimpa, ':', dicas);
 
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({
                 success: true,
-                dicas: dicas.slice(0, 3) // Garantir apenas 3 dicas
+                dicas: dicas.slice(0, 3), // Garantir apenas 3 dicas
+                palavraOrigem: palavraLimpa // Retornar palavra para verificação no cliente
             })
         };
 

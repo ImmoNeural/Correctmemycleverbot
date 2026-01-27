@@ -3018,9 +3018,16 @@ async function handleCorrectionSubmit(e) {
                     }
 
                     if (data.success && data.dicas && data.dicas.length >= 3) {
+                        // VERIFICAÇÃO EXTRA: Confirmar que as dicas são para a palavra correta
+                        if (data.palavraOrigem && data.palavraOrigem.toLowerCase() !== currentWord.toLowerCase()) {
+                            console.log('[DICA] Dicas descartadas: palavraOrigem não corresponde (API:', data.palavraOrigem, ', esperado:', currentWord, ')');
+                            updateDicaText('Erro de sincronização. Tente novamente.');
+                            return;
+                        }
+
                         // Armazenar as 3 dicas geradas
                         forcaGameState.dicasGeradas = data.dicas;
-                        console.log('[DICA] Dicas armazenadas:', forcaGameState.dicasGeradas);
+                        console.log('[DICA] Dicas armazenadas para', currentWord, ':', forcaGameState.dicasGeradas);
 
                         // Mostrar a primeira dica
                         mostrarProximaDica();
