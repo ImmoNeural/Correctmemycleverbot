@@ -2725,8 +2725,27 @@ async function handleCorrectionSubmit(e) {
 
         function initForcaWord() {
             const word = forcaGameState.words[forcaGameState.currentIndex];
+
+            // DEBUG: Log completo do estado
+            console.log('[FORCA] initForcaWord chamado:', {
+                currentIndex: forcaGameState.currentIndex,
+                wordsLength: forcaGameState.words?.length,
+                word: word,
+                palavraRaw: word?.palavra,
+                descricaoRaw: word?.descricao
+            });
+
             if (!word) {
                 showForcaResults();
+                return;
+            }
+
+            // Verificar se a palavra tem conteúdo válido
+            if (!word.palavra || word.palavra.trim() === '') {
+                console.error('[FORCA] ERRO: Palavra vazia no índice', forcaGameState.currentIndex, word);
+                // Pular para próxima palavra
+                forcaGameState.currentIndex++;
+                initForcaWord();
                 return;
             }
 
@@ -2891,6 +2910,17 @@ async function handleCorrectionSubmit(e) {
             // Evitar chamadas se já terminou ou não tem dicas
             if (forcaGameState.gameOver) return;
             if (forcaGameState.dicasRestantes <= 0) return;
+
+            // PROTEÇÃO: Verificar se a palavra e tradução existem
+            if (!forcaGameState.originalWord || forcaGameState.originalWord.trim() === '') {
+                console.error('[DICA] ERRO: palavra vazia! originalWord:', forcaGameState.originalWord);
+                console.error('[DICA] Estado atual:', JSON.stringify({
+                    currentIndex: forcaGameState.currentIndex,
+                    wordsLength: forcaGameState.words?.length,
+                    currentWord: forcaGameState.currentWord
+                }));
+                return;
+            }
 
             // Se está carregando as dicas, não faz nada
             if (forcaGameState.dicasCarregando) {
