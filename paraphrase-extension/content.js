@@ -434,8 +434,8 @@
               selection.addRange(newRange);
             }
 
-            // Trigger input event
-            editableElement.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+            // Trigger input event (InputEvent for React/Teams compatibility)
+            editableElement.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: newText }));
           } catch (innerE) {
             console.error('Error replacing text:', innerE);
             navigator.clipboard.writeText(newText);
@@ -547,16 +547,31 @@
               editableElement.focus();
             }
 
+            // Restore selection
             const sel = window.getSelection();
             sel.removeAllRanges();
             sel.addRange(localSavedRange);
 
-            localSavedRange.deleteContents();
-            localSavedRange.insertNode(document.createTextNode(result));
+            // Use execCommand first - works with rich text editors (Teams, Gmail, etc.)
+            let replaced = document.execCommand('insertText', false, result);
 
-            // Trigger input event for frameworks
+            if (!replaced) {
+              // Fallback: direct DOM manipulation
+              localSavedRange.deleteContents();
+              const textNode = document.createTextNode(result);
+              localSavedRange.insertNode(textNode);
+
+              // Move cursor to end of inserted text
+              const newRange = document.createRange();
+              newRange.setStartAfter(textNode);
+              newRange.collapse(true);
+              sel.removeAllRanges();
+              sel.addRange(newRange);
+            }
+
+            // Trigger input event for frameworks (React, Vue, Angular)
             if (editableElement) {
-              editableElement.dispatchEvent(new Event('input', { bubbles: true }));
+              editableElement.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: result }));
             }
 
             showToast(`${style.emoji} Texto substituído!`);
