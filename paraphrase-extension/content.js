@@ -72,13 +72,13 @@
             ${PARAPHRASE_STYLES.map(style => `
               <button class="style-btn ${preSelectedStyle === style.id ? 'selected' : ''}"
                       data-style="${style.id}"
-                      title="${style.title} (Ctrl+Shift+${style.shortcut})">
-                ${style.emoji} ${style.title} <span class="style-shortcut">Ctrl+Shift+${style.shortcut}</span>
+                      title="${style.title} (Ctrl+Alt+${style.shortcut})">
+                ${style.emoji} ${style.title} <span class="style-shortcut">Ctrl+Alt+${style.shortcut}</span>
               </button>
             `).join('')}
           </div>
           <div class="shortcuts-hint">
-            Dica: Selecione texto e use <strong>Ctrl+Shift+1-8</strong> para parafrasear direto, sem abrir o popup.
+            Dica: Selecione texto e use <strong>Ctrl+Alt+1-8</strong> para parafrasear direto, sem abrir o popup.
           </div>
         </div>
 
@@ -581,7 +581,7 @@
 
   // Keyboard shortcuts handler
   // Ctrl+Shift+P = Open popup
-  // Ctrl+Shift+1-8 = Direct paraphrase with specific style and auto-replace
+  // Ctrl+Alt+1-8 = Direct paraphrase with specific style and auto-replace
   document.addEventListener('keydown', (e) => {
     // Ctrl+Shift+P = Open popup (keep this one)
     if (e.ctrlKey && e.shiftKey && e.key === 'P') {
@@ -595,9 +595,10 @@
       return;
     }
 
-    // Ctrl+Shift+1-8 = Direct paraphrase with style and auto-replace
-    // Use e.code (Digit1-Digit8) to avoid issues with Shift changing the key character
-    if (e.ctrlKey && e.shiftKey && !e.altKey) {
+    // Ctrl+Alt+1-8 = Direct paraphrase with style and auto-replace
+    // Use e.code (Digit1-Digit8) to avoid issues with modifier keys changing the key character
+    // Also works with AltGr+1-8 since AltGr sends Ctrl+Alt
+    if (e.ctrlKey && e.altKey && !e.shiftKey) {
       const digitMatch = e.code && e.code.match(/^Digit([1-8])$/);
       if (digitMatch) {
         const style = PARAPHRASE_STYLES.find(s => s.shortcut === digitMatch[1]);
