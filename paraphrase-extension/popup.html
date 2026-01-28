@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parafraseador de Texto</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      width: 350px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f7fafc;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .header p {
+      font-size: 13px;
+      opacity: 0.9;
+    }
+
+    .content {
+      padding: 20px;
+    }
+
+    .section {
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #718096;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    .instruction-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .instruction-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .instruction-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .instruction-number {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .instruction-text {
+      font-size: 14px;
+      color: #4a5568;
+      line-height: 1.5;
+    }
+
+    .instruction-text strong {
+      color: #2d3748;
+    }
+
+    .shortcut-badge {
+      display: inline-block;
+      background: #edf2f7;
+      color: #4a5568;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: monospace;
+      margin-left: 4px;
+    }
+
+    .config-section {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .config-section label {
+      display: block;
+      font-size: 13px;
+      color: #4a5568;
+      margin-bottom: 6px;
+    }
+
+    .config-section input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+    }
+
+    .config-section input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .save-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .save-btn:hover {
+      opacity: 0.9;
+    }
+
+    .status-message {
+      text-align: center;
+      font-size: 13px;
+      color: #48bb78;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .status-message.show {
+      display: block;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 16px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 12px;
+      color: #a0aec0;
+    }
+
+    .footer a {
+      color: #667eea;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    .styles-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .style-tag {
+      background: #edf2f7;
+      color: #4a5568;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Parafraseador de Texto</h1>
+    <p>Reescreva textos com diferentes estilos</p>
+  </div>
+
+  <div class="content">
+    <div class="section">
+      <div class="section-title">Como usar</div>
+      <div class="instruction-card">
+        <div class="instruction-item">
+          <span class="instruction-number">1</span>
+          <span class="instruction-text">
+            <strong>Selecione</strong> qualquer texto em uma pagina web
+          </span>
+        </div>
+        <div class="instruction-item">
+          <span class="instruction-number">2</span>
+          <span class="instruction-text">
+            <strong>Clique com o botao direito</strong> e escolha "Parafrasear texto"
+          </span>
+        </div>
+        <div class="instruction-item">
+          <span class="instruction-number">3</span>
+          <span class="instruction-text">
+            <strong>Escolha o estilo</strong> e receba o texto parafraseado!
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Atalho de teclado</div>
+      <div class="instruction-card">
+        <div class="instruction-item">
+          <span class="instruction-text">
+            Selecione texto e pressione <span class="shortcut-badge">Ctrl+Shift+P</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Estilos disponiveis</div>
+      <div class="instruction-card">
+        <div class="styles-preview">
+          <span class="style-tag">Formal</span>
+          <span class="style-tag">Informal</span>
+          <span class="style-tag">Conciso</span>
+          <span class="style-tag">Detalhado</span>
+          <span class="style-tag">Criativo</span>
+          <span class="style-tag">Simples</span>
+          <span class="style-tag">Academico</span>
+          <span class="style-tag">Amigavel</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Configuracao da API</div>
+      <div class="config-section">
+        <label for="apiKey">API Key (OpenAI ou compativel):</label>
+        <input type="password" id="apiKey" placeholder="sk-...">
+
+        <label for="apiUrl">URL da API (opcional):</label>
+        <input type="text" id="apiUrl" placeholder="https://api.openai.com/v1/chat/completions">
+
+        <button class="save-btn" id="saveConfig">Salvar Configuracoes</button>
+        <div class="status-message" id="statusMessage">Configuracoes salvas com sucesso!</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    A API key e salva localmente no seu navegador.
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
