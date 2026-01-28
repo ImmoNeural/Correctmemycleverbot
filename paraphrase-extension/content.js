@@ -73,7 +73,8 @@
               <button class="style-btn ${preSelectedStyle === style.id ? 'selected' : ''}"
                       data-style="${style.id}"
                       title="${style.title} (Ctrl+Alt+${style.shortcut})">
-                ${style.emoji} ${style.title} <span class="style-shortcut">Ctrl+Alt+${style.shortcut}</span>
+                ${style.emoji} ${style.title.split(' / ')[0]}
+                <span class="style-shortcut">Ctrl+Alt+${style.shortcut}</span>
               </button>
             `).join('')}
           </div>
