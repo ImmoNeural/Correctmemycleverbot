@@ -123,6 +123,34 @@
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
+.style-btn.selected .style-shortcut {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+}
+
+.style-shortcut {
+  display: inline-block;
+  background: #e2e8f0;
+  color: #718096;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-family: monospace;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.shortcuts-hint {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #ebf4ff;
+  border: 1px solid #bee3f8;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #2b6cb0;
+  line-height: 1.5;
+}
+
 .result-section {
   background: #f0fff4;
   border: 1px solid #9ae6b4;
@@ -387,5 +415,16 @@
 
   .config-content input:focus {
     border-color: #667eea;
+  }
+
+  .style-shortcut {
+    background: #4a5568;
+    color: #a0aec0;
+  }
+
+  .shortcuts-hint {
+    background: #2a4365;
+    border-color: #2b6cb0;
+    color: #90cdf4;
   }
 }

@@ -72,10 +72,13 @@
             ${PARAPHRASE_STYLES.map(style => `
               <button class="style-btn ${preSelectedStyle === style.id ? 'selected' : ''}"
                       data-style="${style.id}"
-                      title="${style.title}">
-                ${style.emoji} ${style.title}
+                      title="${style.title} (Ctrl+Shift+${style.shortcut})">
+                ${style.emoji} ${style.title} <span class="style-shortcut">Ctrl+Shift+${style.shortcut}</span>
               </button>
             `).join('')}
+          </div>
+          <div class="shortcuts-hint">
+            Dica: Selecione texto e use <strong>Ctrl+Shift+1-8</strong> para parafrasear direto, sem abrir o popup.
           </div>
         </div>
 
@@ -164,9 +167,15 @@
     // Replace button
     popup.querySelector('.replace-btn').addEventListener('click', () => {
       const result = popup.querySelector('.paraphrase-result').textContent;
-      replaceSelectedText(result);
+      // Remove popup FIRST so it doesn't interfere with focus/selection
       removeExistingPopup();
-      showToast('Texto substituído!');
+      // Small delay to let focus return to the page before replacing
+      setTimeout(() => {
+        const success = replaceSelectedText(result);
+        if (success) {
+          showToast('Texto substituído!');
+        }
+      }, 50);
     });
 
     // Retry button
@@ -399,40 +408,40 @@
                                 (editableParent?.isContentEditable ? editableParent : null);
 
         if (editableElement) {
-          // Restore focus to the editable element first
+          // Restore focus to the editable element
           editableElement.focus();
 
-          // Use a small delay to ensure focus is set
-          setTimeout(() => {
-            try {
-              // Restore selection
-              const selection = window.getSelection();
+          try {
+            // Restore selection
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(savedRange);
+
+            // Try using execCommand first (better compatibility)
+            const success = document.execCommand('insertText', false, newText);
+
+            if (!success) {
+              // Fallback: manual replacement
+              savedRange.deleteContents();
+              const textNode = document.createTextNode(newText);
+              savedRange.insertNode(textNode);
+
+              // Move cursor to end of inserted text
+              const newRange = document.createRange();
+              newRange.setStartAfter(textNode);
+              newRange.collapse(true);
               selection.removeAllRanges();
-              selection.addRange(savedRange);
-
-              // Try using execCommand first (better compatibility)
-              const success = document.execCommand('insertText', false, newText);
-
-              if (!success) {
-                // Fallback: manual replacement
-                savedRange.deleteContents();
-                const textNode = document.createTextNode(newText);
-                savedRange.insertNode(textNode);
-
-                // Move cursor to end of inserted text
-                const newRange = document.createRange();
-                newRange.setStartAfter(textNode);
-                newRange.collapse(true);
-                selection.removeAllRanges();
-                selection.addRange(newRange);
-              }
-
-              // Trigger input event
-              editableElement.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
-            } catch (innerE) {
-              console.error('Error in delayed replacement:', innerE);
+              selection.addRange(newRange);
             }
-          }, 10);
+
+            // Trigger input event
+            editableElement.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+          } catch (innerE) {
+            console.error('Error replacing text:', innerE);
+            navigator.clipboard.writeText(newText);
+            showToast('Texto copiado para a área de transferência!');
+            return false;
+          }
 
           return true;
         } else {
@@ -572,7 +581,7 @@
 
   // Keyboard shortcuts handler
   // Ctrl+Shift+P = Open popup
-  // AltGr+1-8 = Direct paraphrase with specific style and auto-replace
+  // Ctrl+Shift+1-8 = Direct paraphrase with specific style and auto-replace
   document.addEventListener('keydown', (e) => {
     // Ctrl+Shift+P = Open popup (keep this one)
     if (e.ctrlKey && e.shiftKey && e.key === 'P') {
@@ -586,14 +595,17 @@
       return;
     }
 
-    // AltGr+1-8 = Direct paraphrase with style and auto-replace
-    // AltGr is detected as Ctrl+Alt in JavaScript
-    if (e.altKey && e.ctrlKey && !e.shiftKey) {
-      const style = PARAPHRASE_STYLES.find(s => s.shortcut === e.key);
-      if (style) {
-        e.preventDefault();
-        silentParaphrase(style.id);
-        return;
+    // Ctrl+Shift+1-8 = Direct paraphrase with style and auto-replace
+    // Use e.code (Digit1-Digit8) to avoid issues with Shift changing the key character
+    if (e.ctrlKey && e.shiftKey && !e.altKey) {
+      const digitMatch = e.code && e.code.match(/^Digit([1-8])$/);
+      if (digitMatch) {
+        const style = PARAPHRASE_STYLES.find(s => s.shortcut === digitMatch[1]);
+        if (style) {
+          e.preventDefault();
+          silentParaphrase(style.id);
+          return;
+        }
       }
     }
   });
