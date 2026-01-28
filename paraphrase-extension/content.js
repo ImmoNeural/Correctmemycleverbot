@@ -37,12 +37,21 @@
     if (DEBUG) console.log('[Paraphrase]', ...args);
   }
 
+  // Log initialization
+  dbg('Content script loaded on:', location.hostname, location.pathname?.substring(0, 50));
+
   // Detect if we're inside Microsoft Teams
   function isTeamsPage() {
-    return location.hostname.includes('teams.microsoft') ||
-           location.hostname.includes('teams.live') ||
-           document.querySelector('[data-tid]') !== null ||
-           document.querySelector('.ts-message-list-container') !== null;
+    const checks = {
+      hostTeamsMicrosoft: location.hostname.includes('teams.microsoft'),
+      hostTeamsLive: location.hostname.includes('teams.live'),
+      hostTeamsCloud: location.hostname.includes('teams.cloud'),
+      dataTid: !!document.querySelector('[data-tid]'),
+      tsMessageList: !!document.querySelector('.ts-message-list-container'),
+      teamsAppFrame: !!document.querySelector('#app') && location.hostname.includes('teams')
+    };
+    const result = Object.values(checks).some(v => v);
+    return result;
   }
 
   // Find the Teams compose box (or any contentEditable) robustly
@@ -66,18 +75,46 @@
 
   // Robust focus restoration - click + focus + wait
   async function restoreFocus(element) {
-    if (!element) return false;
+    if (!element) {
+      dbg('restoreFocus: no element provided');
+      return false;
+    }
     try {
+      dbg('restoreFocus: attempting on', element.tagName, element.id || '', 'isTeams:', isTeamsPage());
+
       // Dispatch mousedown/up to simulate real click (triggers Teams focus handlers)
-      element.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
-      element.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
-      element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      const rect = element.getBoundingClientRect();
+      const clickX = rect.left + rect.width / 2;
+      const clickY = rect.top + rect.height / 2;
+      const mouseOpts = { bubbles: true, cancelable: true, clientX: clickX, clientY: clickY, view: window };
+
+      element.dispatchEvent(new MouseEvent('mousedown', mouseOpts));
+      element.dispatchEvent(new MouseEvent('mouseup', mouseOpts));
+      element.dispatchEvent(new MouseEvent('click', mouseOpts));
       element.focus();
-      // Small delay for React/Teams state to settle
-      await new Promise(r => setTimeout(r, 100));
-      return document.activeElement === element || element.contains(document.activeElement);
+
+      // Longer delay for Teams (React state needs more time to settle)
+      const delay = isTeamsPage() ? 200 : 100;
+      await new Promise(r => setTimeout(r, delay));
+
+      const focused = document.activeElement === element || element.contains(document.activeElement);
+      dbg('restoreFocus result:', focused, 'activeElement:', document.activeElement?.tagName, document.activeElement?.id);
+
+      // Second attempt for Teams if first failed
+      if (!focused && isTeamsPage()) {
+        dbg('restoreFocus: second attempt for Teams...');
+        element.focus();
+        element.dispatchEvent(new FocusEvent('focus', { bubbles: true }));
+        element.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+        await new Promise(r => setTimeout(r, 200));
+        const focused2 = document.activeElement === element || element.contains(document.activeElement);
+        dbg('restoreFocus second attempt result:', focused2);
+        return focused2;
+      }
+
+      return focused;
     } catch(e) {
-      dbg('restoreFocus error:', e);
+      dbg('restoreFocus error:', e.message);
       return false;
     }
   }
@@ -538,31 +575,76 @@
   // Replace text in contentEditable with multiple strategies for Teams/corporate compatibility
   async function replaceInContentEditable(editableElement, newText, origText, textOffset, range) {
     const strategies = [];
+    const inTeams = isTeamsPage();
+
+    dbg('replaceInContentEditable called:', {
+      editableTag: editableElement?.tagName,
+      editableId: editableElement?.id,
+      newTextLen: newText?.length,
+      origTextLen: origText?.length,
+      origTextPreview: origText?.substring(0, 50),
+      textOffset,
+      hasRange: !!range,
+      rangeValid: range ? document.contains(range.commonAncestorContainer) : false,
+      inTeams
+    });
 
     try {
       // Step 1: Robust focus restoration
       dbg('Step 1: Restoring focus to editable element');
-      await restoreFocus(editableElement);
+      const focusResult = await restoreFocus(editableElement);
+      dbg('Focus restoration result:', focusResult, 'activeElement:', document.activeElement?.tagName);
 
       // Step 2: Get a valid range
-      const validRange = range || getValidRange(editableElement, origText, textOffset);
+      let validRange = null;
+
+      // First check if passed range is still valid
+      if (range) {
+        try {
+          const ancestor = range.commonAncestorContainer;
+          if (ancestor && document.contains(ancestor)) {
+            const rangeText = range.toString();
+            dbg('Passed range text:', rangeText?.substring(0, 50), 'matches orig:', rangeText === origText);
+            if (rangeText === origText) {
+              validRange = range;
+            }
+          } else {
+            dbg('Passed range ancestor no longer in document (DOM changed)');
+          }
+        } catch(e) {
+          dbg('Passed range is invalid:', e.message);
+        }
+      }
+
+      // Try getValidRange as second option
+      if (!validRange) {
+        dbg('Trying getValidRange...');
+        validRange = getValidRange(editableElement, origText, textOffset);
+        if (validRange) {
+          dbg('getValidRange returned a range, text:', validRange.toString()?.substring(0, 50));
+        }
+      }
+
       if (!validRange) {
         dbg('ERROR: No valid range found. Trying text search fallback...');
         // Last-ditch: search for original text in the element
+        const elementText = editableElement.textContent;
+        dbg('Element textContent length:', elementText?.length, 'searching for origText...');
         const fallbackRange = origText ? findTextRange(editableElement, origText, 0) : null;
         if (!fallbackRange) {
-          dbg('ERROR: Cannot find original text in element. Copying to clipboard.');
+          dbg('ERROR: Cannot find original text in element. Element text:', elementText?.substring(0, 100));
+          dbg('Copying to clipboard as last resort.');
           await copyToClipboard(newText);
           showToast('Texto não encontrado. Copiado para a área de transferência! Use Ctrl+V para colar.');
           return false;
         }
         dbg('Found text via fallback search');
-        return await tryReplacementStrategies(editableElement, newText, origText, textOffset, fallbackRange, strategies);
+        validRange = fallbackRange;
       }
 
       return await tryReplacementStrategies(editableElement, newText, origText, textOffset, validRange, strategies);
     } catch(e) {
-      dbg('CRITICAL ERROR in replaceInContentEditable:', e);
+      dbg('CRITICAL ERROR in replaceInContentEditable:', e.message, e);
       await copyToClipboard(newText);
       showToast('Erro na substituição. Copiado! Use Ctrl+V para colar.');
       return false;
@@ -594,46 +676,235 @@
   }
 
   // Try all replacement strategies in sequence
+  // For Teams, reorder to prioritize clipboard-based approaches which are more reliable
   async function tryReplacementStrategies(editableElement, newText, origText, textOffset, validRange, strategies) {
     const selection = window.getSelection();
+    const inTeams = isTeamsPage();
+
+    dbg('tryReplacementStrategies starting:', {
+      inTeams,
+      rangeText: validRange?.toString()?.substring(0, 50),
+      rangeValid: validRange ? document.contains(validRange.commonAncestorContainer) : false
+    });
 
     // Helper to restore selection with a given range
     function selectRange(r) {
-      selection.removeAllRanges();
-      selection.addRange(r);
+      try {
+        selection.removeAllRanges();
+        selection.addRange(r);
+        dbg('  selectRange: success, selected text:', selection.toString()?.substring(0, 30));
+        return true;
+      } catch(e) {
+        dbg('  selectRange failed:', e.message);
+        return false;
+      }
     }
 
     // Helper to get a fresh range (in case DOM changed)
     function freshRange() {
-      return getValidRange(editableElement, origText, textOffset) || validRange;
+      const fr = getValidRange(editableElement, origText, textOffset);
+      if (fr) {
+        dbg('  freshRange: got valid range, text:', fr.toString()?.substring(0, 30));
+        return fr;
+      }
+      // Try finding text directly
+      const searchRange = origText ? findTextRange(editableElement, origText, 0) : null;
+      if (searchRange) {
+        dbg('  freshRange: found via text search');
+        return searchRange;
+      }
+      dbg('  freshRange: using original validRange (may be stale)');
+      return validRange;
     }
+
+    // Helper to verify replacement worked
+    function verifyReplacement() {
+      const contains = editableElement.textContent.includes(newText);
+      const noOrig = !origText || !editableElement.textContent.includes(origText);
+      dbg('  verifyReplacement:', { containsNew: contains, origRemoved: noOrig });
+      return contains;
+    }
+
+    // For Teams: try clipboard-based approach FIRST since it's most reliable
+    if (inTeams) {
+      dbg('=== Teams mode: trying clipboard-first strategy ===');
+
+      // Teams Strategy 1: Clipboard write + execCommand('paste')
+      try {
+        dbg('Teams Strategy 1: clipboard write + execCommand paste');
+        const range1 = freshRange();
+        if (range1 && selectRange(range1)) {
+          await copyToClipboard(newText);
+          await new Promise(r => setTimeout(r, 100)); // extra delay for Teams
+          const success = document.execCommand('paste');
+          strategies.push('Teams1:clipboard-paste=' + success);
+          dbg('Teams Strategy 1 result:', success);
+          if (success) {
+            await new Promise(r => setTimeout(r, 100));
+            if (verifyReplacement()) return true;
+          }
+        }
+      } catch(e) {
+        strategies.push('Teams1:clipboard-paste-error');
+        dbg('Teams Strategy 1 failed:', e.message);
+      }
+
+      // Teams Strategy 2: Delete selection + insertText
+      try {
+        dbg('Teams Strategy 2: delete + insertText');
+        const range2 = freshRange();
+        if (range2 && selectRange(range2)) {
+          document.execCommand('delete', false, null);
+          await new Promise(r => setTimeout(r, 50));
+          const success = document.execCommand('insertText', false, newText);
+          strategies.push('Teams2:delete+insertText=' + success);
+          dbg('Teams Strategy 2 result:', success);
+          if (success) {
+            editableElement.dispatchEvent(new InputEvent('input', {
+              bubbles: true, cancelable: true, inputType: 'insertText', data: newText
+            }));
+            return true;
+          }
+        }
+      } catch(e) {
+        strategies.push('Teams2:delete+insertText-error');
+        dbg('Teams Strategy 2 failed:', e.message);
+      }
+
+      // Teams Strategy 3: ClipboardEvent paste simulation
+      try {
+        dbg('Teams Strategy 3: ClipboardEvent paste simulation');
+        const range3 = freshRange();
+        if (range3 && selectRange(range3)) {
+          document.execCommand('delete', false, null);
+          await new Promise(r => setTimeout(r, 50));
+
+          const dt = new DataTransfer();
+          dt.setData('text/plain', newText);
+          dt.setData('text/html', `<span>${newText.replace(/</g, '&lt;')}</span>`);
+          const pasteEvent = new ClipboardEvent('paste', {
+            bubbles: true, cancelable: true, clipboardData: dt
+          });
+          const dispatched = editableElement.dispatchEvent(pasteEvent);
+          strategies.push('Teams3:paste-event=' + dispatched);
+          dbg('Teams Strategy 3 dispatched:', dispatched);
+          if (dispatched) {
+            await new Promise(r => setTimeout(r, 200));
+            if (verifyReplacement()) return true;
+            dbg('Teams Strategy 3: paste event dispatched but text not found');
+          }
+        }
+      } catch(e) {
+        strategies.push('Teams3:paste-event-error');
+        dbg('Teams Strategy 3 failed:', e.message);
+      }
+
+      // Teams Strategy 4: InputEvent with dataTransfer (CKEditor/ProseMirror)
+      try {
+        dbg('Teams Strategy 4: InputEvent with dataTransfer');
+        const range4 = freshRange();
+        if (range4 && selectRange(range4)) {
+          const dt = new DataTransfer();
+          dt.setData('text/plain', newText);
+
+          editableElement.dispatchEvent(new InputEvent('beforeinput', {
+            bubbles: true, cancelable: true, inputType: 'insertFromPaste',
+            data: null, dataTransfer: dt
+          }));
+
+          const range4b = freshRange();
+          if (range4b) {
+            range4b.deleteContents();
+            range4b.insertNode(document.createTextNode(newText));
+            editableElement.normalize();
+          }
+
+          editableElement.dispatchEvent(new InputEvent('input', {
+            bubbles: true, cancelable: false, inputType: 'insertFromPaste',
+            data: null, dataTransfer: dt
+          }));
+
+          strategies.push('Teams4:dataTransfer-input=true');
+          dbg('Teams Strategy 4: dispatched');
+
+          await new Promise(r => setTimeout(r, 100));
+          if (verifyReplacement()) return true;
+        }
+      } catch(e) {
+        strategies.push('Teams4:dataTransfer-input-error');
+        dbg('Teams Strategy 4 failed:', e.message);
+      }
+
+      // Teams Strategy 5: DOM manipulation with events
+      try {
+        dbg('Teams Strategy 5: DOM manipulation');
+        const range5 = freshRange();
+        if (range5 && selectRange(range5)) {
+          editableElement.dispatchEvent(new InputEvent('beforeinput', {
+            bubbles: true, cancelable: true, inputType: 'insertReplacementText', data: newText
+          }));
+
+          range5.deleteContents();
+          const textNode = document.createTextNode(newText);
+          range5.insertNode(textNode);
+          editableElement.normalize();
+
+          const newRange = document.createRange();
+          newRange.setStartAfter(textNode);
+          newRange.collapse(true);
+          selectRange(newRange);
+
+          editableElement.dispatchEvent(new InputEvent('input', {
+            bubbles: true, cancelable: true, inputType: 'insertReplacementText', data: newText
+          }));
+
+          strategies.push('Teams5:DOM-manipulation=true');
+          dbg('Teams Strategy 5 (DOM manipulation): success');
+          return true;
+        }
+      } catch(e) {
+        strategies.push('Teams5:DOM-manipulation-error');
+        dbg('Teams Strategy 5 failed:', e.message);
+      }
+
+      // Teams: all strategies failed
+      dbg('ALL TEAMS STRATEGIES FAILED:', strategies.join(', '));
+      await copyToClipboard(newText);
+      showToast('Substituição bloqueada pelo Teams. Texto copiado! Use Ctrl+V para colar.');
+      return false;
+    }
+
+    // ===== NON-TEAMS path (standard editors) =====
+    dbg('=== Standard mode: trying strategies A-G ===');
 
     // Strategy A: execCommand('insertText') - best for most editors
     try {
-      selectRange(validRange);
-      const success = document.execCommand('insertText', false, newText);
-      strategies.push('A:execCommand-insertText=' + success);
-      dbg('Strategy A (execCommand insertText):', success);
-      if (success) {
-        editableElement.dispatchEvent(new InputEvent('input', {
-          bubbles: true, cancelable: true, inputType: 'insertText', data: newText
-        }));
-        return true;
+      dbg('Strategy A: execCommand insertText');
+      if (selectRange(validRange)) {
+        const success = document.execCommand('insertText', false, newText);
+        strategies.push('A:execCommand-insertText=' + success);
+        dbg('Strategy A result:', success);
+        if (success) {
+          editableElement.dispatchEvent(new InputEvent('input', {
+            bubbles: true, cancelable: true, inputType: 'insertText', data: newText
+          }));
+          return true;
+        }
       }
     } catch(e) {
       strategies.push('A:execCommand-error');
-      dbg('Strategy A failed:', e);
+      dbg('Strategy A failed:', e.message);
     }
 
     // Strategy B: Delete + insertText (two-step)
     try {
+      dbg('Strategy B: delete + insertText');
       const rangeB = freshRange();
-      if (rangeB) {
-        selectRange(rangeB);
+      if (rangeB && selectRange(rangeB)) {
         document.execCommand('delete', false, null);
         const success = document.execCommand('insertText', false, newText);
         strategies.push('B:delete+insertText=' + success);
-        dbg('Strategy B (delete+insertText):', success);
+        dbg('Strategy B result:', success);
         if (success) {
           editableElement.dispatchEvent(new InputEvent('input', {
             bubbles: true, cancelable: true, inputType: 'insertText', data: newText
@@ -643,15 +914,14 @@
       }
     } catch(e) {
       strategies.push('B:delete+insertText-error');
-      dbg('Strategy B failed:', e);
+      dbg('Strategy B failed:', e.message);
     }
 
     // Strategy C: DOM manipulation with beforeinput/input events
     try {
+      dbg('Strategy C: DOM manipulation');
       const rangeC = freshRange();
-      if (rangeC) {
-        selectRange(rangeC);
-
+      if (rangeC && selectRange(rangeC)) {
         editableElement.dispatchEvent(new InputEvent('beforeinput', {
           bubbles: true, cancelable: true, inputType: 'insertReplacementText', data: newText
         }));
@@ -676,14 +946,14 @@
       }
     } catch(e) {
       strategies.push('C:DOM-manipulation-error');
-      dbg('Strategy C failed:', e);
+      dbg('Strategy C failed:', e.message);
     }
 
     // Strategy D: ClipboardEvent paste simulation
     try {
+      dbg('Strategy D: paste event simulation');
       const rangeD = freshRange();
-      if (rangeD) {
-        selectRange(rangeD);
+      if (rangeD && selectRange(rangeD)) {
         document.execCommand('delete', false, null);
 
         const dt = new DataTransfer();
@@ -693,66 +963,48 @@
         });
         const dispatched = editableElement.dispatchEvent(pasteEvent);
         strategies.push('D:paste-event=' + dispatched);
-        dbg('Strategy D (paste event):', dispatched);
+        dbg('Strategy D dispatched:', dispatched);
         if (dispatched) {
-          // Check if text was actually inserted
           await new Promise(r => setTimeout(r, 100));
-          if (editableElement.textContent.includes(newText)) {
-            return true;
-          }
-          dbg('Strategy D: paste event dispatched but text not found in element');
+          if (verifyReplacement()) return true;
+          dbg('Strategy D: paste event dispatched but text not found');
         }
       }
     } catch(e) {
       strategies.push('D:paste-event-error');
-      dbg('Strategy D failed:', e);
+      dbg('Strategy D failed:', e.message);
     }
 
     // Strategy E: Clipboard write + execCommand('paste')
-    // This triggers the browser's native paste handler which Teams respects
     try {
-      dbg('Strategy E: Trying clipboard write + execCommand paste');
+      dbg('Strategy E: clipboard write + execCommand paste');
       const rangeE = freshRange();
-      if (rangeE) {
-        selectRange(rangeE);
-
-        // Write to clipboard first
+      if (rangeE && selectRange(rangeE)) {
         await copyToClipboard(newText);
         await new Promise(r => setTimeout(r, 50));
-
-        // Try native paste command
         const success = document.execCommand('paste');
         strategies.push('E:clipboard-paste=' + success);
-        dbg('Strategy E (clipboard+paste):', success);
-        if (success) {
-          return true;
-        }
+        dbg('Strategy E result:', success);
+        if (success) return true;
       }
     } catch(e) {
       strategies.push('E:clipboard-paste-error');
-      dbg('Strategy E failed:', e);
+      dbg('Strategy E failed:', e.message);
     }
 
-    // Strategy F: InputEvent with dataTransfer (modern editors like CKEditor/ProseMirror)
+    // Strategy F: InputEvent with dataTransfer (CKEditor/ProseMirror)
     try {
+      dbg('Strategy F: InputEvent with dataTransfer');
       const rangeF = freshRange();
-      if (rangeF) {
-        selectRange(rangeF);
-
+      if (rangeF && selectRange(rangeF)) {
         const dt = new DataTransfer();
         dt.setData('text/plain', newText);
 
-        // beforeinput with dataTransfer
-        const beforeInput = new InputEvent('beforeinput', {
-          bubbles: true,
-          cancelable: true,
-          inputType: 'insertFromPaste',
-          data: null,
-          dataTransfer: dt
-        });
-        editableElement.dispatchEvent(beforeInput);
+        editableElement.dispatchEvent(new InputEvent('beforeinput', {
+          bubbles: true, cancelable: true, inputType: 'insertFromPaste',
+          data: null, dataTransfer: dt
+        }));
 
-        // If beforeinput was not canceled, do DOM insertion
         const rangeF2 = freshRange();
         if (rangeF2) {
           rangeF2.deleteContents();
@@ -760,39 +1012,29 @@
           editableElement.normalize();
         }
 
-        // input event
-        const inputEvt = new InputEvent('input', {
-          bubbles: true,
-          cancelable: false,
-          inputType: 'insertFromPaste',
-          data: null,
-          dataTransfer: dt
-        });
-        editableElement.dispatchEvent(inputEvt);
+        editableElement.dispatchEvent(new InputEvent('input', {
+          bubbles: true, cancelable: false, inputType: 'insertFromPaste',
+          data: null, dataTransfer: dt
+        }));
 
         strategies.push('F:dataTransfer-input=true');
-        dbg('Strategy F (dataTransfer input): dispatched');
+        dbg('Strategy F: dispatched');
 
-        // Verify
         await new Promise(r => setTimeout(r, 100));
-        if (editableElement.textContent.includes(newText)) {
-          return true;
-        }
+        if (verifyReplacement()) return true;
       }
     } catch(e) {
       strategies.push('F:dataTransfer-input-error');
-      dbg('Strategy F failed:', e);
+      dbg('Strategy F failed:', e.message);
     }
 
     // Strategy G: Keyboard event simulation (type each character)
-    // Last resort - simulates actual keyboard typing
     try {
+      dbg('Strategy G: keyboard simulation for', newText.length, 'chars');
       const rangeG = freshRange();
-      if (rangeG) {
-        selectRange(rangeG);
+      if (rangeG && selectRange(rangeG)) {
         document.execCommand('delete', false, null);
 
-        dbg('Strategy G: Simulating keyboard input for', newText.length, 'chars');
         for (const char of newText) {
           editableElement.dispatchEvent(new KeyboardEvent('keydown', {
             key: char, code: 'Key' + char.toUpperCase(), bubbles: true
@@ -801,7 +1043,6 @@
             bubbles: true, cancelable: true, inputType: 'insertText', data: char
           }));
 
-          // Insert the character via text node
           const sel = window.getSelection();
           if (sel.rangeCount > 0) {
             const r = sel.getRangeAt(0);
@@ -829,7 +1070,7 @@
       }
     } catch(e) {
       strategies.push('G:keyboard-sim-error');
-      dbg('Strategy G failed:', e);
+      dbg('Strategy G failed:', e.message);
     }
 
     // All strategies failed
@@ -840,9 +1081,18 @@
   }
 
   async function replaceSelectedText(newText) {
-    dbg('replaceSelectedText called. savedActiveElement:', savedActiveElement?.tagName,
-        'savedEditableElement:', !!savedEditableElement, 'savedRange:', !!savedRange,
-        'isTeams:', isTeamsPage());
+    dbg('replaceSelectedText called:', {
+      newTextLen: newText?.length,
+      savedActiveElement: savedActiveElement?.tagName,
+      savedActiveElementId: savedActiveElement?.id,
+      savedEditableElement: !!savedEditableElement,
+      savedEditableTag: savedEditableElement?.tagName,
+      savedRange: !!savedRange,
+      savedRangeValid: savedRange ? (() => { try { return document.contains(savedRange.commonAncestorContainer); } catch(e) { return false; } })() : false,
+      savedSelectedText: savedSelectedText?.substring(0, 30),
+      savedTextOffset,
+      isTeams: isTeamsPage()
+    });
 
     // INPUT/TEXTAREA elements
     if (savedActiveElement && (savedActiveElement.tagName === 'INPUT' || savedActiveElement.tagName === 'TEXTAREA') && savedSelectionStart !== null) {
@@ -925,19 +1175,33 @@
   // Silent paraphrase function - does everything in background and replaces text
   async function silentParaphrase(styleId) {
     const style = PARAPHRASE_STYLES.find(s => s.id === styleId);
-    if (!style) return;
-
-    // Get selected text
-    const selection = window.getSelection();
-    const activeElement = document.activeElement;
-    const text = selection.toString().trim();
-
-    if (!text) {
-      showToast('Selecione um texto primeiro!');
+    if (!style) {
+      dbg('silentParaphrase: style not found for id:', styleId);
       return;
     }
 
-    dbg('silentParaphrase:', style.id, 'text:', text.substring(0, 50) + '...');
+    // Get selected text IMMEDIATELY (before any async or DOM changes)
+    const selection = window.getSelection();
+    const activeElement = document.activeElement;
+    const text = selection ? selection.toString().trim() : '';
+
+    dbg('silentParaphrase called:', {
+      styleId: style.id,
+      textLength: text.length,
+      textPreview: text.substring(0, 80),
+      activeElement: activeElement?.tagName,
+      activeElementId: activeElement?.id,
+      activeElementClass: activeElement?.className?.substring?.(0, 50),
+      contentEditable: activeElement?.contentEditable,
+      selectionRangeCount: selection?.rangeCount,
+      isTeams: isTeamsPage()
+    });
+
+    if (!text) {
+      dbg('silentParaphrase: NO TEXT SELECTED');
+      showToast('Selecione um texto primeiro!');
+      return;
+    }
 
     // Save current selection context BEFORE any async operation
     let localRange = null;
@@ -956,33 +1220,54 @@
       localRange = selection.getRangeAt(0).cloneRange();
       localActiveElement = activeElement;
 
+      dbg('Selection range saved:', {
+        collapsed: localRange.collapsed,
+        startContainer: localRange.startContainer?.nodeName,
+        endContainer: localRange.endContainer?.nodeName,
+        rangeText: localRange.toString().substring(0, 50)
+      });
+
       // Save editable element and text offset for range reconstruction
       localEditableElement = findEditableFromRange(localRange);
       if (localEditableElement) {
         localTextOffset = getTextOffset(localEditableElement, localRange.startContainer, localRange.startOffset);
-        dbg('Saved contentEditable context, offset:', localTextOffset);
+        dbg('Saved contentEditable context:', {
+          tagName: localEditableElement.tagName,
+          id: localEditableElement.id,
+          textOffset: localTextOffset,
+          elementTextLength: localEditableElement.textContent?.length
+        });
+      } else {
+        dbg('No editable element found from range');
       }
 
       // Teams fallback
       if (!localEditableElement && isTeamsPage()) {
         localEditableElement = findTeamsComposeBox();
         if (localEditableElement) {
-          dbg('Using Teams compose box as fallback editable');
+          dbg('Using Teams compose box as fallback editable:', localEditableElement.tagName);
           localTextOffset = getTextOffset(localEditableElement, localRange.startContainer, localRange.startOffset);
+          dbg('Teams compose box textOffset:', localTextOffset);
+        } else {
+          dbg('WARNING: Teams page detected but no compose box found!');
         }
       }
+    } else {
+      dbg('WARNING: No selection range available (rangeCount=0)');
     }
 
     // Show processing toast
     showToast(`${style.emoji} Parafraseando...`);
 
     try {
+      dbg('Calling API with style:', style.id);
       const result = await callParaphraseAPI(text, style.prompt);
-      dbg('API returned result:', result.substring(0, 50) + '...');
+      dbg('API returned result:', result.substring(0, 80) + (result.length > 80 ? '...' : ''));
 
       // Replace the text
       if (localActiveElement && (localActiveElement.tagName === 'INPUT' || localActiveElement.tagName === 'TEXTAREA') && localSelectionStart !== null) {
         // Input/textarea replacement
+        dbg('Replacing in INPUT/TEXTAREA');
         localActiveElement.focus();
         localActiveElement.setSelectionRange(localSelectionStart, localSelectionEnd);
 
@@ -1000,6 +1285,11 @@
       } else if (localRange || localEditableElement) {
         // ContentEditable replacement
         const editableEl = localEditableElement || findEditableFromRange(localRange);
+        dbg('Replacing in contentEditable:', {
+          found: !!editableEl,
+          tagName: editableEl?.tagName,
+          id: editableEl?.id
+        });
 
         if (editableEl) {
           // Temporarily set module-level saved state for getValidRange
@@ -1014,6 +1304,7 @@
           savedTextOffset = localTextOffset;
 
           const success = await replaceInContentEditable(editableEl, result, text, localTextOffset, localRange);
+          dbg('replaceInContentEditable result:', success);
 
           // Restore module-level state
           savedRange = prevRange;
@@ -1026,26 +1317,47 @@
           }
         } else {
           // Non-editable - copy to clipboard
+          dbg('No editable element — copying to clipboard');
           await copyToClipboard(result);
           showToast(`${style.emoji} Copiado! Use Ctrl+V para colar.`);
         }
       } else {
+        dbg('No selection context saved — copying to clipboard');
         await copyToClipboard(result);
         showToast(`${style.emoji} Copiado! Use Ctrl+V para colar.`);
       }
     } catch (error) {
-      dbg('silentParaphrase error:', error);
+      dbg('silentParaphrase error:', error.message, error);
       showToast(`Erro: ${error.message}`);
     }
   }
 
   // Keyboard shortcuts handler
+  // IMPORTANT: Use capture phase (3rd arg = true) so we receive events BEFORE
+  // Teams/React handlers call stopPropagation() in the bubbling phase.
   // Ctrl+Shift+P = Open popup
   // Ctrl+Alt+1-8 = Direct paraphrase with specific style and auto-replace
   document.addEventListener('keydown', (e) => {
-    // Ctrl+Shift+P = Open popup (keep this one)
-    if (e.ctrlKey && e.shiftKey && e.key === 'P') {
+    // Log ALL Ctrl+Alt combinations for debugging
+    if (e.ctrlKey && e.altKey) {
+      dbg('keydown captured:', {
+        key: e.key,
+        code: e.code,
+        ctrlKey: e.ctrlKey,
+        altKey: e.altKey,
+        shiftKey: e.shiftKey,
+        metaKey: e.metaKey,
+        target: e.target?.tagName,
+        contentEditable: e.target?.contentEditable,
+        isTeams: isTeamsPage()
+      });
+    }
+
+    // Ctrl+Shift+P = Open popup (but NOT when Alt is also pressed)
+    if (e.ctrlKey && e.shiftKey && !e.altKey && (e.key === 'P' || e.key === 'p')) {
       e.preventDefault();
+      e.stopImmediatePropagation();
+      dbg('Ctrl+Shift+P detected — opening popup');
       const selection = window.getSelection().toString().trim();
       if (selection) {
         showParaphrasePopup(selection);
@@ -1064,15 +1376,22 @@
         const digit = digitMatch[1];
         const style = PARAPHRASE_STYLES.find(s => s.shortcut === digit);
         if (style) {
+          dbg(`Digit${digit} detected. Style "${style.id}" needsShift=${style.needsShift}, e.shiftKey=${e.shiftKey}`);
           // Check if Shift state matches what this style requires
           if (style.needsShift === e.shiftKey) {
             e.preventDefault();
+            e.stopImmediatePropagation();
+            dbg(`>>> Triggering silentParaphrase for style "${style.id}"`);
             silentParaphrase(style.id);
             return;
+          } else {
+            dbg(`Shift mismatch for style "${style.id}": needs ${style.needsShift}, got ${e.shiftKey} — ignoring`);
           }
         }
+      } else {
+        dbg('Ctrl+Alt pressed but code did not match Digit1-8:', e.code);
       }
     }
-  });
+  }, true);  // <<< CAPTURE PHASE — critical for Teams/React compatibility
 
 })();
