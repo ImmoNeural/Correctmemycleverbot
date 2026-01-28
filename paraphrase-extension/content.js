@@ -317,21 +317,36 @@
       // Ensure popup stays within viewport
       const popupWidth = 450;
       const popupHeight = 500;
+      const taskbarMargin = 80; // Margin for Windows taskbar
 
       if (left + popupWidth > window.innerWidth) {
         left = window.innerWidth - popupWidth - 20;
       }
       if (left < 10) left = 10;
 
-      if (top + popupHeight > window.innerHeight + window.scrollY) {
+      // Check if popup would go below viewport (considering taskbar)
+      const maxBottom = window.innerHeight + window.scrollY - taskbarMargin;
+      if (top + popupHeight > maxBottom) {
+        // Try placing above the selection
         top = rect.top + window.scrollY - popupHeight - 10;
+
+        // If still too high (goes above viewport), center it with margin from bottom
+        if (top < window.scrollY + 10) {
+          top = window.scrollY + Math.max(10, (window.innerHeight - popupHeight - taskbarMargin) / 2);
+        }
+      }
+
+      // Final safety check - ensure minimum margin from bottom
+      const absoluteMaxTop = window.scrollY + window.innerHeight - popupHeight - taskbarMargin;
+      if (top > absoluteMaxTop) {
+        top = absoluteMaxTop;
       }
 
       popup.style.top = `${top}px`;
       popup.style.left = `${left}px`;
     } else {
-      // Center in viewport
-      popup.style.top = '50%';
+      // Center in viewport with margin for taskbar
+      popup.style.top = 'calc(50% - 40px)';
       popup.style.left = '50%';
       popup.style.transform = 'translate(-50%, -50%)';
     }
@@ -349,11 +364,26 @@
 
     // Check if selection was in an input or textarea
     if (savedActiveElement && (savedActiveElement.tagName === 'INPUT' || savedActiveElement.tagName === 'TEXTAREA') && savedSelectionStart !== null) {
-      const text = savedActiveElement.value;
-      savedActiveElement.value = text.substring(0, savedSelectionStart) + newText + text.substring(savedSelectionEnd);
-      savedActiveElement.focus();
-      savedActiveElement.setSelectionRange(savedSelectionStart, savedSelectionStart + newText.length);
-      return true;
+      try {
+        const text = savedActiveElement.value;
+        const newValue = text.substring(0, savedSelectionStart) + newText + text.substring(savedSelectionEnd);
+
+        // Focus and set value
+        savedActiveElement.focus();
+        savedActiveElement.value = newValue;
+        savedActiveElement.setSelectionRange(savedSelectionStart, savedSelectionStart + newText.length);
+
+        // Trigger events for React/Vue/Angular compatibility
+        savedActiveElement.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+        savedActiveElement.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+
+        return true;
+      } catch (e) {
+        console.error('Error replacing in input/textarea:', e);
+        navigator.clipboard.writeText(newText);
+        showToast('Texto copiado para a área de transferência!');
+        return false;
+      }
     }
 
     // Check if we have a saved range for contentEditable or regular elements
@@ -365,34 +395,57 @@
           ? container.parentElement
           : container;
 
-        if (editableParent && (editableParent.isContentEditable || editableParent.closest('[contenteditable="true"]'))) {
+        const editableElement = editableParent?.closest?.('[contenteditable="true"]') ||
+                                (editableParent?.isContentEditable ? editableParent : null);
+
+        if (editableElement) {
           // Restore focus to the editable element first
-          const editableElement = editableParent.isContentEditable
-            ? editableParent
-            : editableParent.closest('[contenteditable="true"]');
-          if (editableElement) {
-            editableElement.focus();
-          }
+          editableElement.focus();
 
-          // Restore selection and replace
-          const selection = window.getSelection();
-          selection.removeAllRanges();
-          selection.addRange(savedRange);
+          // Use a small delay to ensure focus is set
+          setTimeout(() => {
+            try {
+              // Restore selection
+              const selection = window.getSelection();
+              selection.removeAllRanges();
+              selection.addRange(savedRange);
 
-          savedRange.deleteContents();
-          savedRange.insertNode(document.createTextNode(newText));
+              // Try using execCommand first (better compatibility)
+              const success = document.execCommand('insertText', false, newText);
+
+              if (!success) {
+                // Fallback: manual replacement
+                savedRange.deleteContents();
+                const textNode = document.createTextNode(newText);
+                savedRange.insertNode(textNode);
+
+                // Move cursor to end of inserted text
+                const newRange = document.createRange();
+                newRange.setStartAfter(textNode);
+                newRange.collapse(true);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
+              }
+
+              // Trigger input event
+              editableElement.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+            } catch (innerE) {
+              console.error('Error in delayed replacement:', innerE);
+            }
+          }, 10);
+
           return true;
         } else {
-          // For non-editable elements, try to replace anyway
-          savedRange.deleteContents();
-          savedRange.insertNode(document.createTextNode(newText));
-          return true;
+          // Non-editable content - copy to clipboard
+          navigator.clipboard.writeText(newText);
+          showToast('Texto copiado para a área de transferência!');
+          return false;
         }
       } catch (e) {
         console.error('Error replacing text:', e);
         // Fallback: just copy to clipboard
         navigator.clipboard.writeText(newText);
-        showToast('Texto copiado para a área de transferência (não foi possível substituir)!');
+        showToast('Texto copiado para a área de transferência!');
         return false;
       }
     }
@@ -519,23 +572,22 @@
 
   // Keyboard shortcuts handler
   // Ctrl+Shift+P = Open popup
-  // Ctrl+Shift+1-8 = Direct paraphrase with specific style
+  // Alt+1-8 = Direct paraphrase with specific style (avoids Teams conflicts)
   document.addEventListener('keydown', (e) => {
-    // Check for Ctrl+Shift combination
-    if (e.ctrlKey && e.shiftKey) {
-      // Ctrl+Shift+P = Open popup
-      if (e.key === 'P') {
-        e.preventDefault();
-        const selection = window.getSelection().toString().trim();
-        if (selection) {
-          showParaphrasePopup(selection);
-        } else {
-          showToast('Selecione um texto primeiro!');
-        }
-        return;
+    // Ctrl+Shift+P = Open popup (keep this one)
+    if (e.ctrlKey && e.shiftKey && e.key === 'P') {
+      e.preventDefault();
+      const selection = window.getSelection().toString().trim();
+      if (selection) {
+        showParaphrasePopup(selection);
+      } else {
+        showToast('Selecione um texto primeiro!');
       }
+      return;
+    }
 
-      // Ctrl+Shift+1-8 = Direct paraphrase with style
+    // Alt+1-8 = Direct paraphrase with style (changed from Ctrl+Shift to avoid Teams conflicts)
+    if (e.altKey && !e.ctrlKey && !e.shiftKey) {
       const style = PARAPHRASE_STYLES.find(s => s.shortcut === e.key);
       if (style) {
         e.preventDefault();

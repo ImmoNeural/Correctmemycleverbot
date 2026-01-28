@@ -297,7 +297,7 @@
 /* Toast notification */
 .paraphrase-toast {
   position: fixed;
-  bottom: 20px;
+  bottom: 100px; /* Increased to stay above Windows taskbar */
   left: 50%;
   transform: translateX(-50%) translateY(100px);
   background: #1a202c;
