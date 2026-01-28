@@ -5,15 +5,20 @@
   'use strict';
 
   const PARAPHRASE_STYLES = [
-    { id: 'formal', title: 'Formal / Profissional', emoji: '👔', shortcut: '1', prompt: 'Reescreva este texto EM ALEMÃO em um tom formal e profissional, usando "Sie" e vocabulário sofisticado. Mantenha o significado original. O resultado DEVE ser em alemão.' },
-    { id: 'informal', title: 'Informal / Casual', emoji: '😊', shortcut: '2', prompt: 'Reescreva este texto EM ALEMÃO em um tom informal e casual, usando "du" como se estivesse conversando com um amigo. O resultado DEVE ser em alemão.' },
-    { id: 'concise', title: 'Conciso / Resumido', emoji: '📝', shortcut: '3', prompt: 'Reescreva este texto EM ALEMÃO de forma mais concisa e direta, removendo palavras desnecessárias. O resultado DEVE ser em alemão.' },
-    { id: 'detailed', title: 'Detalhado / Expandido', emoji: '📖', shortcut: '4', prompt: 'Expanda este texto EM ALEMÃO com mais detalhes e explicações, tornando-o mais completo. O resultado DEVE ser em alemão.' },
-    { id: 'creative', title: 'Criativo / Original', emoji: '🎨', shortcut: '5', prompt: 'Reescreva este texto EM ALEMÃO de forma criativa e original, usando metáforas ou linguagem mais expressiva. O resultado DEVE ser em alemão.' },
-    { id: 'simple', title: 'Simples / Fácil de entender', emoji: '💡', shortcut: '6', prompt: 'Simplifique este texto EM ALEMÃO para que seja fácil de entender (nível A2-B1). O resultado DEVE ser em alemão.' },
-    { id: 'academic', title: 'Acadêmico / Científico', emoji: '🎓', shortcut: '7', prompt: 'Reescreva este texto EM ALEMÃO em um tom acadêmico e científico, com linguagem técnica apropriada. O resultado DEVE ser em alemão.' },
-    { id: 'friendly', title: 'Amigável / Empático', emoji: '🤗', shortcut: '8', prompt: 'Reescreva este texto EM ALEMÃO em um tom amigável e empático, demonstrando compreensão e cordialidade. O resultado DEVE ser em alemão.' }
+    { id: 'formal', title: 'Formal / Profissional', emoji: '👔', shortcut: '1', needsShift: false, prompt: 'Reescreva este texto EM ALEMÃO em um tom formal e profissional, usando "Sie" e vocabulário sofisticado. Mantenha o significado original. O resultado DEVE ser em alemão.' },
+    { id: 'informal', title: 'Informal / Casual', emoji: '😊', shortcut: '2', needsShift: true, prompt: 'Reescreva este texto EM ALEMÃO em um tom informal e casual, usando "du" como se estivesse conversando com um amigo. O resultado DEVE ser em alemão.' },
+    { id: 'concise', title: 'Conciso / Resumido', emoji: '📝', shortcut: '3', needsShift: true, prompt: 'Reescreva este texto EM ALEMÃO de forma mais concisa e direta, removendo palavras desnecessárias. O resultado DEVE ser em alemão.' },
+    { id: 'detailed', title: 'Detalhado / Expandido', emoji: '📖', shortcut: '4', needsShift: false, prompt: 'Expanda este texto EM ALEMÃO com mais detalhes e explicações, tornando-o mais completo. O resultado DEVE ser em alemão.' },
+    { id: 'creative', title: 'Criativo / Original', emoji: '🎨', shortcut: '5', needsShift: false, prompt: 'Reescreva este texto EM ALEMÃO de forma criativa e original, usando metáforas ou linguagem mais expressiva. O resultado DEVE ser em alemão.' },
+    { id: 'simple', title: 'Simples / Fácil de entender', emoji: '💡', shortcut: '6', needsShift: false, prompt: 'Simplifique este texto EM ALEMÃO para que seja fácil de entender (nível A2-B1). O resultado DEVE ser em alemão.' },
+    { id: 'academic', title: 'Acadêmico / Científico', emoji: '🎓', shortcut: '7', needsShift: true, prompt: 'Reescreva este texto EM ALEMÃO em um tom acadêmico e científico, com linguagem técnica apropriada. O resultado DEVE ser em alemão.' },
+    { id: 'friendly', title: 'Amigável / Empático', emoji: '🤗', shortcut: '8', needsShift: true, prompt: 'Reescreva este texto EM ALEMÃO em um tom amigável e empático, demonstrando compreensão e cordialidade. O resultado DEVE ser em alemão.' }
   ];
+
+  // Helper to get display label for a style's shortcut
+  function shortcutLabel(style) {
+    return style.needsShift ? `Ctrl+Alt+Shift+${style.shortcut}` : `Ctrl+Alt+${style.shortcut}`;
+  }
 
   let currentPopup = null;
   let selectedText = '';
@@ -241,14 +246,14 @@
             ${PARAPHRASE_STYLES.map(style => `
               <button class="style-btn ${preSelectedStyle === style.id ? 'selected' : ''}"
                       data-style="${style.id}"
-                      title="${style.title} (Ctrl+Alt+${style.shortcut})">
+                      title="${style.title} (${shortcutLabel(style)})">
                 ${style.emoji} ${style.title.split(' / ')[0]}
-                <span class="style-shortcut">Ctrl+Alt+${style.shortcut}</span>
+                <span class="style-shortcut">${shortcutLabel(style)}</span>
               </button>
             `).join('')}
           </div>
           <div class="shortcuts-hint">
-            Dica: Selecione texto e use <strong>Ctrl+Alt+1-8</strong> para parafrasear direto, sem abrir o popup.
+            Dica: Selecione texto e use os atalhos acima para parafrasear direto, sem abrir o popup.
           </div>
         </div>
 
@@ -1051,16 +1056,20 @@
     }
 
     // Ctrl+Alt+1-8 = Direct paraphrase with style and auto-replace
+    // Some keys (2,3,7,8) require Shift to avoid Outlook conflicts
     // Use e.code (Digit1-Digit8) to avoid issues with modifier keys changing the key character
-    // Also works with AltGr+1-8 since AltGr sends Ctrl+Alt
-    if (e.ctrlKey && e.altKey && !e.shiftKey) {
+    if (e.ctrlKey && e.altKey) {
       const digitMatch = e.code && e.code.match(/^Digit([1-8])$/);
       if (digitMatch) {
-        const style = PARAPHRASE_STYLES.find(s => s.shortcut === digitMatch[1]);
+        const digit = digitMatch[1];
+        const style = PARAPHRASE_STYLES.find(s => s.shortcut === digit);
         if (style) {
-          e.preventDefault();
-          silentParaphrase(style.id);
-          return;
+          // Check if Shift state matches what this style requires
+          if (style.needsShift === e.shiftKey) {
+            e.preventDefault();
+            silentParaphrase(style.id);
+            return;
+          }
         }
       }
     }
