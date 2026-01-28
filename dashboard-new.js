@@ -1986,6 +1986,18 @@ async function handleCorrectionSubmit(e) {
             correctionForm.addEventListener('submit', handleCorrectionSubmit);
         }
 
+        // Paraphrase form
+        const paraphraseForm = document.getElementById('paraphrase-form');
+        if (paraphraseForm) {
+            paraphraseForm.addEventListener('submit', handleParaphraseSubmit);
+        }
+
+        // Paraphrase word counter
+        const paraphraseTextarea = document.getElementById('paraphrase-text');
+        if (paraphraseTextarea) {
+            paraphraseTextarea.addEventListener('input', updateParaphraseWordCount);
+        }
+
         const buyButtons = document.querySelectorAll('.buy-credits-btn');
         buyButtons.forEach(btn => {
             btn.addEventListener('click', handlePurchaseClick);
@@ -3385,6 +3397,186 @@ async function handleCorrectionSubmit(e) {
         // Chama a função uma vez para definir o estado inicial
         updateWordCount();
     }
+
+    // =================================================================
+    // FUNCIONALIDADE DE PARAFRASEAMENTO
+    // =================================================================
+
+    function updateParaphraseWordCount() {
+        const textarea = document.getElementById('paraphrase-text');
+        const counter = document.getElementById('paraphrase-word-counter');
+        if (textarea && counter) {
+            const text = textarea.value.trim();
+            const wordCount = text ? text.split(/\s+/).length : 0;
+            counter.textContent = `${wordCount} palavra${wordCount !== 1 ? 's' : ''}`;
+        }
+    }
+
+    async function handleParaphraseSubmit(event) {
+        event.preventDefault();
+
+        const textarea = document.getElementById('paraphrase-text');
+        const resultDiv = document.getElementById('paraphrase-result');
+        const submitBtn = document.getElementById('paraphrase-submit-btn');
+        const selectedStyle = document.querySelector('input[name="paraphrase-style"]:checked');
+
+        if (!textarea || !resultDiv || !selectedStyle) {
+            console.error('Elementos do formulário de parafraseamento não encontrados');
+            return;
+        }
+
+        const text = textarea.value.trim();
+        const style = selectedStyle.value;
+
+        if (!text) {
+            resultDiv.innerHTML = `
+                <div class="p-4 bg-red-900/30 border border-red-500/50 rounded-lg">
+                    <p class="text-red-400">Por favor, insira um texto para parafrasear.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Mostrar loading
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `
+            <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Parafraseando...
+        `;
+
+        resultDiv.innerHTML = `
+            <div class="flex flex-col items-center justify-center h-64">
+                <svg class="w-12 h-12 animate-spin text-cyan-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="text-slate-400">Gerando versão ${getStyleLabel(style)}...</p>
+            </div>
+        `;
+
+        try {
+            const response = await fetch('/.netlify/functions/parafrasear', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    text: text,
+                    style: style,
+                    user_id: currentUser?.id,
+                    email: currentUser?.email
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Erro ao parafrasear o texto');
+            }
+
+            // Exibir resultado
+            resultDiv.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="px-3 py-1 rounded-full text-sm font-medium ${getStyleBadgeClass(style)}">
+                            ${getStyleLabel(style)}
+                        </span>
+                    </div>
+
+                    <div class="bg-slate-800 border border-slate-700 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-sm font-medium text-slate-400">Texto Parafraseado</h3>
+                            <button onclick="copyParaphraseResult()" class="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+                                </svg>
+                                Copiar
+                            </button>
+                        </div>
+                        <p id="paraphrase-output" class="text-white whitespace-pre-wrap leading-relaxed">${escapeHtml(data.paraphrased)}</p>
+                    </div>
+
+                    <div class="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-slate-400 mb-2">Texto Original</h3>
+                        <p class="text-slate-300 text-sm whitespace-pre-wrap">${escapeHtml(text)}</p>
+                    </div>
+                </div>
+            `;
+
+        } catch (error) {
+            console.error('Erro ao parafrasear:', error);
+            resultDiv.innerHTML = `
+                <div class="p-4 bg-red-900/30 border border-red-500/50 rounded-lg">
+                    <p class="text-red-400 font-medium mb-2">Erro ao parafrasear</p>
+                    <p class="text-red-300 text-sm">${error.message}</p>
+                </div>
+            `;
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Parafrasear texto
+            `;
+        }
+    }
+
+    function getStyleLabel(style) {
+        const labels = {
+            'formal': 'Formal',
+            'educado': 'Educado',
+            'despojado': 'Despojado',
+            'original': 'Original',
+            'emojis': 'Com Emojis',
+            'simples': 'Simples'
+        };
+        return labels[style] || style;
+    }
+
+    function getStyleBadgeClass(style) {
+        const classes = {
+            'formal': 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30',
+            'educado': 'bg-green-500/20 text-green-400 border border-green-500/30',
+            'despojado': 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30',
+            'original': 'bg-purple-500/20 text-purple-400 border border-purple-500/30',
+            'emojis': 'bg-pink-500/20 text-pink-400 border border-pink-500/30',
+            'simples': 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+        };
+        return classes[style] || 'bg-slate-500/20 text-slate-400';
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Função global para copiar resultado
+    window.copyParaphraseResult = function() {
+        const output = document.getElementById('paraphrase-output');
+        if (output) {
+            navigator.clipboard.writeText(output.textContent).then(() => {
+                // Feedback visual
+                const btn = output.parentElement.querySelector('button');
+                if (btn) {
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = `
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Copiado!
+                    `;
+                    btn.classList.add('text-green-400');
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.classList.remove('text-green-400');
+                    }, 2000);
+                }
+            });
+        }
+    };
 });
 
 
