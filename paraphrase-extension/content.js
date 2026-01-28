@@ -5,18 +5,22 @@
   'use strict';
 
   const PARAPHRASE_STYLES = [
-    { id: 'formal', title: 'Formal / Profissional', emoji: '👔', prompt: 'Reescreva este texto em um tom formal e profissional, mantendo o significado original.' },
-    { id: 'informal', title: 'Informal / Casual', emoji: '😊', prompt: 'Reescreva este texto em um tom informal e casual, como se estivesse conversando com um amigo.' },
-    { id: 'concise', title: 'Conciso / Resumido', emoji: '📝', prompt: 'Reescreva este texto de forma mais concisa e direta, removendo palavras desnecessárias.' },
-    { id: 'detailed', title: 'Detalhado / Expandido', emoji: '📖', prompt: 'Expanda este texto com mais detalhes e explicações, tornando-o mais completo.' },
-    { id: 'creative', title: 'Criativo / Original', emoji: '🎨', prompt: 'Reescreva este texto de forma criativa e original, usando metáforas ou linguagem mais expressiva.' },
-    { id: 'simple', title: 'Simples / Fácil de entender', emoji: '💡', prompt: 'Simplifique este texto para que seja fácil de entender por qualquer pessoa.' },
-    { id: 'academic', title: 'Acadêmico / Científico', emoji: '🎓', prompt: 'Reescreva este texto em um tom acadêmico e científico, com linguagem técnica apropriada.' },
-    { id: 'friendly', title: 'Amigável / Empático', emoji: '🤗', prompt: 'Reescreva este texto em um tom amigável e empático, demonstrando compreensão e cordialidade.' }
+    { id: 'formal', title: 'Formal / Profissional', emoji: '👔', prompt: 'Reescreva este texto EM ALEMÃO em um tom formal e profissional, usando "Sie" e vocabulário sofisticado. Mantenha o significado original. O resultado DEVE ser em alemão.' },
+    { id: 'informal', title: 'Informal / Casual', emoji: '😊', prompt: 'Reescreva este texto EM ALEMÃO em um tom informal e casual, usando "du" como se estivesse conversando com um amigo. O resultado DEVE ser em alemão.' },
+    { id: 'concise', title: 'Conciso / Resumido', emoji: '📝', prompt: 'Reescreva este texto EM ALEMÃO de forma mais concisa e direta, removendo palavras desnecessárias. O resultado DEVE ser em alemão.' },
+    { id: 'detailed', title: 'Detalhado / Expandido', emoji: '📖', prompt: 'Expanda este texto EM ALEMÃO com mais detalhes e explicações, tornando-o mais completo. O resultado DEVE ser em alemão.' },
+    { id: 'creative', title: 'Criativo / Original', emoji: '🎨', prompt: 'Reescreva este texto EM ALEMÃO de forma criativa e original, usando metáforas ou linguagem mais expressiva. O resultado DEVE ser em alemão.' },
+    { id: 'simple', title: 'Simples / Fácil de entender', emoji: '💡', prompt: 'Simplifique este texto EM ALEMÃO para que seja fácil de entender (nível A2-B1). O resultado DEVE ser em alemão.' },
+    { id: 'academic', title: 'Acadêmico / Científico', emoji: '🎓', prompt: 'Reescreva este texto EM ALEMÃO em um tom acadêmico e científico, com linguagem técnica apropriada. O resultado DEVE ser em alemão.' },
+    { id: 'friendly', title: 'Amigável / Empático', emoji: '🤗', prompt: 'Reescreva este texto EM ALEMÃO em um tom amigável e empático, demonstrando compreensão e cordialidade. O resultado DEVE ser em alemão.' }
   ];
 
   let currentPopup = null;
   let selectedText = '';
+  let savedRange = null;
+  let savedActiveElement = null;
+  let savedSelectionStart = null;
+  let savedSelectionEnd = null;
 
   // Listen for messages from background script
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -29,6 +33,22 @@
   // Create and show the paraphrase popup
   function showParaphrasePopup(text, preSelectedStyle = null) {
     removeExistingPopup();
+
+    // Save the current selection/range BEFORE creating the popup
+    const selection = window.getSelection();
+    const activeElement = document.activeElement;
+
+    if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+      savedActiveElement = activeElement;
+      savedSelectionStart = activeElement.selectionStart;
+      savedSelectionEnd = activeElement.selectionEnd;
+      savedRange = null;
+    } else if (selection.rangeCount > 0) {
+      savedRange = selection.getRangeAt(0).cloneRange();
+      savedActiveElement = activeElement;
+      savedSelectionStart = null;
+      savedSelectionEnd = null;
+    }
 
     const popup = document.createElement('div');
     popup.id = 'paraphrase-popup';
@@ -230,11 +250,11 @@
         messages: [
           {
             role: 'system',
-            content: `Você é um assistente especializado em parafrasear textos. ${stylePrompt} Responda APENAS com o texto parafraseado, sem explicações adicionais.`
+            content: `Você é um assistente especializado em parafrasear textos em ALEMÃO. ${stylePrompt} IMPORTANTE: O texto de saída DEVE estar em alemão correto. Responda APENAS com o texto parafraseado em alemão, sem explicações adicionais.`
           },
           {
             role: 'user',
-            content: text
+            content: `Parafraseie o seguinte texto em alemão:\n\n${text}`
           }
         ],
         temperature: 0.7
@@ -325,34 +345,62 @@
   }
 
   function replaceSelectedText(newText) {
-    const selection = window.getSelection();
-    if (selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      const activeElement = document.activeElement;
+    // Use saved selection/range instead of current selection
 
-      // Check if selection is in an input or textarea
-      if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
-        const start = activeElement.selectionStart;
-        const end = activeElement.selectionEnd;
-        const text = activeElement.value;
-        activeElement.value = text.substring(0, start) + newText + text.substring(end);
-        activeElement.setSelectionRange(start, start + newText.length);
-      } else if (activeElement && activeElement.isContentEditable) {
-        // For contentEditable elements
-        range.deleteContents();
-        range.insertNode(document.createTextNode(newText));
-      } else {
-        // For regular text (may not work in all contexts)
-        try {
-          range.deleteContents();
-          range.insertNode(document.createTextNode(newText));
-        } catch (e) {
-          // Fallback: just copy to clipboard
-          navigator.clipboard.writeText(newText);
-          showToast('Texto copiado para a área de transferência!');
+    // Check if selection was in an input or textarea
+    if (savedActiveElement && (savedActiveElement.tagName === 'INPUT' || savedActiveElement.tagName === 'TEXTAREA') && savedSelectionStart !== null) {
+      const text = savedActiveElement.value;
+      savedActiveElement.value = text.substring(0, savedSelectionStart) + newText + text.substring(savedSelectionEnd);
+      savedActiveElement.focus();
+      savedActiveElement.setSelectionRange(savedSelectionStart, savedSelectionStart + newText.length);
+      return true;
+    }
+
+    // Check if we have a saved range for contentEditable or regular elements
+    if (savedRange) {
+      try {
+        // Check if the original element was contentEditable
+        const container = savedRange.commonAncestorContainer;
+        const editableParent = container.nodeType === 3
+          ? container.parentElement
+          : container;
+
+        if (editableParent && (editableParent.isContentEditable || editableParent.closest('[contenteditable="true"]'))) {
+          // Restore focus to the editable element first
+          const editableElement = editableParent.isContentEditable
+            ? editableParent
+            : editableParent.closest('[contenteditable="true"]');
+          if (editableElement) {
+            editableElement.focus();
+          }
+
+          // Restore selection and replace
+          const selection = window.getSelection();
+          selection.removeAllRanges();
+          selection.addRange(savedRange);
+
+          savedRange.deleteContents();
+          savedRange.insertNode(document.createTextNode(newText));
+          return true;
+        } else {
+          // For non-editable elements, try to replace anyway
+          savedRange.deleteContents();
+          savedRange.insertNode(document.createTextNode(newText));
+          return true;
         }
+      } catch (e) {
+        console.error('Error replacing text:', e);
+        // Fallback: just copy to clipboard
+        navigator.clipboard.writeText(newText);
+        showToast('Texto copiado para a área de transferência (não foi possível substituir)!');
+        return false;
       }
     }
+
+    // No saved selection - just copy to clipboard
+    navigator.clipboard.writeText(newText);
+    showToast('Texto copiado para a área de transferência!');
+    return false;
   }
 
   function showToast(message) {
