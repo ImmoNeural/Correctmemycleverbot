@@ -14,7 +14,9 @@ Extensao de navegador que permite parafrasear qualquer texto selecionado com dif
   - Simples / Facil de entender
   - Academico / Cientifico
   - Amigavel / Empatico
-- **Atalho de Teclado**: Ctrl+Shift+P
+- **Atalhos de Teclado**:
+  - `Ctrl+Shift+P`: Abre popup com todos os estilos
+  - `Ctrl+Shift+1-8`: Parafraseia e substitui automaticamente (sem popup)
 - **Copiar ou Substituir**: Copie o resultado ou substitua o texto original diretamente
 
 ## Como Instalar
@@ -60,10 +62,26 @@ Ou voce pode converter os SVGs da pasta icons para PNG usando ferramentas online
 4. Um popup aparecera com o texto parafraseado
 5. Clique em "Copiar" ou "Substituir"
 
-### Metodo 2: Atalho de Teclado
+### Metodo 2: Atalho de Teclado (Popup)
 1. Selecione qualquer texto
 2. Pressione `Ctrl+Shift+P`
 3. Escolha o estilo no popup que aparecer
+
+### Metodo 3: Atalhos Diretos (Substituicao Automatica)
+Selecione texto e pressione o atalho para parafrasear e substituir automaticamente:
+
+| Atalho | Estilo |
+|--------|--------|
+| `Ctrl+Shift+1` | Formal / Profissional |
+| `Ctrl+Shift+2` | Informal / Casual |
+| `Ctrl+Shift+3` | Conciso / Resumido |
+| `Ctrl+Shift+4` | Detalhado / Expandido |
+| `Ctrl+Shift+5` | Criativo / Original |
+| `Ctrl+Shift+6` | Simples / Facil de entender |
+| `Ctrl+Shift+7` | Academico / Cientifico |
+| `Ctrl+Shift+8` | Amigavel / Empatico |
+
+**Nota**: O texto sera substituido diretamente em campos editaveis (Teams, Gmail, etc). Em areas nao editaveis, o resultado e copiado para a area de transferencia.
 
 ## APIs Compativeis
 

@@ -5,14 +5,14 @@
   'use strict';
 
   const PARAPHRASE_STYLES = [
-    { id: 'formal', title: 'Formal / Profissional', emoji: '👔', prompt: 'Reescreva este texto EM ALEMÃO em um tom formal e profissional, usando "Sie" e vocabulário sofisticado. Mantenha o significado original. O resultado DEVE ser em alemão.' },
-    { id: 'informal', title: 'Informal / Casual', emoji: '😊', prompt: 'Reescreva este texto EM ALEMÃO em um tom informal e casual, usando "du" como se estivesse conversando com um amigo. O resultado DEVE ser em alemão.' },
-    { id: 'concise', title: 'Conciso / Resumido', emoji: '📝', prompt: 'Reescreva este texto EM ALEMÃO de forma mais concisa e direta, removendo palavras desnecessárias. O resultado DEVE ser em alemão.' },
-    { id: 'detailed', title: 'Detalhado / Expandido', emoji: '📖', prompt: 'Expanda este texto EM ALEMÃO com mais detalhes e explicações, tornando-o mais completo. O resultado DEVE ser em alemão.' },
-    { id: 'creative', title: 'Criativo / Original', emoji: '🎨', prompt: 'Reescreva este texto EM ALEMÃO de forma criativa e original, usando metáforas ou linguagem mais expressiva. O resultado DEVE ser em alemão.' },
-    { id: 'simple', title: 'Simples / Fácil de entender', emoji: '💡', prompt: 'Simplifique este texto EM ALEMÃO para que seja fácil de entender (nível A2-B1). O resultado DEVE ser em alemão.' },
-    { id: 'academic', title: 'Acadêmico / Científico', emoji: '🎓', prompt: 'Reescreva este texto EM ALEMÃO em um tom acadêmico e científico, com linguagem técnica apropriada. O resultado DEVE ser em alemão.' },
-    { id: 'friendly', title: 'Amigável / Empático', emoji: '🤗', prompt: 'Reescreva este texto EM ALEMÃO em um tom amigável e empático, demonstrando compreensão e cordialidade. O resultado DEVE ser em alemão.' }
+    { id: 'formal', title: 'Formal / Profissional', emoji: '👔', shortcut: '1', prompt: 'Reescreva este texto EM ALEMÃO em um tom formal e profissional, usando "Sie" e vocabulário sofisticado. Mantenha o significado original. O resultado DEVE ser em alemão.' },
+    { id: 'informal', title: 'Informal / Casual', emoji: '😊', shortcut: '2', prompt: 'Reescreva este texto EM ALEMÃO em um tom informal e casual, usando "du" como se estivesse conversando com um amigo. O resultado DEVE ser em alemão.' },
+    { id: 'concise', title: 'Conciso / Resumido', emoji: '📝', shortcut: '3', prompt: 'Reescreva este texto EM ALEMÃO de forma mais concisa e direta, removendo palavras desnecessárias. O resultado DEVE ser em alemão.' },
+    { id: 'detailed', title: 'Detalhado / Expandido', emoji: '📖', shortcut: '4', prompt: 'Expanda este texto EM ALEMÃO com mais detalhes e explicações, tornando-o mais completo. O resultado DEVE ser em alemão.' },
+    { id: 'creative', title: 'Criativo / Original', emoji: '🎨', shortcut: '5', prompt: 'Reescreva este texto EM ALEMÃO de forma criativa e original, usando metáforas ou linguagem mais expressiva. O resultado DEVE ser em alemão.' },
+    { id: 'simple', title: 'Simples / Fácil de entender', emoji: '💡', shortcut: '6', prompt: 'Simplifique este texto EM ALEMÃO para que seja fácil de entender (nível A2-B1). O resultado DEVE ser em alemão.' },
+    { id: 'academic', title: 'Acadêmico / Científico', emoji: '🎓', shortcut: '7', prompt: 'Reescreva este texto EM ALEMÃO em um tom acadêmico e científico, com linguagem técnica apropriada. O resultado DEVE ser em alemão.' },
+    { id: 'friendly', title: 'Amigável / Empático', emoji: '🤗', shortcut: '8', prompt: 'Reescreva este texto EM ALEMÃO em um tom amigável e empático, demonstrando compreensão e cordialidade. O resultado DEVE ser em alemão.' }
   ];
 
   let currentPopup = null;
@@ -425,15 +425,122 @@
     return div.innerHTML;
   }
 
-  // Also detect keyboard shortcut (Ctrl+Shift+P)
-  document.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.shiftKey && e.key === 'P') {
-      e.preventDefault();
-      const selection = window.getSelection().toString().trim();
-      if (selection) {
-        showParaphrasePopup(selection);
+  // Silent paraphrase function - does everything in background and replaces text
+  async function silentParaphrase(styleId) {
+    const style = PARAPHRASE_STYLES.find(s => s.id === styleId);
+    if (!style) return;
+
+    // Get selected text
+    const selection = window.getSelection();
+    const activeElement = document.activeElement;
+    const text = selection.toString().trim();
+
+    if (!text) {
+      showToast('Selecione um texto primeiro!');
+      return;
+    }
+
+    // Save current selection BEFORE any async operation
+    let localSavedRange = null;
+    let localSavedActiveElement = null;
+    let localSavedSelectionStart = null;
+    let localSavedSelectionEnd = null;
+
+    if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+      localSavedActiveElement = activeElement;
+      localSavedSelectionStart = activeElement.selectionStart;
+      localSavedSelectionEnd = activeElement.selectionEnd;
+    } else if (selection.rangeCount > 0) {
+      localSavedRange = selection.getRangeAt(0).cloneRange();
+      localSavedActiveElement = activeElement;
+    }
+
+    // Show processing toast
+    showToast(`${style.emoji} Parafraseando...`);
+
+    try {
+      const result = await callParaphraseAPI(text, style.prompt);
+
+      // Replace the text silently
+      if (localSavedActiveElement && (localSavedActiveElement.tagName === 'INPUT' || localSavedActiveElement.tagName === 'TEXTAREA') && localSavedSelectionStart !== null) {
+        const currentText = localSavedActiveElement.value;
+        localSavedActiveElement.value = currentText.substring(0, localSavedSelectionStart) + result + currentText.substring(localSavedSelectionEnd);
+        localSavedActiveElement.focus();
+        localSavedActiveElement.setSelectionRange(localSavedSelectionStart, localSavedSelectionStart + result.length);
+
+        // Trigger input event for frameworks like React
+        localSavedActiveElement.dispatchEvent(new Event('input', { bubbles: true }));
+
+        showToast(`${style.emoji} Texto substituído!`);
+      } else if (localSavedRange) {
+        try {
+          const container = localSavedRange.commonAncestorContainer;
+          const editableParent = container.nodeType === 3 ? container.parentElement : container;
+
+          if (editableParent && (editableParent.isContentEditable || editableParent.closest('[contenteditable="true"]'))) {
+            const editableElement = editableParent.isContentEditable
+              ? editableParent
+              : editableParent.closest('[contenteditable="true"]');
+            if (editableElement) {
+              editableElement.focus();
+            }
+
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(localSavedRange);
+
+            localSavedRange.deleteContents();
+            localSavedRange.insertNode(document.createTextNode(result));
+
+            // Trigger input event for frameworks
+            if (editableElement) {
+              editableElement.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+
+            showToast(`${style.emoji} Texto substituído!`);
+          } else {
+            // Non-editable - copy to clipboard
+            navigator.clipboard.writeText(result);
+            showToast(`${style.emoji} Copiado para a área de transferência!`);
+          }
+        } catch (e) {
+          console.error('Error replacing text:', e);
+          navigator.clipboard.writeText(result);
+          showToast(`${style.emoji} Copiado para a área de transferência!`);
+        }
       } else {
-        showToast('Selecione um texto primeiro!');
+        navigator.clipboard.writeText(result);
+        showToast(`${style.emoji} Copiado para a área de transferência!`);
+      }
+    } catch (error) {
+      showToast(`Erro: ${error.message}`);
+    }
+  }
+
+  // Keyboard shortcuts handler
+  // Ctrl+Shift+P = Open popup
+  // Ctrl+Shift+1-8 = Direct paraphrase with specific style
+  document.addEventListener('keydown', (e) => {
+    // Check for Ctrl+Shift combination
+    if (e.ctrlKey && e.shiftKey) {
+      // Ctrl+Shift+P = Open popup
+      if (e.key === 'P') {
+        e.preventDefault();
+        const selection = window.getSelection().toString().trim();
+        if (selection) {
+          showParaphrasePopup(selection);
+        } else {
+          showToast('Selecione um texto primeiro!');
+        }
+        return;
+      }
+
+      // Ctrl+Shift+1-8 = Direct paraphrase with style
+      const style = PARAPHRASE_STYLES.find(s => s.shortcut === e.key);
+      if (style) {
+        e.preventDefault();
+        silentParaphrase(style.id);
+        return;
       }
     }
   });

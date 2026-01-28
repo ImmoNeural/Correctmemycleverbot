@@ -195,6 +195,32 @@
       border-radius: 20px;
       font-size: 11px;
     }
+
+    .shortcut-divider {
+      height: 1px;
+      background: #e2e8f0;
+      margin: 12px 0;
+    }
+
+    .shortcuts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .shortcut-item {
+      font-size: 12px;
+      color: #4a5568;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .shortcut-item .shortcut-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+    }
   </style>
 </head>
 <body>
@@ -229,28 +255,28 @@
     </div>
 
     <div class="section">
-      <div class="section-title">Atalho de teclado</div>
+      <div class="section-title">Atalhos de teclado</div>
       <div class="instruction-card">
         <div class="instruction-item">
           <span class="instruction-text">
-            Selecione texto e pressione <span class="shortcut-badge">Ctrl+Shift+P</span>
+            <span class="shortcut-badge">Ctrl+Shift+P</span> Abrir popup de parafrase
           </span>
         </div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Estilos disponiveis</div>
-      <div class="instruction-card">
-        <div class="styles-preview">
-          <span class="style-tag">Formal</span>
-          <span class="style-tag">Informal</span>
-          <span class="style-tag">Conciso</span>
-          <span class="style-tag">Detalhado</span>
-          <span class="style-tag">Criativo</span>
-          <span class="style-tag">Simples</span>
-          <span class="style-tag">Academico</span>
-          <span class="style-tag">Amigavel</span>
+        <div class="shortcut-divider"></div>
+        <div class="instruction-item">
+          <span class="instruction-text" style="font-size: 12px; color: #718096;">
+            <strong>Atalhos diretos</strong> - Selecione texto e pressione para substituir automaticamente:
+          </span>
+        </div>
+        <div class="shortcuts-grid">
+          <div class="shortcut-item"><span class="shortcut-badge">Ctrl+Shift+1</span> Formal</div>
+          <div class="shortcut-item"><span class="shortcut-badge">Ctrl+Shift+2</span> Informal</div>
+          <div class="shortcut-item"><span class="shortcut-badge">Ctrl+Shift+3</span> Conciso</div>
+          <div class="shortcut-item"><span class="shortcut-badge">Ctrl+Shift+4</span> Detalhado</div>
+          <div class="shortcut-item"><span class="shortcut-badge">Ctrl+Shift+5</span> Criativo</div>
+          <div class="shortcut-item"><span class="shortcut-badge">Ctrl+Shift+6</span> Simples</div>
+          <div class="shortcut-item"><span class="shortcut-badge">Ctrl+Shift+7</span> Academico</div>
+          <div class="shortcut-item"><span class="shortcut-badge">Ctrl+Shift+8</span> Amigavel</div>
         </div>
       </div>
     </div>
