@@ -21,6 +21,10 @@
   let savedActiveElement = null;
   let savedSelectionStart = null;
   let savedSelectionEnd = null;
+  // Extra context for Teams/rich editor compatibility
+  let savedEditableElement = null;
+  let savedSelectedText = '';
+  let savedTextOffset = -1;
 
   // Listen for messages from background script
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -29,6 +33,108 @@
       showParaphrasePopup(request.text, request.style);
     }
   });
+
+  // Helper: get character offset of a node position within a root element
+  function getTextOffset(rootElement, targetNode, targetOffset) {
+    const walker = document.createTreeWalker(rootElement, NodeFilter.SHOW_TEXT);
+    let offset = 0;
+    while (walker.nextNode()) {
+      if (walker.currentNode === targetNode) {
+        return offset + targetOffset;
+      }
+      offset += walker.currentNode.textContent.length;
+    }
+    return -1;
+  }
+
+  // Helper: find text in element and create a Range
+  function findTextRange(element, searchText, approximateOffset) {
+    if (!element || !searchText) return null;
+    const fullText = element.textContent;
+
+    // Try near the approximate offset first
+    let idx = -1;
+    if (approximateOffset >= 0) {
+      idx = fullText.indexOf(searchText, Math.max(0, approximateOffset - 10));
+    }
+    if (idx === -1) {
+      idx = fullText.indexOf(searchText);
+    }
+    if (idx === -1) return null;
+
+    // Convert text index to Range using TreeWalker
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    let charCount = 0;
+    let startNode = null, startOff = 0;
+    let endNode = null, endOff = 0;
+    const endIdx = idx + searchText.length;
+
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      const nodeLen = node.textContent.length;
+
+      if (!startNode && charCount + nodeLen > idx) {
+        startNode = node;
+        startOff = idx - charCount;
+      }
+      if (!endNode && charCount + nodeLen >= endIdx) {
+        endNode = node;
+        endOff = endIdx - charCount;
+        break;
+      }
+      charCount += nodeLen;
+    }
+
+    if (startNode && endNode) {
+      try {
+        const range = document.createRange();
+        range.setStart(startNode, startOff);
+        range.setEnd(endNode, endOff);
+        return range;
+      } catch(e) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  // Get a valid range, trying saved range first then text search
+  function getValidRange(editableEl, origText, textOffset) {
+    // Strategy 1: Use saved/passed range
+    if (savedRange) {
+      try {
+        const parent = savedRange.commonAncestorContainer;
+        if (parent && document.contains(parent)) {
+          // Verify the range still contains expected text
+          const currentText = savedRange.toString();
+          if (currentText === origText) {
+            return savedRange;
+          }
+        }
+      } catch(e) {}
+    }
+
+    // Strategy 2: Find text in the editable element
+    if (editableEl && origText) {
+      const found = findTextRange(editableEl, origText, textOffset);
+      if (found) return found;
+    }
+
+    return null;
+  }
+
+  // Find the contentEditable element from a range
+  function findEditableFromRange(range) {
+    if (!range) return null;
+    try {
+      const container = range.commonAncestorContainer;
+      const el = container.nodeType === 3 ? container.parentElement : container;
+      return el?.closest?.('[contenteditable="true"]') ||
+             (el?.isContentEditable ? el : null);
+    } catch(e) {
+      return null;
+    }
+  }
 
   // Create and show the paraphrase popup
   function showParaphrasePopup(text, preSelectedStyle = null) {
@@ -43,11 +149,23 @@
       savedSelectionStart = activeElement.selectionStart;
       savedSelectionEnd = activeElement.selectionEnd;
       savedRange = null;
+      savedEditableElement = null;
+      savedSelectedText = text;
+      savedTextOffset = -1;
     } else if (selection.rangeCount > 0) {
       savedRange = selection.getRangeAt(0).cloneRange();
       savedActiveElement = activeElement;
       savedSelectionStart = null;
       savedSelectionEnd = null;
+      savedSelectedText = text;
+
+      // Save contentEditable element and text offset for reconstruction
+      savedEditableElement = findEditableFromRange(savedRange);
+      if (savedEditableElement) {
+        savedTextOffset = getTextOffset(savedEditableElement, savedRange.startContainer, savedRange.startOffset);
+      } else {
+        savedTextOffset = -1;
+      }
     }
 
     const popup = document.createElement('div');
@@ -126,7 +244,7 @@
     // Load saved configuration
     loadConfig(popup);
 
-    // Position popup near selection
+    // Position popup - FIXED positioning, prefer top of screen
     positionPopup(popup);
 
     // Add event listeners
@@ -165,18 +283,18 @@
       });
     });
 
-    // Replace button
+    // Replace button - remove popup first, then replace with delay for Teams focus restoration
     popup.querySelector('.replace-btn').addEventListener('click', () => {
       const result = popup.querySelector('.paraphrase-result').textContent;
       // Remove popup FIRST so it doesn't interfere with focus/selection
       removeExistingPopup();
-      // Small delay to let focus return to the page before replacing
+      // Longer delay to let Teams/React fully restore focus
       setTimeout(() => {
         const success = replaceSelectedText(result);
         if (success) {
           showToast('Texto substituído!');
         }
-      }, 50);
+      }, 250);
     });
 
     // Retry button
@@ -316,50 +434,41 @@
   }
 
   function positionPopup(popup) {
+    // Use FIXED positioning for reliability (especially in Teams)
+    popup.style.position = 'fixed';
+
+    const popupWidth = 450;
+
+    // Get selection rect (viewport-relative since we use fixed positioning)
     const selection = window.getSelection();
+    let selRect = null;
     if (selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
+      selRect = selection.getRangeAt(0).getBoundingClientRect();
+    }
 
-      let top = rect.bottom + window.scrollY + 10;
-      let left = rect.left + window.scrollX;
-
-      // Ensure popup stays within viewport
-      const popupWidth = 450;
-      const popupHeight = 500;
-      const taskbarMargin = 80; // Margin for Windows taskbar
-
-      if (left + popupWidth > window.innerWidth) {
+    // Horizontal: near selection or centered
+    let left;
+    if (selRect && selRect.left > 0) {
+      left = selRect.left;
+      if (left + popupWidth > window.innerWidth - 20) {
         left = window.innerWidth - popupWidth - 20;
       }
-      if (left < 10) left = 10;
-
-      // Check if popup would go below viewport (considering taskbar)
-      const maxBottom = window.innerHeight + window.scrollY - taskbarMargin;
-      if (top + popupHeight > maxBottom) {
-        // Try placing above the selection
-        top = rect.top + window.scrollY - popupHeight - 10;
-
-        // If still too high (goes above viewport), center it with margin from bottom
-        if (top < window.scrollY + 10) {
-          top = window.scrollY + Math.max(10, (window.innerHeight - popupHeight - taskbarMargin) / 2);
-        }
-      }
-
-      // Final safety check - ensure minimum margin from bottom
-      const absoluteMaxTop = window.scrollY + window.innerHeight - popupHeight - taskbarMargin;
-      if (top > absoluteMaxTop) {
-        top = absoluteMaxTop;
-      }
-
-      popup.style.top = `${top}px`;
-      popup.style.left = `${left}px`;
     } else {
-      // Center in viewport with margin for taskbar
-      popup.style.top = 'calc(50% - 40px)';
-      popup.style.left = '50%';
-      popup.style.transform = 'translate(-50%, -50%)';
+      left = Math.max(10, (window.innerWidth - popupWidth) / 2);
     }
+    if (left < 10) left = 10;
+
+    // Vertical: ALWAYS place near the top of viewport
+    // This ensures buttons are always visible even with long content
+    let top = 20;
+
+    // If selection is near the top, push popup down a bit to not cover it
+    if (selRect && selRect.top < 200 && selRect.bottom < 300) {
+      top = selRect.bottom + 10;
+    }
+
+    popup.style.top = `${top}px`;
+    popup.style.left = `${left}px`;
   }
 
   function removeExistingPopup() {
@@ -369,100 +478,167 @@
     }
   }
 
-  function replaceSelectedText(newText) {
-    // Use saved selection/range instead of current selection
+  // Replace text in contentEditable with multiple strategies for Teams compatibility
+  function replaceInContentEditable(editableElement, newText, origText, textOffset, range) {
+    try {
+      // Step 1: Focus the element
+      editableElement.focus();
 
-    // Check if selection was in an input or textarea
+      // Step 2: Get a valid range
+      const validRange = range || getValidRange(editableElement, origText, textOffset);
+      if (!validRange) {
+        console.error('Paraphrase: No valid range found for replacement');
+        navigator.clipboard.writeText(newText);
+        showToast('Copiado para a área de transferência!');
+        return false;
+      }
+
+      // Step 3: Restore selection
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(validRange);
+
+      // Strategy A: execCommand('insertText') - best compatibility with editors
+      let success = false;
+      try {
+        success = document.execCommand('insertText', false, newText);
+      } catch(e) {
+        console.log('Paraphrase: execCommand insertText failed:', e);
+      }
+
+      if (success) {
+        editableElement.dispatchEvent(new InputEvent('input', {
+          bubbles: true, cancelable: true, inputType: 'insertText', data: newText
+        }));
+        return true;
+      }
+
+      // Strategy B: Delete selection first, then insert
+      try {
+        // Re-restore selection
+        selection.removeAllRanges();
+        const rangeB = getValidRange(editableElement, origText, textOffset);
+        if (rangeB) {
+          selection.addRange(rangeB);
+          document.execCommand('delete', false, null);
+          success = document.execCommand('insertText', false, newText);
+          if (success) {
+            editableElement.dispatchEvent(new InputEvent('input', {
+              bubbles: true, cancelable: true, inputType: 'insertText', data: newText
+            }));
+            return true;
+          }
+        }
+      } catch(e) {
+        console.log('Paraphrase: delete+insertText failed:', e);
+      }
+
+      // Strategy C: Dispatch beforeinput + DOM manipulation + input
+      try {
+        selection.removeAllRanges();
+        const rangeC = getValidRange(editableElement, origText, textOffset);
+        if (rangeC) {
+          selection.addRange(rangeC);
+
+          // Dispatch beforeinput
+          editableElement.dispatchEvent(new InputEvent('beforeinput', {
+            bubbles: true, cancelable: true, inputType: 'insertReplacementText', data: newText
+          }));
+
+          // DOM manipulation
+          rangeC.deleteContents();
+          const textNode = document.createTextNode(newText);
+          rangeC.insertNode(textNode);
+          editableElement.normalize();
+
+          // Move cursor after inserted text
+          const newRange = document.createRange();
+          newRange.setStartAfter(textNode);
+          newRange.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(newRange);
+
+          // Dispatch input
+          editableElement.dispatchEvent(new InputEvent('input', {
+            bubbles: true, cancelable: true, inputType: 'insertReplacementText', data: newText
+          }));
+
+          return true;
+        }
+      } catch(e) {
+        console.log('Paraphrase: DOM manipulation failed:', e);
+      }
+
+      // Strategy D: Simulate paste event
+      try {
+        selection.removeAllRanges();
+        const rangeD = getValidRange(editableElement, origText, textOffset);
+        if (rangeD) {
+          selection.addRange(rangeD);
+
+          // First delete selection
+          document.execCommand('delete', false, null);
+
+          const dt = new DataTransfer();
+          dt.setData('text/plain', newText);
+          const pasteEvent = new ClipboardEvent('paste', {
+            bubbles: true, cancelable: true, clipboardData: dt
+          });
+          editableElement.dispatchEvent(pasteEvent);
+          return true;
+        }
+      } catch(e) {
+        console.log('Paraphrase: Paste simulation failed:', e);
+      }
+
+      // All strategies failed - copy to clipboard
+      navigator.clipboard.writeText(newText);
+      showToast('Copiado para a área de transferência!');
+      return false;
+    } catch(e) {
+      console.error('Paraphrase: replaceInContentEditable error:', e);
+      navigator.clipboard.writeText(newText);
+      showToast('Copiado para a área de transferência!');
+      return false;
+    }
+  }
+
+  function replaceSelectedText(newText) {
+    // INPUT/TEXTAREA elements
     if (savedActiveElement && (savedActiveElement.tagName === 'INPUT' || savedActiveElement.tagName === 'TEXTAREA') && savedSelectionStart !== null) {
       try {
-        const text = savedActiveElement.value;
-        const newValue = text.substring(0, savedSelectionStart) + newText + text.substring(savedSelectionEnd);
-
-        // Focus and set value
         savedActiveElement.focus();
-        savedActiveElement.value = newValue;
-        savedActiveElement.setSelectionRange(savedSelectionStart, savedSelectionStart + newText.length);
+        savedActiveElement.setSelectionRange(savedSelectionStart, savedSelectionEnd);
 
-        // Trigger events for React/Vue/Angular compatibility
-        savedActiveElement.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
-        savedActiveElement.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+        // Try execCommand first (works with React controlled inputs)
+        let success = document.execCommand('insertText', false, newText);
+        if (!success) {
+          // Fallback: direct value manipulation
+          const text = savedActiveElement.value;
+          savedActiveElement.value = text.substring(0, savedSelectionStart) + newText + text.substring(savedSelectionEnd);
+          savedActiveElement.setSelectionRange(savedSelectionStart, savedSelectionStart + newText.length);
+          savedActiveElement.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+          savedActiveElement.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
+        }
 
         return true;
       } catch (e) {
-        console.error('Error replacing in input/textarea:', e);
+        console.error('Paraphrase: Error replacing in input/textarea:', e);
         navigator.clipboard.writeText(newText);
-        showToast('Texto copiado para a área de transferência!');
+        showToast('Copiado para a área de transferência!');
         return false;
       }
     }
 
-    // Check if we have a saved range for contentEditable or regular elements
-    if (savedRange) {
-      try {
-        // Check if the original element was contentEditable
-        const container = savedRange.commonAncestorContainer;
-        const editableParent = container.nodeType === 3
-          ? container.parentElement
-          : container;
-
-        const editableElement = editableParent?.closest?.('[contenteditable="true"]') ||
-                                (editableParent?.isContentEditable ? editableParent : null);
-
-        if (editableElement) {
-          // Restore focus to the editable element
-          editableElement.focus();
-
-          try {
-            // Restore selection
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(savedRange);
-
-            // Try using execCommand first (better compatibility)
-            const success = document.execCommand('insertText', false, newText);
-
-            if (!success) {
-              // Fallback: manual replacement
-              savedRange.deleteContents();
-              const textNode = document.createTextNode(newText);
-              savedRange.insertNode(textNode);
-
-              // Move cursor to end of inserted text
-              const newRange = document.createRange();
-              newRange.setStartAfter(textNode);
-              newRange.collapse(true);
-              selection.removeAllRanges();
-              selection.addRange(newRange);
-            }
-
-            // Trigger input event (InputEvent for React/Teams compatibility)
-            editableElement.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: newText }));
-          } catch (innerE) {
-            console.error('Error replacing text:', innerE);
-            navigator.clipboard.writeText(newText);
-            showToast('Texto copiado para a área de transferência!');
-            return false;
-          }
-
-          return true;
-        } else {
-          // Non-editable content - copy to clipboard
-          navigator.clipboard.writeText(newText);
-          showToast('Texto copiado para a área de transferência!');
-          return false;
-        }
-      } catch (e) {
-        console.error('Error replacing text:', e);
-        // Fallback: just copy to clipboard
-        navigator.clipboard.writeText(newText);
-        showToast('Texto copiado para a área de transferência!');
-        return false;
-      }
+    // ContentEditable elements
+    const editableEl = savedEditableElement || findEditableFromRange(savedRange);
+    if (editableEl) {
+      return replaceInContentEditable(editableEl, newText, savedSelectedText, savedTextOffset, savedRange);
     }
 
-    // No saved selection - just copy to clipboard
+    // Non-editable or no saved selection - copy to clipboard
     navigator.clipboard.writeText(newText);
-    showToast('Texto copiado para a área de transferência!');
+    showToast('Copiado para a área de transferência!');
     return false;
   }
 
@@ -503,19 +679,27 @@
       return;
     }
 
-    // Save current selection BEFORE any async operation
-    let localSavedRange = null;
-    let localSavedActiveElement = null;
-    let localSavedSelectionStart = null;
-    let localSavedSelectionEnd = null;
+    // Save current selection context BEFORE any async operation
+    let localRange = null;
+    let localActiveElement = null;
+    let localSelectionStart = null;
+    let localSelectionEnd = null;
+    let localEditableElement = null;
+    let localTextOffset = -1;
 
     if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
-      localSavedActiveElement = activeElement;
-      localSavedSelectionStart = activeElement.selectionStart;
-      localSavedSelectionEnd = activeElement.selectionEnd;
+      localActiveElement = activeElement;
+      localSelectionStart = activeElement.selectionStart;
+      localSelectionEnd = activeElement.selectionEnd;
     } else if (selection.rangeCount > 0) {
-      localSavedRange = selection.getRangeAt(0).cloneRange();
-      localSavedActiveElement = activeElement;
+      localRange = selection.getRangeAt(0).cloneRange();
+      localActiveElement = activeElement;
+
+      // Save editable element and text offset for range reconstruction
+      localEditableElement = findEditableFromRange(localRange);
+      if (localEditableElement) {
+        localTextOffset = getTextOffset(localEditableElement, localRange.startContainer, localRange.startOffset);
+      }
     }
 
     // Show processing toast
@@ -524,65 +708,50 @@
     try {
       const result = await callParaphraseAPI(text, style.prompt);
 
-      // Replace the text silently
-      if (localSavedActiveElement && (localSavedActiveElement.tagName === 'INPUT' || localSavedActiveElement.tagName === 'TEXTAREA') && localSavedSelectionStart !== null) {
-        const currentText = localSavedActiveElement.value;
-        localSavedActiveElement.value = currentText.substring(0, localSavedSelectionStart) + result + currentText.substring(localSavedSelectionEnd);
-        localSavedActiveElement.focus();
-        localSavedActiveElement.setSelectionRange(localSavedSelectionStart, localSavedSelectionStart + result.length);
+      // Replace the text
+      if (localActiveElement && (localActiveElement.tagName === 'INPUT' || localActiveElement.tagName === 'TEXTAREA') && localSelectionStart !== null) {
+        // Input/textarea replacement
+        localActiveElement.focus();
+        localActiveElement.setSelectionRange(localSelectionStart, localSelectionEnd);
 
-        // Trigger input event for frameworks like React
-        localSavedActiveElement.dispatchEvent(new Event('input', { bubbles: true }));
+        let success = document.execCommand('insertText', false, result);
+        if (!success) {
+          const currentText = localActiveElement.value;
+          localActiveElement.value = currentText.substring(0, localSelectionStart) + result + currentText.substring(localSelectionEnd);
+          localActiveElement.setSelectionRange(localSelectionStart, localSelectionStart + result.length);
+          localActiveElement.dispatchEvent(new Event('input', { bubbles: true }));
+        }
 
         showToast(`${style.emoji} Texto substituído!`);
-      } else if (localSavedRange) {
-        try {
-          const container = localSavedRange.commonAncestorContainer;
-          const editableParent = container.nodeType === 3 ? container.parentElement : container;
+      } else if (localRange || localEditableElement) {
+        // ContentEditable replacement
+        const editableEl = localEditableElement || findEditableFromRange(localRange);
 
-          if (editableParent && (editableParent.isContentEditable || editableParent.closest('[contenteditable="true"]'))) {
-            const editableElement = editableParent.isContentEditable
-              ? editableParent
-              : editableParent.closest('[contenteditable="true"]');
-            if (editableElement) {
-              editableElement.focus();
-            }
+        if (editableEl) {
+          // Temporarily set module-level saved state for getValidRange
+          const prevRange = savedRange;
+          const prevEditable = savedEditableElement;
+          const prevText = savedSelectedText;
+          const prevOffset = savedTextOffset;
 
-            // Restore selection
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(localSavedRange);
+          savedRange = localRange;
+          savedEditableElement = localEditableElement;
+          savedSelectedText = text;
+          savedTextOffset = localTextOffset;
 
-            // Use execCommand first - works with rich text editors (Teams, Gmail, etc.)
-            let replaced = document.execCommand('insertText', false, result);
+          const success = replaceInContentEditable(editableEl, result, text, localTextOffset, localRange);
 
-            if (!replaced) {
-              // Fallback: direct DOM manipulation
-              localSavedRange.deleteContents();
-              const textNode = document.createTextNode(result);
-              localSavedRange.insertNode(textNode);
+          // Restore module-level state
+          savedRange = prevRange;
+          savedEditableElement = prevEditable;
+          savedSelectedText = prevText;
+          savedTextOffset = prevOffset;
 
-              // Move cursor to end of inserted text
-              const newRange = document.createRange();
-              newRange.setStartAfter(textNode);
-              newRange.collapse(true);
-              sel.removeAllRanges();
-              sel.addRange(newRange);
-            }
-
-            // Trigger input event for frameworks (React, Vue, Angular)
-            if (editableElement) {
-              editableElement.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: result }));
-            }
-
+          if (success) {
             showToast(`${style.emoji} Texto substituído!`);
-          } else {
-            // Non-editable - copy to clipboard
-            navigator.clipboard.writeText(result);
-            showToast(`${style.emoji} Copiado para a área de transferência!`);
           }
-        } catch (e) {
-          console.error('Error replacing text:', e);
+        } else {
+          // Non-editable - copy to clipboard
           navigator.clipboard.writeText(result);
           showToast(`${style.emoji} Copiado para a área de transferência!`);
         }

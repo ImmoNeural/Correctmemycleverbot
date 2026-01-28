@@ -2,10 +2,10 @@
 /* Injected into web pages */
 
 .paraphrase-popup {
-  position: absolute;
+  position: fixed;
   z-index: 2147483647;
   width: 450px;
-  max-height: 80vh;
+  max-height: 85vh;
   background: #ffffff;
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
