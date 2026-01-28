@@ -16,7 +16,7 @@ Extensao de navegador que permite parafrasear qualquer texto selecionado com dif
   - Amigavel / Empatico
 - **Atalhos de Teclado**:
   - `Ctrl+Shift+P`: Abre popup com todos os estilos
-  - `Ctrl+Shift+1-8`: Parafraseia e substitui automaticamente (sem popup)
+  - `AltGr+1-8`: Parafraseia e substitui automaticamente (sem popup)
 - **Copiar ou Substituir**: Copie o resultado ou substitua o texto original diretamente
 
 ## Como Instalar
@@ -72,16 +72,18 @@ Selecione texto e pressione o atalho para parafrasear e substituir automaticamen
 
 | Atalho | Estilo |
 |--------|--------|
-| `Ctrl+Shift+1` | Formal / Profissional |
-| `Ctrl+Shift+2` | Informal / Casual |
-| `Ctrl+Shift+3` | Conciso / Resumido |
-| `Ctrl+Shift+4` | Detalhado / Expandido |
-| `Ctrl+Shift+5` | Criativo / Original |
-| `Ctrl+Shift+6` | Simples / Facil de entender |
-| `Ctrl+Shift+7` | Academico / Cientifico |
-| `Ctrl+Shift+8` | Amigavel / Empatico |
+| `AltGr+1` | Formal / Profissional |
+| `AltGr+2` | Informal / Casual |
+| `AltGr+3` | Conciso / Resumido |
+| `AltGr+4` | Detalhado / Expandido |
+| `AltGr+5` | Criativo / Original |
+| `AltGr+6` | Simples / Facil de entender |
+| `AltGr+7` | Academico / Cientifico |
+| `AltGr+8` | Amigavel / Empatico |
 
 **Nota**: O texto sera substituido diretamente em campos editaveis (Teams, Gmail, etc). Em areas nao editaveis, o resultado e copiado para a area de transferencia.
+
+**Dica**: A tecla AltGr fica a direita da barra de espaco no teclado.
 
 ## APIs Compativeis
 

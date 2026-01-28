@@ -572,7 +572,7 @@
 
   // Keyboard shortcuts handler
   // Ctrl+Shift+P = Open popup
-  // Alt+1-8 = Direct paraphrase with specific style (avoids Teams conflicts)
+  // AltGr+1-8 = Direct paraphrase with specific style and auto-replace
   document.addEventListener('keydown', (e) => {
     // Ctrl+Shift+P = Open popup (keep this one)
     if (e.ctrlKey && e.shiftKey && e.key === 'P') {
@@ -586,8 +586,9 @@
       return;
     }
 
-    // Alt+1-8 = Direct paraphrase with style (changed from Ctrl+Shift to avoid Teams conflicts)
-    if (e.altKey && !e.ctrlKey && !e.shiftKey) {
+    // AltGr+1-8 = Direct paraphrase with style and auto-replace
+    // AltGr is detected as Ctrl+Alt in JavaScript
+    if (e.altKey && e.ctrlKey && !e.shiftKey) {
       const style = PARAPHRASE_STYLES.find(s => s.shortcut === e.key);
       if (style) {
         e.preventDefault();
