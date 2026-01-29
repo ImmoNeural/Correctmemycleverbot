@@ -3758,10 +3758,11 @@ async function handleCorrectionSubmit(e) {
         continuousMode: true,
         selectedVoice: 'Aoede', // Voz alemã
 
-        // Correction tracking
+        // Correction tracking - acumula transcripts para análise no final
         totalCorrections: 0,
-        pendingCorrection: null,
-        correctionDebounceTimer: null
+        transcripts: [], // Array de {timestamp, speaker, text}
+        analysisTimer: null, // Timer de 5 minutos para análise
+        analysisTriggered: false
     };
 
     let conversacaoInitialized = false;
@@ -4113,9 +4114,9 @@ SPRACHE:
                 if (message.serverContent.inputTranscription) {
                     const transcript = message.serverContent.inputTranscription.text;
                     console.log('🎤 VOCÊ DISSE:', transcript);
-                    // Enviar para análise de erros em alemão
+                    // Armazena transcript para análise no final da conversa
                     if (transcript && transcript.trim().length > 3) {
-                        analyzeTranscript(transcript, 'user');
+                        storeTranscript(transcript, 'user');
                     }
                 }
 
@@ -4509,6 +4510,12 @@ SPRACHE:
             conversacaoState.ws.close();
         }
 
+        // Dispara análise de erros ao desconectar (se houver transcripts)
+        if (conversacaoState.transcripts && conversacaoState.transcripts.length > 0) {
+            console.log('📊 Disparando análise de correções...');
+            triggerAnalysis();
+        }
+
         cleanupConversation();
         updateStatus('Desconectado', 'idle');
         updateConversacaoUI('idle');
@@ -4762,57 +4769,109 @@ SPRACHE:
         vocabulario: { hex: '#4ade80', name: 'Vocabulário' }
     };
 
-    // Função para enviar transcrição para análise de erros
-    async function analyzeTranscript(text, speaker) {
-        if (!text || text.trim().length < 5) return;
+    // Função para armazenar transcrição (NÃO faz chamada API em tempo real)
+    function storeTranscript(text, speaker) {
+        if (!text || text.trim().length < 3) return;
 
-        // Debounce - aguarda 1.5s após última transcrição antes de analisar
-        if (conversacaoState.correctionDebounceTimer) {
-            clearTimeout(conversacaoState.correctionDebounceTimer);
+        // Adiciona ao array de transcripts
+        conversacaoState.transcripts.push({
+            timestamp: Date.now(),
+            speaker: speaker, // 'user' ou 'ai'
+            text: text.trim()
+        });
+
+        console.log(`📝 Transcript armazenado (${speaker}):`, text.substring(0, 50) + '...');
+
+        // Inicia timer de 5 minutos se ainda não foi iniciado
+        if (!conversacaoState.analysisTimer && !conversacaoState.analysisTriggered) {
+            conversacaoState.analysisTimer = setTimeout(() => {
+                console.log('⏰ Timer de 5 minutos atingido - iniciando análise');
+                triggerAnalysis();
+            }, 5 * 60 * 1000); // 5 minutos
         }
-
-        // Acumula texto pendente
-        if (!conversacaoState.pendingCorrection) {
-            conversacaoState.pendingCorrection = '';
-        }
-        conversacaoState.pendingCorrection += ' ' + text.trim();
-
-        conversacaoState.correctionDebounceTimer = setTimeout(async () => {
-            const textToAnalyze = conversacaoState.pendingCorrection.trim();
-            conversacaoState.pendingCorrection = null;
-
-            if (textToAnalyze.length < 5) return;
-
-            try {
-                const response = await fetch('/.netlify/functions/conversacao-correcoes', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: textToAnalyze, speaker })
-                });
-
-                if (!response.ok) {
-                    console.warn('Erro ao analisar correções:', response.status);
-                    return;
-                }
-
-                const data = await response.json();
-                if (data.corrections && data.corrections.length > 0) {
-                    displayCorrections(data.corrections, textToAnalyze);
-                }
-            } catch (error) {
-                console.warn('Erro na análise de correções:', error);
-            }
-        }, 1500);
     }
 
-    // Função para exibir correções na UI
-    function displayCorrections(corrections, originalText) {
+    // Função para disparar análise (chamada ao desconectar ou após 5 min)
+    async function triggerAnalysis() {
+        // Evita análises duplicadas
+        if (conversacaoState.analysisTriggered) return;
+        conversacaoState.analysisTriggered = true;
+
+        // Limpa timer se existir
+        if (conversacaoState.analysisTimer) {
+            clearTimeout(conversacaoState.analysisTimer);
+            conversacaoState.analysisTimer = null;
+        }
+
+        // Filtra apenas transcripts do usuário (não analisa a IA)
+        const userTranscripts = conversacaoState.transcripts.filter(t => t.speaker === 'user');
+
+        if (userTranscripts.length === 0) {
+            console.log('📭 Nenhum transcript do usuário para analisar');
+            return;
+        }
+
+        // Mostra status de análise
+        showAnalysisStatus('Analisando sua conversa...');
+
+        try {
+            const response = await fetch('/.netlify/functions/conversacao-correcoes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    transcripts: userTranscripts,
+                    fullAnalysis: true
+                })
+            });
+
+            if (!response.ok) {
+                console.warn('Erro ao analisar correções:', response.status);
+                showAnalysisStatus('Erro na análise. Tente novamente.');
+                return;
+            }
+
+            const data = await response.json();
+            if (data.corrections && data.corrections.length > 0) {
+                displayCorrections(data.corrections);
+            } else {
+                showAnalysisStatus('Parabéns! Nenhum erro encontrado na sua conversa.');
+            }
+        } catch (error) {
+            console.warn('Erro na análise de correções:', error);
+            showAnalysisStatus('Erro na análise. Tente novamente.');
+        }
+    }
+
+    // Mostra status da análise
+    function showAnalysisStatus(message) {
         const correctionsEl = document.getElementById('conv-corrections');
         if (!correctionsEl) return;
 
         // Remover mensagem inicial se existir
         const emptyMsg = correctionsEl.querySelector('.text-center');
         if (emptyMsg) emptyMsg.remove();
+
+        const statusDiv = document.createElement('div');
+        statusDiv.className = 'analysis-status text-center py-4';
+        statusDiv.innerHTML = `
+            <div class="flex items-center justify-center gap-2 text-cyan-400">
+                <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>${escapeHtml(message)}</span>
+            </div>
+        `;
+        correctionsEl.appendChild(statusDiv);
+    }
+
+    // Função para exibir correções na UI com contexto completo
+    function displayCorrections(corrections) {
+        const correctionsEl = document.getElementById('conv-corrections');
+        if (!correctionsEl) return;
+
+        // Limpa tudo
+        correctionsEl.innerHTML = '';
 
         // Mostrar contador de erros
         const errorCountEl = document.getElementById('conv-error-count');
@@ -4830,7 +4889,7 @@ SPRACHE:
                 totalEl.textContent = conversacaoState.totalCorrections;
             }
 
-            // Criar card de correção
+            // Criar card de correção com contexto
             const corrDiv = document.createElement('div');
             corrDiv.className = 'correction-card animate-fade-in';
             corrDiv.style.cssText = `
@@ -4839,42 +4898,53 @@ SPRACHE:
                 border-left: 4px solid ${color.hex};
                 border-radius: 8px;
                 padding: 12px;
-                margin-bottom: 8px;
+                margin-bottom: 12px;
                 animation: slideIn 0.3s ease-out;
             `;
 
+            // Destacar o erro no contexto
+            let contextHtml = '';
+            if (corr.contexto) {
+                const contextoEscaped = escapeHtml(corr.contexto);
+                const erroEscaped = escapeHtml(corr.erro || '');
+                // Tenta destacar o erro no contexto
+                if (erroEscaped && contextoEscaped.toLowerCase().includes(erroEscaped.toLowerCase())) {
+                    const regex = new RegExp(`(${erroEscaped.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                    contextHtml = contextoEscaped.replace(regex, `<mark style="background: ${color.hex}; color: #000; padding: 1px 4px; border-radius: 3px;">$1</mark>`);
+                } else {
+                    contextHtml = contextoEscaped;
+                }
+            }
+
             corrDiv.innerHTML = `
+                ${corr.contexto ? `
+                <div style="margin-bottom: 10px; padding: 10px; background: #0f172a; border-radius: 6px; font-style: italic; color: #e2e8f0; font-size: 14px; line-height: 1.5;">
+                    "${contextHtml}"
+                </div>` : ''}
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                     <span style="display: inline-block; width: 10px; height: 10px; background: ${color.hex}; border-radius: 50%;"></span>
                     <span style="color: ${color.hex}; font-size: 12px; font-weight: 600; text-transform: uppercase;">${color.name}</span>
                 </div>
                 <div style="margin-bottom: 8px;">
-                    <span style="color: #ef4444; text-decoration: line-through;">${escapeHtml(corr.erro || '')}</span>
+                    <span style="color: #ef4444; text-decoration: line-through; font-weight: 500;">${escapeHtml(corr.erro || '')}</span>
                     <span style="color: #94a3b8; margin: 0 8px;">→</span>
                     <span style="color: #4ade80; font-weight: 600;">${escapeHtml(corr.correcao || '')}</span>
                 </div>
-                <p style="color: #94a3b8; font-size: 13px; margin: 0; line-height: 1.4;">${escapeHtml(corr.explicacao || '')}</p>
+                <p style="color: #cbd5e1; font-size: 13px; margin: 0; line-height: 1.5;">${escapeHtml(corr.explicacao || '')}</p>
             `;
 
             correctionsEl.appendChild(corrDiv);
-            correctionsEl.scrollTop = correctionsEl.scrollHeight;
         });
 
-        // Limitar a 20 correções visíveis
-        const allCards = correctionsEl.querySelectorAll('.correction-card');
-        while (allCards.length > 20) {
-            allCards[0].remove();
-        }
+        correctionsEl.scrollTop = 0; // Volta ao topo para ver todas as correções
     }
 
-    // Função legada - mantida para compatibilidade mas não faz nada visual
+    // Função legada - agora apenas armazena transcripts
     function addMessageToHistory(type, text) {
-        // Não exibe mais no histórico, apenas processa para correções
-        // A análise é feita diretamente no handler de transcrição
+        // Não faz mais nada - a análise é feita no final
     }
 
     function clearHistory() {
-        // Limpa correções ao invés de histórico
         clearCorrections();
     }
 
@@ -4884,12 +4954,18 @@ SPRACHE:
             correctionsEl.innerHTML = `
                 <div class="text-center text-slate-500 py-4">
                     <p>Suas correções aparecerão aqui.</p>
-                    <p class="text-sm mt-1">Fale em alemão e veja seus erros em tempo real!</p>
+                    <p class="text-sm mt-1">Ao final da conversa, seus erros serão analisados!</p>
                 </div>
             `;
         }
-        // Reset contador
+        // Reset estado
         conversacaoState.totalCorrections = 0;
+        conversacaoState.transcripts = [];
+        conversacaoState.analysisTriggered = false;
+        if (conversacaoState.analysisTimer) {
+            clearTimeout(conversacaoState.analysisTimer);
+            conversacaoState.analysisTimer = null;
+        }
         const totalEl = document.getElementById('conv-total-errors');
         if (totalEl) totalEl.textContent = '0';
         const errorCountEl = document.getElementById('conv-error-count');

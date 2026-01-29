@@ -1,41 +1,44 @@
-// Correções em tempo real para conversação - usa DeepSeek para analisar erros em alemão
-// Versão simplificada e rápida para uso durante conversas
+// Análise de correções para conversação - usa DeepSeek para analisar erros em alemão
+// Analisa toda a conversa no final, não em tempo real
 
 const DEEPSEEK_API_KEY = 'sk-e080234eab8b442fb65fe8955d8947de';
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 
-// Prompt simplificado para análise rápida de erros em conversação
-const CONVERSATION_CORRECTION_PROMPT = `Du bist ein Deutschlehrer, der Fehler in der gesprochenen Sprache analysiert.
+// Prompt para análise completa da conversa com contexto
+const FULL_ANALYSIS_PROMPT = `Du bist ein erfahrener Deutschlehrer, der die gesprochene Sprache eines Schülers analysiert.
 
-AUFGABE: Analysiere den deutschen Text und finde grammatische Fehler. Antworte NUR mit einem JSON-Array.
+AUFGABE: Analysiere alle Sätze des Schülers und finde grammatische Fehler. Für JEDEN Fehler musst du den VOLLSTÄNDIGEN SATZ (Kontext) angeben, in dem der Fehler vorkommt.
 
-KATEGORIEN (mit Farben für die Anzeige):
-- "declinacao" (Deklination - Fälle, Artikel, Adjektivendungen) - Rosa #f472b6
-- "conjugacao" (Konjugation - Verbformen, Zeiten) - Lila #c084fc
-- "preposicoes" (Präpositionen) - Blau #60a5fa
-- "sintaxe" (Syntax - Wortstellung, Satzstruktur) - Orange #fb923c
-- "vocabulario" (Vokabular - falsche Wörter, Rechtschreibung) - Grün #4ade80
+KATEGORIEN:
+- "declinacao" (Deklination - Fälle, Artikel, Adjektivendungen)
+- "conjugacao" (Konjugation - Verbformen, Zeiten)
+- "preposicoes" (Präpositionen)
+- "sintaxe" (Syntax - Wortstellung, Satzstruktur)
+- "vocabulario" (Vokabular - falsche Wörter, Rechtschreibung)
 
 FORMAT DER ANTWORT (NUR dieses JSON-Array, kein anderer Text):
 [
   {
     "categoria": "declinacao|conjugacao|preposicoes|sintaxe|vocabulario",
-    "erro": "das falsche Wort/Phrase",
+    "contexto": "Der vollständige Satz, in dem der Fehler vorkommt",
+    "erro": "das falsche Wort oder die falsche Phrase",
     "correcao": "die richtige Form",
-    "explicacao": "kurze Erklärung auf Portugiesisch (1 Satz)"
+    "explicacao": "Erklärung auf Portugiesisch (1-2 Sätze), warum es falsch ist und wie man es richtig macht"
   }
 ]
 
-WICHTIG:
+WICHTIGE REGELN:
+- "contexto" MUSS immer den vollständigen Originalsatz des Schülers enthalten
 - Wenn keine Fehler gefunden werden, antworte mit: []
-- Maximal 5 Fehler pro Analyse
-- Erkläre auf Portugiesisch, kurz und klar
-- Analysiere NUR den letzten Satz/die letzte Äußerung des Benutzers`;
+- Maximal 10 Fehler analysieren (die wichtigsten)
+- Erkläre auf Portugiesisch, klar und lehrreich
+- Ignoriere kleine Aussprachefehler, konzentriere dich auf Grammatik
+- Sei ermunternd in den Erklärungen`;
 
-// Helper function to call DeepSeek API with timeout
-async function callDeepSeek(text) {
+// Helper function to call DeepSeek API with longer timeout for full analysis
+async function callDeepSeek(systemPrompt, userContent) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
 
     try {
         const response = await fetch(DEEPSEEK_API_URL, {
@@ -47,11 +50,11 @@ async function callDeepSeek(text) {
             body: JSON.stringify({
                 model: 'deepseek-chat',
                 messages: [
-                    { role: 'system', content: CONVERSATION_CORRECTION_PROMPT },
-                    { role: 'user', content: `Analysiere diesen Text auf Fehler: "${text}"` }
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: userContent }
                 ],
                 temperature: 0.2,
-                max_tokens: 1000
+                max_tokens: 2000
             }),
             signal: controller.signal
         });
@@ -68,7 +71,7 @@ async function callDeepSeek(text) {
     } catch (error) {
         clearTimeout(timeoutId);
         if (error.name === 'AbortError') {
-            throw new Error('Timeout: análise demorou mais que 15 segundos');
+            throw new Error('Timeout: análise demorou mais que 25 segundos');
         }
         throw error;
     }
@@ -96,6 +99,18 @@ function parseCorrections(rawResponse) {
     return [];
 }
 
+// Format transcripts into a readable conversation
+function formatTranscripts(transcripts) {
+    if (!Array.isArray(transcripts) || transcripts.length === 0) {
+        return '';
+    }
+
+    return transcripts
+        .filter(t => t.speaker === 'user') // Apenas frases do usuário
+        .map((t, index) => `${index + 1}. "${t.text}"`)
+        .join('\n');
+}
+
 exports.handler = async (event) => {
     const headers = {
         'Access-Control-Allow-Origin': '*',
@@ -114,6 +129,45 @@ exports.handler = async (event) => {
 
     try {
         const body = JSON.parse(event.body);
+        const { transcripts, fullAnalysis } = body;
+
+        // Modo de análise completa (no final da conversa)
+        if (fullAnalysis && Array.isArray(transcripts)) {
+            const formattedConversation = formatTranscripts(transcripts);
+
+            if (!formattedConversation || formattedConversation.length < 10) {
+                return {
+                    statusCode: 200,
+                    headers,
+                    body: JSON.stringify({
+                        corrections: [],
+                        message: 'Conversa muito curta para análise'
+                    })
+                };
+            }
+
+            console.log('=== ANÁLISE COMPLETA DA CONVERSA ===');
+            console.log(`Total de frases do usuário: ${transcripts.filter(t => t.speaker === 'user').length}`);
+
+            const userContent = `Hier sind die Sätze des Schülers während des Gesprächs. Analysiere jeden Satz auf Fehler:\n\n${formattedConversation}`;
+
+            const rawResponse = await callDeepSeek(FULL_ANALYSIS_PROMPT, userContent);
+            const corrections = parseCorrections(rawResponse);
+
+            console.log(`Encontrados ${corrections.length} erros na conversa`);
+
+            return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({
+                    corrections,
+                    totalSentences: transcripts.filter(t => t.speaker === 'user').length,
+                    totalErrors: corrections.length
+                })
+            };
+        }
+
+        // Modo legado (texto único) - mantido para compatibilidade
         const { text, speaker } = body;
 
         if (!text || text.trim().length < 3) {
@@ -126,8 +180,8 @@ exports.handler = async (event) => {
 
         console.log(`Analisando texto de ${speaker || 'user'}:`, text.substring(0, 100));
 
-        // Call DeepSeek for correction analysis
-        const rawResponse = await callDeepSeek(text);
+        const userContent = `Analysiere diesen Satz auf Fehler: "${text}"`;
+        const rawResponse = await callDeepSeek(FULL_ANALYSIS_PROMPT, userContent);
         const corrections = parseCorrections(rawResponse);
 
         console.log(`Encontrados ${corrections.length} erros`);
