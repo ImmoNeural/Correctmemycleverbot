@@ -3778,20 +3778,12 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
                 console.log('WebSocket conectado');
 
                 // Enviar configuração de setup
-                // Modelo Gemini 2.5 Flash Native Audio - modelo mais recente para Live API
+                // Modelo Gemini 2.5 Flash Native Audio - configuração simplificada
                 const setupMessage = {
                     setup: {
                         model: 'models/gemini-2.5-flash-native-audio-preview-12-2025',
                         generationConfig: {
-                            responseModalities: ['AUDIO', 'TEXT'],
-                            speechConfig: {
-                                voiceConfig: {
-                                    prebuiltVoiceConfig: {
-                                        voiceName: conversacaoState.selectedVoice
-                                    }
-                                },
-                                languageCode: 'de-DE'
-                            }
+                            responseModalities: ['AUDIO']
                         },
                         systemInstruction: {
                             parts: [{ text: GERMAN_TUTOR_INSTRUCTION }]
