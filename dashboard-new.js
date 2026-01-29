@@ -26,37 +26,104 @@ document.addEventListener('DOMContentLoaded', () => {
     // LÓGICA DE INICIALIZAÇÃO DA APLICAÇÃO
     // =================================================================
 
+    // Flag para evitar redirecionamento prematuro durante callback OAuth
+    let isProcessingAuth = false;
+
+    // Verifica se estamos processando um callback OAuth (tokens na URL)
+    function isOAuthCallback() {
+        const hash = window.location.hash;
+        const search = window.location.search;
+        return hash.includes('access_token') ||
+               hash.includes('refresh_token') ||
+               search.includes('code=') ||
+               hash.includes('type=');
+    }
+
+    // Inicialização: primeiro tenta obter a sessão existente
+    async function initAuth() {
+        isProcessingAuth = true;
+
+        try {
+            // Se for callback OAuth, aguarda o Supabase processar
+            if (isOAuthCallback()) {
+                console.log('🔄 Processando callback de autenticação...');
+                // Aguarda um momento para o Supabase processar os tokens
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+
+            // Tenta obter a sessão atual
+            const { data: { session }, error } = await _supabase.auth.getSession();
+
+            if (error) {
+                console.error('Erro ao obter sessão:', error);
+            }
+
+            if (session && session.user) {
+                currentUser = session.user;
+                window.currentUser = session.user;
+                await initializeApp(currentUser);
+                window.dispatchEvent(new CustomEvent('userAuthenticated', { detail: { user: session.user } }));
+            } else if (!isOAuthCallback()) {
+                // Só redireciona se não estiver processando OAuth
+                window.location.href = 'login.html';
+            }
+        } catch (err) {
+            console.error('Erro na inicialização de auth:', err);
+        } finally {
+            isProcessingAuth = false;
+        }
+    }
+
+    // Inicia a autenticação
+    initAuth();
+
     _supabase.auth.onAuthStateChange((_event, session) => {
+        // Ignora se já estamos processando ou se já temos um usuário
+        if (isProcessingAuth) return;
+
         if (session && session.user) {
-            currentUser = session.user;
-            window.currentUser = session.user; // Tornar globalmente acessível para o iframe do chatbot
-            initializeApp(currentUser);
-
-            // Avisa os outros scripts (como o chatbot) que o usuário foi autenticado.
-            window.dispatchEvent(new CustomEvent('userAuthenticated', { detail: { user: session.user } }));
-
-        } else {
+            // Só reinicializa se for um usuário diferente
+            if (!currentUser || currentUser.id !== session.user.id) {
+                currentUser = session.user;
+                window.currentUser = session.user;
+                initializeApp(currentUser);
+                window.dispatchEvent(new CustomEvent('userAuthenticated', { detail: { user: session.user } }));
+            }
+        } else if (!isOAuthCallback()) {
+            // Só redireciona se não estiver processando OAuth
             window.location.href = 'login.html';
         }
     });
 
     async function initializeApp(user) {
-        // Verificar se usuário completou onboarding ANTES de carregar dashboard
-        const { data: leadData } = await _supabase
-            .from('leads')
-            .select('id')
-            .eq('id', user.id)
-            .single();
+        console.log('🚀 Inicializando app para usuário:', user.email);
 
-        // Se não está na tabela leads, redirecionar para onboarding
-        if (!leadData) {
-            window.location.href = 'onboarding.html';
-            return; // Parar execução aqui
-        }
+        try {
+            // Verificar se usuário completou onboarding ANTES de carregar dashboard
+            const { data: leadData, error: leadError } = await _supabase
+                .from('leads')
+                .select('id')
+                .eq('id', user.id)
+                .single();
 
-        // Só continua se usuário está na tabela leads
-        await loadUserProfile(user);
-        attachEventListeners();
+            if (leadError && leadError.code !== 'PGRST116') {
+                // Erro de banco de dados (não é "não encontrado")
+                // Loga o erro mas continua carregando o dashboard
+                console.error('Erro ao verificar leads (continuando mesmo assim):', leadError);
+            }
+
+            // Se não está na tabela leads (e não foi erro de banco), redirecionar para onboarding
+            if (!leadData && (!leadError || leadError.code === 'PGRST116')) {
+                console.log('Usuário não completou onboarding, redirecionando...');
+                window.location.href = 'onboarding.html';
+                return; // Parar execução aqui
+            }
+
+            console.log('✅ Usuário já completou onboarding, carregando perfil...');
+
+            // Só continua se usuário está na tabela leads (ou se houve erro de banco)
+            await loadUserProfile(user);
+            attachEventListeners();
 
         // Restaura correção salva ao carregar a página (se estiver na seção REDAÇÃO)
         const correcaoSalva = localStorage.getItem('ultimaCorrecaoHTML');
@@ -127,18 +194,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadUserProfile(user) {
         const columnsToSelect = 'credits, avatar_url, total_essays, error_declinacao, error_conjugacao, error_sintaxe, error_preposicao, error_vocabulario';
-        let { data: profile, error } = await _supabase.from('profiles').select(columnsToSelect).eq('id', user.id).single();
+        let profile = null;
 
-        if (error && error.code !== 'PGRST116') { console.error("Erro ao buscar perfil:", error); return; }
+        try {
+            const { data, error } = await _supabase.from('profiles').select(columnsToSelect).eq('id', user.id).single();
 
-        if (!profile) {
-            const { data: newProfile } = await _supabase.from('profiles').insert([{ id: user.id, credits: 200 }]).select(columnsToSelect).single();
-            profile = newProfile;
-        }
+            if (error && error.code !== 'PGRST116') {
+                console.error("Erro ao buscar perfil:", error);
+                // Continua mesmo com erro para tentar mostrar dados básicos do usuário
+            } else {
+                profile = data;
+            }
 
-        if (profile) {
-            updateUI(user, profile);
+            // Se não existe perfil, tenta criar um novo
+            if (!profile) {
+                console.log('Criando novo perfil para usuário:', user.id);
+                const { data: newProfile, error: insertError } = await _supabase
+                    .from('profiles')
+                    .insert([{ id: user.id, credits: 200 }])
+                    .select(columnsToSelect)
+                    .single();
+
+                if (insertError) {
+                    console.error("Erro ao criar perfil:", insertError);
+                    // Usa perfil padrão se a inserção falhar
+                    profile = { credits: 200, avatar_url: null, total_essays: 0, error_declinacao: 0, error_conjugacao: 0, error_sintaxe: 0, error_preposicao: 0, error_vocabulario: 0 };
+                } else {
+                    profile = newProfile;
+                }
+            }
+
+            // Sempre atualiza a UI com o que temos disponível
+            updateUI(user, profile || { credits: 0, avatar_url: null, total_essays: 0, error_declinacao: 0, error_conjugacao: 0, error_sintaxe: 0, error_preposicao: 0, error_vocabulario: 0 });
             await loadErrorHistory(user);
+
+        } catch (err) {
+            console.error("Erro inesperado ao carregar perfil:", err);
+            // Mesmo com erro, tenta atualizar a UI com dados básicos do usuário
+            updateUI(user, { credits: 0, avatar_url: null, total_essays: 0, error_declinacao: 0, error_conjugacao: 0, error_sintaxe: 0, error_preposicao: 0, error_vocabulario: 0 });
         }
     }
 
