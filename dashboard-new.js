@@ -3762,7 +3762,11 @@ async function handleCorrectionSubmit(e) {
         totalCorrections: 0,
         transcripts: [], // Array de {timestamp, speaker, text}
         analysisTimer: null, // Timer de 5 minutos para análise
-        analysisTriggered: false
+        analysisTriggered: false,
+
+        // Acumulador de transcrição do usuário (junta fragmentos em frases)
+        currentUserTranscript: '',
+        transcriptFlushTimer: null
     };
 
     let conversacaoInitialized = false;
@@ -4112,19 +4116,29 @@ SPRACHE:
 
                 // Transcrição do que o usuário falou (entrada)
                 if (message.serverContent.inputTranscription) {
-                    const transcript = message.serverContent.inputTranscription.text;
-                    console.log('🎤 VOCÊ DISSE:', transcript);
-                    // Armazena transcript para análise no final da conversa
-                    if (transcript && transcript.trim().length > 3) {
-                        storeTranscript(transcript, 'user');
+                    const fragment = message.serverContent.inputTranscription.text || '';
+                    console.log('🎤 VOCÊ DISSE:', fragment);
+
+                    // Acumula fragmentos na frase atual
+                    conversacaoState.currentUserTranscript += fragment;
+
+                    // Reseta timer de flush
+                    if (conversacaoState.transcriptFlushTimer) {
+                        clearTimeout(conversacaoState.transcriptFlushTimer);
                     }
+
+                    // Flush após 2 segundos sem novos fragmentos
+                    conversacaoState.transcriptFlushTimer = setTimeout(() => {
+                        flushUserTranscript();
+                    }, 2000);
                 }
 
                 // Transcrição do que a IA falou (saída)
                 if (message.serverContent.outputTranscription) {
                     const transcript = message.serverContent.outputTranscription.text;
                     console.log('🤖 IA DISSE:', transcript);
-                    // Não analisamos a IA, apenas o usuário
+                    // Quando a IA fala, flush o transcript do usuário acumulado
+                    flushUserTranscript();
                 }
 
                 // Generation complete - a IA terminou de gerar resposta
@@ -4505,6 +4519,10 @@ SPRACHE:
     // Desconectar da conversa
     function disconnectConversation() {
         console.log('Desconectando...');
+
+        // Flush qualquer transcript pendente antes de desconectar
+        flushUserTranscript();
+
         console.log('📊 Total de transcripts armazenados:', conversacaoState.transcripts.length);
         console.log('📊 Transcripts:', JSON.stringify(conversacaoState.transcripts, null, 2));
 
@@ -4773,18 +4791,42 @@ SPRACHE:
         vocabulario: { hex: '#4ade80', name: 'Vocabulário' }
     };
 
-    // Função para armazenar transcrição (NÃO faz chamada API em tempo real)
+    // Função para fazer flush do transcript acumulado do usuário
+    function flushUserTranscript() {
+        if (conversacaoState.transcriptFlushTimer) {
+            clearTimeout(conversacaoState.transcriptFlushTimer);
+            conversacaoState.transcriptFlushTimer = null;
+        }
+
+        const accumulated = conversacaoState.currentUserTranscript.trim();
+        conversacaoState.currentUserTranscript = '';
+
+        // Só armazena se tiver conteúdo significativo (mais de 5 caracteres)
+        if (accumulated.length > 5) {
+            // Limpa ruídos e fragmentos inválidos
+            const cleaned = accumulated
+                .replace(/<noise>/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            if (cleaned.length > 5) {
+                storeTranscript(cleaned, 'user');
+            }
+        }
+    }
+
+    // Função para armazenar transcrição completa
     function storeTranscript(text, speaker) {
-        if (!text || text.trim().length < 3) return;
+        if (!text || text.trim().length < 5) return;
 
         // Adiciona ao array de transcripts
         conversacaoState.transcripts.push({
             timestamp: Date.now(),
-            speaker: speaker, // 'user' ou 'ai'
+            speaker: speaker,
             text: text.trim()
         });
 
-        console.log(`📝 Transcript armazenado (${speaker}):`, text.substring(0, 50) + '...');
+        console.log(`📝 FRASE COMPLETA ARMAZENADA (${speaker}):`, text);
 
         // Inicia timer de 5 minutos se ainda não foi iniciado
         if (!conversacaoState.analysisTimer && !conversacaoState.analysisTriggered) {
@@ -4979,6 +5021,11 @@ SPRACHE:
         conversacaoState.totalCorrections = 0;
         conversacaoState.transcripts = [];
         conversacaoState.analysisTriggered = false;
+        conversacaoState.currentUserTranscript = '';
+        if (conversacaoState.transcriptFlushTimer) {
+            clearTimeout(conversacaoState.transcriptFlushTimer);
+            conversacaoState.transcriptFlushTimer = null;
+        }
         if (conversacaoState.analysisTimer) {
             clearTimeout(conversacaoState.analysisTimer);
             conversacaoState.analysisTimer = null;
