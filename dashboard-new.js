@@ -3739,6 +3739,8 @@ async function handleCorrectionSubmit(e) {
         totalSeconds: 0,
         conversationHistory: [],
         creditsUsed: 0,
+        isAISpeaking: false,
+        turnCount: 0,
 
         // Silence detection
         lastSoundTime: null,
@@ -3945,6 +3947,20 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
                         systemInstruction: {
                             parts: [{ text: GERMAN_TUTOR_INSTRUCTION }]
                         },
+                        // Configuração de detecção de atividade de voz (VAD)
+                        realtimeInputConfig: {
+                            automaticActivityDetection: {
+                                disabled: false,
+                                // Sensibilidade para detectar início de fala (LOW = mais sensível)
+                                startOfSpeechSensitivity: 'START_SENSITIVITY_LOW',
+                                // Sensibilidade para detectar fim de fala (LOW = espera mais tempo)
+                                endOfSpeechSensitivity: 'END_SENSITIVITY_LOW',
+                                // Tempo de silêncio antes de considerar fim de fala (ms)
+                                silenceDurationMs: 1000,
+                                // Padding antes do início da fala (ms)
+                                prefixPaddingMs: 300
+                            }
+                        },
                         // Ativar transcrição de entrada para melhor compreensão
                         inputAudioTranscription: {},
                         // Ativar transcrição de saída para debug
@@ -4064,6 +4080,11 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
 
                     // Áudio da resposta (como no exemplo oficial)
                     if (part.inlineData && part.inlineData.data) {
+                        // Marcar que a IA está falando
+                        if (!conversacaoState.isAISpeaking) {
+                            console.log('🗣️ IA começou a falar...');
+                            conversacaoState.isAISpeaking = true;
+                        }
                         // Adicionar à fila de áudio
                         conversacaoState.audioQueue.push(part.inlineData.data);
                         // Iniciar playback se não estiver tocando
@@ -4075,8 +4096,12 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
 
                 // Fim do turno do servidor
                 if (message.serverContent.turnComplete) {
-                    console.log('Turno do servidor completo');
+                    console.log('✅ Turno do servidor completo - IA terminou de falar');
+                    console.log('👂 AGORA É SUA VEZ DE FALAR - O sistema está ouvindo...');
                     updateStatus('Sua vez de falar...', 'listening');
+                    conversacaoState.isAISpeaking = false;
+                    conversacaoState.turnCount = (conversacaoState.turnCount || 0) + 1;
+                    console.log(`📊 Turno #${conversacaoState.turnCount} completo`);
 
                     // Atualizar créditos (aproximado)
                     conversacaoState.creditsUsed += 0.5;
