@@ -78,8 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initAuth();
 
     _supabase.auth.onAuthStateChange((_event, session) => {
-<<<<<<< HEAD
-        // Ignora se já estamos processando ou se já temos um usuário
+        console.log('🔄 Auth state changed:', _event, session?.user?.email);
+
+        // Ignora se já estamos processando
         if (isProcessingAuth) return;
 
         if (session && session.user) {
@@ -91,32 +92,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.dispatchEvent(new CustomEvent('userAuthenticated', { detail: { user: session.user } }));
             }
         } else if (!isOAuthCallback()) {
-            // Só redireciona se não estiver processando OAuth
-=======
-        console.log('🔄 Dashboard: Auth state changed:', _event, session?.user?.email);
-
-        if (session && session.user) {
-            currentUser = session.user;
-            window.currentUser = session.user; // Tornar globalmente acessível para o iframe do chatbot
-            initializeApp(currentUser);
-
-            // Avisa os outros scripts (como o chatbot) que o usuário foi autenticado.
-            window.dispatchEvent(new CustomEvent('userAuthenticated', { detail: { user: session.user } }));
-
-        } else {
-            console.log('❌ Dashboard: No session, redirecting to login');
->>>>>>> origin/main
+            console.log('❌ No session, redirecting to login');
             window.location.href = 'login.html';
         }
     });
 
     async function initializeApp(user) {
-<<<<<<< HEAD
         console.log('🚀 Inicializando app para usuário:', user.email);
-=======
-        console.log('🚀 Dashboard: Initializing app for user:', user.email);
-        console.log('🔑 Dashboard: User ID:', user.id);
->>>>>>> origin/main
+        console.log('🔑 User ID:', user.id);
 
         try {
             // Verificar se usuário completou onboarding ANTES de carregar dashboard
@@ -125,48 +108,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 .select('id')
                 .eq('id', user.id)
                 .single();
-<<<<<<< HEAD
-=======
 
-            console.log('📊 Dashboard: Lead data:', leadData);
-            console.log('📊 Dashboard: Lead error:', leadError);
+            console.log('📊 Lead data:', leadData);
+            console.log('📊 Lead error:', leadError);
 
-            // Se houve erro diferente de "não encontrado", logar e continuar
             if (leadError && leadError.code !== 'PGRST116') {
-                console.error('⚠️ Dashboard: Error checking leads table:', leadError);
-                // Tentar continuar mesmo assim - pode ser um problema temporário
+                console.error('⚠️ Erro ao verificar leads (continuando mesmo assim):', leadError);
             }
 
             // Se não está na tabela leads, redirecionar para onboarding
-            if (!leadData) {
-                console.log('➡️ Dashboard: User not in leads, redirecting to onboarding');
-                window.location.href = 'onboarding.html';
-                return; // Parar execução aqui
-            }
-
-            console.log('✅ Dashboard: User found in leads, loading dashboard');
-        } catch (err) {
-            console.error('❌ Dashboard: Unexpected error in initializeApp:', err);
-            // Tentar continuar mesmo assim
-        }
->>>>>>> origin/main
-
-            if (leadError && leadError.code !== 'PGRST116') {
-                // Erro de banco de dados (não é "não encontrado")
-                // Loga o erro mas continua carregando o dashboard
-                console.error('Erro ao verificar leads (continuando mesmo assim):', leadError);
-            }
-
-            // Se não está na tabela leads (e não foi erro de banco), redirecionar para onboarding
             if (!leadData && (!leadError || leadError.code === 'PGRST116')) {
-                console.log('Usuário não completou onboarding, redirecionando...');
+                console.log('➡️ Usuário não completou onboarding, redirecionando...');
                 window.location.href = 'onboarding.html';
-                return; // Parar execução aqui
+                return;
             }
 
             console.log('✅ Usuário já completou onboarding, carregando perfil...');
 
-            // Só continua se usuário está na tabela leads (ou se houve erro de banco)
+            // Carregar perfil e anexar listeners
             await loadUserProfile(user);
             attachEventListeners();
 
@@ -3789,7 +3748,7 @@ async function handleCorrectionSubmit(e) {
         // Reconnection
         reconnectAttempts: 0,
         maxReconnectAttempts: 3,
-        shouldReconnect: false
+        shouldReconnect: false,
 
         // Settings
         continuousMode: true,
