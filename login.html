@@ -199,15 +199,37 @@
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            messageDiv.textContent = '';
+            messageDiv.textContent = 'Entrando...';
+            messageDiv.className = 'text-center text-slate-400 mt-4';
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
-            const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
-            if (error) {
-                messageDiv.textContent = 'E-mail ou senha inválidos.';
+
+            try {
+                const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+
+                if (error) {
+                    console.error('Login error:', error);
+                    let errorMessage = 'E-mail ou senha inválidos.';
+
+                    // Mensagens de erro mais específicas
+                    if (error.message.includes('Email not confirmed')) {
+                        errorMessage = 'Por favor, confirme seu e-mail antes de fazer login. Verifique sua caixa de entrada.';
+                    } else if (error.message.includes('Invalid login credentials')) {
+                        errorMessage = 'E-mail ou senha incorretos. Tente novamente.';
+                    }
+
+                    messageDiv.textContent = errorMessage;
+                    messageDiv.className = 'text-center text-red-400 mt-4';
+                } else {
+                    // Login bem-sucedido - o onAuthStateChange vai cuidar do redirecionamento
+                    messageDiv.textContent = 'Login realizado! Redirecionando...';
+                    messageDiv.className = 'text-center text-green-400 mt-4';
+                    console.log('Login successful, waiting for onAuthStateChange to redirect...');
+                }
+            } catch (err) {
+                console.error('Unexpected login error:', err);
+                messageDiv.textContent = 'Erro inesperado. Tente novamente.';
                 messageDiv.className = 'text-center text-red-400 mt-4';
-            } else {
-                window.location.href = 'dashboard-new.html';
             }
         });
 
@@ -276,6 +298,8 @@
         }
 
         _supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log('🔄 Auth state changed:', event, session?.user?.email);
+
             // 3. O listener ainda pode apanhar o evento como um backup, mas a verificação da URL já fez o trabalho.
             if (event === 'PASSWORD_RECOVERY') {
                 showForm(updatePasswordContainer);
@@ -287,23 +311,38 @@
                  // Verifica se a URL atual não é a do dashboard para evitar loops
                 if (!window.location.pathname.endsWith('dashboard-new.html') && !window.location.pathname.endsWith('onboarding.html')) {
                     console.log('🔍 Verificando onboarding para usuário:', session.user.email);
+                    console.log('🔍 User ID:', session.user.id);
 
-                    // Verificar se usuário já completou onboarding
-                    const { data: leadData, error: leadError } = await _supabase
-                        .from('leads')
-                        .select('id')
-                        .eq('id', session.user.id)
-                        .single();
+                    try {
+                        // Verificar se usuário já completou onboarding
+                        const { data: leadData, error: leadError } = await _supabase
+                            .from('leads')
+                            .select('id')
+                            .eq('id', session.user.id)
+                            .single();
 
-                    console.log('Lead data:', leadData);
-                    console.log('Lead error:', leadError);
+                        console.log('Lead data:', leadData);
+                        console.log('Lead error:', leadError);
 
-                    // Se não está na tabela leads, redirecionar para onboarding
-                    if (!leadData) {
-                        console.log('✅ Usuário NÃO está na tabela leads - redirecionando para onboarding');
-                        window.location.href = 'onboarding.html';
-                    } else {
-                        console.log('✅ Usuário JÁ está na tabela leads - redirecionando para dashboard');
+                        // Se houve erro diferente de "não encontrado", redirecionar para dashboard
+                        // e deixar o dashboard lidar com a verificação
+                        if (leadError && leadError.code !== 'PGRST116') {
+                            console.warn('⚠️ Erro ao verificar leads, redirecionando para dashboard:', leadError);
+                            window.location.href = 'dashboard-new.html';
+                            return;
+                        }
+
+                        // Se não está na tabela leads, redirecionar para onboarding
+                        if (!leadData) {
+                            console.log('✅ Usuário NÃO está na tabela leads - redirecionando para onboarding');
+                            window.location.href = 'onboarding.html';
+                        } else {
+                            console.log('✅ Usuário JÁ está na tabela leads - redirecionando para dashboard');
+                            window.location.href = 'dashboard-new.html';
+                        }
+                    } catch (err) {
+                        console.error('❌ Erro inesperado ao verificar onboarding:', err);
+                        // Em caso de erro, tentar redirecionar para dashboard
                         window.location.href = 'dashboard-new.html';
                     }
                 }
