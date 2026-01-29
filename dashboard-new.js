@@ -3743,6 +3743,8 @@ async function handleCorrectionSubmit(e) {
         // Silence detection
         lastSoundTime: null,
         silenceCheckInterval: null,
+        keepAliveInterval: null,
+        connectionStartTime: null,
         SILENCE_TIMEOUT: 120000, // 2 minutos de silêncio para desconectar (era 5s)
 
         // Reconnection
@@ -3947,7 +3949,8 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
 
             conversacaoState.ws.onclose = (event) => {
                 clearTimeout(connectionTimeout);
-                console.log('WebSocket fechado:', event.code, event.reason);
+                console.log('⚠️ WebSocket fechado - Código:', event.code, '- Razão:', event.reason || 'não especificada');
+                console.log('⚠️ WasClean:', event.wasClean, '- Tempo de conexão:', Math.round((Date.now() - (conversacaoState.connectionStartTime || Date.now())) / 1000), 's');
 
                 // Códigos de erro que permitem reconexão
                 const reconnectableCodes = [1006, 1001, 1011, 1012, 1013, 1014];
@@ -4005,14 +4008,16 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
 
             // Setup complete - pronto para conversar
             if (message.setupComplete) {
-                console.log('Setup completo - iniciando captura de áudio');
+                console.log('✅ Setup completo - iniciando captura de áudio');
                 conversacaoState.isConnected = true;
                 conversacaoState.isConnecting = false;
                 conversacaoState.reconnectAttempts = 0; // Reset contador de reconexão
+                conversacaoState.connectionStartTime = Date.now(); // Registrar início da conexão
                 updateStatus('Conectado - Fale agora!', 'connected');
                 updateConversacaoUI('recording');
                 startAudioCapture();
                 startTimer();
+                startKeepAlive(); // Iniciar keep-alive
             }
 
             // Resposta do servidor (texto ou áudio)
@@ -4062,6 +4067,29 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
             if (message.error) {
                 console.error('Erro do servidor:', message.error);
                 showConversacaoError(message.error.message || 'Erro do servidor');
+            }
+
+            // Sessão terminando (goAway) - reconectar automaticamente
+            if (message.goAway || message.sessionEnd || message.close) {
+                console.log('⚠️ Servidor solicitou encerramento da sessão');
+                console.log('Motivo:', message.goAway || message.sessionEnd || message.close);
+
+                // Tentar reconectar automaticamente
+                const savedApiKey = conversacaoState.apiKey;
+                cleanupConversation();
+                conversacaoState.apiKey = savedApiKey;
+
+                // Reconectar após pequeno delay
+                setTimeout(async () => {
+                    console.log('🔄 Reconectando após goAway...');
+                    updateStatus('Reconectando...', 'connecting');
+                    await connectConversation();
+                }, 1000);
+            }
+
+            // Log completo para debug (apenas em casos sem tratamento específico)
+            if (!message.setupComplete && !message.serverContent && !message.error && !message.goAway) {
+                console.log('📩 Mensagem não tratada:', JSON.stringify(message).substring(0, 500));
             }
 
         } catch (error) {
@@ -4126,6 +4154,40 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
     }
 
     // Iniciar detecção de silêncio
+    // Keep-alive para manter a conexão WebSocket ativa
+    function startKeepAlive() {
+        // Limpar intervalo anterior se existir
+        if (conversacaoState.keepAliveInterval) {
+            clearInterval(conversacaoState.keepAliveInterval);
+        }
+
+        // Enviar um ping a cada 20 segundos para manter a conexão
+        conversacaoState.keepAliveInterval = setInterval(() => {
+            if (conversacaoState.ws?.readyState === WebSocket.OPEN) {
+                try {
+                    // Enviar mensagem vazia de keep-alive
+                    const keepAliveMsg = {
+                        clientContent: {
+                            turns: [],
+                            turnComplete: false
+                        }
+                    };
+                    conversacaoState.ws.send(JSON.stringify(keepAliveMsg));
+                    console.log('💓 Keep-alive enviado');
+                } catch (err) {
+                    console.error('Erro ao enviar keep-alive:', err);
+                }
+            }
+        }, 20000); // A cada 20 segundos
+    }
+
+    function stopKeepAlive() {
+        if (conversacaoState.keepAliveInterval) {
+            clearInterval(conversacaoState.keepAliveInterval);
+            conversacaoState.keepAliveInterval = null;
+        }
+    }
+
     function startSilenceDetection() {
         // Limpar intervalo anterior se existir
         if (conversacaoState.silenceCheckInterval) {
@@ -4360,8 +4422,10 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
         conversacaoState.isConnecting = false;
         conversacaoState.isRecording = false;
         conversacaoState.ws = null;
+        conversacaoState.connectionStartTime = null;
 
-        // Parar detecção de silêncio
+        // Parar keep-alive e detecção de silêncio
+        stopKeepAlive();
         stopSilenceDetection();
 
         if (conversacaoState.stream) {
