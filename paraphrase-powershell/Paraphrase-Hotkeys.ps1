@@ -332,43 +332,122 @@ function Invoke-ParaphraseAPI {
     $apiUrl = if ($config.ApiUrl) { $config.ApiUrl } else { "https://api.openai.com/v1/chat/completions" }
     $model = if ($config.Model) { $config.Model } else { "gpt-4o-mini" }
 
-    $headers = @{
-        "Content-Type" = "application/json"
-        "Authorization" = "Bearer $($config.ApiKey)"
-    }
+    # Detectar se é API Anthropic ou OpenAI
+    $isAnthropic = $apiUrl -match "anthropic" -or $model -match "claude"
 
-    $body = @{
-        model = $model
-        messages = @(
-            @{
-                role = "system"
-                content = "Voce e um assistente especializado em parafrasear textos em ALEMAO. $StylePrompt IMPORTANTE: O texto de saida DEVE estar em alemao correto. Responda APENAS com o texto parafraseado em alemao, sem explicacoes adicionais."
-            },
-            @{
-                role = "user"
-                content = "Parafraseie o seguinte texto em alemao:`n`n$Text"
-            }
-        )
-        temperature = 0.7
-    } | ConvertTo-Json -Depth 10
+    if ($isAnthropic) {
+        # Headers para Anthropic
+        $headers = @{
+            "Content-Type" = "application/json"
+            "x-api-key" = $config.ApiKey
+            "anthropic-version" = "2023-06-01"
+        }
+
+        # Corpo para Anthropic
+        $body = @{
+            model = $model
+            max_tokens = 4096
+            system = "Voce e um assistente especializado em parafrasear textos em ALEMAO. $StylePrompt IMPORTANTE: O texto de saida DEVE estar em alemao correto. Responda APENAS com o texto parafraseado em alemao, sem explicacoes adicionais."
+            messages = @(
+                @{
+                    role = "user"
+                    content = "Parafraseie o seguinte texto em alemao:`n`n$Text"
+                }
+            )
+        } | ConvertTo-Json -Depth 10
+
+        # Ajustar URL se necessário
+        if (-not ($apiUrl -match "messages")) {
+            $apiUrl = "https://api.anthropic.com/v1/messages"
+        }
+    } else {
+        # Headers para OpenAI
+        $headers = @{
+            "Content-Type" = "application/json"
+            "Authorization" = "Bearer $($config.ApiKey)"
+        }
+
+        # Corpo para OpenAI
+        $body = @{
+            model = $model
+            messages = @(
+                @{
+                    role = "system"
+                    content = "Voce e um assistente especializado em parafrasear textos em ALEMAO. $StylePrompt IMPORTANTE: O texto de saida DEVE estar em alemao correto. Responda APENAS com o texto parafraseado em alemao, sem explicacoes adicionais."
+                },
+                @{
+                    role = "user"
+                    content = "Parafraseie o seguinte texto em alemao:`n`n$Text"
+                }
+            )
+            temperature = 0.7
+        } | ConvertTo-Json -Depth 10
+    }
 
     Write-Log "Chamando API: $apiUrl com modelo $model"
 
     try {
-        $response = Invoke-RestMethod -Uri $apiUrl -Method Post -Headers $headers -Body $body -TimeoutSec 30
-        $result = $response.choices[0].message.content.Trim()
-        Write-Log "API respondeu com sucesso"
-        return $result
-    } catch {
+        # Use Invoke-WebRequest para ter mais controle sobre a resposta
+        $webResponse = Invoke-WebRequest -Uri $apiUrl -Method Post -Headers $headers -Body $body -TimeoutSec 30 -UseBasicParsing
+        $responseContent = $webResponse.Content
+
+        Write-Log "Resposta recebida (status: $($webResponse.StatusCode))"
+
+        # Tentar parsear JSON manualmente com tratamento de erro
+        try {
+            $response = $responseContent | ConvertFrom-Json
+        } catch {
+            Write-Log "Erro ao parsear JSON da resposta: $responseContent" "ERROR"
+            throw "Resposta da API nao e JSON valido. Resposta: $($responseContent.Substring(0, [Math]::Min(200, $responseContent.Length)))"
+        }
+
+        # Verificar se ha erro na resposta
+        if ($response.error) {
+            throw "API Error: $($response.error.message)"
+        }
+
+        # Verificar se a resposta tem o formato esperado (OpenAI)
+        if ($response.choices -and $response.choices[0].message.content) {
+            $result = $response.choices[0].message.content.Trim()
+            Write-Log "API respondeu com sucesso"
+            return $result
+        }
+        # Formato Anthropic/Claude
+        elseif ($response.content -and $response.content[0].text) {
+            $result = $response.content[0].text.Trim()
+            Write-Log "API respondeu com sucesso (formato Anthropic)"
+            return $result
+        }
+        else {
+            Write-Log "Formato de resposta desconhecido: $responseContent" "ERROR"
+            throw "Formato de resposta da API desconhecido"
+        }
+    } catch [System.Net.WebException] {
         $errorMessage = $_.Exception.Message
         if ($_.Exception.Response) {
             try {
                 $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
                 $errorBody = $reader.ReadToEnd()
-                $errorMessage = "API Error: $errorBody"
-            } catch {}
+                Write-Log "Erro da API: $errorBody" "ERROR"
+
+                # Tentar extrair mensagem de erro do JSON
+                try {
+                    $errorJson = $errorBody | ConvertFrom-Json
+                    if ($errorJson.error.message) {
+                        $errorMessage = $errorJson.error.message
+                    } else {
+                        $errorMessage = $errorBody
+                    }
+                } catch {
+                    $errorMessage = "API Error: $errorBody"
+                }
+            } catch {
+                $errorMessage = "Erro de conexao: $($_.Exception.Message)"
+            }
         }
         throw $errorMessage
+    } catch {
+        throw $_.Exception.Message
     }
 }
 
