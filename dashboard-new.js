@@ -3898,6 +3898,14 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
                 }
             });
 
+            // Log das configurações reais do microfone
+            const audioTrack = conversacaoState.stream.getAudioTracks()[0];
+            const settings = audioTrack.getSettings();
+            console.log('🎤 MICROFONE OBTIDO:');
+            console.log('   - Sample Rate real:', settings.sampleRate || 'não disponível');
+            console.log('   - Channels:', settings.channelCount || 'não disponível');
+            console.log('   - Device:', settings.deviceId?.substring(0, 20) || 'padrão');
+
             // Conectar WebSocket ao Gemini Live API
             // Usando v1alpha que funciona com gemini-2.0-flash-exp
             const wsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${conversacaoState.apiKey}`;
@@ -4156,6 +4164,7 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
 
             // Contador para log de debug
             let audioChunksSent = 0;
+            let totalBytesEnviados = 0;
 
             conversacaoState.workletNode.port.onmessage = (event) => {
                 if (conversacaoState.ws?.readyState === WebSocket.OPEN && conversacaoState.isConnected) {
@@ -4168,6 +4177,7 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
 
                     // Converter para base64 e enviar
                     const audioBase64 = arrayBufferToBase64(audioData);
+                    totalBytesEnviados += audioData.byteLength;
 
                     // Formato correto conforme documentação Gemini Live API
                     const audioMessage = {
@@ -4181,10 +4191,18 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
 
                     conversacaoState.ws.send(JSON.stringify(audioMessage));
 
-                    // Log a cada 50 chunks (~3 segundos de áudio)
+                    // Log do primeiro chunk para confirmar que está funcionando
                     audioChunksSent++;
+                    if (audioChunksSent === 1) {
+                        console.log('🎤 PRIMEIRO CHUNK DE ÁUDIO ENVIADO!');
+                        console.log('   - Tamanho do chunk:', audioData.byteLength, 'bytes');
+                        console.log('   - Base64 length:', audioBase64.length);
+                        console.log('   - Som detectado:', hasSound);
+                    }
+
+                    // Log a cada 50 chunks (~3 segundos de áudio)
                     if (audioChunksSent % 50 === 0) {
-                        console.log(`🎙️ Áudio enviado: ${audioChunksSent} chunks, som detectado: ${hasSound}`);
+                        console.log(`🎙️ Áudio enviado: ${audioChunksSent} chunks (${Math.round(totalBytesEnviados/1024)}KB), som: ${hasSound}`);
                     }
                 }
             };
