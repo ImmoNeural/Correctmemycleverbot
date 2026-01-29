@@ -3758,8 +3758,8 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
             });
 
             // Conectar WebSocket ao Gemini Live API
-            // Usando o modelo gemini-2.5-flash-lite para menor custo
-            const wsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${conversacaoState.apiKey}`;
+            // Usando v1alpha que funciona com gemini-2.0-flash-exp
+            const wsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${conversacaoState.apiKey}`;
 
             conversacaoState.ws = new WebSocket(wsUrl);
 
@@ -3778,10 +3778,10 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
                 console.log('WebSocket conectado');
 
                 // Enviar configuração de setup
-                // Modelo Gemini 2.0 Flash Live - mais estável e com melhor qualidade de voz
+                // Modelo Gemini 2.5 Flash Native Audio - modelo mais recente para Live API
                 const setupMessage = {
                     setup: {
-                        model: 'models/gemini-2.0-flash-live-001',
+                        model: 'models/gemini-2.5-flash-native-audio-preview-12-2025',
                         generationConfig: {
                             responseModalities: ['AUDIO', 'TEXT'],
                             speechConfig: {
