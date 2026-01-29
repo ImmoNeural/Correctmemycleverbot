@@ -1974,6 +1974,8 @@ async function handleCorrectionSubmit(e) {
                                 loadFlashcardsData();
                             } else if (sectionName === 'chatbot') {
                                 initializeChatbot();
+                            } else if (sectionName === 'conversacao') {
+                                initializeConversacao();
                             }
                         }
                     }
@@ -2072,6 +2074,8 @@ async function handleCorrectionSubmit(e) {
                                 console.log('✅ Correção restaurada ao voltar para seção REDAÇÃO');
                             }
                         }
+                    } else if (sectionName === 'conversacao') {
+                        initializeConversacao();
                     }
                 }
             });
@@ -3577,6 +3581,481 @@ async function handleCorrectionSubmit(e) {
             });
         }
     };
+
+    // =====================================================================
+    // SISTEMA DE PRÁTICA DE CONVERSAÇÃO - GEMINI LIVE API
+    // =====================================================================
+
+    let conversacaoState = {
+        isRecording: false,
+        isPlaying: false,
+        mediaRecorder: null,
+        audioChunks: [],
+        stream: null,
+        startTime: null,
+        timerInterval: null,
+        totalSeconds: 0,
+        conversationHistory: [],
+        creditsUsed: 0
+    };
+
+    let conversacaoInitialized = false;
+
+    function initializeConversacao() {
+        if (conversacaoInitialized) return;
+        conversacaoInitialized = true;
+
+        console.log('Inicializando seção de conversação...');
+
+        // Botão do microfone
+        const micBtn = document.getElementById('conv-mic-btn');
+        if (micBtn) {
+            micBtn.addEventListener('click', toggleRecording);
+        }
+
+        // Botão de mudo
+        const muteBtn = document.getElementById('conv-mute-btn');
+        if (muteBtn) {
+            muteBtn.addEventListener('click', toggleMute);
+        }
+
+        // Botões de tópicos
+        const topicBtns = document.querySelectorAll('.conv-topic-btn');
+        topicBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const topic = btn.textContent.trim();
+                startConversationWithTopic(topic);
+            });
+        });
+
+        console.log('Seção de conversação inicializada');
+    }
+
+    async function toggleRecording() {
+        if (conversacaoState.isRecording) {
+            stopRecording();
+        } else {
+            await startRecording();
+        }
+    }
+
+    async function startRecording() {
+        try {
+            // Verificar se o navegador suporta MediaRecorder
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showConversacaoError('Seu navegador não suporta gravação de áudio.');
+                return;
+            }
+
+            // Solicitar permissão do microfone
+            conversacaoState.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            // Criar MediaRecorder
+            const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+            conversacaoState.mediaRecorder = new MediaRecorder(conversacaoState.stream, { mimeType });
+            conversacaoState.audioChunks = [];
+
+            conversacaoState.mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    conversacaoState.audioChunks.push(event.data);
+                }
+            };
+
+            conversacaoState.mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(conversacaoState.audioChunks, { type: mimeType });
+                await sendAudioToAPI(audioBlob, mimeType);
+            };
+
+            // Iniciar gravação
+            conversacaoState.mediaRecorder.start();
+            conversacaoState.isRecording = true;
+            conversacaoState.startTime = Date.now();
+
+            // Atualizar UI
+            updateConversacaoUI('recording');
+            startTimer();
+
+            console.log('Gravação iniciada');
+
+        } catch (error) {
+            console.error('Erro ao iniciar gravação:', error);
+            if (error.name === 'NotAllowedError') {
+                showConversacaoError('Permissão de microfone negada. Por favor, permita o acesso ao microfone.');
+            } else {
+                showConversacaoError('Erro ao acessar o microfone: ' + error.message);
+            }
+        }
+    }
+
+    function stopRecording() {
+        if (conversacaoState.mediaRecorder && conversacaoState.isRecording) {
+            conversacaoState.mediaRecorder.stop();
+            conversacaoState.isRecording = false;
+
+            // Parar o stream
+            if (conversacaoState.stream) {
+                conversacaoState.stream.getTracks().forEach(track => track.stop());
+            }
+
+            // Atualizar UI
+            updateConversacaoUI('processing');
+            stopTimer();
+
+            console.log('Gravação parada');
+        }
+    }
+
+    async function sendAudioToAPI(audioBlob, mimeType) {
+        try {
+            updateConversacaoUI('processing');
+            updateStatus('Processando...', 'connecting');
+
+            // Converter blob para base64
+            const reader = new FileReader();
+            const base64Promise = new Promise((resolve) => {
+                reader.onloadend = () => {
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                };
+            });
+            reader.readAsDataURL(audioBlob);
+            const audioBase64 = await base64Promise;
+
+            // Calcular duração
+            const durationSeconds = conversacaoState.totalSeconds;
+
+            // Obter voz selecionada
+            const voiceSelect = document.getElementById('conv-voice-select');
+            const voice = voiceSelect ? voiceSelect.value : 'Puck';
+
+            // Enviar para a API
+            const response = await fetch('/.netlify/functions/conversacao', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'message',
+                    userId: currentUser?.id,
+                    audioBase64: audioBase64,
+                    mimeType: mimeType,
+                    conversationHistory: conversacaoState.conversationHistory,
+                    voice: voice,
+                    durationSeconds: durationSeconds
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                if (response.status === 402) {
+                    showConversacaoError(data.message || 'Créditos insuficientes');
+                } else {
+                    throw new Error(data.message || 'Erro ao processar áudio');
+                }
+                updateConversacaoUI('idle');
+                return;
+            }
+
+            // Adicionar à história
+            if (data.text) {
+                // Adicionar resposta do user (seria o transcript, mas não temos)
+                conversacaoState.conversationHistory.push({
+                    role: 'user',
+                    text: '[áudio enviado]'
+                });
+
+                // Adicionar resposta da IA
+                conversacaoState.conversationHistory.push({
+                    role: 'model',
+                    text: data.text
+                });
+
+                // Atualizar histórico visual
+                addMessageToHistory('user', '[Você falou]');
+                addMessageToHistory('ai', data.text);
+            }
+
+            // Reproduzir áudio de resposta
+            if (data.audioBase64) {
+                updateStatus('Reproduzindo resposta...', 'speaking');
+                await playAudioResponse(data.audioBase64, data.audioMimeType);
+            }
+
+            // Atualizar créditos usados
+            const creditsUsed = (durationSeconds / 60) * 2.5;
+            conversacaoState.creditsUsed += creditsUsed;
+            updateCreditsUsed();
+
+            updateConversacaoUI('idle');
+            updateStatus('Pronto para continuar', 'connected');
+
+            // Atualizar créditos do usuário no header
+            if (currentUser) {
+                loadUserProfile(currentUser);
+            }
+
+        } catch (error) {
+            console.error('Erro ao enviar áudio:', error);
+            showConversacaoError('Erro ao processar sua mensagem: ' + error.message);
+            updateConversacaoUI('idle');
+            updateStatus('Erro', 'idle');
+        }
+    }
+
+    async function playAudioResponse(audioBase64, mimeType) {
+        return new Promise((resolve) => {
+            try {
+                const audioData = atob(audioBase64);
+                const arrayBuffer = new ArrayBuffer(audioData.length);
+                const uint8Array = new Uint8Array(arrayBuffer);
+                for (let i = 0; i < audioData.length; i++) {
+                    uint8Array[i] = audioData.charCodeAt(i);
+                }
+
+                const blob = new Blob([uint8Array], { type: mimeType || 'audio/mp3' });
+                const audioUrl = URL.createObjectURL(blob);
+
+                const audio = new Audio(audioUrl);
+                conversacaoState.isPlaying = true;
+                updateConversacaoUI('playing');
+
+                audio.onended = () => {
+                    conversacaoState.isPlaying = false;
+                    URL.revokeObjectURL(audioUrl);
+                    resolve();
+                };
+
+                audio.onerror = (e) => {
+                    console.error('Erro ao reproduzir áudio:', e);
+                    conversacaoState.isPlaying = false;
+                    URL.revokeObjectURL(audioUrl);
+                    resolve();
+                };
+
+                audio.play();
+            } catch (error) {
+                console.error('Erro ao decodificar áudio:', error);
+                resolve();
+            }
+        });
+    }
+
+    async function startConversationWithTopic(topic) {
+        try {
+            updateStatus('Iniciando conversa...', 'connecting');
+
+            const voiceSelect = document.getElementById('conv-voice-select');
+            const voice = voiceSelect ? voiceSelect.value : 'Puck';
+
+            // Enviar texto inicial
+            const response = await fetch('/.netlify/functions/conversacao', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'message',
+                    userId: currentUser?.id,
+                    text: `Vamos praticar uma conversa sobre: ${topic}. Por favor, comece a conversa em alemão sobre este tema.`,
+                    conversationHistory: [],
+                    voice: voice,
+                    durationSeconds: 0
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Erro ao iniciar conversa');
+            }
+
+            // Limpar histórico anterior
+            conversacaoState.conversationHistory = [];
+            clearHistory();
+
+            // Adicionar à história
+            if (data.text) {
+                conversacaoState.conversationHistory.push({
+                    role: 'model',
+                    text: data.text
+                });
+                addMessageToHistory('ai', data.text);
+            }
+
+            // Reproduzir áudio
+            if (data.audioBase64) {
+                updateStatus('Reproduzindo...', 'speaking');
+                await playAudioResponse(data.audioBase64, data.audioMimeType);
+            }
+
+            updateStatus('Sua vez de falar!', 'connected');
+
+        } catch (error) {
+            console.error('Erro ao iniciar conversa:', error);
+            showConversacaoError('Erro ao iniciar conversa: ' + error.message);
+            updateStatus('Erro', 'idle');
+        }
+    }
+
+    function updateConversacaoUI(state) {
+        const micBtn = document.getElementById('conv-mic-btn');
+        const micIcon = document.getElementById('conv-mic-icon');
+        const stopIcon = document.getElementById('conv-stop-icon');
+        const pulseRing = document.getElementById('conv-pulse-ring');
+        const waveContainer = document.getElementById('conv-wave-container');
+        const idleText = document.getElementById('conv-idle-text');
+        const muteBtn = document.getElementById('conv-mute-btn');
+
+        if (!micBtn) return;
+
+        switch (state) {
+            case 'recording':
+                micBtn.classList.add('active');
+                micIcon.classList.add('hidden');
+                stopIcon.classList.remove('hidden');
+                pulseRing.classList.remove('opacity-0');
+                waveContainer.classList.add('conv-wave-active');
+                waveContainer.classList.remove('hidden');
+                if (idleText) idleText.classList.add('hidden');
+                if (muteBtn) muteBtn.disabled = false;
+                break;
+
+            case 'processing':
+                micBtn.classList.remove('active');
+                micIcon.classList.remove('hidden');
+                stopIcon.classList.add('hidden');
+                pulseRing.classList.add('opacity-0');
+                waveContainer.classList.remove('conv-wave-active');
+                break;
+
+            case 'playing':
+                waveContainer.classList.add('conv-wave-active');
+                break;
+
+            case 'idle':
+            default:
+                micBtn.classList.remove('active');
+                micIcon.classList.remove('hidden');
+                stopIcon.classList.add('hidden');
+                pulseRing.classList.add('opacity-0');
+                waveContainer.classList.remove('conv-wave-active');
+                if (conversacaoState.conversationHistory.length === 0) {
+                    if (idleText) idleText.classList.remove('hidden');
+                    waveContainer.classList.add('hidden');
+                }
+                if (muteBtn) muteBtn.disabled = true;
+                break;
+        }
+    }
+
+    function updateStatus(text, state) {
+        const statusDot = document.getElementById('conv-status-dot');
+        const statusText = document.getElementById('conv-status-text');
+
+        if (statusText) statusText.textContent = text;
+
+        if (statusDot) {
+            statusDot.className = 'w-3 h-3 rounded-full';
+            switch (state) {
+                case 'connecting':
+                    statusDot.classList.add('connecting');
+                    break;
+                case 'connected':
+                    statusDot.classList.add('connected');
+                    break;
+                case 'speaking':
+                    statusDot.classList.add('speaking');
+                    break;
+                case 'listening':
+                    statusDot.classList.add('listening');
+                    break;
+                default:
+                    statusDot.classList.add('bg-slate-500');
+            }
+        }
+    }
+
+    function startTimer() {
+        conversacaoState.totalSeconds = 0;
+        updateTimerDisplay();
+        conversacaoState.timerInterval = setInterval(() => {
+            conversacaoState.totalSeconds++;
+            updateTimerDisplay();
+        }, 1000);
+    }
+
+    function stopTimer() {
+        if (conversacaoState.timerInterval) {
+            clearInterval(conversacaoState.timerInterval);
+            conversacaoState.timerInterval = null;
+        }
+    }
+
+    function updateTimerDisplay() {
+        const timerEl = document.getElementById('conv-timer');
+        if (timerEl) {
+            const minutes = Math.floor(conversacaoState.totalSeconds / 60);
+            const seconds = conversacaoState.totalSeconds % 60;
+            timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+    }
+
+    function updateCreditsUsed() {
+        const creditsEl = document.getElementById('conv-credits-used');
+        if (creditsEl) {
+            creditsEl.textContent = `${conversacaoState.creditsUsed.toFixed(1)} créditos usados`;
+        }
+    }
+
+    function addMessageToHistory(type, text) {
+        const historyEl = document.getElementById('conv-history');
+        if (!historyEl) return;
+
+        // Remover mensagem inicial se existir
+        const emptyMsg = historyEl.querySelector('.text-center');
+        if (emptyMsg) emptyMsg.remove();
+
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `conv-msg ${type === 'user' ? 'conv-msg-user' : 'conv-msg-ai'}`;
+        msgDiv.innerHTML = `<p class="text-white text-sm">${escapeHtml(text)}</p>`;
+
+        historyEl.appendChild(msgDiv);
+        historyEl.scrollTop = historyEl.scrollHeight;
+    }
+
+    function clearHistory() {
+        const historyEl = document.getElementById('conv-history');
+        if (historyEl) {
+            historyEl.innerHTML = `
+                <div class="text-center text-slate-500 py-4">
+                    <p>Nenhuma conversa ainda.</p>
+                    <p class="text-sm mt-1">Clique no microfone para começar a praticar!</p>
+                </div>
+            `;
+        }
+    }
+
+    function showConversacaoError(message) {
+        const historyEl = document.getElementById('conv-history');
+        if (historyEl) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'p-3 bg-red-900/30 border border-red-500/50 rounded-lg text-center';
+            errorDiv.innerHTML = `<p class="text-red-400 text-sm">${escapeHtml(message)}</p>`;
+            historyEl.appendChild(errorDiv);
+            historyEl.scrollTop = historyEl.scrollHeight;
+        }
+    }
+
+    function toggleMute() {
+        if (conversacaoState.stream) {
+            const audioTrack = conversacaoState.stream.getAudioTracks()[0];
+            if (audioTrack) {
+                audioTrack.enabled = !audioTrack.enabled;
+                const muteBtn = document.getElementById('conv-mute-btn');
+                if (muteBtn) {
+                    muteBtn.classList.toggle('bg-red-600', !audioTrack.enabled);
+                    muteBtn.classList.toggle('bg-slate-700', audioTrack.enabled);
+                }
+            }
+        }
+    }
 });
 
 
