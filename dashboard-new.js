@@ -3618,7 +3618,12 @@ async function handleCorrectionSubmit(e) {
         // Silence detection
         lastSoundTime: null,
         silenceCheckInterval: null,
-        SILENCE_TIMEOUT: 5000, // 5 segundos de silêncio para desconectar
+        SILENCE_TIMEOUT: 120000, // 2 minutos de silêncio para desconectar (era 5s)
+
+        // Reconnection
+        reconnectAttempts: 0,
+        maxReconnectAttempts: 3,
+        shouldReconnect: false
 
         // Settings
         continuousMode: true,
@@ -3627,23 +3632,27 @@ async function handleCorrectionSubmit(e) {
 
     let conversacaoInitialized = false;
 
-    // System instruction para o tutor de alemão
-    const GERMAN_TUTOR_INSTRUCTION = `Du bist ein freundlicher Deutschlehrer für brasilianische Schüler.
+    // System instruction para o tutor de alemão - MODO LIVRE
+    const GERMAN_TUTOR_INSTRUCTION = `Du bist ein freundlicher Gesprächspartner für Deutschübungen.
 
-WICHTIGE REGELN:
-1. Sprich IMMER auf Deutsch mit dem Schüler
-2. Wenn der Schüler einen Fehler macht:
-   - Korrigiere den Fehler sanft
-   - Erkläre kurz auf Portugiesisch warum es falsch war
-   - Fahre dann auf Deutsch fort
-3. Passe dein Niveau an den Schüler an
-4. Sei geduldig und ermutigend
-5. Verwende einfache, klare Sätze
-6. Stelle Fragen um das Gespräch fortzusetzen
+WICHTIG - FOLGE DEM GESPRÄCH:
+- Höre genau zu, was der Schüler sagt, und antworte darauf
+- Stelle Folgefragen zum Thema, das der Schüler erwähnt hat
+- KEINE vorgefertigten Themen oder Skripte - folge dem natürlichen Gesprächsfluss
+- Wenn der Schüler über Brasilien spricht, frage über Brasilien
+- Wenn der Schüler über Reisen spricht, frage über seine Reisen
+- Sei spontan und natürlich wie ein echter Freund
 
-Beispiel einer Korrektur:
-Schüler: "Ich habe gestern ins Kino gegangen"
-Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa o auxiliar 'sein', não 'haben') Und welchen Film hast du gesehen?"`;
+SPRACHE:
+- Sprich hauptsächlich Deutsch
+- Bei Fehlern: kurz korrigieren und weitermachen (nicht lange erklären)
+- Passe dein Niveau an - wenn der Schüler einfach spricht, sprich auch einfach
+
+STIL:
+- Sei locker und freundlich
+- Kurze, natürliche Antworten
+- Echtes Interesse am Gespräch zeigen
+- KEIN Lehrer-Modus mit vielen Regeln - einfach plaudern!`;
 
     function initializeConversacao() {
         if (conversacaoInitialized) return;
@@ -3802,18 +3811,24 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
             conversacaoState.ws.onerror = (error) => {
                 clearTimeout(connectionTimeout);
                 console.error('WebSocket error:', error);
-                showConversacaoError('Erro na conexão WebSocket. Verifique sua internet.');
-                disconnectConversation();
+                // Tentar reconectar automaticamente em caso de erro
+                attemptReconnection('Erro na conexão');
             };
 
             conversacaoState.ws.onclose = (event) => {
                 clearTimeout(connectionTimeout);
                 console.log('WebSocket fechado:', event.code, event.reason);
 
+                // Códigos de erro que permitem reconexão
+                const reconnectableCodes = [1006, 1001, 1011, 1012, 1013, 1014];
+                const shouldTryReconnect = reconnectableCodes.includes(event.code) &&
+                                           conversacaoState.isConnected &&
+                                           conversacaoState.reconnectAttempts < conversacaoState.maxReconnectAttempts;
+
                 // Códigos de erro específicos do WebSocket
                 let errorMsg = '';
                 if (event.code === 1006) {
-                    errorMsg = 'Conexão perdida inesperadamente. Verifique sua internet.';
+                    errorMsg = 'Conexão perdida. Tentando reconectar...';
                 } else if (event.code === 1008 || event.code === 1003) {
                     errorMsg = 'Erro de autenticação com a API. Tente novamente.';
                 } else if (event.code === 4001) {
@@ -3822,12 +3837,17 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
                     errorMsg = `Conexão encerrada: ${event.reason}`;
                 }
 
-                if (errorMsg && !conversacaoState.isConnected) {
-                    showConversacaoError(errorMsg);
-                } else if (conversacaoState.isConnected) {
-                    showConversacaoError('Conexão encerrada.');
+                if (shouldTryReconnect) {
+                    // Tentar reconectar automaticamente
+                    attemptReconnection(errorMsg);
+                } else {
+                    if (errorMsg && !conversacaoState.isConnected) {
+                        showConversacaoError(errorMsg);
+                    } else if (conversacaoState.isConnected) {
+                        showConversacaoError('Conexão encerrada.');
+                    }
+                    cleanupConversation();
                 }
-                cleanupConversation();
             };
 
         } catch (error) {
@@ -3858,6 +3878,7 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
                 console.log('Setup completo - iniciando captura de áudio');
                 conversacaoState.isConnected = true;
                 conversacaoState.isConnecting = false;
+                conversacaoState.reconnectAttempts = 0; // Reset contador de reconexão
                 updateStatus('Conectado - Fale agora!', 'connected');
                 updateConversacaoUI('recording');
                 startAudioCapture();
@@ -3991,15 +4012,15 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
             const timeSinceLastSound = Date.now() - conversacaoState.lastSoundTime;
 
             if (timeSinceLastSound >= conversacaoState.SILENCE_TIMEOUT) {
-                console.log('Silêncio detectado por 5 segundos - desconectando...');
+                console.log('Silêncio detectado por 2 minutos - desconectando...');
                 updateStatus('Desconectado por inatividade', 'idle');
                 disconnectConversation();
-            } else if (timeSinceLastSound >= 3000) {
-                // Avisar o usuário que vai desconectar em breve
+            } else if (timeSinceLastSound >= conversacaoState.SILENCE_TIMEOUT - 30000) {
+                // Avisar o usuário apenas nos últimos 30 segundos
                 const remaining = Math.ceil((conversacaoState.SILENCE_TIMEOUT - timeSinceLastSound) / 1000);
-                updateStatus(`Sem som detectado... (${remaining}s)`, 'warning');
+                updateStatus(`Inatividade detectada... (${remaining}s)`, 'warning');
             }
-        }, 1000);
+        }, 5000); // Verificar a cada 5 segundos (não precisa ser tão frequente)
     }
 
     // Parar detecção de silêncio
@@ -4079,21 +4100,21 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
 
             // Criar nós de processamento para melhor qualidade
             conversacaoState.gainNode = conversacaoState.playbackContext.createGain();
-            conversacaoState.gainNode.gain.value = 1.2; // Leve aumento de volume
+            conversacaoState.gainNode.gain.value = 1.3; // Aumento de volume
 
-            // Filtro passa-baixa para suavizar o som e remover ruído
+            // Filtro passa-baixa mais suave - não cortar tanto a voz
             conversacaoState.lowPassFilter = conversacaoState.playbackContext.createBiquadFilter();
             conversacaoState.lowPassFilter.type = 'lowpass';
-            conversacaoState.lowPassFilter.frequency.value = 8000; // Corta frequências altas (ruído)
-            conversacaoState.lowPassFilter.Q.value = 0.7;
+            conversacaoState.lowPassFilter.frequency.value = 12000; // Frequência mais alta para não cortar a voz
+            conversacaoState.lowPassFilter.Q.value = 0.5; // Q mais baixo = transição mais suave
 
-            // Compressor para normalizar volume e evitar distorção
+            // Compressor mais suave para não distorcer
             conversacaoState.compressor = conversacaoState.playbackContext.createDynamicsCompressor();
-            conversacaoState.compressor.threshold.value = -20;
-            conversacaoState.compressor.knee.value = 30;
-            conversacaoState.compressor.ratio.value = 4;
-            conversacaoState.compressor.attack.value = 0.003;
-            conversacaoState.compressor.release.value = 0.25;
+            conversacaoState.compressor.threshold.value = -24;
+            conversacaoState.compressor.knee.value = 40;
+            conversacaoState.compressor.ratio.value = 3;
+            conversacaoState.compressor.attack.value = 0.01;
+            conversacaoState.compressor.release.value = 0.3;
 
             // Conectar cadeia de áudio
             conversacaoState.gainNode.connect(conversacaoState.lowPassFilter);
@@ -4101,9 +4122,10 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
             conversacaoState.compressor.connect(conversacaoState.playbackContext.destination);
         }
 
-        // Acumular chunks para reprodução mais suave
-        let accumulatedSamples = [];
+        // Acumular TODOS os chunks primeiro para reprodução contínua sem tremor
+        let allSamples = [];
 
+        // Coletar todos os chunks disponíveis
         while (conversacaoState.audioQueue.length > 0) {
             const base64Data = conversacaoState.audioQueue.shift();
 
@@ -4123,40 +4145,53 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
                     float32Data[i] = int16Data[i] / 32768;
                 }
 
-                // Aplicar fade-in/fade-out suave para evitar cliques
-                const fadeLength = Math.min(64, float32Data.length / 4);
-                for (let i = 0; i < fadeLength; i++) {
-                    const fadeIn = i / fadeLength;
-                    float32Data[i] *= fadeIn;
-                    float32Data[float32Data.length - 1 - i] *= fadeIn;
-                }
-
-                // Acumular amostras
-                accumulatedSamples.push(...float32Data);
-
-                // Reproduzir quando tiver amostras suficientes ou a fila esvaziar
-                if (accumulatedSamples.length >= 4800 || conversacaoState.audioQueue.length === 0) {
-                    const samples = new Float32Array(accumulatedSamples);
-                    accumulatedSamples = [];
-
-                    // Criar buffer e tocar
-                    const audioBuffer = conversacaoState.playbackContext.createBuffer(1, samples.length, 24000);
-                    audioBuffer.getChannelData(0).set(samples);
-
-                    const source = conversacaoState.playbackContext.createBufferSource();
-                    source.buffer = audioBuffer;
-                    source.connect(conversacaoState.gainNode);
-
-                    // Esperar o chunk terminar antes de tocar o próximo
-                    await new Promise((resolve) => {
-                        source.onended = resolve;
-                        source.start();
-                    });
-                }
+                // NÃO aplicar fade em cada chunk - isso causa tremor!
+                // Apenas acumular as amostras
+                allSamples.push(...float32Data);
 
             } catch (error) {
-                console.error('Erro ao reproduzir chunk de áudio:', error);
+                console.error('Erro ao processar chunk de áudio:', error);
             }
+        }
+
+        // Reproduzir todas as amostras acumuladas de uma vez
+        if (allSamples.length > 0) {
+            try {
+                const samples = new Float32Array(allSamples);
+
+                // Aplicar fade APENAS no início e fim do áudio completo (não em cada chunk)
+                const fadeLength = Math.min(256, Math.floor(samples.length / 10));
+                for (let i = 0; i < fadeLength; i++) {
+                    const fadeMultiplier = i / fadeLength;
+                    samples[i] *= fadeMultiplier; // Fade-in suave no início
+                    samples[samples.length - 1 - i] *= fadeMultiplier; // Fade-out suave no fim
+                }
+
+                // Criar buffer e tocar
+                const audioBuffer = conversacaoState.playbackContext.createBuffer(1, samples.length, 24000);
+                audioBuffer.getChannelData(0).set(samples);
+
+                const source = conversacaoState.playbackContext.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(conversacaoState.gainNode);
+
+                // Esperar o áudio terminar
+                await new Promise((resolve) => {
+                    source.onended = resolve;
+                    source.start();
+                });
+
+            } catch (error) {
+                console.error('Erro ao reproduzir áudio:', error);
+            }
+        }
+
+        // Verificar se chegaram mais chunks enquanto tocava
+        if (conversacaoState.audioQueue.length > 0) {
+            // Continuar reproduzindo novos chunks que chegaram
+            conversacaoState.isPlayingAudio = false;
+            playAudioQueue();
+            return;
         }
 
         conversacaoState.isPlayingAudio = false;
@@ -4219,6 +4254,46 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
         conversacaoState.gainNode = null;
         conversacaoState.lowPassFilter = null;
         conversacaoState.compressor = null;
+    }
+
+    // Tentar reconexão automática com backoff exponencial
+    async function attemptReconnection(reason) {
+        conversacaoState.reconnectAttempts++;
+
+        if (conversacaoState.reconnectAttempts > conversacaoState.maxReconnectAttempts) {
+            console.log('Máximo de tentativas de reconexão atingido');
+            showConversacaoError('Conexão perdida. Clique no microfone para reconectar.');
+            cleanupConversation();
+            updateStatus('Desconectado', 'idle');
+            updateConversacaoUI('idle');
+            conversacaoState.reconnectAttempts = 0;
+            return;
+        }
+
+        // Backoff exponencial: 2s, 4s, 8s
+        const delay = Math.pow(2, conversacaoState.reconnectAttempts) * 1000;
+        console.log(`Tentativa de reconexão ${conversacaoState.reconnectAttempts}/${conversacaoState.maxReconnectAttempts} em ${delay/1000}s...`);
+
+        updateStatus(`Reconectando (${conversacaoState.reconnectAttempts}/${conversacaoState.maxReconnectAttempts})...`, 'connecting');
+
+        // Limpar recursos antigos mas manter apiKey
+        const savedApiKey = conversacaoState.apiKey;
+        cleanupConversation();
+        conversacaoState.apiKey = savedApiKey;
+
+        // Aguardar antes de reconectar
+        await new Promise(resolve => setTimeout(resolve, delay));
+
+        // Tentar reconectar
+        try {
+            await connectConversation();
+            // Se chegou aqui, conexão foi bem sucedida
+            conversacaoState.reconnectAttempts = 0;
+            console.log('Reconexão bem sucedida!');
+        } catch (error) {
+            console.error('Falha na reconexão:', error);
+            // A próxima tentativa será feita pelo onclose/onerror
+        }
     }
 
     // Iniciar conversa com um tópico
