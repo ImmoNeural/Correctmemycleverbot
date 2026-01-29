@@ -3738,10 +3738,10 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
                 console.log('WebSocket conectado');
 
                 // Enviar configuração de setup
-                // Modelo compatível com bidiGenerateContent (Live API)
+                // Modelo com áudio nativo (do exemplo oficial Google)
                 const setupMessage = {
                     setup: {
-                        model: 'models/gemini-2.0-flash-live-001',
+                        model: 'models/gemini-2.5-flash-native-audio-preview-12-2025',
                         generationConfig: {
                             responseModalities: ['AUDIO'],
                             speechConfig: {
@@ -3810,6 +3810,13 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
 
             // Resposta do servidor (texto ou áudio)
             if (message.serverContent) {
+                // Interrupção - limpar fila de áudio
+                if (message.serverContent.interrupted) {
+                    console.log('Interrupção detectada - limpando fila de áudio');
+                    conversacaoState.audioQueue = [];
+                    return;
+                }
+
                 const parts = message.serverContent.modelTurn?.parts || [];
 
                 for (const part of parts) {
@@ -3822,10 +3829,14 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
                         });
                     }
 
-                    // Áudio da resposta (PCM 24kHz)
-                    if (part.inlineData && part.inlineData.mimeType?.includes('audio')) {
-                        const audioData = part.inlineData.data;
-                        playPCMAudio(audioData);
+                    // Áudio da resposta (como no exemplo oficial)
+                    if (part.inlineData && part.inlineData.data) {
+                        // Adicionar à fila de áudio
+                        conversacaoState.audioQueue.push(part.inlineData.data);
+                        // Iniciar playback se não estiver tocando
+                        if (!conversacaoState.isPlayingAudio) {
+                            playAudioQueue();
+                        }
                     }
                 }
 
@@ -3935,51 +3946,59 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
         return URL.createObjectURL(blob);
     }
 
-    // Reproduzir áudio PCM recebido
-    function playPCMAudio(base64Data) {
-        try {
-            // Decodificar base64 para ArrayBuffer
-            const binaryString = atob(base64Data);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
+    // Reproduzir fila de áudio de forma sequencial (como no exemplo oficial)
+    async function playAudioQueue() {
+        if (conversacaoState.isPlayingAudio) return;
+        conversacaoState.isPlayingAudio = true;
+        updateConversacaoUI('playing');
 
-            // Converter de Int16 para Float32
-            const int16Data = new Int16Array(bytes.buffer);
-            const float32Data = new Float32Array(int16Data.length);
-            for (let i = 0; i < int16Data.length; i++) {
-                float32Data[i] = int16Data[i] / 32768;
-            }
+        // Criar contexto de playback se não existir
+        if (!conversacaoState.playbackContext) {
+            conversacaoState.playbackContext = new (window.AudioContext || window.webkitAudioContext)({
+                sampleRate: 24000 // Gemini retorna áudio a 24kHz
+            });
+        }
 
-            // Criar contexto de playback se não existir
-            if (!conversacaoState.playbackContext) {
-                conversacaoState.playbackContext = new (window.AudioContext || window.webkitAudioContext)({
-                    sampleRate: 24000 // Gemini retorna áudio a 24kHz
-                });
-            }
+        while (conversacaoState.audioQueue.length > 0) {
+            const base64Data = conversacaoState.audioQueue.shift();
 
-            // Criar buffer e tocar
-            const audioBuffer = conversacaoState.playbackContext.createBuffer(1, float32Data.length, 24000);
-            audioBuffer.getChannelData(0).set(float32Data);
-
-            const source = conversacaoState.playbackContext.createBufferSource();
-            source.buffer = audioBuffer;
-            source.connect(conversacaoState.playbackContext.destination);
-            source.start();
-
-            conversacaoState.isPlaying = true;
-            updateConversacaoUI('playing');
-
-            source.onended = () => {
-                conversacaoState.isPlaying = false;
-                if (conversacaoState.isConnected) {
-                    updateConversacaoUI('recording');
+            try {
+                // Decodificar base64 para ArrayBuffer
+                const binaryString = atob(base64Data);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
                 }
-            };
 
-        } catch (error) {
-            console.error('Erro ao reproduzir áudio:', error);
+                // Converter de Int16 para Float32
+                const int16Data = new Int16Array(bytes.buffer);
+                const float32Data = new Float32Array(int16Data.length);
+                for (let i = 0; i < int16Data.length; i++) {
+                    float32Data[i] = int16Data[i] / 32768;
+                }
+
+                // Criar buffer e tocar
+                const audioBuffer = conversacaoState.playbackContext.createBuffer(1, float32Data.length, 24000);
+                audioBuffer.getChannelData(0).set(float32Data);
+
+                const source = conversacaoState.playbackContext.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(conversacaoState.playbackContext.destination);
+
+                // Esperar o chunk terminar antes de tocar o próximo
+                await new Promise((resolve) => {
+                    source.onended = resolve;
+                    source.start();
+                });
+
+            } catch (error) {
+                console.error('Erro ao reproduzir chunk de áudio:', error);
+            }
+        }
+
+        conversacaoState.isPlayingAudio = false;
+        if (conversacaoState.isConnected) {
+            updateConversacaoUI('recording');
         }
     }
 
