@@ -4505,6 +4505,8 @@ SPRACHE:
     // Desconectar da conversa
     function disconnectConversation() {
         console.log('Desconectando...');
+        console.log('📊 Total de transcripts armazenados:', conversacaoState.transcripts.length);
+        console.log('📊 Transcripts:', JSON.stringify(conversacaoState.transcripts, null, 2));
 
         if (conversacaoState.ws) {
             conversacaoState.ws.close();
@@ -4514,6 +4516,8 @@ SPRACHE:
         if (conversacaoState.transcripts && conversacaoState.transcripts.length > 0) {
             console.log('📊 Disparando análise de correções...');
             triggerAnalysis();
+        } else {
+            console.log('⚠️ Nenhum transcript para analisar!');
         }
 
         cleanupConversation();
@@ -4805,9 +4809,12 @@ SPRACHE:
 
         // Filtra apenas transcripts do usuário (não analisa a IA)
         const userTranscripts = conversacaoState.transcripts.filter(t => t.speaker === 'user');
+        console.log('🔍 Transcripts do usuário para análise:', userTranscripts.length);
+        console.log('🔍 Conteúdo:', userTranscripts.map(t => t.text).join(' | '));
 
         if (userTranscripts.length === 0) {
             console.log('📭 Nenhum transcript do usuário para analisar');
+            showAnalysisStatus('Nenhuma frase sua foi captada para análise.');
             return;
         }
 
@@ -4815,29 +4822,39 @@ SPRACHE:
         showAnalysisStatus('Analisando sua conversa...');
 
         try {
+            const requestBody = {
+                transcripts: userTranscripts,
+                fullAnalysis: true
+            };
+            console.log('📤 Enviando para DeepSeek:', JSON.stringify(requestBody, null, 2));
+
             const response = await fetch('/.netlify/functions/conversacao-correcoes', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    transcripts: userTranscripts,
-                    fullAnalysis: true
-                })
+                body: JSON.stringify(requestBody)
             });
 
+            console.log('📥 Resposta status:', response.status);
+
             if (!response.ok) {
-                console.warn('Erro ao analisar correções:', response.status);
+                const errorText = await response.text();
+                console.error('Erro ao analisar correções:', response.status, errorText);
                 showAnalysisStatus('Erro na análise. Tente novamente.');
                 return;
             }
 
             const data = await response.json();
+            console.log('📥 Resposta DeepSeek:', JSON.stringify(data, null, 2));
+
             if (data.corrections && data.corrections.length > 0) {
+                console.log('✅ Encontrados', data.corrections.length, 'erros');
                 displayCorrections(data.corrections);
             } else {
+                console.log('✅ Nenhum erro encontrado');
                 showAnalysisStatus('Parabéns! Nenhum erro encontrado na sua conversa.');
             }
         } catch (error) {
-            console.warn('Erro na análise de correções:', error);
+            console.error('Erro na análise de correções:', error);
             showAnalysisStatus('Erro na análise. Tente novamente.');
         }
     }

@@ -133,9 +133,14 @@ exports.handler = async (event) => {
 
         // Modo de análise completa (no final da conversa)
         if (fullAnalysis && Array.isArray(transcripts)) {
+            console.log('=== RECEBIDO DO FRONTEND ===');
+            console.log('Transcripts recebidos:', JSON.stringify(transcripts, null, 2));
+
             const formattedConversation = formatTranscripts(transcripts);
+            console.log('Conversa formatada:', formattedConversation);
 
             if (!formattedConversation || formattedConversation.length < 10) {
+                console.log('Conversa muito curta, retornando vazio');
                 return {
                     statusCode: 200,
                     headers,
@@ -150,9 +155,13 @@ exports.handler = async (event) => {
             console.log(`Total de frases do usuário: ${transcripts.filter(t => t.speaker === 'user').length}`);
 
             const userContent = `Hier sind die Sätze des Schülers während des Gesprächs. Analysiere jeden Satz auf Fehler:\n\n${formattedConversation}`;
+            console.log('Enviando para DeepSeek:', userContent);
 
             const rawResponse = await callDeepSeek(FULL_ANALYSIS_PROMPT, userContent);
+            console.log('Resposta bruta DeepSeek:', rawResponse);
+
             const corrections = parseCorrections(rawResponse);
+            console.log('Correções parseadas:', JSON.stringify(corrections, null, 2));
 
             console.log(`Encontrados ${corrections.length} erros na conversa`);
 
