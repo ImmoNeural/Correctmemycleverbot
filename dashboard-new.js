@@ -3738,9 +3738,10 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
                 console.log('WebSocket conectado');
 
                 // Enviar configuração de setup
+                // Modelo compatível com bidiGenerateContent (Live API)
                 const setupMessage = {
                     setup: {
-                        model: 'models/gemini-2.5-flash-preview-native-audio',
+                        model: 'models/gemini-2.0-flash-live-001',
                         generationConfig: {
                             responseModalities: ['AUDIO'],
                             speechConfig: {
