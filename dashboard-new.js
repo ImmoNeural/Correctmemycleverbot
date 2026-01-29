@@ -3995,6 +3995,13 @@ SPRACHE:
                 console.log('⚠️ WebSocket fechado - Código:', event.code, '- Razão:', event.reason || 'não especificada');
                 console.log('⚠️ WasClean:', event.wasClean, '- Tempo de conexão:', Math.round((Date.now() - (conversacaoState.connectionStartTime || Date.now())) / 1000), 's');
 
+                // IMPORTANTE: Flush e dispara análise ANTES de limpar qualquer coisa
+                flushUserTranscript();
+                if (conversacaoState.transcripts && conversacaoState.transcripts.length > 0) {
+                    console.log('📊 Conexão fechada - disparando análise com', conversacaoState.transcripts.length, 'transcripts');
+                    triggerAnalysis();
+                }
+
                 // Códigos de erro que permitem reconexão
                 const reconnectableCodes = [1006, 1001, 1011, 1012, 1013, 1014];
                 const shouldTryReconnect = reconnectableCodes.includes(event.code) &&
@@ -4006,7 +4013,7 @@ SPRACHE:
                 if (event.code === 1006) {
                     errorMsg = 'Conexão perdida. Tentando reconectar...';
                 } else if (event.code === 1008 || event.code === 1003) {
-                    errorMsg = 'Erro de autenticação com a API. Tente novamente.';
+                    errorMsg = 'Sessão encerrada pelo servidor.';
                 } else if (event.code === 4001) {
                     errorMsg = 'API key inválida ou expirada.';
                 } else if (event.reason) {
@@ -5007,7 +5014,13 @@ SPRACHE:
         clearCorrections();
     }
 
-    function clearCorrections() {
+    function clearCorrections(force = false) {
+        // NÃO limpar se há análise em andamento (a menos que seja forçado)
+        if (conversacaoState.analysisTriggered && !force) {
+            console.log('⏳ Análise em andamento - mantendo transcripts');
+            return;
+        }
+
         const correctionsEl = document.getElementById('conv-corrections');
         if (correctionsEl) {
             correctionsEl.innerHTML = `
