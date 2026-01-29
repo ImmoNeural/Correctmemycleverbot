@@ -4026,7 +4026,6 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
             }
 
             const message = JSON.parse(data);
-            console.log('Mensagem recebida:', Object.keys(message));
 
             // Setup complete - pronto para conversar
             if (message.setupComplete) {
