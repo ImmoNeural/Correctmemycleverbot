@@ -3918,13 +3918,14 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
                 clearTimeout(connectionTimeout);
                 console.log('WebSocket conectado');
 
-                // Enviar configuração de setup
-                // Modelo Gemini 2.5 Flash Native Audio - com TEXT para melhor compreensão
+                // Enviar configuração de setup conforme documentação oficial
+                // Modelo Gemini 2.5 Flash Native Audio
+                // IMPORTANTE: responseModalities só pode ser AUDIO ou TEXT, não ambos!
                 const setupMessage = {
                     setup: {
                         model: 'models/gemini-2.5-flash-native-audio-preview-12-2025',
                         generationConfig: {
-                            responseModalities: ['AUDIO', 'TEXT'],
+                            responseModalities: ['AUDIO'],
                             speechConfig: {
                                 voiceConfig: {
                                     prebuiltVoiceConfig: {
@@ -3935,7 +3936,11 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
                         },
                         systemInstruction: {
                             parts: [{ text: GERMAN_TUTOR_INSTRUCTION }]
-                        }
+                        },
+                        // Ativar transcrição de entrada para melhor compreensão
+                        inputAudioTranscription: {},
+                        // Ativar transcrição de saída para debug
+                        outputAudioTranscription: {}
                     }
                 };
 
@@ -4024,7 +4029,8 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
                 updateConversacaoUI('recording');
                 startAudioCapture();
                 startTimer();
-                startKeepAlive(); // Iniciar keep-alive
+                // Keep-alive desativado - o streaming de áudio já mantém a conexão
+                // startKeepAlive();
             }
 
             // Resposta do servidor (texto ou áudio)
@@ -4068,6 +4074,32 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
                     conversacaoState.creditsUsed += 0.5;
                     updateCreditsUsed();
                 }
+
+                // Transcrição do que o usuário falou (entrada)
+                if (message.serverContent.inputTranscription) {
+                    const transcript = message.serverContent.inputTranscription.text;
+                    console.log('🎤 VOCÊ DISSE:', transcript);
+                    // Adicionar ao histórico para debug
+                    addMessageToHistory('user', `[Transcrito: ${transcript}]`);
+                }
+
+                // Transcrição do que a IA falou (saída)
+                if (message.serverContent.outputTranscription) {
+                    const transcript = message.serverContent.outputTranscription.text;
+                    console.log('🤖 IA DISSE:', transcript);
+                }
+
+                // Generation complete - a IA terminou de gerar resposta
+                if (message.serverContent.generationComplete) {
+                    console.log('✅ Geração completa');
+                }
+            }
+
+            // GoAway - servidor avisa que vai desconectar
+            if (message.goAway) {
+                const timeLeft = message.goAway.timeLeft;
+                console.log(`⚠️ Servidor vai desconectar em ${timeLeft}`);
+                updateStatus(`Reconectando em breve...`, 'warning');
             }
 
             // Erro
@@ -4076,10 +4108,9 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
                 showConversacaoError(message.error.message || 'Erro do servidor');
             }
 
-            // Sessão terminando (goAway) - reconectar automaticamente
-            if (message.goAway || message.sessionEnd || message.close) {
-                console.log('⚠️ Servidor solicitou encerramento da sessão');
-                console.log('Motivo:', message.goAway || message.sessionEnd || message.close);
+            // Sessão terminando - reconectar automaticamente
+            if (message.sessionEnd || message.close) {
+                console.log('⚠️ Sessão encerrada pelo servidor');
 
                 // Tentar reconectar automaticamente
                 const savedApiKey = conversacaoState.apiKey;
@@ -4088,15 +4119,17 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
 
                 // Reconectar após pequeno delay
                 setTimeout(async () => {
-                    console.log('🔄 Reconectando após goAway...');
+                    console.log('🔄 Reconectando após encerramento...');
                     updateStatus('Reconectando...', 'connecting');
                     await connectConversation();
                 }, 1000);
             }
 
             // Log completo para debug (apenas em casos sem tratamento específico)
-            if (!message.setupComplete && !message.serverContent && !message.error && !message.goAway) {
-                console.log('📩 Mensagem não tratada:', JSON.stringify(message).substring(0, 500));
+            const handledKeys = ['setupComplete', 'serverContent', 'error', 'goAway', 'sessionEnd', 'close', 'usageMetadata'];
+            const hasUnhandled = Object.keys(message).some(key => !handledKeys.includes(key));
+            if (hasUnhandled) {
+                console.log('📩 Mensagem com campos não tratados:', JSON.stringify(message).substring(0, 500));
             }
 
         } catch (error) {
@@ -4121,6 +4154,9 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
             // Inicializar timestamp do último som
             conversacaoState.lastSoundTime = Date.now();
 
+            // Contador para log de debug
+            let audioChunksSent = 0;
+
             conversacaoState.workletNode.port.onmessage = (event) => {
                 if (conversacaoState.ws?.readyState === WebSocket.OPEN && conversacaoState.isConnected) {
                     const { audioData, hasSound } = event.data;
@@ -4133,6 +4169,7 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
                     // Converter para base64 e enviar
                     const audioBase64 = arrayBufferToBase64(audioData);
 
+                    // Formato correto conforme documentação Gemini Live API
                     const audioMessage = {
                         realtimeInput: {
                             mediaChunks: [{
@@ -4143,6 +4180,12 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
                     };
 
                     conversacaoState.ws.send(JSON.stringify(audioMessage));
+
+                    // Log a cada 50 chunks (~3 segundos de áudio)
+                    audioChunksSent++;
+                    if (audioChunksSent % 50 === 0) {
+                        console.log(`🎙️ Áudio enviado: ${audioChunksSent} chunks, som detectado: ${hasSound}`);
+                    }
                 }
             };
 
