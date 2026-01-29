@@ -3757,27 +3757,32 @@ async function handleCorrectionSubmit(e) {
 
     let conversacaoInitialized = false;
 
-    // System instruction para o tutor de alemão - MODO LIVRE
-    const GERMAN_TUTOR_INSTRUCTION = `Du bist ein freundlicher Gesprächspartner für Deutschübungen.
+    // System instruction para o tutor de alemão - MODO CONVERSACIONAL NATURAL
+    const GERMAN_TUTOR_INSTRUCTION = `Du bist ein Gesprächspartner für Deutschübungen.
 
-WICHTIG - FOLGE DEM GESPRÄCH:
-- Höre genau zu, was der Schüler sagt, und antworte darauf
-- Stelle Folgefragen zum Thema, das der Schüler erwähnt hat
-- KEINE vorgefertigten Themen oder Skripte - folge dem natürlichen Gesprächsfluss
-- Wenn der Schüler über Brasilien spricht, frage über Brasilien
-- Wenn der Schüler über Reisen spricht, frage über seine Reisen
-- Sei spontan und natürlich wie ein echter Freund
+KRITISCH WICHTIG - HÖRE ZU UND REAGIERE:
+- Du MUSST auf das reagieren, was der Benutzer TATSÄCHLICH sagt
+- Wenn er "Brasilien" sagt, sprich über Brasilien - NICHT über Paris oder andere Orte
+- Wenn er "ich mag Pizza" sagt, frage über Pizza - NICHT über andere Essen
+- NIEMALS ein vorgefertigtes Skript folgen
+- NIEMALS das Thema wechseln, es sei denn, der Benutzer tut es
+- Deine Antwort muss DIREKT mit dem verbunden sein, was der Benutzer gerade gesagt hat
+
+KONVERSATIONSREGELN:
+- Stelle Folgefragen basierend auf dem, was der Benutzer erwähnt hat
+- Zeige echtes Interesse an seinen Antworten
+- Wenn du etwas nicht verstanden hast, frage nach
+- Sei wie ein echter Freund, der zuhört und reagiert
 
 SPRACHE:
-- Sprich hauptsächlich Deutsch
-- Bei Fehlern: kurz korrigieren und weitermachen (nicht lange erklären)
-- Passe dein Niveau an - wenn der Schüler einfach spricht, sprich auch einfach
+- Sprich einfaches, natürliches Deutsch
+- Bei Fehlern: kurz korrigieren und weitermachen
+- Kurze Sätze, nicht zu kompliziert
 
-STIL:
-- Sei locker und freundlich
-- Kurze, natürliche Antworten
-- Echtes Interesse am Gespräch zeigen
-- KEIN Lehrer-Modus mit vielen Regeln - einfach plaudern!`;
+BEISPIEL:
+Benutzer: "Ich möchte nach Brasilien reisen"
+RICHTIG: "Oh, Brasilien! Das klingt toll. Warst du schon mal dort? Was möchtest du in Brasilien sehen?"
+FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er gesagt hat)`;
 
     function initializeConversacao() {
         if (conversacaoInitialized) return;
@@ -4446,11 +4451,23 @@ STIL:
 
         // Enviar mensagem de texto para iniciar o tópico
         if (conversacaoState.ws?.readyState === WebSocket.OPEN) {
+            // Prompts específicos por tema que incentivam conversa natural
+            const topicPrompts = {
+                '✈️ Viagens': `Beginne ein lockeres Gespräch auf Deutsch über Reisen. Frage mich zuerst, wohin ICH gerne reisen möchte. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort - wenn ich "Brasilien" sage, sprich über Brasilien, nicht über andere Orte.`,
+                '🍽️ Restaurante': `Beginne ein lockeres Gespräch auf Deutsch über Essen und Restaurants. Frage mich, was ICH gerne esse. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort - bleib beim Thema, das ICH gewählt habe.`,
+                '👋 Apresentação': `Beginne ein lockeres Gespräch auf Deutsch, um mich kennenzulernen. Frage mich nach meinem Namen und woher ICH komme. WICHTIG: Höre genau zu was ich sage und stelle Folgefragen basierend auf MEINEN Antworten.`,
+                '🏠 Moradia': `Beginne ein lockeres Gespräch auf Deutsch über Wohnen. Frage mich, wo ICH wohne. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort und stelle Folgefragen dazu.`,
+                '💼 Trabalho': `Beginne ein lockeres Gespräch auf Deutsch über Arbeit. Frage mich, was ICH beruflich mache. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort und zeige echtes Interesse.`,
+                '🎬 Hobbies': `Beginne ein lockeres Gespräch auf Deutsch über Hobbys. Frage mich, was ICH in meiner Freizeit gerne mache. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort.`
+            };
+
+            const prompt = topicPrompts[topic] || `Beginne ein lockeres Gespräch auf Deutsch über: ${topic}. Frage mich zuerst nach meiner Meinung dazu. WICHTIG: Reagiere immer auf das, was ICH sage.`;
+
             const textMessage = {
                 clientContent: {
                     turns: [{
                         role: 'user',
-                        parts: [{ text: `Vamos praticar uma conversa sobre: ${topic}. Por favor, comece a conversa em alemão sobre este tema.` }]
+                        parts: [{ text: prompt }]
                     }],
                     turnComplete: true
                 }
