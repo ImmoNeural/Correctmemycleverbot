@@ -3604,6 +3604,9 @@ async function handleCorrectionSubmit(e) {
         playbackContext: null,
         audioQueue: [],
         isPlayingAudio: false,
+        gainNode: null,
+        lowPassFilter: null,
+        compressor: null,
 
         // Session state
         startTime: null,
@@ -3611,6 +3614,11 @@ async function handleCorrectionSubmit(e) {
         totalSeconds: 0,
         conversationHistory: [],
         creditsUsed: 0,
+
+        // Silence detection
+        lastSoundTime: null,
+        silenceCheckInterval: null,
+        SILENCE_TIMEOUT: 5000, // 5 segundos de silêncio para desconectar
 
         // Settings
         continuousMode: true,
@@ -3738,18 +3746,19 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
                 console.log('WebSocket conectado');
 
                 // Enviar configuração de setup
-                // Modelo com áudio nativo (do exemplo oficial Google)
+                // Modelo Gemini 2.0 Flash Live - mais estável e com melhor qualidade de voz
                 const setupMessage = {
                     setup: {
-                        model: 'models/gemini-2.5-flash-native-audio-preview-12-2025',
+                        model: 'models/gemini-2.0-flash-live-001',
                         generationConfig: {
-                            responseModalities: ['AUDIO'],
+                            responseModalities: ['AUDIO', 'TEXT'],
                             speechConfig: {
                                 voiceConfig: {
                                     prebuiltVoiceConfig: {
                                         voiceName: conversacaoState.selectedVoice
                                     }
-                                }
+                                },
+                                languageCode: 'de-DE'
                             }
                         },
                         systemInstruction: {
@@ -3868,7 +3877,7 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
         }
     }
 
-    // Iniciar captura de áudio do microfone
+    // Iniciar captura de áudio do microfone com detecção de silêncio
     async function startAudioCapture() {
         try {
             // Criar AudioContext para captura
@@ -3882,10 +3891,20 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
             const source = conversacaoState.audioContext.createMediaStreamSource(conversacaoState.stream);
             conversacaoState.workletNode = new AudioWorkletNode(conversacaoState.audioContext, 'audio-processor');
 
+            // Inicializar timestamp do último som
+            conversacaoState.lastSoundTime = Date.now();
+
             conversacaoState.workletNode.port.onmessage = (event) => {
                 if (conversacaoState.ws?.readyState === WebSocket.OPEN && conversacaoState.isConnected) {
+                    const { audioData, hasSound } = event.data;
+
+                    // Atualizar timestamp se detectou som
+                    if (hasSound) {
+                        conversacaoState.lastSoundTime = Date.now();
+                    }
+
                     // Converter para base64 e enviar
-                    const audioBase64 = arrayBufferToBase64(event.data);
+                    const audioBase64 = arrayBufferToBase64(audioData);
 
                     const audioMessage = {
                         realtimeInput: {
@@ -3903,6 +3922,9 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
             source.connect(conversacaoState.workletNode);
             conversacaoState.isRecording = true;
 
+            // Iniciar verificação de silêncio
+            startSilenceDetection();
+
             console.log('Captura de áudio iniciada');
 
         } catch (error) {
@@ -3911,7 +3933,43 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
         }
     }
 
-    // Criar processador de áudio inline
+    // Iniciar detecção de silêncio
+    function startSilenceDetection() {
+        // Limpar intervalo anterior se existir
+        if (conversacaoState.silenceCheckInterval) {
+            clearInterval(conversacaoState.silenceCheckInterval);
+        }
+
+        conversacaoState.silenceCheckInterval = setInterval(() => {
+            // Não verificar silêncio se estiver tocando áudio (IA está respondendo)
+            if (conversacaoState.isPlayingAudio || !conversacaoState.isConnected) {
+                conversacaoState.lastSoundTime = Date.now(); // Reset durante playback
+                return;
+            }
+
+            const timeSinceLastSound = Date.now() - conversacaoState.lastSoundTime;
+
+            if (timeSinceLastSound >= conversacaoState.SILENCE_TIMEOUT) {
+                console.log('Silêncio detectado por 5 segundos - desconectando...');
+                updateStatus('Desconectado por inatividade', 'idle');
+                disconnectConversation();
+            } else if (timeSinceLastSound >= 3000) {
+                // Avisar o usuário que vai desconectar em breve
+                const remaining = Math.ceil((conversacaoState.SILENCE_TIMEOUT - timeSinceLastSound) / 1000);
+                updateStatus(`Sem som detectado... (${remaining}s)`, 'warning');
+            }
+        }, 1000);
+    }
+
+    // Parar detecção de silêncio
+    function stopSilenceDetection() {
+        if (conversacaoState.silenceCheckInterval) {
+            clearInterval(conversacaoState.silenceCheckInterval);
+            conversacaoState.silenceCheckInterval = null;
+        }
+    }
+
+    // Criar processador de áudio inline com detecção de silêncio
     function createAudioWorkletProcessor() {
         const processorCode = `
             class AudioProcessor extends AudioWorkletProcessor {
@@ -3920,12 +3978,20 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
                     this.bufferSize = 4096;
                     this.buffer = new Float32Array(this.bufferSize);
                     this.bufferIndex = 0;
+                    this.silenceThreshold = 0.01; // Limiar de volume para considerar silêncio
                 }
 
                 process(inputs, outputs, parameters) {
                     const input = inputs[0];
                     if (input.length > 0) {
                         const channelData = input[0];
+
+                        // Calcular RMS (volume) do chunk atual
+                        let sumSquares = 0;
+                        for (let i = 0; i < channelData.length; i++) {
+                            sumSquares += channelData[i] * channelData[i];
+                        }
+                        const rms = Math.sqrt(sumSquares / channelData.length);
 
                         for (let i = 0; i < channelData.length; i++) {
                             this.buffer[this.bufferIndex++] = channelData[i];
@@ -3936,7 +4002,13 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
                                 for (let j = 0; j < this.bufferSize; j++) {
                                     pcmData[j] = Math.max(-32768, Math.min(32767, this.buffer[j] * 32767));
                                 }
-                                this.port.postMessage(pcmData.buffer);
+
+                                // Enviar dados de áudio junto com indicador de som detectado
+                                const hasSound = rms > this.silenceThreshold;
+                                this.port.postMessage({
+                                    audioData: pcmData.buffer,
+                                    hasSound: hasSound
+                                });
                                 this.bufferIndex = 0;
                             }
                         }
@@ -3952,7 +4024,7 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
         return URL.createObjectURL(blob);
     }
 
-    // Reproduzir fila de áudio de forma sequencial (como no exemplo oficial)
+    // Reproduzir fila de áudio de forma sequencial com melhor qualidade
     async function playAudioQueue() {
         if (conversacaoState.isPlayingAudio) return;
         conversacaoState.isPlayingAudio = true;
@@ -3963,7 +4035,33 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
             conversacaoState.playbackContext = new (window.AudioContext || window.webkitAudioContext)({
                 sampleRate: 24000 // Gemini retorna áudio a 24kHz
             });
+
+            // Criar nós de processamento para melhor qualidade
+            conversacaoState.gainNode = conversacaoState.playbackContext.createGain();
+            conversacaoState.gainNode.gain.value = 1.2; // Leve aumento de volume
+
+            // Filtro passa-baixa para suavizar o som e remover ruído
+            conversacaoState.lowPassFilter = conversacaoState.playbackContext.createBiquadFilter();
+            conversacaoState.lowPassFilter.type = 'lowpass';
+            conversacaoState.lowPassFilter.frequency.value = 8000; // Corta frequências altas (ruído)
+            conversacaoState.lowPassFilter.Q.value = 0.7;
+
+            // Compressor para normalizar volume e evitar distorção
+            conversacaoState.compressor = conversacaoState.playbackContext.createDynamicsCompressor();
+            conversacaoState.compressor.threshold.value = -20;
+            conversacaoState.compressor.knee.value = 30;
+            conversacaoState.compressor.ratio.value = 4;
+            conversacaoState.compressor.attack.value = 0.003;
+            conversacaoState.compressor.release.value = 0.25;
+
+            // Conectar cadeia de áudio
+            conversacaoState.gainNode.connect(conversacaoState.lowPassFilter);
+            conversacaoState.lowPassFilter.connect(conversacaoState.compressor);
+            conversacaoState.compressor.connect(conversacaoState.playbackContext.destination);
         }
+
+        // Acumular chunks para reprodução mais suave
+        let accumulatedSamples = [];
 
         while (conversacaoState.audioQueue.length > 0) {
             const base64Data = conversacaoState.audioQueue.shift();
@@ -3976,26 +4074,44 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
                     bytes[i] = binaryString.charCodeAt(i);
                 }
 
-                // Converter de Int16 para Float32
+                // Converter de Int16 para Float32 com normalização
                 const int16Data = new Int16Array(bytes.buffer);
                 const float32Data = new Float32Array(int16Data.length);
+
                 for (let i = 0; i < int16Data.length; i++) {
                     float32Data[i] = int16Data[i] / 32768;
                 }
 
-                // Criar buffer e tocar
-                const audioBuffer = conversacaoState.playbackContext.createBuffer(1, float32Data.length, 24000);
-                audioBuffer.getChannelData(0).set(float32Data);
+                // Aplicar fade-in/fade-out suave para evitar cliques
+                const fadeLength = Math.min(64, float32Data.length / 4);
+                for (let i = 0; i < fadeLength; i++) {
+                    const fadeIn = i / fadeLength;
+                    float32Data[i] *= fadeIn;
+                    float32Data[float32Data.length - 1 - i] *= fadeIn;
+                }
 
-                const source = conversacaoState.playbackContext.createBufferSource();
-                source.buffer = audioBuffer;
-                source.connect(conversacaoState.playbackContext.destination);
+                // Acumular amostras
+                accumulatedSamples.push(...float32Data);
 
-                // Esperar o chunk terminar antes de tocar o próximo
-                await new Promise((resolve) => {
-                    source.onended = resolve;
-                    source.start();
-                });
+                // Reproduzir quando tiver amostras suficientes ou a fila esvaziar
+                if (accumulatedSamples.length >= 4800 || conversacaoState.audioQueue.length === 0) {
+                    const samples = new Float32Array(accumulatedSamples);
+                    accumulatedSamples = [];
+
+                    // Criar buffer e tocar
+                    const audioBuffer = conversacaoState.playbackContext.createBuffer(1, samples.length, 24000);
+                    audioBuffer.getChannelData(0).set(samples);
+
+                    const source = conversacaoState.playbackContext.createBufferSource();
+                    source.buffer = audioBuffer;
+                    source.connect(conversacaoState.gainNode);
+
+                    // Esperar o chunk terminar antes de tocar o próximo
+                    await new Promise((resolve) => {
+                        source.onended = resolve;
+                        source.start();
+                    });
+                }
 
             } catch (error) {
                 console.error('Erro ao reproduzir chunk de áudio:', error);
@@ -4039,6 +4155,9 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
         conversacaoState.isRecording = false;
         conversacaoState.ws = null;
 
+        // Parar detecção de silêncio
+        stopSilenceDetection();
+
         if (conversacaoState.stream) {
             conversacaoState.stream.getTracks().forEach(track => track.stop());
             conversacaoState.stream = null;
@@ -4054,7 +4173,11 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
             conversacaoState.playbackContext = null;
         }
 
+        // Limpar nós de áudio
         conversacaoState.workletNode = null;
+        conversacaoState.gainNode = null;
+        conversacaoState.lowPassFilter = null;
+        conversacaoState.compressor = null;
     }
 
     // Iniciar conversa com um tópico
@@ -4213,16 +4336,35 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
         const historyEl = document.getElementById('conv-history');
         if (!historyEl) return;
 
+        // Mostrar apenas subtitles da IA (não mensagens do usuário)
+        if (type !== 'ai') return;
+
         // Remover mensagem inicial se existir
         const emptyMsg = historyEl.querySelector('.text-center');
         if (emptyMsg) emptyMsg.remove();
 
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `conv-msg ${type === 'user' ? 'conv-msg-user' : 'conv-msg-ai'}`;
-        msgDiv.innerHTML = `<p class="text-white text-sm">${escapeHtml(text)}</p>`;
+        // Criar elemento de subtitle estilizado
+        const subtitleDiv = document.createElement('div');
+        subtitleDiv.className = 'conv-subtitle animate-fade-in';
+        subtitleDiv.style.cssText = `
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 16px;
+            border-radius: 8px;
+            margin: 4px 0;
+            text-align: center;
+            backdrop-filter: blur(4px);
+            border-left: 3px solid #60a5fa;
+        `;
+        subtitleDiv.innerHTML = `<p class="text-white text-sm" style="margin: 0; line-height: 1.4;">${escapeHtml(text)}</p>`;
 
-        historyEl.appendChild(msgDiv);
+        historyEl.appendChild(subtitleDiv);
         historyEl.scrollTop = historyEl.scrollHeight;
+
+        // Remover subtitles antigos para manter apenas os últimos 5
+        const subtitles = historyEl.querySelectorAll('.conv-subtitle');
+        if (subtitles.length > 5) {
+            subtitles[0].remove();
+        }
     }
 
     function clearHistory() {
@@ -4230,7 +4372,7 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
         if (historyEl) {
             historyEl.innerHTML = `
                 <div class="text-center text-slate-500 py-4">
-                    <p>Nenhuma conversa ainda.</p>
+                    <p>Subtitles aparecerão aqui</p>
                     <p class="text-sm mt-1">Clique no microfone para começar a praticar!</p>
                 </div>
             `;
