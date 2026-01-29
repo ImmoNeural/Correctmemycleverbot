@@ -160,6 +160,51 @@ public class ClipboardHelper {
     [DllImport("user32.dll")]
     public static extern int GetWindowThreadProcessId(IntPtr hWnd, out int lpdwProcessId);
 }
+
+public class KeyboardHelper {
+    [DllImport("user32.dll")]
+    public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+
+    [DllImport("user32.dll")]
+    public static extern short GetAsyncKeyState(int vKey);
+
+    public const byte VK_CONTROL = 0x11;
+    public const byte VK_MENU = 0x12;  // Alt
+    public const byte VK_SHIFT = 0x10;
+    public const byte VK_C = 0x43;
+    public const byte VK_V = 0x56;
+    public const uint KEYEVENTF_KEYUP = 0x0002;
+
+    public static void SendCtrlC() {
+        // Soltar todas as teclas modificadoras primeiro
+        keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+        keybd_event(VK_MENU, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+        keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+        System.Threading.Thread.Sleep(50);
+
+        // Enviar Ctrl+C
+        keybd_event(VK_CONTROL, 0, 0, UIntPtr.Zero);
+        keybd_event(VK_C, 0, 0, UIntPtr.Zero);
+        System.Threading.Thread.Sleep(50);
+        keybd_event(VK_C, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+        keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+    }
+
+    public static void SendCtrlV() {
+        // Soltar todas as teclas modificadoras primeiro
+        keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+        keybd_event(VK_MENU, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+        keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+        System.Threading.Thread.Sleep(50);
+
+        // Enviar Ctrl+V
+        keybd_event(VK_CONTROL, 0, 0, UIntPtr.Zero);
+        keybd_event(VK_V, 0, 0, UIntPtr.Zero);
+        System.Threading.Thread.Sleep(50);
+        keybd_event(VK_V, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+        keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+    }
+}
 "@ -ReferencedAssemblies System.Windows.Forms -ErrorAction Stop
     } catch {
         Write-Host "[ERRO] Falha ao compilar tipos nativos: $_" -ForegroundColor Red
@@ -255,6 +300,9 @@ function Get-SelectedText {
         Captura o texto atualmente selecionado em qualquer aplicativo
     #>
     try {
+        # Aguardar um momento para as teclas modificadoras serem soltas
+        Start-Sleep -Milliseconds 100
+
         # Salvar o conteudo atual do clipboard
         $originalClipboard = $null
         try {
@@ -263,15 +311,15 @@ function Get-SelectedText {
 
         # Limpar clipboard
         [System.Windows.Forms.Clipboard]::Clear()
-        Start-Sleep -Milliseconds 50
+        Start-Sleep -Milliseconds 100
 
-        # Simular Ctrl+C para copiar o texto selecionado
-        [System.Windows.Forms.SendKeys]::SendWait("^c")
-        Start-Sleep -Milliseconds 150
+        # Usar KeyboardHelper para enviar Ctrl+C (solta as teclas modificadoras primeiro)
+        [KeyboardHelper]::SendCtrlC()
+        Start-Sleep -Milliseconds 200
 
         # Pegar o texto copiado
         $selectedText = ""
-        $retries = 3
+        $retries = 5
         while ($retries -gt 0 -and [string]::IsNullOrEmpty($selectedText)) {
             Start-Sleep -Milliseconds 100
             try {
@@ -303,11 +351,11 @@ function Set-TextReplacement {
     try {
         # Copiar novo texto para clipboard
         [System.Windows.Forms.Clipboard]::SetText($NewText)
-        Start-Sleep -Milliseconds 50
-
-        # Simular Ctrl+V para colar
-        [System.Windows.Forms.SendKeys]::SendWait("^v")
         Start-Sleep -Milliseconds 100
+
+        # Usar KeyboardHelper para enviar Ctrl+V (solta as teclas modificadoras primeiro)
+        [KeyboardHelper]::SendCtrlV()
+        Start-Sleep -Milliseconds 150
 
         Write-Log "Texto substituido com sucesso"
         return $true
@@ -332,57 +380,27 @@ function Invoke-ParaphraseAPI {
     $apiUrl = if ($config.ApiUrl) { $config.ApiUrl } else { "https://api.openai.com/v1/chat/completions" }
     $model = if ($config.Model) { $config.Model } else { "gpt-4o-mini" }
 
-    # Detectar se é API Anthropic ou OpenAI
-    $isAnthropic = $apiUrl -match "anthropic" -or $model -match "claude"
-
-    if ($isAnthropic) {
-        # Headers para Anthropic
-        $headers = @{
-            "Content-Type" = "application/json"
-            "x-api-key" = $config.ApiKey
-            "anthropic-version" = "2023-06-01"
-        }
-
-        # Corpo para Anthropic
-        $body = @{
-            model = $model
-            max_tokens = 4096
-            system = "Voce e um assistente especializado em parafrasear textos em ALEMAO. $StylePrompt IMPORTANTE: O texto de saida DEVE estar em alemao correto. Responda APENAS com o texto parafraseado em alemao, sem explicacoes adicionais."
-            messages = @(
-                @{
-                    role = "user"
-                    content = "Parafraseie o seguinte texto em alemao:`n`n$Text"
-                }
-            )
-        } | ConvertTo-Json -Depth 10
-
-        # Ajustar URL se necessário
-        if (-not ($apiUrl -match "messages")) {
-            $apiUrl = "https://api.anthropic.com/v1/messages"
-        }
-    } else {
-        # Headers para OpenAI
-        $headers = @{
-            "Content-Type" = "application/json"
-            "Authorization" = "Bearer $($config.ApiKey)"
-        }
-
-        # Corpo para OpenAI
-        $body = @{
-            model = $model
-            messages = @(
-                @{
-                    role = "system"
-                    content = "Voce e um assistente especializado em parafrasear textos em ALEMAO. $StylePrompt IMPORTANTE: O texto de saida DEVE estar em alemao correto. Responda APENAS com o texto parafraseado em alemao, sem explicacoes adicionais."
-                },
-                @{
-                    role = "user"
-                    content = "Parafraseie o seguinte texto em alemao:`n`n$Text"
-                }
-            )
-            temperature = 0.7
-        } | ConvertTo-Json -Depth 10
+    # Headers para OpenAI/DeepSeek (mesmo formato)
+    $headers = @{
+        "Content-Type" = "application/json"
+        "Authorization" = "Bearer $($config.ApiKey)"
     }
+
+    # Corpo para OpenAI/DeepSeek
+    $body = @{
+        model = $model
+        messages = @(
+            @{
+                role = "system"
+                content = "Voce e um assistente especializado em parafrasear textos em ALEMAO. $StylePrompt IMPORTANTE: O texto de saida DEVE estar em alemao correto. Responda APENAS com o texto parafraseado em alemao, sem explicacoes adicionais."
+            },
+            @{
+                role = "user"
+                content = "Parafraseie o seguinte texto em alemao:`n`n$Text"
+            }
+        )
+        temperature = 0.7
+    } | ConvertTo-Json -Depth 10
 
     Write-Log "Chamando API: $apiUrl com modelo $model"
 
@@ -406,16 +424,10 @@ function Invoke-ParaphraseAPI {
             throw "API Error: $($response.error.message)"
         }
 
-        # Verificar se a resposta tem o formato esperado (OpenAI)
+        # Verificar se a resposta tem o formato esperado (OpenAI/DeepSeek)
         if ($response.choices -and $response.choices[0].message.content) {
             $result = $response.choices[0].message.content.Trim()
             Write-Log "API respondeu com sucesso"
-            return $result
-        }
-        # Formato Anthropic/Claude
-        elseif ($response.content -and $response.content[0].text) {
-            $result = $response.content[0].text.Trim()
-            Write-Log "API respondeu com sucesso (formato Anthropic)"
             return $result
         }
         else {
@@ -540,7 +552,7 @@ function Show-ConfigDialog {
     $cmbModel.Location = New-Object System.Drawing.Point(20, 165)
     $cmbModel.Size = New-Object System.Drawing.Size(200, 25)
     $cmbModel.DropDownStyle = "DropDownList"
-    $cmbModel.Items.AddRange(@("gpt-4o-mini", "gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo", "claude-3-haiku-20240307", "claude-3-sonnet-20240229"))
+    $cmbModel.Items.AddRange(@("gpt-4o-mini", "gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo", "deepseek-chat", "deepseek-reasoner"))
     $currentModel = if ($config.Model) { $config.Model } else { "gpt-4o-mini" }
     $cmbModel.SelectedIndex = [Math]::Max(0, $cmbModel.Items.IndexOf($currentModel))
     $form.Controls.Add($cmbModel)
