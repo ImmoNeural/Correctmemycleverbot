@@ -17,6 +17,9 @@
 [functions."conversacao"]
   timeout = 60
 
+[functions."conversacao-correcoes"]
+  timeout = 60
+
 # Edge Function para streaming da correção de redações
 [[edge_functions]]
   path = "/api/trataerro-stream"

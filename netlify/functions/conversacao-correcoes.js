@@ -1,44 +1,27 @@
 // Análise de correções para conversação - usa DeepSeek para analisar erros em alemão
-// Analisa toda a conversa no final, não em tempo real
+// Otimizado para funcionar dentro do timeout do Netlify (10s)
 
 const DEEPSEEK_API_KEY = 'sk-e080234eab8b442fb65fe8955d8947de';
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 
-// Prompt para análise completa da conversa com contexto
-const FULL_ANALYSIS_PROMPT = `Du bist ein erfahrener Deutschlehrer, der die gesprochene Sprache eines Schülers analysiert.
+// Prompt otimizado e mais curto para resposta rápida
+const ANALYSIS_PROMPT = `Analise os erros de alemão. Responda APENAS com JSON array.
 
-AUFGABE: Analysiere alle Sätze des Schülers und finde grammatische Fehler. Für JEDEN Fehler musst du den VOLLSTÄNDIGEN SATZ (Kontext) angeben, in dem der Fehler vorkommt.
+CATEGORIAS: declinacao, conjugacao, preposicoes, sintaxe, vocabulario
 
-KATEGORIEN:
-- "declinacao" (Deklination - Fälle, Artikel, Adjektivendungen)
-- "conjugacao" (Konjugation - Verbformen, Zeiten)
-- "preposicoes" (Präpositionen)
-- "sintaxe" (Syntax - Wortstellung, Satzstruktur)
-- "vocabulario" (Vokabular - falsche Wörter, Rechtschreibung)
+FORMATO:
+[{"categoria":"X","contexto":"frase original","erro":"erro","correcao":"correto","explicacao":"explicação em português"}]
 
-FORMAT DER ANTWORT (NUR dieses JSON-Array, kein anderer Text):
-[
-  {
-    "categoria": "declinacao|conjugacao|preposicoes|sintaxe|vocabulario",
-    "contexto": "Der vollständige Satz, in dem der Fehler vorkommt",
-    "erro": "das falsche Wort oder die falsche Phrase",
-    "correcao": "die richtige Form",
-    "explicacao": "Erklärung auf Portugiesisch (1-2 Sätze), warum es falsch ist und wie man es richtig macht"
-  }
-]
+REGRAS:
+- Máximo 5 erros
+- Se não houver erros: []
+- Explicação curta (1 frase)
+- Foque em gramática, ignore pronúncia`;
 
-WICHTIGE REGELN:
-- "contexto" MUSS immer den vollständigen Originalsatz des Schülers enthalten
-- Wenn keine Fehler gefunden werden, antworte mit: []
-- Maximal 10 Fehler analysieren (die wichtigsten)
-- Erkläre auf Portugiesisch, klar und lehrreich
-- Ignoriere kleine Aussprachefehler, konzentriere dich auf Grammatik
-- Sei ermunternd in den Erklärungen`;
-
-// Helper function to call DeepSeek API with longer timeout for full analysis
-async function callDeepSeek(systemPrompt, userContent) {
+// Timeout reduzido para funcionar no Netlify
+async function callDeepSeek(userContent) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 segundos
 
     try {
         const response = await fetch(DEEPSEEK_API_URL, {
@@ -50,11 +33,11 @@ async function callDeepSeek(systemPrompt, userContent) {
             body: JSON.stringify({
                 model: 'deepseek-chat',
                 messages: [
-                    { role: 'system', content: systemPrompt },
+                    { role: 'system', content: ANALYSIS_PROMPT },
                     { role: 'user', content: userContent }
                 ],
-                temperature: 0.2,
-                max_tokens: 2000
+                temperature: 0.1,
+                max_tokens: 1000
             }),
             signal: controller.signal
         });
@@ -62,52 +45,35 @@ async function callDeepSeek(systemPrompt, userContent) {
         clearTimeout(timeoutId);
 
         if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`DeepSeek API error: ${errorText}`);
+            throw new Error(`API error: ${response.status}`);
         }
 
         const data = await response.json();
         return data.choices[0]?.message?.content || '[]';
     } catch (error) {
         clearTimeout(timeoutId);
-        if (error.name === 'AbortError') {
-            throw new Error('Timeout: análise demorou mais que 25 segundos');
-        }
         throw error;
     }
 }
 
-// Parse response and extract JSON array
 function parseCorrections(rawResponse) {
-    if (!rawResponse || typeof rawResponse !== 'string') {
-        return [];
-    }
-
-    // Try to find JSON array in response
-    const jsonMatch = rawResponse.match(/\[[\s\S]*\]/);
-    if (jsonMatch) {
+    if (!rawResponse) return [];
+    const match = rawResponse.match(/\[[\s\S]*\]/);
+    if (match) {
         try {
-            const parsed = JSON.parse(jsonMatch[0]);
-            if (Array.isArray(parsed)) {
-                return parsed;
-            }
+            return JSON.parse(match[0]);
         } catch (e) {
-            console.error('Failed to parse JSON:', e);
+            return [];
         }
     }
-
     return [];
 }
 
-// Format transcripts into a readable conversation
 function formatTranscripts(transcripts) {
-    if (!Array.isArray(transcripts) || transcripts.length === 0) {
-        return '';
-    }
-
+    if (!Array.isArray(transcripts)) return '';
     return transcripts
-        .filter(t => t.speaker === 'user') // Apenas frases do usuário
-        .map((t, index) => `${index + 1}. "${t.text}"`)
+        .filter(t => t.speaker === 'user')
+        .map((t, i) => `${i + 1}. "${t.text}"`)
         .join('\n');
 }
 
@@ -131,89 +97,58 @@ exports.handler = async (event) => {
         const body = JSON.parse(event.body);
         const { transcripts, fullAnalysis } = body;
 
-        // Modo de análise completa (no final da conversa)
         if (fullAnalysis && Array.isArray(transcripts)) {
-            console.log('=== RECEBIDO DO FRONTEND ===');
-            console.log('Transcripts recebidos:', JSON.stringify(transcripts, null, 2));
+            const formatted = formatTranscripts(transcripts);
+            console.log('Analisando:', formatted);
 
-            const formattedConversation = formatTranscripts(transcripts);
-            console.log('Conversa formatada:', formattedConversation);
-
-            if (!formattedConversation || formattedConversation.length < 10) {
-                console.log('Conversa muito curta, retornando vazio');
+            if (!formatted || formatted.length < 10) {
                 return {
                     statusCode: 200,
                     headers,
-                    body: JSON.stringify({
-                        corrections: [],
-                        message: 'Conversa muito curta para análise'
-                    })
+                    body: JSON.stringify({ corrections: [], message: 'Muito curto' })
                 };
             }
 
-            console.log('=== ANÁLISE COMPLETA DA CONVERSA ===');
-            console.log(`Total de frases do usuário: ${transcripts.filter(t => t.speaker === 'user').length}`);
-
-            const userContent = `Hier sind die Sätze des Schülers während des Gesprächs. Analysiere jeden Satz auf Fehler:\n\n${formattedConversation}`;
-            console.log('Enviando para DeepSeek:', userContent);
-
-            const rawResponse = await callDeepSeek(FULL_ANALYSIS_PROMPT, userContent);
-            console.log('Resposta bruta DeepSeek:', rawResponse);
+            const userContent = `Frases do aluno:\n${formatted}`;
+            const rawResponse = await callDeepSeek(userContent);
+            console.log('Resposta:', rawResponse.substring(0, 200));
 
             const corrections = parseCorrections(rawResponse);
-            console.log('Correções parseadas:', JSON.stringify(corrections, null, 2));
-
-            console.log(`Encontrados ${corrections.length} erros na conversa`);
 
             return {
                 statusCode: 200,
                 headers,
-                body: JSON.stringify({
-                    corrections,
-                    totalSentences: transcripts.filter(t => t.speaker === 'user').length,
-                    totalErrors: corrections.length
-                })
+                body: JSON.stringify({ corrections, totalErrors: corrections.length })
             };
         }
 
-        // Modo legado (texto único) - mantido para compatibilidade
-        const { text, speaker } = body;
-
-        if (!text || text.trim().length < 3) {
+        // Modo legado
+        const { text } = body;
+        if (!text || text.length < 5) {
             return {
                 statusCode: 200,
                 headers,
-                body: JSON.stringify({ corrections: [], message: 'Texto muito curto para análise' })
+                body: JSON.stringify({ corrections: [] })
             };
         }
 
-        console.log(`Analisando texto de ${speaker || 'user'}:`, text.substring(0, 100));
-
-        const userContent = `Analysiere diesen Satz auf Fehler: "${text}"`;
-        const rawResponse = await callDeepSeek(FULL_ANALYSIS_PROMPT, userContent);
+        const rawResponse = await callDeepSeek(`Frase: "${text}"`);
         const corrections = parseCorrections(rawResponse);
-
-        console.log(`Encontrados ${corrections.length} erros`);
 
         return {
             statusCode: 200,
             headers,
-            body: JSON.stringify({
-                corrections,
-                analyzedText: text,
-                speaker: speaker || 'user'
-            })
+            body: JSON.stringify({ corrections })
         };
 
     } catch (error) {
-        console.error('Erro na análise:', error.message);
+        console.error('Erro:', error.message);
         return {
-            statusCode: 500,
+            statusCode: 200, // Retorna 200 mesmo com erro para não quebrar o frontend
             headers,
             body: JSON.stringify({
-                error: 'Erro na análise',
-                details: error.message,
-                corrections: []
+                corrections: [],
+                error: error.message
             })
         };
     }
