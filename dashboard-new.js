@@ -3947,20 +3947,6 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
                         systemInstruction: {
                             parts: [{ text: GERMAN_TUTOR_INSTRUCTION }]
                         },
-                        // Configuração de detecção de atividade de voz (VAD)
-                        realtimeInputConfig: {
-                            automaticActivityDetection: {
-                                disabled: false,
-                                // Sensibilidade para detectar início de fala (LOW = mais sensível)
-                                startOfSpeechSensitivity: 'START_SENSITIVITY_LOW',
-                                // Sensibilidade para detectar fim de fala (LOW = espera mais tempo)
-                                endOfSpeechSensitivity: 'END_SENSITIVITY_LOW',
-                                // Tempo de silêncio antes de considerar fim de fala (ms)
-                                silenceDurationMs: 1000,
-                                // Padding antes do início da fala (ms)
-                                prefixPaddingMs: 300
-                            }
-                        },
                         // Ativar transcrição de entrada para melhor compreensão
                         inputAudioTranscription: {},
                         // Ativar transcrição de saída para debug
@@ -4193,7 +4179,7 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
 
             conversacaoState.workletNode.port.onmessage = (event) => {
                 if (conversacaoState.ws?.readyState === WebSocket.OPEN && conversacaoState.isConnected) {
-                    const { audioData, hasSound } = event.data;
+                    const { audioData, hasSound, rmsLevel } = event.data;
 
                     // Atualizar timestamp se detectou som
                     if (hasSound) {
@@ -4222,12 +4208,13 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
                         console.log('🎤 PRIMEIRO CHUNK DE ÁUDIO ENVIADO!');
                         console.log('   - Tamanho do chunk:', audioData.byteLength, 'bytes');
                         console.log('   - Base64 length:', audioBase64.length);
+                        console.log('   - RMS Level:', rmsLevel?.toFixed(6) || 'N/A');
                         console.log('   - Som detectado:', hasSound);
                     }
 
                     // Log a cada 50 chunks (~3 segundos de áudio)
                     if (audioChunksSent % 50 === 0) {
-                        console.log(`🎙️ Áudio enviado: ${audioChunksSent} chunks (${Math.round(totalBytesEnviados/1024)}KB), som: ${hasSound}`);
+                        console.log(`🎙️ Áudio enviado: ${audioChunksSent} chunks (${Math.round(totalBytesEnviados/1024)}KB), som: ${hasSound}, RMS: ${rmsLevel?.toFixed(4) || 'N/A'}`);
                     }
                 }
             };
@@ -4325,7 +4312,7 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
                     this.bufferSize = 4096;
                     this.buffer = new Float32Array(this.bufferSize);
                     this.bufferIndex = 0;
-                    this.silenceThreshold = 0.01; // Limiar de volume para considerar silêncio
+                    this.silenceThreshold = 0.0005; // Limiar MUITO baixo para detectar som
                 }
 
                 process(inputs, outputs, parameters) {
@@ -4354,7 +4341,8 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
                                 const hasSound = rms > this.silenceThreshold;
                                 this.port.postMessage({
                                     audioData: pcmData.buffer,
-                                    hasSound: hasSound
+                                    hasSound: hasSound,
+                                    rmsLevel: rms // Enviar nível de RMS para debug
                                 });
                                 this.bufferIndex = 0;
                             }
