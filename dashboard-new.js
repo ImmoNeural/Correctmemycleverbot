@@ -170,6 +170,17 @@ document.addEventListener('DOMContentLoaded', () => {
             await loadUserProfile(user);
             attachEventListeners();
 
+        } catch (initError) {
+            console.error('❌ Erro crítico na inicialização:', initError);
+            // Mesmo com erro, tenta carregar o perfil básico
+            try {
+                await loadUserProfile(user);
+                attachEventListeners();
+            } catch (fallbackError) {
+                console.error('❌ Erro no fallback de carregamento:', fallbackError);
+            }
+        }
+
         // Restaura correção salva ao carregar a página (se estiver na seção REDAÇÃO)
         const correcaoSalva = localStorage.getItem('ultimaCorrecaoHTML');
         if (correcaoSalva) {
@@ -238,11 +249,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // =================================================================
 
     async function loadUserProfile(user) {
+        console.log('👤 loadUserProfile chamada para:', user.email, 'ID:', user.id);
+
         const columnsToSelect = 'credits, avatar_url, total_essays, error_declinacao, error_conjugacao, error_sintaxe, error_preposicao, error_vocabulario';
         let profile = null;
 
         try {
+            console.log('🔍 Buscando perfil no Supabase...');
             const { data, error } = await _supabase.from('profiles').select(columnsToSelect).eq('id', user.id).single();
+            console.log('🔍 Resultado da busca:', { data, error });
 
             if (error && error.code !== 'PGRST116') {
                 console.error("Erro ao buscar perfil:", error);
@@ -281,8 +296,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateUI(user, profile) {
-        document.querySelectorAll('#user-email').forEach(el => el.textContent = user.email);
-        document.querySelectorAll('#user-credits').forEach(el => el.textContent = profile.credits !== null ? profile.credits : 0);
+        console.log('📊 updateUI chamada com:', { email: user.email, credits: profile?.credits });
+
+        const emailElements = document.querySelectorAll('#user-email');
+        const creditsElements = document.querySelectorAll('#user-credits');
+
+        console.log('📊 Elementos encontrados:', { emailElements: emailElements.length, creditsElements: creditsElements.length });
+
+        emailElements.forEach(el => {
+            el.textContent = user.email;
+            console.log('✅ Email atualizado para:', user.email);
+        });
+        creditsElements.forEach(el => {
+            el.textContent = profile.credits !== null ? profile.credits : 0;
+            console.log('✅ Créditos atualizados para:', profile.credits);
+        });
         document.querySelectorAll('#profile-pic').forEach(el => {
             if (profile.avatar_url) {
                 const { data: urlData } = _supabase.storage.from('avatar').getPublicUrl(profile.avatar_url);
