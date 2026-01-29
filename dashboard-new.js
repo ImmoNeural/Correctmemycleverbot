@@ -3713,17 +3713,38 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
 
             // Obter API key do backend
             if (!conversacaoState.apiKey) {
+                console.log('Obtendo API key para userId:', currentUser?.id);
+
+                if (!currentUser?.id) {
+                    throw new Error('Você precisa estar logado para usar a conversa.');
+                }
+
                 const keyResponse = await fetch('/.netlify/functions/get-gemini-key', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: currentUser?.id })
+                    body: JSON.stringify({ userId: currentUser.id })
                 });
+
+                console.log('Resposta get-gemini-key:', keyResponse.status);
 
                 const keyData = await keyResponse.json();
                 if (!keyResponse.ok) {
+                    if (keyResponse.status === 402) {
+                        throw new Error(`Créditos insuficientes (${keyData.credits || 0}). Você precisa de pelo menos 5 créditos.`);
+                    } else if (keyResponse.status === 401) {
+                        throw new Error('Usuário não autenticado. Faça login novamente.');
+                    } else if (keyResponse.status === 500 && keyData.error === 'API key not configured') {
+                        throw new Error('Serviço temporariamente indisponível. Tente novamente mais tarde.');
+                    }
                     throw new Error(keyData.message || keyData.error || 'Erro ao obter credenciais');
                 }
+
+                if (!keyData.apiKey) {
+                    throw new Error('API key não recebida do servidor.');
+                }
+
                 conversacaoState.apiKey = keyData.apiKey;
+                console.log('API key obtida com sucesso. Créditos:', keyData.credits);
             }
 
             // Solicitar permissão do microfone
@@ -3742,7 +3763,18 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
 
             conversacaoState.ws = new WebSocket(wsUrl);
 
+            // Timeout de conexão - 15 segundos
+            const connectionTimeout = setTimeout(() => {
+                if (conversacaoState.ws && conversacaoState.ws.readyState !== WebSocket.OPEN) {
+                    console.error('Timeout de conexão WebSocket');
+                    conversacaoState.ws.close();
+                    showConversacaoError('Timeout na conexão. Verifique sua internet e tente novamente.');
+                    cleanupConversation();
+                }
+            }, 15000);
+
             conversacaoState.ws.onopen = () => {
+                clearTimeout(connectionTimeout);
                 console.log('WebSocket conectado');
 
                 // Enviar configuração de setup
@@ -3776,14 +3808,31 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
             };
 
             conversacaoState.ws.onerror = (error) => {
+                clearTimeout(connectionTimeout);
                 console.error('WebSocket error:', error);
-                showConversacaoError('Erro na conexão. Tente novamente.');
+                showConversacaoError('Erro na conexão WebSocket. Verifique sua internet.');
                 disconnectConversation();
             };
 
             conversacaoState.ws.onclose = (event) => {
+                clearTimeout(connectionTimeout);
                 console.log('WebSocket fechado:', event.code, event.reason);
-                if (conversacaoState.isConnected) {
+
+                // Códigos de erro específicos do WebSocket
+                let errorMsg = '';
+                if (event.code === 1006) {
+                    errorMsg = 'Conexão perdida inesperadamente. Verifique sua internet.';
+                } else if (event.code === 1008 || event.code === 1003) {
+                    errorMsg = 'Erro de autenticação com a API. Tente novamente.';
+                } else if (event.code === 4001) {
+                    errorMsg = 'API key inválida ou expirada.';
+                } else if (event.reason) {
+                    errorMsg = `Conexão encerrada: ${event.reason}`;
+                }
+
+                if (errorMsg && !conversacaoState.isConnected) {
+                    showConversacaoError(errorMsg);
+                } else if (conversacaoState.isConnected) {
                     showConversacaoError('Conexão encerrada.');
                 }
                 cleanupConversation();
