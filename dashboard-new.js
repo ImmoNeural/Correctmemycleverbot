@@ -3583,45 +3583,70 @@ async function handleCorrectionSubmit(e) {
     };
 
     // =====================================================================
-    // SISTEMA DE PRÁTICA DE CONVERSAÇÃO - GEMINI LIVE API
+    // SISTEMA DE PRÁTICA DE CONVERSAÇÃO - GEMINI LIVE API (WebSocket)
     // =====================================================================
 
     let conversacaoState = {
+        // WebSocket connection
+        ws: null,
+        isConnected: false,
+        isConnecting: false,
+        apiKey: null,
+
+        // Audio state
         isRecording: false,
         isPlaying: false,
-        mediaRecorder: null,
-        audioChunks: [],
         stream: null,
+        audioContext: null,
+        workletNode: null,
+
+        // Playback
+        playbackContext: null,
+        audioQueue: [],
+        isPlayingAudio: false,
+
+        // Session state
         startTime: null,
         timerInterval: null,
         totalSeconds: 0,
         conversationHistory: [],
         creditsUsed: 0,
-        // VAD (Voice Activity Detection) - Detecção automática de silêncio
-        audioContext: null,
-        analyser: null,
-        silenceCheckInterval: null,
-        lastSoundTime: null,
-        vadEnabled: true,
-        silenceThreshold: 15,       // Nível mínimo para considerar som (0-255)
-        silenceDuration: 1500,      // ms de silêncio para parar (1.5 segundos)
-        minRecordingTime: 800,      // Tempo mínimo de gravação em ms
-        // Modo conversa contínua - inicia gravação automaticamente após resposta
-        continuousMode: true
+
+        // Settings
+        continuousMode: true,
+        selectedVoice: 'Aoede' // Voz alemã
     };
 
     let conversacaoInitialized = false;
+
+    // System instruction para o tutor de alemão
+    const GERMAN_TUTOR_INSTRUCTION = `Du bist ein freundlicher Deutschlehrer für brasilianische Schüler.
+
+WICHTIGE REGELN:
+1. Sprich IMMER auf Deutsch mit dem Schüler
+2. Wenn der Schüler einen Fehler macht:
+   - Korrigiere den Fehler sanft
+   - Erkläre kurz auf Portugiesisch warum es falsch war
+   - Fahre dann auf Deutsch fort
+3. Passe dein Niveau an den Schüler an
+4. Sei geduldig und ermutigend
+5. Verwende einfache, klare Sätze
+6. Stelle Fragen um das Gespräch fortzusetzen
+
+Beispiel einer Korrektur:
+Schüler: "Ich habe gestern ins Kino gegangen"
+Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa o auxiliar 'sein', não 'haben') Und welchen Film hast du gesehen?"`;
 
     function initializeConversacao() {
         if (conversacaoInitialized) return;
         conversacaoInitialized = true;
 
-        console.log('Inicializando seção de conversação...');
+        console.log('Inicializando seção de conversação com Gemini Live API...');
 
-        // Botão do microfone
+        // Botão do microfone - agora conecta/desconecta
         const micBtn = document.getElementById('conv-mic-btn');
         if (micBtn) {
-            micBtn.addEventListener('click', toggleRecording);
+            micBtn.addEventListener('click', toggleConversation);
         }
 
         // Botão de mudo
@@ -3633,9 +3658,9 @@ async function handleCorrectionSubmit(e) {
         // Toggle modo fluido (contínuo)
         const continuousModeToggle = document.getElementById('conv-continuous-mode');
         if (continuousModeToggle) {
+            continuousModeToggle.checked = true;
             continuousModeToggle.addEventListener('change', (e) => {
                 conversacaoState.continuousMode = e.target.checked;
-                conversacaoState.vadEnabled = e.target.checked;
                 console.log('Modo fluido:', e.target.checked ? 'ativado' : 'desativado');
             });
         }
@@ -3649,371 +3674,401 @@ async function handleCorrectionSubmit(e) {
             });
         });
 
+        // Voice select
+        const voiceSelect = document.getElementById('conv-voice-select');
+        if (voiceSelect) {
+            voiceSelect.addEventListener('change', (e) => {
+                conversacaoState.selectedVoice = e.target.value;
+            });
+        }
+
         console.log('Seção de conversação inicializada');
     }
 
-    async function toggleRecording() {
-        if (conversacaoState.isRecording) {
-            stopRecording();
+    // Toggle entre conectar/desconectar da conversa
+    async function toggleConversation() {
+        if (conversacaoState.isConnected || conversacaoState.isConnecting) {
+            disconnectConversation();
         } else {
-            await startRecording();
+            await connectConversation();
         }
     }
 
-    async function startRecording() {
+    // Conectar à Gemini Live API via WebSocket
+    async function connectConversation() {
+        if (conversacaoState.isConnecting || conversacaoState.isConnected) return;
+
         try {
-            // Verificar se o navegador suporta MediaRecorder
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                showConversacaoError('Seu navegador não suporta gravação de áudio.');
-                return;
+            conversacaoState.isConnecting = true;
+            updateStatus('Conectando...', 'connecting');
+            updateConversacaoUI('connecting');
+
+            // Obter API key do backend
+            if (!conversacaoState.apiKey) {
+                const keyResponse = await fetch('/.netlify/functions/get-gemini-key', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUser?.id })
+                });
+
+                const keyData = await keyResponse.json();
+                if (!keyResponse.ok) {
+                    throw new Error(keyData.message || keyData.error || 'Erro ao obter credenciais');
+                }
+                conversacaoState.apiKey = keyData.apiKey;
             }
 
             // Solicitar permissão do microfone
-            conversacaoState.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-            // Criar MediaRecorder
-            const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
-            conversacaoState.mediaRecorder = new MediaRecorder(conversacaoState.stream, { mimeType });
-            conversacaoState.audioChunks = [];
-
-            conversacaoState.mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    conversacaoState.audioChunks.push(event.data);
+            conversacaoState.stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    sampleRate: 16000,
+                    channelCount: 1,
+                    echoCancellation: true,
+                    noiseSuppression: true
                 }
+            });
+
+            // Conectar WebSocket ao Gemini Live API
+            // Usando o modelo gemini-2.5-flash-lite para menor custo
+            const wsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${conversacaoState.apiKey}`;
+
+            conversacaoState.ws = new WebSocket(wsUrl);
+
+            conversacaoState.ws.onopen = () => {
+                console.log('WebSocket conectado');
+
+                // Enviar configuração de setup
+                const setupMessage = {
+                    setup: {
+                        model: 'models/gemini-2.5-flash-preview-native-audio',
+                        generationConfig: {
+                            responseModalities: ['AUDIO'],
+                            speechConfig: {
+                                voiceConfig: {
+                                    prebuiltVoiceConfig: {
+                                        voiceName: conversacaoState.selectedVoice
+                                    }
+                                }
+                            }
+                        },
+                        systemInstruction: {
+                            parts: [{ text: GERMAN_TUTOR_INSTRUCTION }]
+                        }
+                    }
+                };
+
+                conversacaoState.ws.send(JSON.stringify(setupMessage));
+                console.log('Setup enviado:', setupMessage);
             };
 
-            conversacaoState.mediaRecorder.onstop = async () => {
-                // Limpar VAD
-                stopVAD();
-                const audioBlob = new Blob(conversacaoState.audioChunks, { type: mimeType });
-                await sendAudioToAPI(audioBlob, mimeType);
+            conversacaoState.ws.onmessage = (event) => {
+                handleWebSocketMessage(event);
             };
 
-            // Iniciar gravação
-            conversacaoState.mediaRecorder.start(100); // Gravar em chunks de 100ms
-            conversacaoState.isRecording = true;
-            conversacaoState.startTime = Date.now();
+            conversacaoState.ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                showConversacaoError('Erro na conexão. Tente novamente.');
+                disconnectConversation();
+            };
 
-            // Iniciar detecção de silêncio (VAD)
-            if (conversacaoState.vadEnabled) {
-                startVAD();
-            }
-
-            // Atualizar UI
-            updateConversacaoUI('recording');
-            startTimer();
-
-            console.log('Gravação iniciada com detecção automática de silêncio');
+            conversacaoState.ws.onclose = (event) => {
+                console.log('WebSocket fechado:', event.code, event.reason);
+                if (conversacaoState.isConnected) {
+                    showConversacaoError('Conexão encerrada.');
+                }
+                cleanupConversation();
+            };
 
         } catch (error) {
-            console.error('Erro ao iniciar gravação:', error);
+            console.error('Erro ao conectar:', error);
             if (error.name === 'NotAllowedError') {
-                showConversacaoError('Permissão de microfone negada. Por favor, permita o acesso ao microfone.');
+                showConversacaoError('Permissão de microfone negada.');
             } else {
-                showConversacaoError('Erro ao acessar o microfone: ' + error.message);
+                showConversacaoError('Erro ao conectar: ' + error.message);
             }
+            cleanupConversation();
         }
     }
 
-    // Voice Activity Detection (VAD) - Detecção automática de silêncio
-    function startVAD() {
+    // Processar mensagens recebidas do WebSocket
+    function handleWebSocketMessage(event) {
         try {
-            // Criar contexto de áudio
-            conversacaoState.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            conversacaoState.analyser = conversacaoState.audioContext.createAnalyser();
-            conversacaoState.analyser.fftSize = 512;
-            conversacaoState.analyser.smoothingTimeConstant = 0.5;
+            const message = JSON.parse(event.data);
+            console.log('Mensagem recebida:', Object.keys(message));
 
-            // Conectar o stream ao analyser
-            const source = conversacaoState.audioContext.createMediaStreamSource(conversacaoState.stream);
-            source.connect(conversacaoState.analyser);
+            // Setup complete - pronto para conversar
+            if (message.setupComplete) {
+                console.log('Setup completo - iniciando captura de áudio');
+                conversacaoState.isConnected = true;
+                conversacaoState.isConnecting = false;
+                updateStatus('Conectado - Fale agora!', 'connected');
+                updateConversacaoUI('recording');
+                startAudioCapture();
+                startTimer();
+            }
 
-            // Buffer para análise
-            const dataArray = new Uint8Array(conversacaoState.analyser.frequencyBinCount);
-            conversacaoState.lastSoundTime = Date.now();
+            // Resposta do servidor (texto ou áudio)
+            if (message.serverContent) {
+                const parts = message.serverContent.modelTurn?.parts || [];
 
-            // Verificar nível de áudio periodicamente
-            conversacaoState.silenceCheckInterval = setInterval(() => {
-                if (!conversacaoState.isRecording) {
-                    stopVAD();
-                    return;
+                for (const part of parts) {
+                    // Texto da resposta
+                    if (part.text) {
+                        addMessageToHistory('ai', part.text);
+                        conversacaoState.conversationHistory.push({
+                            role: 'model',
+                            text: part.text
+                        });
+                    }
+
+                    // Áudio da resposta (PCM 24kHz)
+                    if (part.inlineData && part.inlineData.mimeType?.includes('audio')) {
+                        const audioData = part.inlineData.data;
+                        playPCMAudio(audioData);
+                    }
                 }
 
-                conversacaoState.analyser.getByteFrequencyData(dataArray);
+                // Fim do turno do servidor
+                if (message.serverContent.turnComplete) {
+                    console.log('Turno do servidor completo');
+                    updateStatus('Sua vez de falar...', 'listening');
 
-                // Calcular nível médio de áudio
-                let sum = 0;
-                for (let i = 0; i < dataArray.length; i++) {
-                    sum += dataArray[i];
+                    // Atualizar créditos (aproximado)
+                    conversacaoState.creditsUsed += 0.5;
+                    updateCreditsUsed();
                 }
-                const average = sum / dataArray.length;
+            }
 
-                // Se detectar som acima do limiar
-                if (average > conversacaoState.silenceThreshold) {
-                    conversacaoState.lastSoundTime = Date.now();
-                }
-
-                // Verificar tempo desde o último som
-                const timeSinceSound = Date.now() - conversacaoState.lastSoundTime;
-                const recordingTime = Date.now() - conversacaoState.startTime;
-
-                // Se passou tempo suficiente de silêncio E gravou tempo mínimo
-                if (timeSinceSound > conversacaoState.silenceDuration &&
-                    recordingTime > conversacaoState.minRecordingTime) {
-                    console.log('Silêncio detectado - parando gravação automaticamente');
-                    stopRecording();
-                }
-            }, 100); // Verificar a cada 100ms
-
-            console.log('VAD iniciado - detecção de silêncio ativa');
+            // Erro
+            if (message.error) {
+                console.error('Erro do servidor:', message.error);
+                showConversacaoError(message.error.message || 'Erro do servidor');
+            }
 
         } catch (error) {
-            console.error('Erro ao iniciar VAD:', error);
-            // Se VAD falhar, continua sem ele
+            console.error('Erro ao processar mensagem:', error);
         }
     }
 
-    function stopVAD() {
-        if (conversacaoState.silenceCheckInterval) {
-            clearInterval(conversacaoState.silenceCheckInterval);
-            conversacaoState.silenceCheckInterval = null;
+    // Iniciar captura de áudio do microfone
+    async function startAudioCapture() {
+        try {
+            // Criar AudioContext para captura
+            conversacaoState.audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                sampleRate: 16000
+            });
+
+            // Criar worklet para processar áudio
+            await conversacaoState.audioContext.audioWorklet.addModule(createAudioWorkletProcessor());
+
+            const source = conversacaoState.audioContext.createMediaStreamSource(conversacaoState.stream);
+            conversacaoState.workletNode = new AudioWorkletNode(conversacaoState.audioContext, 'audio-processor');
+
+            conversacaoState.workletNode.port.onmessage = (event) => {
+                if (conversacaoState.ws?.readyState === WebSocket.OPEN && conversacaoState.isConnected) {
+                    // Converter para base64 e enviar
+                    const audioBase64 = arrayBufferToBase64(event.data);
+
+                    const audioMessage = {
+                        realtimeInput: {
+                            mediaChunks: [{
+                                mimeType: 'audio/pcm;rate=16000',
+                                data: audioBase64
+                            }]
+                        }
+                    };
+
+                    conversacaoState.ws.send(JSON.stringify(audioMessage));
+                }
+            };
+
+            source.connect(conversacaoState.workletNode);
+            conversacaoState.isRecording = true;
+
+            console.log('Captura de áudio iniciada');
+
+        } catch (error) {
+            console.error('Erro ao iniciar captura de áudio:', error);
+            showConversacaoError('Erro ao capturar áudio: ' + error.message);
         }
+    }
+
+    // Criar processador de áudio inline
+    function createAudioWorkletProcessor() {
+        const processorCode = `
+            class AudioProcessor extends AudioWorkletProcessor {
+                constructor() {
+                    super();
+                    this.bufferSize = 4096;
+                    this.buffer = new Float32Array(this.bufferSize);
+                    this.bufferIndex = 0;
+                }
+
+                process(inputs, outputs, parameters) {
+                    const input = inputs[0];
+                    if (input.length > 0) {
+                        const channelData = input[0];
+
+                        for (let i = 0; i < channelData.length; i++) {
+                            this.buffer[this.bufferIndex++] = channelData[i];
+
+                            if (this.bufferIndex >= this.bufferSize) {
+                                // Converter para PCM 16-bit
+                                const pcmData = new Int16Array(this.bufferSize);
+                                for (let j = 0; j < this.bufferSize; j++) {
+                                    pcmData[j] = Math.max(-32768, Math.min(32767, this.buffer[j] * 32767));
+                                }
+                                this.port.postMessage(pcmData.buffer);
+                                this.bufferIndex = 0;
+                            }
+                        }
+                    }
+                    return true;
+                }
+            }
+
+            registerProcessor('audio-processor', AudioProcessor);
+        `;
+
+        const blob = new Blob([processorCode], { type: 'application/javascript' });
+        return URL.createObjectURL(blob);
+    }
+
+    // Reproduzir áudio PCM recebido
+    function playPCMAudio(base64Data) {
+        try {
+            // Decodificar base64 para ArrayBuffer
+            const binaryString = atob(base64Data);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+
+            // Converter de Int16 para Float32
+            const int16Data = new Int16Array(bytes.buffer);
+            const float32Data = new Float32Array(int16Data.length);
+            for (let i = 0; i < int16Data.length; i++) {
+                float32Data[i] = int16Data[i] / 32768;
+            }
+
+            // Criar contexto de playback se não existir
+            if (!conversacaoState.playbackContext) {
+                conversacaoState.playbackContext = new (window.AudioContext || window.webkitAudioContext)({
+                    sampleRate: 24000 // Gemini retorna áudio a 24kHz
+                });
+            }
+
+            // Criar buffer e tocar
+            const audioBuffer = conversacaoState.playbackContext.createBuffer(1, float32Data.length, 24000);
+            audioBuffer.getChannelData(0).set(float32Data);
+
+            const source = conversacaoState.playbackContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(conversacaoState.playbackContext.destination);
+            source.start();
+
+            conversacaoState.isPlaying = true;
+            updateConversacaoUI('playing');
+
+            source.onended = () => {
+                conversacaoState.isPlaying = false;
+                if (conversacaoState.isConnected) {
+                    updateConversacaoUI('recording');
+                }
+            };
+
+        } catch (error) {
+            console.error('Erro ao reproduzir áudio:', error);
+        }
+    }
+
+    // Converter ArrayBuffer para Base64
+    function arrayBufferToBase64(buffer) {
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
+    }
+
+    // Desconectar da conversa
+    function disconnectConversation() {
+        console.log('Desconectando...');
+
+        if (conversacaoState.ws) {
+            conversacaoState.ws.close();
+        }
+
+        cleanupConversation();
+        updateStatus('Desconectado', 'idle');
+        updateConversacaoUI('idle');
+        stopTimer();
+    }
+
+    // Limpar recursos
+    function cleanupConversation() {
+        conversacaoState.isConnected = false;
+        conversacaoState.isConnecting = false;
+        conversacaoState.isRecording = false;
+        conversacaoState.ws = null;
+
+        if (conversacaoState.stream) {
+            conversacaoState.stream.getTracks().forEach(track => track.stop());
+            conversacaoState.stream = null;
+        }
+
         if (conversacaoState.audioContext && conversacaoState.audioContext.state !== 'closed') {
             conversacaoState.audioContext.close().catch(() => {});
             conversacaoState.audioContext = null;
         }
-        conversacaoState.analyser = null;
+
+        if (conversacaoState.playbackContext && conversacaoState.playbackContext.state !== 'closed') {
+            conversacaoState.playbackContext.close().catch(() => {});
+            conversacaoState.playbackContext = null;
+        }
+
+        conversacaoState.workletNode = null;
     }
 
-    function stopRecording() {
-        if (conversacaoState.mediaRecorder && conversacaoState.isRecording) {
-            // Parar VAD primeiro
-            stopVAD();
+    // Iniciar conversa com um tópico
+    async function startConversationWithTopic(topic) {
+        // Primeiro conectar se não estiver conectado
+        if (!conversacaoState.isConnected) {
+            await connectConversation();
 
-            conversacaoState.mediaRecorder.stop();
-            conversacaoState.isRecording = false;
-
-            // Parar o stream
-            if (conversacaoState.stream) {
-                conversacaoState.stream.getTracks().forEach(track => track.stop());
+            // Esperar conexão estabelecer
+            let attempts = 0;
+            while (!conversacaoState.isConnected && attempts < 50) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                attempts++;
             }
 
-            // Atualizar UI
-            updateConversacaoUI('processing');
-            stopTimer();
-
-            console.log('Gravação parada');
-        }
-    }
-
-    async function sendAudioToAPI(audioBlob, mimeType) {
-        try {
-            updateConversacaoUI('processing');
-            updateStatus('Processando...', 'connecting');
-
-            // Converter blob para base64
-            const reader = new FileReader();
-            const base64Promise = new Promise((resolve) => {
-                reader.onloadend = () => {
-                    const base64 = reader.result.split(',')[1];
-                    resolve(base64);
-                };
-            });
-            reader.readAsDataURL(audioBlob);
-            const audioBase64 = await base64Promise;
-
-            // Calcular duração
-            const durationSeconds = conversacaoState.totalSeconds;
-
-            // Obter voz selecionada
-            const voiceSelect = document.getElementById('conv-voice-select');
-            const voice = voiceSelect ? voiceSelect.value : 'Puck';
-
-            // Enviar para a API
-            const response = await fetch('/.netlify/functions/conversacao', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'message',
-                    userId: currentUser?.id,
-                    audioBase64: audioBase64,
-                    mimeType: mimeType,
-                    conversationHistory: conversacaoState.conversationHistory,
-                    voice: voice,
-                    durationSeconds: durationSeconds
-                })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                if (response.status === 402) {
-                    showConversacaoError(data.message || 'Créditos insuficientes');
-                } else {
-                    throw new Error(data.message || 'Erro ao processar áudio');
-                }
-                updateConversacaoUI('idle');
+            if (!conversacaoState.isConnected) {
+                showConversacaoError('Não foi possível conectar.');
                 return;
             }
-
-            // Adicionar à história
-            if (data.text) {
-                // Adicionar resposta do user (seria o transcript, mas não temos)
-                conversacaoState.conversationHistory.push({
-                    role: 'user',
-                    text: '[áudio enviado]'
-                });
-
-                // Adicionar resposta da IA
-                conversacaoState.conversationHistory.push({
-                    role: 'model',
-                    text: data.text
-                });
-
-                // Atualizar histórico visual
-                addMessageToHistory('user', '[Você falou]');
-                addMessageToHistory('ai', data.text);
-            }
-
-            // Reproduzir áudio de resposta
-            if (data.audioBase64) {
-                updateStatus('Reproduzindo resposta...', 'speaking');
-                await playAudioResponse(data.audioBase64, data.audioMimeType);
-            }
-
-            // Atualizar créditos usados
-            const creditsUsed = (durationSeconds / 60) * 2.5;
-            conversacaoState.creditsUsed += creditsUsed;
-            updateCreditsUsed();
-
-            // Atualizar créditos do usuário no header
-            if (currentUser) {
-                loadUserProfile(currentUser);
-            }
-
-            // Modo conversa contínua - iniciar gravação automaticamente
-            if (conversacaoState.continuousMode && !conversacaoState.isRecording) {
-                updateStatus('Sua vez de falar...', 'listening');
-                updateConversacaoUI('idle');
-                // Pequeno delay antes de iniciar nova gravação
-                setTimeout(async () => {
-                    if (!conversacaoState.isRecording && !conversacaoState.isPlaying) {
-                        await startRecording();
-                    }
-                }, 500);
-            } else {
-                updateConversacaoUI('idle');
-                updateStatus('Pronto para continuar', 'connected');
-            }
-
-        } catch (error) {
-            console.error('Erro ao enviar áudio:', error);
-            showConversacaoError('Erro ao processar sua mensagem: ' + error.message);
-            updateConversacaoUI('idle');
-            updateStatus('Erro', 'idle');
         }
-    }
 
-    async function playAudioResponse(audioBase64, mimeType) {
-        return new Promise((resolve) => {
-            try {
-                const audioData = atob(audioBase64);
-                const arrayBuffer = new ArrayBuffer(audioData.length);
-                const uint8Array = new Uint8Array(arrayBuffer);
-                for (let i = 0; i < audioData.length; i++) {
-                    uint8Array[i] = audioData.charCodeAt(i);
+        // Limpar histórico
+        conversacaoState.conversationHistory = [];
+        clearHistory();
+
+        // Enviar mensagem de texto para iniciar o tópico
+        if (conversacaoState.ws?.readyState === WebSocket.OPEN) {
+            const textMessage = {
+                clientContent: {
+                    turns: [{
+                        role: 'user',
+                        parts: [{ text: `Vamos praticar uma conversa sobre: ${topic}. Por favor, comece a conversa em alemão sobre este tema.` }]
+                    }],
+                    turnComplete: true
                 }
+            };
 
-                const blob = new Blob([uint8Array], { type: mimeType || 'audio/mp3' });
-                const audioUrl = URL.createObjectURL(blob);
-
-                const audio = new Audio(audioUrl);
-                conversacaoState.isPlaying = true;
-                updateConversacaoUI('playing');
-
-                audio.onended = () => {
-                    conversacaoState.isPlaying = false;
-                    URL.revokeObjectURL(audioUrl);
-                    resolve();
-                };
-
-                audio.onerror = (e) => {
-                    console.error('Erro ao reproduzir áudio:', e);
-                    conversacaoState.isPlaying = false;
-                    URL.revokeObjectURL(audioUrl);
-                    resolve();
-                };
-
-                audio.play();
-            } catch (error) {
-                console.error('Erro ao decodificar áudio:', error);
-                resolve();
-            }
-        });
-    }
-
-    async function startConversationWithTopic(topic) {
-        try {
-            updateStatus('Iniciando conversa...', 'connecting');
-
-            const voiceSelect = document.getElementById('conv-voice-select');
-            const voice = voiceSelect ? voiceSelect.value : 'Puck';
-
-            // Enviar texto inicial
-            const response = await fetch('/.netlify/functions/conversacao', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'message',
-                    userId: currentUser?.id,
-                    text: `Vamos praticar uma conversa sobre: ${topic}. Por favor, comece a conversa em alemão sobre este tema.`,
-                    conversationHistory: [],
-                    voice: voice,
-                    durationSeconds: 0
-                })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || 'Erro ao iniciar conversa');
-            }
-
-            // Limpar histórico anterior
-            conversacaoState.conversationHistory = [];
-            clearHistory();
-
-            // Adicionar à história
-            if (data.text) {
-                conversacaoState.conversationHistory.push({
-                    role: 'model',
-                    text: data.text
-                });
-                addMessageToHistory('ai', data.text);
-            }
-
-            // Reproduzir áudio
-            if (data.audioBase64) {
-                updateStatus('Reproduzindo...', 'speaking');
-                await playAudioResponse(data.audioBase64, data.audioMimeType);
-            }
-
-            // Modo conversa contínua - iniciar gravação automaticamente
-            if (conversacaoState.continuousMode && !conversacaoState.isRecording) {
-                updateStatus('Sua vez de falar...', 'listening');
-                setTimeout(async () => {
-                    if (!conversacaoState.isRecording && !conversacaoState.isPlaying) {
-                        await startRecording();
-                    }
-                }, 500);
-            } else {
-                updateStatus('Sua vez de falar!', 'connected');
-            }
-
-        } catch (error) {
-            console.error('Erro ao iniciar conversa:', error);
-            showConversacaoError('Erro ao iniciar conversa: ' + error.message);
-            updateStatus('Erro', 'idle');
+            conversacaoState.ws.send(JSON.stringify(textMessage));
+            addMessageToHistory('user', `Tema: ${topic}`);
+            updateStatus('Aguardando resposta...', 'speaking');
         }
     }
 
@@ -4029,6 +4084,14 @@ async function handleCorrectionSubmit(e) {
         if (!micBtn) return;
 
         switch (state) {
+            case 'connecting':
+                micBtn.classList.add('active');
+                micIcon.classList.add('hidden');
+                stopIcon.classList.remove('hidden');
+                pulseRing.classList.remove('opacity-0');
+                if (idleText) idleText.classList.add('hidden');
+                break;
+
             case 'recording':
                 micBtn.classList.add('active');
                 micIcon.classList.add('hidden');
@@ -4040,16 +4103,9 @@ async function handleCorrectionSubmit(e) {
                 if (muteBtn) muteBtn.disabled = false;
                 break;
 
-            case 'processing':
-                micBtn.classList.remove('active');
-                micIcon.classList.remove('hidden');
-                stopIcon.classList.add('hidden');
-                pulseRing.classList.add('opacity-0');
-                waveContainer.classList.remove('conv-wave-active');
-                break;
-
             case 'playing':
                 waveContainer.classList.add('conv-wave-active');
+                pulseRing.classList.add('opacity-0');
                 break;
 
             case 'idle':
