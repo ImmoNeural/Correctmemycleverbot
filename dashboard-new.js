@@ -3792,9 +3792,15 @@ Du: "Fast richtig! Ich BIN gestern ins Kino gegangen. (Explicação: 'gehen' usa
     }
 
     // Processar mensagens recebidas do WebSocket
-    function handleWebSocketMessage(event) {
+    async function handleWebSocketMessage(event) {
         try {
-            const message = JSON.parse(event.data);
+            // WebSocket pode enviar dados como Blob ou string
+            let data = event.data;
+            if (data instanceof Blob) {
+                data = await data.text();
+            }
+
+            const message = JSON.parse(data);
             console.log('Mensagem recebida:', Object.keys(message));
 
             // Setup complete - pronto para conversar
