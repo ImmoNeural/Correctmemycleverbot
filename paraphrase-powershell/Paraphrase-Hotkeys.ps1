@@ -349,8 +349,10 @@ function Set-TextReplacement {
         Substitui o texto selecionado pelo novo texto
     #>
     try {
-        # Copiar novo texto para clipboard
-        [System.Windows.Forms.Clipboard]::SetText($NewText)
+        # Copiar novo texto para clipboard com encoding UTF-8 usando DataObject
+        $dataObject = New-Object System.Windows.Forms.DataObject
+        $dataObject.SetText($NewText, [System.Windows.Forms.TextDataFormat]::UnicodeText)
+        [System.Windows.Forms.Clipboard]::SetDataObject($dataObject, $true)
         Start-Sleep -Milliseconds 100
 
         # Usar KeyboardHelper para enviar Ctrl+V (solta as teclas modificadoras primeiro)
@@ -382,12 +384,12 @@ function Invoke-ParaphraseAPI {
 
     # Headers para OpenAI/DeepSeek (mesmo formato)
     $headers = @{
-        "Content-Type" = "application/json"
+        "Content-Type" = "application/json; charset=utf-8"
         "Authorization" = "Bearer $($config.ApiKey)"
     }
 
     # Corpo para OpenAI/DeepSeek
-    $body = @{
+    $bodyObject = @{
         model = $model
         messages = @(
             @{
@@ -400,16 +402,40 @@ function Invoke-ParaphraseAPI {
             }
         )
         temperature = 0.7
-    } | ConvertTo-Json -Depth 10
+    }
+
+    # Converter para JSON e depois para bytes UTF-8
+    $jsonBody = $bodyObject | ConvertTo-Json -Depth 10
+    $bodyBytes = [System.Text.Encoding]::UTF8.GetBytes($jsonBody)
 
     Write-Log "Chamando API: $apiUrl com modelo $model"
 
     try {
-        # Use Invoke-WebRequest para ter mais controle sobre a resposta
-        $webResponse = Invoke-WebRequest -Uri $apiUrl -Method Post -Headers $headers -Body $body -TimeoutSec 30 -UseBasicParsing
-        $responseContent = $webResponse.Content
+        # Usar HttpWebRequest para controle total sobre encoding
+        $request = [System.Net.HttpWebRequest]::Create($apiUrl)
+        $request.Method = "POST"
+        $request.ContentType = "application/json; charset=utf-8"
+        $request.Headers.Add("Authorization", "Bearer $($config.ApiKey)")
+        $request.Timeout = 30000
+        $request.ContentLength = $bodyBytes.Length
 
-        Write-Log "Resposta recebida (status: $($webResponse.StatusCode))"
+        # Escrever o body
+        $requestStream = $request.GetRequestStream()
+        $requestStream.Write($bodyBytes, 0, $bodyBytes.Length)
+        $requestStream.Close()
+
+        # Obter resposta
+        $webResponse = $request.GetResponse()
+        $responseStream = $webResponse.GetResponseStream()
+
+        # Ler resposta como UTF-8 explicitamente
+        $reader = New-Object System.IO.StreamReader($responseStream, [System.Text.Encoding]::UTF8)
+        $responseContent = $reader.ReadToEnd()
+        $reader.Close()
+        $responseStream.Close()
+        $webResponse.Close()
+
+        Write-Log "Resposta recebida com sucesso"
 
         # Tentar parsear JSON manualmente com tratamento de erro
         try {
@@ -438,8 +464,10 @@ function Invoke-ParaphraseAPI {
         $errorMessage = $_.Exception.Message
         if ($_.Exception.Response) {
             try {
-                $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
+                $errorStream = $_.Exception.Response.GetResponseStream()
+                $reader = New-Object System.IO.StreamReader($errorStream, [System.Text.Encoding]::UTF8)
                 $errorBody = $reader.ReadToEnd()
+                $reader.Close()
                 Write-Log "Erro da API: $errorBody" "ERROR"
 
                 # Tentar extrair mensagem de erro do JSON
