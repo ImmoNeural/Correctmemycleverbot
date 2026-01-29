@@ -3596,7 +3596,18 @@ async function handleCorrectionSubmit(e) {
         timerInterval: null,
         totalSeconds: 0,
         conversationHistory: [],
-        creditsUsed: 0
+        creditsUsed: 0,
+        // VAD (Voice Activity Detection) - Detecção automática de silêncio
+        audioContext: null,
+        analyser: null,
+        silenceCheckInterval: null,
+        lastSoundTime: null,
+        vadEnabled: true,
+        silenceThreshold: 15,       // Nível mínimo para considerar som (0-255)
+        silenceDuration: 1500,      // ms de silêncio para parar (1.5 segundos)
+        minRecordingTime: 800,      // Tempo mínimo de gravação em ms
+        // Modo conversa contínua - inicia gravação automaticamente após resposta
+        continuousMode: true
     };
 
     let conversacaoInitialized = false;
@@ -3617,6 +3628,16 @@ async function handleCorrectionSubmit(e) {
         const muteBtn = document.getElementById('conv-mute-btn');
         if (muteBtn) {
             muteBtn.addEventListener('click', toggleMute);
+        }
+
+        // Toggle modo fluido (contínuo)
+        const continuousModeToggle = document.getElementById('conv-continuous-mode');
+        if (continuousModeToggle) {
+            continuousModeToggle.addEventListener('change', (e) => {
+                conversacaoState.continuousMode = e.target.checked;
+                conversacaoState.vadEnabled = e.target.checked;
+                console.log('Modo fluido:', e.target.checked ? 'ativado' : 'desativado');
+            });
         }
 
         // Botões de tópicos
@@ -3662,20 +3683,27 @@ async function handleCorrectionSubmit(e) {
             };
 
             conversacaoState.mediaRecorder.onstop = async () => {
+                // Limpar VAD
+                stopVAD();
                 const audioBlob = new Blob(conversacaoState.audioChunks, { type: mimeType });
                 await sendAudioToAPI(audioBlob, mimeType);
             };
 
             // Iniciar gravação
-            conversacaoState.mediaRecorder.start();
+            conversacaoState.mediaRecorder.start(100); // Gravar em chunks de 100ms
             conversacaoState.isRecording = true;
             conversacaoState.startTime = Date.now();
+
+            // Iniciar detecção de silêncio (VAD)
+            if (conversacaoState.vadEnabled) {
+                startVAD();
+            }
 
             // Atualizar UI
             updateConversacaoUI('recording');
             startTimer();
 
-            console.log('Gravação iniciada');
+            console.log('Gravação iniciada com detecção automática de silêncio');
 
         } catch (error) {
             console.error('Erro ao iniciar gravação:', error);
@@ -3687,8 +3715,81 @@ async function handleCorrectionSubmit(e) {
         }
     }
 
+    // Voice Activity Detection (VAD) - Detecção automática de silêncio
+    function startVAD() {
+        try {
+            // Criar contexto de áudio
+            conversacaoState.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            conversacaoState.analyser = conversacaoState.audioContext.createAnalyser();
+            conversacaoState.analyser.fftSize = 512;
+            conversacaoState.analyser.smoothingTimeConstant = 0.5;
+
+            // Conectar o stream ao analyser
+            const source = conversacaoState.audioContext.createMediaStreamSource(conversacaoState.stream);
+            source.connect(conversacaoState.analyser);
+
+            // Buffer para análise
+            const dataArray = new Uint8Array(conversacaoState.analyser.frequencyBinCount);
+            conversacaoState.lastSoundTime = Date.now();
+
+            // Verificar nível de áudio periodicamente
+            conversacaoState.silenceCheckInterval = setInterval(() => {
+                if (!conversacaoState.isRecording) {
+                    stopVAD();
+                    return;
+                }
+
+                conversacaoState.analyser.getByteFrequencyData(dataArray);
+
+                // Calcular nível médio de áudio
+                let sum = 0;
+                for (let i = 0; i < dataArray.length; i++) {
+                    sum += dataArray[i];
+                }
+                const average = sum / dataArray.length;
+
+                // Se detectar som acima do limiar
+                if (average > conversacaoState.silenceThreshold) {
+                    conversacaoState.lastSoundTime = Date.now();
+                }
+
+                // Verificar tempo desde o último som
+                const timeSinceSound = Date.now() - conversacaoState.lastSoundTime;
+                const recordingTime = Date.now() - conversacaoState.startTime;
+
+                // Se passou tempo suficiente de silêncio E gravou tempo mínimo
+                if (timeSinceSound > conversacaoState.silenceDuration &&
+                    recordingTime > conversacaoState.minRecordingTime) {
+                    console.log('Silêncio detectado - parando gravação automaticamente');
+                    stopRecording();
+                }
+            }, 100); // Verificar a cada 100ms
+
+            console.log('VAD iniciado - detecção de silêncio ativa');
+
+        } catch (error) {
+            console.error('Erro ao iniciar VAD:', error);
+            // Se VAD falhar, continua sem ele
+        }
+    }
+
+    function stopVAD() {
+        if (conversacaoState.silenceCheckInterval) {
+            clearInterval(conversacaoState.silenceCheckInterval);
+            conversacaoState.silenceCheckInterval = null;
+        }
+        if (conversacaoState.audioContext && conversacaoState.audioContext.state !== 'closed') {
+            conversacaoState.audioContext.close().catch(() => {});
+            conversacaoState.audioContext = null;
+        }
+        conversacaoState.analyser = null;
+    }
+
     function stopRecording() {
         if (conversacaoState.mediaRecorder && conversacaoState.isRecording) {
+            // Parar VAD primeiro
+            stopVAD();
+
             conversacaoState.mediaRecorder.stop();
             conversacaoState.isRecording = false;
 
@@ -3785,12 +3886,24 @@ async function handleCorrectionSubmit(e) {
             conversacaoState.creditsUsed += creditsUsed;
             updateCreditsUsed();
 
-            updateConversacaoUI('idle');
-            updateStatus('Pronto para continuar', 'connected');
-
             // Atualizar créditos do usuário no header
             if (currentUser) {
                 loadUserProfile(currentUser);
+            }
+
+            // Modo conversa contínua - iniciar gravação automaticamente
+            if (conversacaoState.continuousMode && !conversacaoState.isRecording) {
+                updateStatus('Sua vez de falar...', 'listening');
+                updateConversacaoUI('idle');
+                // Pequeno delay antes de iniciar nova gravação
+                setTimeout(async () => {
+                    if (!conversacaoState.isRecording && !conversacaoState.isPlaying) {
+                        await startRecording();
+                    }
+                }, 500);
+            } else {
+                updateConversacaoUI('idle');
+                updateStatus('Pronto para continuar', 'connected');
             }
 
         } catch (error) {
@@ -3885,7 +3998,17 @@ async function handleCorrectionSubmit(e) {
                 await playAudioResponse(data.audioBase64, data.audioMimeType);
             }
 
-            updateStatus('Sua vez de falar!', 'connected');
+            // Modo conversa contínua - iniciar gravação automaticamente
+            if (conversacaoState.continuousMode && !conversacaoState.isRecording) {
+                updateStatus('Sua vez de falar...', 'listening');
+                setTimeout(async () => {
+                    if (!conversacaoState.isRecording && !conversacaoState.isPlaying) {
+                        await startRecording();
+                    }
+                }, 500);
+            } else {
+                updateStatus('Sua vez de falar!', 'connected');
+            }
 
         } catch (error) {
             console.error('Erro ao iniciar conversa:', error);

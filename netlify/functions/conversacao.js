@@ -129,7 +129,38 @@ async function callGeminiWithAudio(audioBase64, mimeType, conversationHistory, v
     if (!response.ok) {
         const errorText = await response.text();
         console.error('Gemini API error:', errorText);
-        throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
+
+        // Parse do erro para mensagens mais amigáveis
+        let errorMessage = `Gemini API error: ${response.status}`;
+        try {
+            const errorJson = JSON.parse(errorText);
+            if (errorJson.error) {
+                const errMsg = errorJson.error.message || '';
+                if (response.status === 403) {
+                    if (errMsg.includes('API_KEY_INVALID') || errMsg.includes('invalid')) {
+                        errorMessage = 'Chave da API Gemini inválida. Verifique a configuração.';
+                    } else if (errMsg.includes('PERMISSION_DENIED')) {
+                        errorMessage = 'Acesso negado. Verifique se a API Generative Language está habilitada no Google Cloud Console.';
+                    } else if (errMsg.includes('billing') || errMsg.includes('Billing')) {
+                        errorMessage = 'Faturamento não configurado ou conta suspensa no Google Cloud.';
+                    } else {
+                        errorMessage = 'Permissão negada: ' + errMsg;
+                    }
+                } else if (response.status === 400) {
+                    errorMessage = 'Requisição inválida: ' + errMsg;
+                } else if (response.status === 429) {
+                    errorMessage = 'Limite de requisições excedido. Aguarde um momento e tente novamente.';
+                } else if (response.status === 500 || response.status === 503) {
+                    errorMessage = 'Servidor do Gemini temporariamente indisponível. Tente novamente.';
+                } else {
+                    errorMessage = errMsg || errorText;
+                }
+            }
+        } catch (e) {
+            errorMessage = errorText;
+        }
+
+        throw new Error(errorMessage);
     }
 
     const data = await response.json();
@@ -194,7 +225,38 @@ async function callGeminiWithText(text, conversationHistory, voice) {
     if (!response.ok) {
         const errorText = await response.text();
         console.error('Gemini API error:', errorText);
-        throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
+
+        // Parse do erro para mensagens mais amigáveis
+        let errorMessage = `Gemini API error: ${response.status}`;
+        try {
+            const errorJson = JSON.parse(errorText);
+            if (errorJson.error) {
+                const errMsg = errorJson.error.message || '';
+                if (response.status === 403) {
+                    if (errMsg.includes('API_KEY_INVALID') || errMsg.includes('invalid')) {
+                        errorMessage = 'Chave da API Gemini inválida. Verifique a configuração.';
+                    } else if (errMsg.includes('PERMISSION_DENIED')) {
+                        errorMessage = 'Acesso negado. Verifique se a API Generative Language está habilitada no Google Cloud Console.';
+                    } else if (errMsg.includes('billing') || errMsg.includes('Billing')) {
+                        errorMessage = 'Faturamento não configurado ou conta suspensa no Google Cloud.';
+                    } else {
+                        errorMessage = 'Permissão negada: ' + errMsg;
+                    }
+                } else if (response.status === 400) {
+                    errorMessage = 'Requisição inválida: ' + errMsg;
+                } else if (response.status === 429) {
+                    errorMessage = 'Limite de requisições excedido. Aguarde um momento e tente novamente.';
+                } else if (response.status === 500 || response.status === 503) {
+                    errorMessage = 'Servidor do Gemini temporariamente indisponível. Tente novamente.';
+                } else {
+                    errorMessage = errMsg || errorText;
+                }
+            }
+        } catch (e) {
+            errorMessage = errorText;
+        }
+
+        throw new Error(errorMessage);
     }
 
     return await response.json();
