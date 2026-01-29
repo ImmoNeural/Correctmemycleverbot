@@ -119,7 +119,10 @@ Add-Type -AssemblyName System.Drawing
 Add-Type -AssemblyName PresentationFramework
 
 # Importar APIs do Windows para hotkeys globais
-Add-Type @"
+# Check if the type already exists (from a previous run in the same session)
+if (-not ([System.Management.Automation.PSTypeName]'GlobalHotkey').Type) {
+    try {
+        Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -157,7 +160,23 @@ public class ClipboardHelper {
     [DllImport("user32.dll")]
     public static extern int GetWindowThreadProcessId(IntPtr hWnd, out int lpdwProcessId);
 }
-"@
+"@ -ReferencedAssemblies System.Windows.Forms -ErrorAction Stop
+    } catch {
+        Write-Host "[ERRO] Falha ao compilar tipos nativos: $_" -ForegroundColor Red
+        Write-Host "Detalhes do erro: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "Verifique se o .NET Framework esta instalado corretamente." -ForegroundColor Yellow
+        Read-Host "Pressione Enter para sair"
+        exit 1
+    }
+}
+
+# Verify the type was loaded successfully
+if (-not ([System.Management.Automation.PSTypeName]'GlobalHotkey').Type) {
+    Write-Host "[ERRO] Tipo GlobalHotkey nao foi carregado corretamente." -ForegroundColor Red
+    Write-Host "Tente reiniciar o PowerShell e executar novamente." -ForegroundColor Yellow
+    Read-Host "Pressione Enter para sair"
+    exit 1
+}
 
 # ========================== FUNCOES ==========================
 
@@ -723,7 +742,9 @@ function Start-ParaphraseHotkeys {
     }
 
     # Adicionar filtro de mensagens
-    Add-Type @"
+    if (-not ([System.Management.Automation.PSTypeName]'HotkeyMessageFilter').Type) {
+        try {
+            Add-Type -TypeDefinition @"
 using System;
 using System.Windows.Forms;
 
@@ -740,7 +761,11 @@ public class HotkeyMessageFilter : IMessageFilter {
         return false;
     }
 }
-"@
+"@ -ReferencedAssemblies System.Windows.Forms -ErrorAction Stop
+        } catch {
+            Write-Log "Erro ao compilar HotkeyMessageFilter: $_" "ERROR"
+        }
+    }
 
     $messageFilter = New-Object HotkeyMessageFilter
     $messageFilter.add_HotkeyPressed({
