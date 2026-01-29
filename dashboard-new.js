@@ -27,6 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // =================================================================
 
     _supabase.auth.onAuthStateChange((_event, session) => {
+        console.log('🔄 Dashboard: Auth state changed:', _event, session?.user?.email);
+
         if (session && session.user) {
             currentUser = session.user;
             window.currentUser = session.user; // Tornar globalmente acessível para o iframe do chatbot
@@ -36,22 +38,43 @@ document.addEventListener('DOMContentLoaded', () => {
             window.dispatchEvent(new CustomEvent('userAuthenticated', { detail: { user: session.user } }));
 
         } else {
+            console.log('❌ Dashboard: No session, redirecting to login');
             window.location.href = 'login.html';
         }
     });
 
     async function initializeApp(user) {
-        // Verificar se usuário completou onboarding ANTES de carregar dashboard
-        const { data: leadData } = await _supabase
-            .from('leads')
-            .select('id')
-            .eq('id', user.id)
-            .single();
+        console.log('🚀 Dashboard: Initializing app for user:', user.email);
+        console.log('🔑 Dashboard: User ID:', user.id);
 
-        // Se não está na tabela leads, redirecionar para onboarding
-        if (!leadData) {
-            window.location.href = 'onboarding.html';
-            return; // Parar execução aqui
+        try {
+            // Verificar se usuário completou onboarding ANTES de carregar dashboard
+            const { data: leadData, error: leadError } = await _supabase
+                .from('leads')
+                .select('id')
+                .eq('id', user.id)
+                .single();
+
+            console.log('📊 Dashboard: Lead data:', leadData);
+            console.log('📊 Dashboard: Lead error:', leadError);
+
+            // Se houve erro diferente de "não encontrado", logar e continuar
+            if (leadError && leadError.code !== 'PGRST116') {
+                console.error('⚠️ Dashboard: Error checking leads table:', leadError);
+                // Tentar continuar mesmo assim - pode ser um problema temporário
+            }
+
+            // Se não está na tabela leads, redirecionar para onboarding
+            if (!leadData) {
+                console.log('➡️ Dashboard: User not in leads, redirecting to onboarding');
+                window.location.href = 'onboarding.html';
+                return; // Parar execução aqui
+            }
+
+            console.log('✅ Dashboard: User found in leads, loading dashboard');
+        } catch (err) {
+            console.error('❌ Dashboard: Unexpected error in initializeApp:', err);
+            // Tentar continuar mesmo assim
         }
 
         // Só continua se usuário está na tabela leads
