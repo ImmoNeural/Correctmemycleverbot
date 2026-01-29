@@ -3756,7 +3756,12 @@ async function handleCorrectionSubmit(e) {
 
         // Settings
         continuousMode: true,
-        selectedVoice: 'Aoede' // Voz alemã
+        selectedVoice: 'Aoede', // Voz alemã
+
+        // Correction tracking
+        totalCorrections: 0,
+        pendingCorrection: null,
+        correctionDebounceTimer: null
     };
 
     let conversacaoInitialized = false;
@@ -3861,6 +3866,9 @@ SPRACHE:
             conversacaoState.isConnecting = true;
             updateStatus('Conectando...', 'connecting');
             updateConversacaoUI('connecting');
+
+            // Limpar correções da sessão anterior
+            clearCorrections();
 
             // Obter API key do backend
             if (!conversacaoState.apiKey) {
@@ -4105,14 +4113,17 @@ SPRACHE:
                 if (message.serverContent.inputTranscription) {
                     const transcript = message.serverContent.inputTranscription.text;
                     console.log('🎤 VOCÊ DISSE:', transcript);
-                    // Adicionar ao histórico para debug
-                    addMessageToHistory('user', `[Transcrito: ${transcript}]`);
+                    // Enviar para análise de erros em alemão
+                    if (transcript && transcript.trim().length > 3) {
+                        analyzeTranscript(transcript, 'user');
+                    }
                 }
 
                 // Transcrição do que a IA falou (saída)
                 if (message.serverContent.outputTranscription) {
                     const transcript = message.serverContent.outputTranscription.text;
                     console.log('🤖 IA DISSE:', transcript);
+                    // Não analisamos a IA, apenas o usuário
                 }
 
                 // Generation complete - a IA terminou de gerar resposta
@@ -4742,61 +4753,157 @@ SPRACHE:
         }
     }
 
-    function addMessageToHistory(type, text) {
-        const historyEl = document.getElementById('conv-history');
-        if (!historyEl) return;
+    // Cores das categorias de erro
+    const CORRECTION_COLORS = {
+        declinacao: { hex: '#f472b6', name: 'Declinação' },
+        conjugacao: { hex: '#c084fc', name: 'Conjugação' },
+        preposicoes: { hex: '#60a5fa', name: 'Preposições' },
+        sintaxe: { hex: '#fb923c', name: 'Sintaxe' },
+        vocabulario: { hex: '#4ade80', name: 'Vocabulário' }
+    };
 
-        // Mostrar apenas subtitles da IA (não mensagens do usuário)
-        if (type !== 'ai') return;
+    // Função para enviar transcrição para análise de erros
+    async function analyzeTranscript(text, speaker) {
+        if (!text || text.trim().length < 5) return;
+
+        // Debounce - aguarda 1.5s após última transcrição antes de analisar
+        if (conversacaoState.correctionDebounceTimer) {
+            clearTimeout(conversacaoState.correctionDebounceTimer);
+        }
+
+        // Acumula texto pendente
+        if (!conversacaoState.pendingCorrection) {
+            conversacaoState.pendingCorrection = '';
+        }
+        conversacaoState.pendingCorrection += ' ' + text.trim();
+
+        conversacaoState.correctionDebounceTimer = setTimeout(async () => {
+            const textToAnalyze = conversacaoState.pendingCorrection.trim();
+            conversacaoState.pendingCorrection = null;
+
+            if (textToAnalyze.length < 5) return;
+
+            try {
+                const response = await fetch('/.netlify/functions/conversacao-correcoes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: textToAnalyze, speaker })
+                });
+
+                if (!response.ok) {
+                    console.warn('Erro ao analisar correções:', response.status);
+                    return;
+                }
+
+                const data = await response.json();
+                if (data.corrections && data.corrections.length > 0) {
+                    displayCorrections(data.corrections, textToAnalyze);
+                }
+            } catch (error) {
+                console.warn('Erro na análise de correções:', error);
+            }
+        }, 1500);
+    }
+
+    // Função para exibir correções na UI
+    function displayCorrections(corrections, originalText) {
+        const correctionsEl = document.getElementById('conv-corrections');
+        if (!correctionsEl) return;
 
         // Remover mensagem inicial se existir
-        const emptyMsg = historyEl.querySelector('.text-center');
+        const emptyMsg = correctionsEl.querySelector('.text-center');
         if (emptyMsg) emptyMsg.remove();
 
-        // Criar elemento de subtitle estilizado
-        const subtitleDiv = document.createElement('div');
-        subtitleDiv.className = 'conv-subtitle animate-fade-in';
-        subtitleDiv.style.cssText = `
-            background: rgba(0, 0, 0, 0.7);
-            padding: 8px 16px;
-            border-radius: 8px;
-            margin: 4px 0;
-            text-align: center;
-            backdrop-filter: blur(4px);
-            border-left: 3px solid #60a5fa;
-        `;
-        subtitleDiv.innerHTML = `<p class="text-white text-sm" style="margin: 0; line-height: 1.4;">${escapeHtml(text)}</p>`;
-
-        historyEl.appendChild(subtitleDiv);
-        historyEl.scrollTop = historyEl.scrollHeight;
-
-        // Remover subtitles antigos para manter apenas os últimos 5
-        const subtitles = historyEl.querySelectorAll('.conv-subtitle');
-        if (subtitles.length > 5) {
-            subtitles[0].remove();
+        // Mostrar contador de erros
+        const errorCountEl = document.getElementById('conv-error-count');
+        if (errorCountEl) {
+            errorCountEl.classList.remove('hidden');
         }
+
+        corrections.forEach(corr => {
+            const color = CORRECTION_COLORS[corr.categoria] || CORRECTION_COLORS.vocabulario;
+            conversacaoState.totalCorrections++;
+
+            // Atualizar contador
+            const totalEl = document.getElementById('conv-total-errors');
+            if (totalEl) {
+                totalEl.textContent = conversacaoState.totalCorrections;
+            }
+
+            // Criar card de correção
+            const corrDiv = document.createElement('div');
+            corrDiv.className = 'correction-card animate-fade-in';
+            corrDiv.style.cssText = `
+                background: #1e293b;
+                border: 1px solid #475569;
+                border-left: 4px solid ${color.hex};
+                border-radius: 8px;
+                padding: 12px;
+                margin-bottom: 8px;
+                animation: slideIn 0.3s ease-out;
+            `;
+
+            corrDiv.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span style="display: inline-block; width: 10px; height: 10px; background: ${color.hex}; border-radius: 50%;"></span>
+                    <span style="color: ${color.hex}; font-size: 12px; font-weight: 600; text-transform: uppercase;">${color.name}</span>
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <span style="color: #ef4444; text-decoration: line-through;">${escapeHtml(corr.erro || '')}</span>
+                    <span style="color: #94a3b8; margin: 0 8px;">→</span>
+                    <span style="color: #4ade80; font-weight: 600;">${escapeHtml(corr.correcao || '')}</span>
+                </div>
+                <p style="color: #94a3b8; font-size: 13px; margin: 0; line-height: 1.4;">${escapeHtml(corr.explicacao || '')}</p>
+            `;
+
+            correctionsEl.appendChild(corrDiv);
+            correctionsEl.scrollTop = correctionsEl.scrollHeight;
+        });
+
+        // Limitar a 20 correções visíveis
+        const allCards = correctionsEl.querySelectorAll('.correction-card');
+        while (allCards.length > 20) {
+            allCards[0].remove();
+        }
+    }
+
+    // Função legada - mantida para compatibilidade mas não faz nada visual
+    function addMessageToHistory(type, text) {
+        // Não exibe mais no histórico, apenas processa para correções
+        // A análise é feita diretamente no handler de transcrição
     }
 
     function clearHistory() {
-        const historyEl = document.getElementById('conv-history');
-        if (historyEl) {
-            historyEl.innerHTML = `
+        // Limpa correções ao invés de histórico
+        clearCorrections();
+    }
+
+    function clearCorrections() {
+        const correctionsEl = document.getElementById('conv-corrections');
+        if (correctionsEl) {
+            correctionsEl.innerHTML = `
                 <div class="text-center text-slate-500 py-4">
-                    <p>Subtitles aparecerão aqui</p>
-                    <p class="text-sm mt-1">Clique no microfone para começar a praticar!</p>
+                    <p>Suas correções aparecerão aqui.</p>
+                    <p class="text-sm mt-1">Fale em alemão e veja seus erros em tempo real!</p>
                 </div>
             `;
         }
+        // Reset contador
+        conversacaoState.totalCorrections = 0;
+        const totalEl = document.getElementById('conv-total-errors');
+        if (totalEl) totalEl.textContent = '0';
+        const errorCountEl = document.getElementById('conv-error-count');
+        if (errorCountEl) errorCountEl.classList.add('hidden');
     }
 
     function showConversacaoError(message) {
-        const historyEl = document.getElementById('conv-history');
-        if (historyEl) {
+        const correctionsEl = document.getElementById('conv-corrections');
+        if (correctionsEl) {
             const errorDiv = document.createElement('div');
             errorDiv.className = 'p-3 bg-red-900/30 border border-red-500/50 rounded-lg text-center';
             errorDiv.innerHTML = `<p class="text-red-400 text-sm">${escapeHtml(message)}</p>`;
-            historyEl.appendChild(errorDiv);
-            historyEl.scrollTop = historyEl.scrollHeight;
+            correctionsEl.appendChild(errorDiv);
+            correctionsEl.scrollTop = correctionsEl.scrollHeight;
         }
     }
 

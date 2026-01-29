@@ -57,6 +57,21 @@
             50% { transform: scale(1.05); }
         }
 
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+
         .shake-animation {
             animation: shake 0.5s;
             background-color: #7f1d1d !important;
@@ -2677,19 +2692,52 @@
                         </div>
                     </div>
 
-                    <!-- Histórico de Conversa -->
+                    <!-- Correções em Tempo Real -->
                     <div class="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
                         <h3 class="text-lg font-semibold text-slate-300 mb-4 flex items-center gap-2">
                             <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
-                            Histórico da Sessão
+                            Correções em Tempo Real
                         </h3>
-                        <div id="conv-history" class="space-y-3 max-h-64 overflow-y-auto">
-                            <div class="text-center text-slate-500 py-4">
-                                <p>Nenhuma conversa ainda.</p>
-                                <p class="text-sm mt-1">Clique no microfone para começar a praticar!</p>
+
+                        <!-- Legenda de Cores -->
+                        <div class="mb-4 p-3 bg-slate-900/50 rounded-lg">
+                            <div class="flex flex-wrap gap-2 text-xs">
+                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-800 rounded">
+                                    <span class="w-3 h-3 rounded" style="background: #f472b6;"></span>
+                                    Declinação
+                                </span>
+                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-800 rounded">
+                                    <span class="w-3 h-3 rounded" style="background: #c084fc;"></span>
+                                    Conjugação
+                                </span>
+                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-800 rounded">
+                                    <span class="w-3 h-3 rounded" style="background: #60a5fa;"></span>
+                                    Preposições
+                                </span>
+                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-800 rounded">
+                                    <span class="w-3 h-3 rounded" style="background: #fb923c;"></span>
+                                    Sintaxe
+                                </span>
+                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-800 rounded">
+                                    <span class="w-3 h-3 rounded" style="background: #4ade80;"></span>
+                                    Vocabulário
+                                </span>
                             </div>
+                        </div>
+
+                        <!-- Container das Correções -->
+                        <div id="conv-corrections" class="space-y-3 max-h-80 overflow-y-auto">
+                            <div class="text-center text-slate-500 py-4">
+                                <p>Suas correções aparecerão aqui.</p>
+                                <p class="text-sm mt-1">Fale em alemão e veja seus erros em tempo real!</p>
+                            </div>
+                        </div>
+
+                        <!-- Contador de Erros -->
+                        <div id="conv-error-count" class="mt-4 pt-3 border-t border-slate-700 text-center text-sm text-slate-400 hidden">
+                            <span id="conv-total-errors">0</span> erro(s) encontrado(s) nesta sessão
                         </div>
                     </div>
 
