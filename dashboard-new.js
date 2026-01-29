@@ -3919,12 +3919,19 @@ FALSCH: "Paris ist eine schöne Stadt" (DAS IST VERBOTEN - du ignorierst was er 
                 console.log('WebSocket conectado');
 
                 // Enviar configuração de setup
-                // Modelo Gemini 2.5 Flash Native Audio - configuração simplificada
+                // Modelo Gemini 2.5 Flash Native Audio - com TEXT para melhor compreensão
                 const setupMessage = {
                     setup: {
                         model: 'models/gemini-2.5-flash-native-audio-preview-12-2025',
                         generationConfig: {
-                            responseModalities: ['AUDIO']
+                            responseModalities: ['AUDIO', 'TEXT'],
+                            speechConfig: {
+                                voiceConfig: {
+                                    prebuiltVoiceConfig: {
+                                        voiceName: conversacaoState.selectedVoice || 'Aoede'
+                                    }
+                                }
+                            }
                         },
                         systemInstruction: {
                             parts: [{ text: GERMAN_TUTOR_INSTRUCTION }]
