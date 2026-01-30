@@ -3851,7 +3851,9 @@ SPRACHE:
         const topicBtns = document.querySelectorAll('.conv-topic-btn');
         topicBtns.forEach(btn => {
             btn.addEventListener('click', () => {
-                const topic = btn.textContent.trim();
+                // Pegar o texto do segundo span (nome do tema, sem emoji)
+                const textSpan = btn.querySelectorAll('span')[1];
+                const topic = textSpan ? textSpan.textContent.trim() : btn.textContent.trim();
                 startConversationWithTopic(topic);
             });
         });
@@ -4719,12 +4721,14 @@ SPRACHE:
         if (conversacaoState.ws?.readyState === WebSocket.OPEN) {
             // Prompts específicos por tema que incentivam conversa natural
             const topicPrompts = {
-                '✈️ Viagens': `Beginne ein lockeres Gespräch auf Deutsch über Reisen. Frage mich zuerst, wohin ICH gerne reisen möchte. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort - wenn ich "Brasilien" sage, sprich über Brasilien, nicht über andere Orte.`,
-                '🍽️ Restaurante': `Beginne ein lockeres Gespräch auf Deutsch über Essen und Restaurants. Frage mich, was ICH gerne esse. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort - bleib beim Thema, das ICH gewählt habe.`,
-                '👋 Apresentação': `Beginne ein lockeres Gespräch auf Deutsch, um mich kennenzulernen. Frage mich nach meinem Namen und woher ICH komme. WICHTIG: Höre genau zu was ich sage und stelle Folgefragen basierend auf MEINEN Antworten.`,
-                '🏠 Moradia': `Beginne ein lockeres Gespräch auf Deutsch über Wohnen. Frage mich, wo ICH wohne. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort und stelle Folgefragen dazu.`,
-                '💼 Trabalho': `Beginne ein lockeres Gespräch auf Deutsch über Arbeit. Frage mich, was ICH beruflich mache. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort und zeige echtes Interesse.`,
-                '🎬 Hobbies': `Beginne ein lockeres Gespräch auf Deutsch über Hobbys. Frage mich, was ICH in meiner Freizeit gerne mache. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort.`
+                'Viagens': `Beginne ein lockeres Gespräch auf Deutsch über Reisen. Frage mich zuerst, wohin ICH gerne reisen möchte. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort - wenn ich "Brasilien" sage, sprich über Brasilien, nicht über andere Orte.`,
+                'Restaurante': `Beginne ein lockeres Gespräch auf Deutsch über Essen und Restaurants. Frage mich, was ICH gerne esse. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort - bleib beim Thema, das ICH gewählt habe.`,
+                'Apresentação': `Beginne ein lockeres Gespräch auf Deutsch, um mich kennenzulernen. Frage mich nach meinem Namen und woher ICH komme. WICHTIG: Höre genau zu was ich sage und stelle Folgefragen basierend auf MEINEN Antworten.`,
+                'Moradia': `Beginne ein lockeres Gespräch auf Deutsch über Wohnen. Frage mich, wo ICH wohne. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort und stelle Folgefragen dazu.`,
+                'Trabalho': `Beginne ein lockeres Gespräch auf Deutsch über Arbeit. Frage mich, was ICH beruflich mache. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort und zeige echtes Interesse.`,
+                'Hobbies': `Beginne ein lockeres Gespräch auf Deutsch über Hobbys. Frage mich, was ICH in meiner Freizeit gerne mache. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort.`,
+                'Fazer Compras': `Beginne ein lockeres Gespräch auf Deutsch über Einkaufen. Frage mich, wo ICH gerne einkaufe. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort und stelle Folgefragen dazu.`,
+                'Rotina Diária': `Beginne ein lockeres Gespräch auf Deutsch über Tagesroutine. Frage mich, wie MEIN typischer Tag aussieht. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort und zeige echtes Interesse.`
             };
 
             const prompt = topicPrompts[topic] || `Beginne ein lockeres Gespräch auf Deutsch über: ${topic}. Frage mich zuerst nach meiner Meinung dazu. WICHTIG: Reagiere immer auf das, was ICH sage.`;
