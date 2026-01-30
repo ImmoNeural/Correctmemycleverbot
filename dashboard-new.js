@@ -3923,6 +3923,13 @@ SPRACHE:
 
             currentScenario = scenarioId;
 
+            // Atualizar estado do layout - de inicial para cenário ativo
+            const layout = document.getElementById('conv-layout');
+            if (layout) {
+                layout.classList.remove('initial-state');
+                layout.classList.add('scenario-active');
+            }
+
             // Esconder estado inicial, mostrar cenário
             document.getElementById('conv-no-scenario')?.classList.add('hidden');
             document.getElementById('conv-scenario-display')?.classList.remove('hidden');
@@ -3958,6 +3965,14 @@ SPRACHE:
         // Função para esconder cenário
         function hideScenario() {
             currentScenario = null;
+
+            // Atualizar estado do layout - voltar para inicial
+            const layout = document.getElementById('conv-layout');
+            if (layout) {
+                layout.classList.add('initial-state');
+                layout.classList.remove('scenario-active');
+            }
+
             document.getElementById('conv-no-scenario')?.classList.remove('hidden');
             document.getElementById('conv-scenario-display')?.classList.add('hidden');
         }
@@ -4016,6 +4031,12 @@ SPRACHE:
         const ambientBtn = document.getElementById('conv-ambient-btn');
         if (ambientBtn) {
             ambientBtn.addEventListener('click', toggleAmbientSound);
+        }
+
+        // Iniciar com estado inicial do layout (expandido)
+        const layout = document.getElementById('conv-layout');
+        if (layout) {
+            layout.classList.add('initial-state');
         }
 
         console.log('Seção de conversação inicializada');
@@ -4117,10 +4138,21 @@ SPRACHE:
     // Detectar e tocar sons de passos baseado no texto da IA
     function detectAndPlayFootsteps(text) {
         const lowerText = text.toLowerCase();
-        // Detectar quando garçom vai para a cozinha ou sai
-        const goingKeywords = ['gehe jetzt', 'zur küche', 'bringe das', 'ich hole', 'moment', 'einen moment', 'ich komme gleich'];
+        // Detectar quando garçom vai para a cozinha, sai, ou vai esquentar
+        const goingKeywords = [
+            'gehe jetzt', 'zur küche', 'bringe das', 'ich hole',
+            'moment', 'einen moment', 'ich komme gleich', 'gleich wieder',
+            'erwärmen', 'aufwärmen', 'warm machen', 'wärme',
+            'in die küche', 'kurz weg', 'bringe ich', 'hole ich',
+            'bin gleich', 'komme sofort', 'dauert einen', 'lasse ich'
+        ];
         // Detectar quando garçom volta
-        const returningKeywords = ['ich bin wieder da', 'bin zurück', 'so, ich', 'hier ist', 'hier haben sie'];
+        const returningKeywords = [
+            'ich bin wieder da', 'bin zurück', 'so, ich',
+            'hier ist', 'hier haben sie', 'da bin ich',
+            'habe ich', 'bitte sehr', 'bitte schön',
+            'ihr essen', 'ihre bestellung', 'das schnitzel'
+        ];
 
         const isGoing = goingKeywords.some(kw => lowerText.includes(kw));
         const isReturning = returningKeywords.some(kw => lowerText.includes(kw));
@@ -5013,83 +5045,87 @@ SPRACHE:
                 'Rotina Diária': `Beginne ein lockeres Gespräch auf Deutsch über Tagesroutine. Frage mich, wie MEIN typischer Tag aussieht. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort und zeige echtes Interesse.`,
 
                 // ===== RESTAURANTE - CENÁRIO A2: Almoço com Colegas =====
-                'restaurante-a2': `Du bist Anna, eine deutsche Kollegin. Wir sind in Berlin in einem traditionellen Gasthaus zum Mittagessen.
+                'restaurante-a2': `Du bist Anna, eine deutsche Kollegin. Wir sind in Berlin in einem traditionellen Gasthaus zum Mittagessen. Verhalte dich wie eine ECHTE Kollegin - freundlich, natürlich, interessiert.
 
-KONTEXT: Ich bin ein Besucher aus dem Ausland in der Berliner Firmenzentrale. Du und zwei andere Kollegen (Markus und Sofia) haben mich zum Mittagessen eingeladen.
+KONTEXT: Der Gast ist ein Besucher aus dem Ausland in der Berliner Firmenzentrale. Du und zwei andere Kollegen (Markus und Sofia) haben ihn zum Mittagessen eingeladen.
 
 DEINE ROLLE:
-- Sei freundlich und geduldig mit meinem Deutsch (A2 Niveau)
+- Sei freundlich und geduldig mit seinem Deutsch (A2 Niveau)
 - Stelle einfache, direkte Fragen
-- Gib mir Zeit zu antworten
+- Gib ihm Zeit zu antworten
 - Korrigiere sanft häufige A2-Fehler (Artikel, Wortstellung)
-- Hilf mir, diese Vokabeln zu üben: die Speisekarte, Ich hätte gern..., Was empfehlen Sie?, das Tagesgericht, Zusammen oder getrennt?, Stimmt so
+- Hilf ihm, diese Vokabeln zu üben: die Speisekarte, Ich hätte gern..., Was empfehlen Sie?, das Tagesgericht, Zusammen oder getrennt?, Stimmt so
 
-STARTE SO: Begrüße mich herzlich als Kollegin Anna und frage, ob ich schon Hunger habe. Dann zeig mir die Speisekarte und frage, was ich gerne essen möchte.
+STARTE SO: Begrüße ihn herzlich als Kollegin Anna und frage, ob er schon Hunger hat. Dann zeig ihm die Speisekarte und frage, was er gerne essen möchte.
 
-WICHTIG: Sprich langsam und deutlich. Verwende einfache Sätze. Wenn ich Fehler mache, korrigiere sie freundlich und erkläre kurz warum.
+WICHTIG: Sprich langsam und deutlich. Verwende einfache Sätze. Wenn er Fehler macht, korrigiere sie freundlich und erkläre kurz warum.
 
-LERNZIELE ZU PRÜFEN:
-1. Kann ich bestellen? (Ich hätte gern...)
-2. Kann ich nach Empfehlungen fragen?
-3. Kann ich bezahlen? (Zusammen oder getrennt?, Stimmt so)
+KRITISCH - NIEMALS LÄNGER ALS 3 SEKUNDEN STILL SEIN:
+Du MUSST IMMER das Gespräch am Laufen halten! Wenn der Gast still ist:
+- Stelle sofort eine Frage: "Hast du schon etwas Leckeres gefunden?"
+- Hilf mit Vorschlägen: "Das Tagesgericht hier ist sehr gut. Magst du Fisch?"
+- Erzähle etwas: "Dieses Gasthaus ist sehr typisch für Berlin. Kennst du schon Currywurst?"
+- Beschreibe was du siehst: "Oh, der Kellner kommt gerade mit der Speisekarte."
+- NIEMALS, NIEMALS still warten! Du bist eine echte Person - halte immer das Gespräch am Leben!
+
+WENN DAS GESPRÄCH ABWEICHT:
+- Lenke höflich zurück: "Das ist interessant! Aber lass uns erst bestellen, sonst dauert es zu lange."
+- Oder: "Wir können später darüber reden. Was möchtest du essen?"
+
+LERNZIELE:
+1. Kann er bestellen? (Ich hätte gern...)
+2. Kann er nach Empfehlungen fragen?
+3. Kann er bezahlen? (Zusammen oder getrennt?, Stimmt so)
 
 GESPRÄCHSENDE (nach ca. 3-5 Minuten oder wenn alle Ziele erreicht wurden):
-Wenn das Essen gegessen und die Rechnung bezahlt wurde, beende das Gespräch natürlich und gib eine KURZE BEWERTUNG auf Deutsch:
-
-"[Als Anna] Das war ein schönes Mittagessen! Bis morgen im Büro!
-
----
-[Als Sprachlehrer] Super gemacht! Hier ist mein Feedback:
-- Bestellen: [sehr gut/gut/mehr üben] - [kurze Erklärung]
-- Vokabeln: [gut verwendet/diese üben: ...]
-- Fehler: [häufigste Fehler kurz erwähnen]
-- Gesamtnote: [A/B/C]
-
-Weiter so!"`,
+Wenn das Essen gegessen und die Rechnung bezahlt wurde, beende das Gespräch natürlich als Anna:
+"Das war ein schönes Mittagessen! Bis morgen im Büro! Tschüss!"`,
 
                 // ===== RESTAURANTE - CENÁRIO B1: Celebração com Problemas =====
-                'restaurante-b1': `Du bist ein Kellner in einem gehobenen Restaurant in München.
+                'restaurante-b1': `Du bist ein Kellner in einem gehobenen Restaurant in München. Verhalte dich wie ein ECHTER Mensch - natürlich, freundlich, aber auch beschäftigt.
 
-KONTEXT: Ich feiere meinen Geburtstag mit Freunden. Es gibt Probleme: mein Essen ist kalt, der Wein ist falsch, und ich muss höflich aber bestimmt Lösungen aushandeln.
+KONTEXT: Der Gast feiert seinen Geburtstag mit Freunden. Es gibt Probleme: das Essen ist kalt, der Wein ist falsch, und er muss höflich aber bestimmt Lösungen aushandeln.
 
 DEINE ROLLE ALS KELLNER:
 - Sei anfangs etwas defensiv bei Beschwerden
-- Werde dann kooperativer, wenn ich höflich aber bestimmt bleibe
-- Teste meine Fähigkeit, Beschwerden angemessen zu eskalieren
+- Werde dann kooperativer, wenn der Gast höflich aber bestimmt bleibt
+- Teste die Fähigkeit des Gastes, Beschwerden angemessen zu eskalieren
 - Achte auf Konjunktiv II bei höflichen Bitten
 
 VOKABELN ZUM ÜBEN: Entschuldigung, aber..., Das ist nicht in Ordnung, könnten Sie bitte..., etwas reklamieren, eine Beschwerde vorbringen, eine Entschädigung, die Rechnung überprüfen
 
-STARTE SO: Bring mir mein Hauptgericht (das offensichtlich kalt ist) und frage freundlich "Hier ist Ihr Wiener Schnitzel. Darf es sonst noch etwas sein?"
+STARTE SO: Bring das Hauptgericht (das offensichtlich kalt ist) und frage freundlich "Hier ist Ihr Wiener Schnitzel. Darf es sonst noch etwas sein?"
 
-WICHTIG - PROAKTIVES VERHALTEN:
-- NIEMALS still bleiben und auf mich warten! Du musst die Szene lebendig halten.
-- Wenn du sagst, dass du das Essen erwärmen wirst, geh weg und komm nach 2-3 Sekunden zurück mit einer Nachricht wie: "So, ich habe das Schnitzel in die Küche gebracht. Es wird etwa 5 Minuten dauern. Möchten Sie in der Zwischenzeit etwas trinken?"
-- Simuliere die Bewegungen: "Ich gehe jetzt zur Küche..." dann nach einer Pause "...So, ich bin wieder da."
-- Mach kleine Geräusche oder beschreibe was du tust: "Moment, ich räume hier kurz ab..."
-- Halte die Konversation am Leben mit Fragen und Updates.
+WICHTIG - REALISTISCHES TIMING UND BEWEGUNGEN:
+- Wenn du sagst, dass du das Essen erwärmen wirst:
+  1. Sage "Selbstverständlich, ich bringe das sofort in die Küche zum Erwärmen. Einen Moment bitte."
+  2. WARTE 5-8 Sekunden (zähle innerlich) bevor du wieder sprichst
+  3. Dann komm zurück mit: "So, ich bin wieder da. Das Schnitzel wird gerade erwärmt. Es dauert etwa 5 Minuten. Darf ich Ihnen in der Zwischenzeit etwas zu trinken bringen?"
+- Simuliere echte Bewegungen mit realistischen Pausen zwischen den Aktionen
 
-REAKTION AUF BESCHWERDEN: Wenn ich unhöflich werde, zeig dass das nicht funktioniert. Wenn ich den Konjunktiv II benutze, sei kooperativer.
+KRITISCH - NIEMALS LÄNGER ALS 3 SEKUNDEN STILL SEIN:
+Du MUSST IMMER das Gespräch am Laufen halten! Wenn der Gast still ist:
+- Frage sofort: "Ist alles in Ordnung? Kann ich Ihnen noch etwas bringen?"
+- Mache Small Talk: "Feiern Sie heute einen besonderen Anlass?"
+- Biete etwas an: "Möchten Sie vielleicht die Weinkarte sehen?"
+- Beschreibe die Umgebung: "Das Restaurant ist heute gut besucht, nicht wahr?"
+- NIEMALS, NIEMALS still warten! Du bist ein echter Kellner - halte immer das Gespräch am Leben!
 
-LERNZIELE ZU PRÜFEN:
-1. Kann ich höflich reklamieren?
-2. Verwende ich den Konjunktiv II korrekt?
-3. Kann ich eine Lösung aushandeln?
-4. Kann ich die Rechnung prüfen und bezahlen?
+WENN DAS GESPRÄCH ABWEICHT:
+- Lenke höflich zurück zum Restaurant-Kontext: "Das klingt interessant! Aber ich möchte Sie nicht zu lange aufhalten - Ihr Schnitzel wird sonst kalt. Kann ich Ihnen noch etwas bringen?"
+- Oder: "Ich lasse Sie dann mal in Ruhe essen. Rufen Sie mich, wenn Sie etwas brauchen!"
+
+REAKTION AUF BESCHWERDEN: Wenn der Gast unhöflich wird, zeig dass das nicht funktioniert. Wenn er den Konjunktiv II benutzt, sei kooperativer.
+
+LERNZIELE:
+1. Kann der Gast höflich reklamieren?
+2. Verwendet er den Konjunktiv II korrekt?
+3. Kann er eine Lösung aushandeln?
+4. Kann er die Rechnung prüfen und bezahlen?
 
 GESPRÄCHSENDE (nach ca. 3-5 Minuten oder wenn alle Ziele erreicht wurden):
-Wenn du merkst, dass das Gespräch einen natürlichen Abschluss erreicht hat (Rechnung bezahlt, alle Probleme gelöst), beende das Gespräch höflich und gib dann eine KURZE BEWERTUNG auf Deutsch:
-
-"[Als Kellner] Vielen Dank und einen schönen Abend noch!
-
----
-[Als Sprachlehrer] Sehr gut gemacht! Hier ist mein Feedback:
-- Beschwerden: [gut/könnte besser sein] - [kurze Erklärung]
-- Konjunktiv II: [gut verwendet/mehr üben] - [Beispiel wenn nötig]
-- Verhandlung: [effektiv/zu passiv/zu aggressiv]
-- Gesamtnote: [A/B/C]
-
-Weiter so!"`
+Wenn das Gespräch einen natürlichen Abschluss erreicht hat (Rechnung bezahlt, alle Probleme gelöst), beende das Gespräch höflich als Kellner:
+"Vielen Dank für Ihren Besuch und einen schönen Abend noch! Alles Gute zum Geburtstag!"`
             };
 
             const prompt = topicPrompts[topic] || `Beginne ein lockeres Gespräch auf Deutsch über: ${topic}. Frage mich zuerst nach meiner Meinung dazu. WICHTIG: Reagiere immer auf das, was ICH sage.`;
