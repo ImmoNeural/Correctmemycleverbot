@@ -3771,6 +3771,10 @@ async function handleCorrectionSubmit(e) {
         continuousMode: true,
         selectedVoice: 'Aoede', // Voz alemã
 
+        // Ambient sound
+        ambientAudio: null,
+        ambientEnabled: false,
+
         // Correction tracking - acumula transcripts para análise no final
         totalCorrections: 0,
         transcripts: [], // Array de {timestamp, speaker, text}
@@ -4005,7 +4009,84 @@ SPRACHE:
             });
         }
 
+        // Botão de som ambiente
+        const ambientBtn = document.getElementById('conv-ambient-btn');
+        if (ambientBtn) {
+            ambientBtn.addEventListener('click', toggleAmbientSound);
+        }
+
         console.log('Seção de conversação inicializada');
+    }
+
+    // Toggle som ambiente
+    function toggleAmbientSound() {
+        const iconOff = document.getElementById('conv-ambient-icon-off');
+        const iconOn = document.getElementById('conv-ambient-icon-on');
+        const textEl = document.getElementById('conv-ambient-text');
+        const btn = document.getElementById('conv-ambient-btn');
+
+        if (conversacaoState.ambientEnabled) {
+            // Desativar
+            stopAmbientSound();
+            iconOff?.classList.remove('hidden');
+            iconOn?.classList.add('hidden');
+            if (textEl) textEl.textContent = '🍽️ Som Ambiente';
+            btn?.classList.remove('bg-cyan-600/30', 'border', 'border-cyan-500/50');
+            btn?.classList.add('bg-slate-700');
+        } else {
+            // Ativar
+            startAmbientSound();
+            iconOff?.classList.add('hidden');
+            iconOn?.classList.remove('hidden');
+            if (textEl) textEl.textContent = '🔊 Tocando...';
+            btn?.classList.remove('bg-slate-700');
+            btn?.classList.add('bg-cyan-600/30', 'border', 'border-cyan-500/50');
+        }
+    }
+
+    // Iniciar som ambiente
+    function startAmbientSound() {
+        if (conversacaoState.ambientAudio) {
+            conversacaoState.ambientAudio.pause();
+        }
+
+        const audio = new Audio('/assets/audio/restaurant-ambient.mp3');
+        audio.loop = true;
+        audio.volume = 0.3; // Volume baixo para não atrapalhar a conversa
+
+        audio.play().then(() => {
+            conversacaoState.ambientAudio = audio;
+            conversacaoState.ambientEnabled = true;
+            console.log('🔊 Som ambiente iniciado');
+        }).catch(err => {
+            console.error('Erro ao tocar som ambiente:', err);
+            // Tentar mostrar mensagem de erro
+            const textEl = document.getElementById('conv-ambient-text');
+            if (textEl) textEl.textContent = '❌ Arquivo não encontrado';
+            setTimeout(() => {
+                if (textEl) textEl.textContent = '🍽️ Som Ambiente';
+            }, 2000);
+        });
+    }
+
+    // Parar som ambiente
+    function stopAmbientSound() {
+        if (conversacaoState.ambientAudio) {
+            conversacaoState.ambientAudio.pause();
+            conversacaoState.ambientAudio.currentTime = 0;
+            conversacaoState.ambientAudio = null;
+        }
+        conversacaoState.ambientEnabled = false;
+        console.log('🔇 Som ambiente parado');
+    }
+
+    // Tocar efeito sonoro único (passos, pratos, etc.)
+    function playSoundEffect(soundFile, volume = 0.5) {
+        const audio = new Audio(`/assets/audio/${soundFile}`);
+        audio.volume = volume;
+        audio.play().catch(err => {
+            console.log('Som não disponível:', soundFile);
+        });
     }
 
     // Toggle entre conectar/desconectar da conversa
@@ -4767,10 +4848,12 @@ SPRACHE:
         conversacaoState.ws = null;
         conversacaoState.connectionStartTime = null;
 
-        // Parar timer, keep-alive e detecção de silêncio
+        // Parar timer, keep-alive, detecção de silêncio e som ambiente
         stopTimer();
         stopKeepAlive();
         stopSilenceDetection();
+        // Não parar som ambiente automaticamente - deixar o usuário decidir
+        // stopAmbientSound();
 
         if (conversacaoState.stream) {
             conversacaoState.stream.getTracks().forEach(track => track.stop());
