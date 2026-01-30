@@ -304,13 +304,16 @@ async function insertEssayHistory(userId, contagem) {
     });
 }
 
+// Custo por redação corrigida
+const ESSAY_CORRECTION_COST = 20;
+
 // Deduct credits
 async function deductCredits(userId, currentCredits) {
     await supabaseRequest(`/rest/v1/profiles?id=eq.${userId}`, {
         method: 'PATCH',
         headers: { 'Prefer': 'return=minimal' },
         body: JSON.stringify({
-            credits: parseInt(currentCredits) - 100
+            credits: parseInt(currentCredits) - ESSAY_CORRECTION_COST
         })
     });
 }
@@ -439,12 +442,15 @@ exports.handler = async (event) => {
             };
         }
 
-        // 5. Check credits
-        if (parseInt(userProfile.credits) < 100) {
+        // 5. Check credits (need at least ESSAY_CORRECTION_COST credits)
+        if (parseInt(userProfile.credits) < ESSAY_CORRECTION_COST) {
             return {
                 statusCode: 402,
                 headers,
-                body: JSON.stringify({ error: 'Sem crédito suficiente', credit: 'Sem crédito suficiente' })
+                body: JSON.stringify({
+                    error: 'Sem crédito suficiente',
+                    credit: `Você precisa de pelo menos ${ESSAY_CORRECTION_COST} créditos para corrigir uma redação.`
+                })
             };
         }
 

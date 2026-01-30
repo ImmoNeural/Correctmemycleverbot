@@ -23,6 +23,9 @@
 [functions."create-checkout"]
   timeout = 30
 
+[functions."deduct-credits"]
+  timeout = 30
+
 # Edge Function para streaming da correção de redações
 [[edge_functions]]
   path = "/api/trataerro-stream"

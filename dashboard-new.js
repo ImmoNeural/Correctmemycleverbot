@@ -4536,15 +4536,64 @@ SPRACHE:
         return btoa(binary);
     }
 
+    // Deduzir créditos após conversa (10 créditos por minuto)
+    async function deductConversationCredits(durationSeconds) {
+        if (!durationSeconds || durationSeconds <= 0) {
+            console.log('⚠️ Sem duração para deduzir créditos');
+            return;
+        }
+
+        if (!currentUser?.id) {
+            console.log('⚠️ Usuário não identificado para deduzir créditos');
+            return;
+        }
+
+        const minutes = durationSeconds / 60;
+        const creditsToDeduct = Math.ceil(minutes * 10); // 10 créditos por minuto
+
+        console.log(`💰 Deduzindo créditos: ${minutes.toFixed(2)} min = ${creditsToDeduct} créditos`);
+
+        try {
+            const response = await fetch('/.netlify/functions/deduct-credits', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: currentUser.id,
+                    durationSeconds: durationSeconds,
+                    type: 'conversation'
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                console.log(`✅ Créditos deduzidos: ${result.creditsDeducted} (${result.previousCredits} → ${result.newCredits})`);
+                // Atualizar display de créditos se existir
+                const creditDisplay = document.querySelector('.credits-display, #credits-count');
+                if (creditDisplay) {
+                    creditDisplay.textContent = result.newCredits;
+                }
+            } else {
+                console.error('❌ Erro ao deduzir créditos:', result.error);
+            }
+        } catch (error) {
+            console.error('❌ Erro na chamada de dedução:', error);
+        }
+    }
+
     // Desconectar da conversa
     function disconnectConversation() {
         console.log('Desconectando...');
+
+        // Guardar duração antes de limpar
+        const conversationDuration = conversacaoState.totalSeconds;
 
         // Flush qualquer transcript pendente antes de desconectar
         flushUserTranscript();
 
         console.log('📊 Total de transcripts armazenados:', conversacaoState.transcripts.length);
         console.log('📊 Transcripts:', JSON.stringify(conversacaoState.transcripts, null, 2));
+        console.log(`⏱️ Duração da conversa: ${conversationDuration} segundos`);
 
         if (conversacaoState.ws) {
             conversacaoState.ws.close();
@@ -4556,6 +4605,11 @@ SPRACHE:
             triggerAnalysis();
         } else {
             console.log('⚠️ Nenhum transcript para analisar!');
+        }
+
+        // Deduzir créditos baseado no tempo de conversa
+        if (conversationDuration > 0) {
+            deductConversationCredits(conversationDuration);
         }
 
         cleanupConversation();
