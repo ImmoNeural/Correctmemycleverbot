@@ -1,7 +1,7 @@
 // Cria sessão de checkout do Stripe para compra de créditos
 // Requer STRIPE_SECRET_KEY nas variáveis de ambiente do Netlify
 
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+const Stripe = require('stripe');
 
 // Mapeamento de price IDs para quantidade de créditos
 const PRICE_CREDITS_MAP = {
@@ -31,6 +31,7 @@ exports.handler = async (event) => {
     }
 
     // Verificar se a chave do Stripe está configurada
+    const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
     if (!STRIPE_SECRET_KEY) {
         console.error('STRIPE_SECRET_KEY não configurada');
         return {
@@ -44,6 +45,8 @@ exports.handler = async (event) => {
         const body = JSON.parse(event.body);
         const { priceId, userId, userEmail } = body;
 
+        console.log('Recebido:', { priceId, userId, userEmail });
+
         if (!priceId) {
             return {
                 statusCode: 400,
@@ -55,6 +58,7 @@ exports.handler = async (event) => {
         // Verificar se o price ID é válido
         const credits = PRICE_CREDITS_MAP[priceId];
         if (!credits) {
+            console.error('Price ID não encontrado no mapa:', priceId);
             return {
                 statusCode: 400,
                 headers,
@@ -62,11 +66,14 @@ exports.handler = async (event) => {
             };
         }
 
-        // Importar Stripe dinamicamente
-        const stripe = require('stripe')(STRIPE_SECRET_KEY);
+        // Inicializar Stripe
+        const stripe = new Stripe(STRIPE_SECRET_KEY, {
+            apiVersion: '2023-10-16'
+        });
 
         // URL base para redirecionamento
         const baseUrl = event.headers.origin || event.headers.referer?.replace(/\/[^/]*$/, '') || 'https://correctme.club';
+        console.log('Base URL:', baseUrl);
 
         // Criar sessão de checkout
         const session = await stripe.checkout.sessions.create({
@@ -99,7 +106,8 @@ exports.handler = async (event) => {
         };
 
     } catch (error) {
-        console.error('Erro ao criar checkout session:', error);
+        console.error('Erro ao criar checkout session:', error.message);
+        console.error('Stack:', error.stack);
         return {
             statusCode: 500,
             headers,
