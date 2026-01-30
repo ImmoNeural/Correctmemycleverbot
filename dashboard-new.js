@@ -3775,6 +3775,9 @@ async function handleCorrectionSubmit(e) {
         ambientAudio: null,
         ambientEnabled: false,
 
+        // Current scenario being played
+        currentScenario: null,
+
         // Correction tracking - acumula transcripts para análise no final
         totalCorrections: 0,
         transcripts: [], // Array de {timestamp, speaker, text}
@@ -4089,6 +4092,45 @@ SPRACHE:
         });
     }
 
+    // Atualizar UI do botão de som ambiente
+    function updateAmbientButtonUI(enabled) {
+        const iconOff = document.getElementById('conv-ambient-icon-off');
+        const iconOn = document.getElementById('conv-ambient-icon-on');
+        const textEl = document.getElementById('conv-ambient-text');
+        const btn = document.getElementById('conv-ambient-btn');
+
+        if (enabled) {
+            iconOff?.classList.add('hidden');
+            iconOn?.classList.remove('hidden');
+            if (textEl) textEl.textContent = '🔊 Tocando...';
+            btn?.classList.remove('bg-slate-700');
+            btn?.classList.add('bg-cyan-600/30', 'border', 'border-cyan-500/50');
+        } else {
+            iconOff?.classList.remove('hidden');
+            iconOn?.classList.add('hidden');
+            if (textEl) textEl.textContent = '🍽️ Som Ambiente';
+            btn?.classList.remove('bg-cyan-600/30', 'border', 'border-cyan-500/50');
+            btn?.classList.add('bg-slate-700');
+        }
+    }
+
+    // Detectar e tocar sons de passos baseado no texto da IA
+    function detectAndPlayFootsteps(text) {
+        const lowerText = text.toLowerCase();
+        // Detectar quando garçom vai para a cozinha ou sai
+        const goingKeywords = ['gehe jetzt', 'zur küche', 'bringe das', 'ich hole', 'moment', 'einen moment', 'ich komme gleich'];
+        // Detectar quando garçom volta
+        const returningKeywords = ['ich bin wieder da', 'bin zurück', 'so, ich', 'hier ist', 'hier haben sie'];
+
+        const isGoing = goingKeywords.some(kw => lowerText.includes(kw));
+        const isReturning = returningKeywords.some(kw => lowerText.includes(kw));
+
+        if (isGoing || isReturning) {
+            playSoundEffect('footsteps.mp3', 0.4);
+            console.log('👣 Som de passos tocado:', isGoing ? 'saindo' : 'voltando');
+        }
+    }
+
     // Toggle entre conectar/desconectar da conversa
     async function toggleConversation() {
         if (conversacaoState.isConnected || conversacaoState.isConnecting) {
@@ -4303,6 +4345,12 @@ SPRACHE:
                 startTimer();
                 // Keep-alive desativado - o streaming de áudio já mantém a conexão
                 // startKeepAlive();
+
+                // Auto-iniciar som ambiente para cenários de restaurante
+                if (conversacaoState.currentScenario?.includes('restaurante')) {
+                    startAmbientSound();
+                    updateAmbientButtonUI(true);
+                }
             }
 
             // Resposta do servidor (texto ou áudio)
@@ -4324,6 +4372,11 @@ SPRACHE:
                             role: 'model',
                             text: part.text
                         });
+
+                        // Detectar e tocar sons de passos para cenários de restaurante
+                        if (conversacaoState.currentScenario?.includes('restaurante')) {
+                            detectAndPlayFootsteps(part.text);
+                        }
                     }
 
                     // Áudio da resposta (como no exemplo oficial)
@@ -4852,8 +4905,11 @@ SPRACHE:
         stopTimer();
         stopKeepAlive();
         stopSilenceDetection();
-        // Não parar som ambiente automaticamente - deixar o usuário decidir
-        // stopAmbientSound();
+        // Parar som ambiente e atualizar botão
+        if (conversacaoState.ambientEnabled) {
+            stopAmbientSound();
+            updateAmbientButtonUI(false);
+        }
 
         if (conversacaoState.stream) {
             conversacaoState.stream.getTracks().forEach(track => track.stop());
@@ -4919,6 +4975,9 @@ SPRACHE:
 
     // Iniciar conversa com um tópico
     async function startConversationWithTopic(topic) {
+        // Salvar o cenário atual no state para referência
+        conversacaoState.currentScenario = topic;
+
         // Primeiro conectar se não estiver conectado
         if (!conversacaoState.isConnected) {
             await connectConversation();
@@ -4967,7 +5026,26 @@ DEINE ROLLE:
 
 STARTE SO: Begrüße mich herzlich als Kollegin Anna und frage, ob ich schon Hunger habe. Dann zeig mir die Speisekarte und frage, was ich gerne essen möchte.
 
-WICHTIG: Sprich langsam und deutlich. Verwende einfache Sätze. Wenn ich Fehler mache, korrigiere sie freundlich und erkläre kurz warum.`,
+WICHTIG: Sprich langsam und deutlich. Verwende einfache Sätze. Wenn ich Fehler mache, korrigiere sie freundlich und erkläre kurz warum.
+
+LERNZIELE ZU PRÜFEN:
+1. Kann ich bestellen? (Ich hätte gern...)
+2. Kann ich nach Empfehlungen fragen?
+3. Kann ich bezahlen? (Zusammen oder getrennt?, Stimmt so)
+
+GESPRÄCHSENDE (nach ca. 3-5 Minuten oder wenn alle Ziele erreicht wurden):
+Wenn das Essen gegessen und die Rechnung bezahlt wurde, beende das Gespräch natürlich und gib eine KURZE BEWERTUNG auf Deutsch:
+
+"[Als Anna] Das war ein schönes Mittagessen! Bis morgen im Büro!
+
+---
+[Als Sprachlehrer] Super gemacht! Hier ist mein Feedback:
+- Bestellen: [sehr gut/gut/mehr üben] - [kurze Erklärung]
+- Vokabeln: [gut verwendet/diese üben: ...]
+- Fehler: [häufigste Fehler kurz erwähnen]
+- Gesamtnote: [A/B/C]
+
+Weiter so!"`,
 
                 // ===== RESTAURANTE - CENÁRIO B1: Celebração com Problemas =====
                 'restaurante-b1': `Du bist ein Kellner in einem gehobenen Restaurant in München.
@@ -4991,7 +5069,27 @@ WICHTIG - PROAKTIVES VERHALTEN:
 - Mach kleine Geräusche oder beschreibe was du tust: "Moment, ich räume hier kurz ab..."
 - Halte die Konversation am Leben mit Fragen und Updates.
 
-REAKTION AUF BESCHWERDEN: Wenn ich unhöflich werde, zeig dass das nicht funktioniert. Wenn ich den Konjunktiv II benutze, sei kooperativer. Gib mir am Ende Feedback zu meiner Kommunikation.`
+REAKTION AUF BESCHWERDEN: Wenn ich unhöflich werde, zeig dass das nicht funktioniert. Wenn ich den Konjunktiv II benutze, sei kooperativer.
+
+LERNZIELE ZU PRÜFEN:
+1. Kann ich höflich reklamieren?
+2. Verwende ich den Konjunktiv II korrekt?
+3. Kann ich eine Lösung aushandeln?
+4. Kann ich die Rechnung prüfen und bezahlen?
+
+GESPRÄCHSENDE (nach ca. 3-5 Minuten oder wenn alle Ziele erreicht wurden):
+Wenn du merkst, dass das Gespräch einen natürlichen Abschluss erreicht hat (Rechnung bezahlt, alle Probleme gelöst), beende das Gespräch höflich und gib dann eine KURZE BEWERTUNG auf Deutsch:
+
+"[Als Kellner] Vielen Dank und einen schönen Abend noch!
+
+---
+[Als Sprachlehrer] Sehr gut gemacht! Hier ist mein Feedback:
+- Beschwerden: [gut/könnte besser sein] - [kurze Erklärung]
+- Konjunktiv II: [gut verwendet/mehr üben] - [Beispiel wenn nötig]
+- Verhandlung: [effektiv/zu passiv/zu aggressiv]
+- Gesamtnote: [A/B/C]
+
+Weiter so!"`
             };
 
             const prompt = topicPrompts[topic] || `Beginne ein lockeres Gespräch auf Deutsch über: ${topic}. Frage mich zuerst nach meiner Meinung dazu. WICHTIG: Reagiere immer auf das, was ICH sage.`;
@@ -5123,10 +5221,16 @@ REAKTION AUF BESCHWERDEN: Wenn ich unhöflich werde, zeig dass das nicht funktio
 
     function updateTimerDisplay() {
         const timerEl = document.getElementById('conv-timer');
+        const creditsEl = document.getElementById('conv-credits-used');
         if (timerEl) {
             const minutes = Math.floor(conversacaoState.totalSeconds / 60);
             const seconds = conversacaoState.totalSeconds % 60;
             timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+        // Calcular créditos em tempo real (10 créditos por minuto)
+        if (creditsEl) {
+            const creditsUsed = (conversacaoState.totalSeconds / 60) * 10;
+            creditsEl.textContent = `${creditsUsed.toFixed(1)} créditos`;
         }
     }
 
