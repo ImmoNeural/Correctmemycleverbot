@@ -1919,7 +1919,15 @@
 
             <!-- Seção: Parafrasear -->
             <div id="section-parafrasear" class="content-section hidden">
-                <h1 class="text-4xl font-extrabold mb-2 bg-gradient-to-r from-blue-400 to-cyan-500 text-transparent bg-clip-text">Parafrasear Texto</h1>
+                <div class="flex items-center justify-between mb-2">
+                    <h1 class="text-4xl font-extrabold bg-gradient-to-r from-blue-400 to-cyan-500 text-transparent bg-clip-text">Parafrasear Texto</h1>
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-lg border border-slate-700">
+                        <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-sm text-slate-300"><strong class="text-blue-400">5</strong> créditos/uso</span>
+                    </div>
+                </div>
                 <p class="text-slate-400 mb-8">Reescreva seu texto em alemão de diferentes formas mantendo o significado.</p>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -2050,9 +2058,9 @@
                 </div>
 
                 <!-- Layout com menu lateral de listas -->
-                <div class="flex gap-6" style="height: calc(100vh - 320px);">
+                <div class="flex gap-6">
                     <!-- Menu Lateral de Listas -->
-                    <aside class="w-72 bg-slate-800 rounded-xl p-4 overflow-y-auto flex-shrink-0 shadow-xl">
+                    <aside class="w-72 bg-slate-800 rounded-xl p-4 flex-shrink-0 shadow-xl">
                         <!-- Header do Menu -->
                         <div class="mb-4 pb-4 border-b border-slate-700">
                             <div class="flex items-center justify-between mb-2">
@@ -2081,7 +2089,7 @@
                     </aside>
 
                     <!-- Área de Conteúdo das Palavras -->
-                    <div class="flex-1 overflow-y-auto">
+                    <div class="flex-1">
                         <div id="wordlist-content" class="space-y-4">
                             <p class="text-slate-400 text-center py-8">Selecione uma lista para ver as palavras</p>
                         </div>
@@ -2554,8 +2562,29 @@
 
             <!-- Seção: Chatbot -->
             <div id="section-chatbot" class="content-section hidden">
+                <!-- Cabeçalho com info de créditos -->
+                <div class="flex items-center justify-between mb-4 px-2">
+                    <div>
+                        <h1 class="text-2xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 text-transparent bg-clip-text">Treinar com o Chatbot</h1>
+                        <p class="text-slate-400 text-sm">Pratique gramática e escrita em alemão</p>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <div class="flex items-center gap-2 px-3 py-1 bg-slate-800/50 rounded-lg border border-slate-700">
+                            <svg class="w-3 h-3 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span class="text-xs text-slate-300">Gramática: <strong class="text-green-400">5</strong> créditos</span>
+                        </div>
+                        <div class="flex items-center gap-2 px-3 py-1 bg-slate-800/50 rounded-lg border border-slate-700">
+                            <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span class="text-xs text-slate-300">Escrita: <strong class="text-emerald-400">2.5</strong> créditos</span>
+                        </div>
+                    </div>
+                </div>
                 <!-- Container do Chatbot (sem bordas, sem cabeçalho) -->
-                <div id="chatbot-prompt-container" style="width: 100%; height: calc(100vh - 200px);">
+                <div id="chatbot-prompt-container" style="width: 100%; height: calc(100vh - 280px);">
                     <!-- Chatbot será carregado aqui automaticamente -->
                 </div>
             </div>

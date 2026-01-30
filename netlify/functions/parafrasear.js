@@ -136,7 +136,7 @@ exports.handler = async (event) => {
                 return {
                     statusCode: 403,
                     headers,
-                    body: JSON.stringify({ error: 'Créditos insuficientes. Por favor, adquira mais créditos.' })
+                    body: JSON.stringify({ error: 'Créditos insuficientes. São necessários 5 créditos para parafrasear.' })
                 };
             }
         }
@@ -217,7 +217,7 @@ async function checkUserCredits(userId) {
         const data = await response.json();
 
         if (data && data.length > 0) {
-            return { hasCredits: data[0].credits > 0, credits: data[0].credits };
+            return { hasCredits: data[0].credits >= 5, credits: data[0].credits };
         }
 
         return { hasCredits: true, credits: 0 }; // Default para não bloquear se não encontrar
@@ -239,8 +239,8 @@ async function deductCredit(userId) {
 
         const checkData = await checkResponse.json();
 
-        if (checkData && checkData.length > 0 && checkData[0].credits > 0) {
-            const newCredits = checkData[0].credits - 1;
+        if (checkData && checkData.length > 0 && checkData[0].credits >= 5) {
+            const newCredits = checkData[0].credits - 5;
 
             // Atualizar créditos
             await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
@@ -254,7 +254,7 @@ async function deductCredit(userId) {
                 body: JSON.stringify({ credits: newCredits })
             });
 
-            console.log(`Crédito deduzido para usuário ${userId}. Novos créditos: ${newCredits}`);
+            console.log(`5 créditos deduzidos para usuário ${userId}. Novos créditos: ${newCredits}`);
         }
     } catch (error) {
         console.error('Erro ao deduzir crédito:', error);

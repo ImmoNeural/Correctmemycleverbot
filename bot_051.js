@@ -563,8 +563,12 @@
     let isChatInitialized = false;
     let currentLevel = '';
     let currentTopic = '';
-    let currentUserId = null;
-    let currentUserEmail = null;
+
+    // Inicializar com dados do usuário do config ou CHATBOT_USER_DATA
+    let currentUserId = settings.initialUserData?.userId || window.CHATBOT_USER_DATA?.userId || null;
+    let currentUserEmail = settings.initialUserData?.email || window.CHATBOT_USER_DATA?.email || null;
+
+    console.log('🔧 Bot inicializado com userId:', currentUserId, 'email:', currentUserEmail);
 
     // Create widget DOM structure
     const widgetRoot = document.createElement('div');

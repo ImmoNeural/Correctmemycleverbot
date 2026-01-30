@@ -1688,6 +1688,14 @@ async function handleCorrectionSubmit(e) {
                 iframe.allow = 'microphone';
                 iframe.title = 'Chatbot de Alemão';
 
+                // Obter dados do usuário ANTES de criar o iframe
+                const userData = window.currentUser ? {
+                    userId: window.currentUser.id,
+                    email: window.currentUser.email
+                } : { userId: null, email: null };
+
+                console.log('📤 Passando dados do usuário para iframe:', userData);
+
                 // Criar conteúdo HTML para o iframe
                 const iframeContent = `
                     <!DOCTYPE html>
@@ -1709,34 +1717,19 @@ async function handleCorrectionSubmit(e) {
                     <body>
                         <div id="chatbot-root"></div>
                         <script>
-                            // Obter dados do usuário autenticado do parent window
-                            const getUserData = () => {
-                                try {
-                                    const parentUser = window.parent.currentUser;
-                                    if (parentUser) {
-                                        console.log('✅ Dados do usuário obtidos do parent:', {
-                                            userId: parentUser.id,
-                                            email: parentUser.email
-                                        });
-                                        return {
-                                            userId: parentUser.id,
-                                            email: parentUser.email
-                                        };
-                                    } else {
-                                        console.warn('⚠️ window.parent.currentUser não está disponível');
-                                    }
-                                } catch (e) {
-                                    console.error('❌ Erro ao acessar dados do usuário:', e);
-                                }
-                                return { userId: null, email: null };
+                            // Dados do usuário passados diretamente do parent
+                            window.CHATBOT_USER_DATA = {
+                                userId: ${userData.userId ? `"${userData.userId}"` : 'null'},
+                                email: ${userData.email ? `"${userData.email}"` : 'null'}
                             };
+                            console.log('📥 Dados do usuário recebidos no iframe:', window.CHATBOT_USER_DATA);
 
                             // Configuração do Chatbot Widget v051
                             window.ChatWidgetConfig = {
                                 webhook: {
                                     url: '/.netlify/functions/chatbot',
                                 },
-                                getUserData: getUserData,
+                                initialUserData: window.CHATBOT_USER_DATA,
                                 embedded: true,
                                 showBubble: false,
                                 autoOpen: true,
