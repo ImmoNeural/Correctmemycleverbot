@@ -36,7 +36,7 @@ async function loadUserProfile() {
             console.log('Perfil não encontrado, criando um novo...');
             const { data: newProfile, error: insertError } = await _supabase
                 .from('profiles')
-                .insert([{ id: user.id, credits: 2, avatar_url: null }])
+                .insert([{ id: user.id, credits: 100, avatar_url: null }])
                 .select()
                 .single();
             

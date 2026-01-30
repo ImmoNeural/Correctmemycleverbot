@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Criando novo perfil para usuário:', user.id);
                 const { data: newProfile, error: insertError } = await _supabase
                     .from('profiles')
-                    .insert([{ id: user.id, credits: 200 }])
+                    .insert([{ id: user.id, credits: 100 }])
                     .select(columnsToSelect)
                     .single();
 

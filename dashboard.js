@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (error && error.code !== 'PGRST116') { console.error("Erro ao buscar perfil:", error); return; }
 
         if (!profile) {
-            const { data: newProfile } = await _supabase.from('profiles').insert([{ id: user.id, credits: 200 }]).select(columnsToSelect).single();
+            const { data: newProfile } = await _supabase.from('profiles').insert([{ id: user.id, credits: 100 }]).select(columnsToSelect).single();
             profile = newProfile;
         }
 
