@@ -1459,7 +1459,7 @@ async function handleCorrectionSubmit(e) {
                         <p class="text-blue-100 text-sm">Masculino</p>
                         <p class="text-blue-200 text-xs mt-1">${byArtigo.der.length} palavra(s)</p>
                     </div>
-                    <div class="p-4 space-y-2 max-h-96 overflow-y-auto">
+                    <div class="p-4 space-y-2">
             `;
             if (byArtigo.der.length === 0) {
                 html += `<p class="text-slate-500 text-center text-sm py-4">Nenhuma palavra com DER</p>`;
@@ -1478,7 +1478,7 @@ async function handleCorrectionSubmit(e) {
                         <p class="text-pink-100 text-sm">Feminino</p>
                         <p class="text-pink-200 text-xs mt-1">${byArtigo.die.length} palavra(s)</p>
                     </div>
-                    <div class="p-4 space-y-2 max-h-96 overflow-y-auto">
+                    <div class="p-4 space-y-2">
             `;
             if (byArtigo.die.length === 0) {
                 html += `<p class="text-slate-500 text-center text-sm py-4">Nenhuma palavra com DIE</p>`;
@@ -1497,7 +1497,7 @@ async function handleCorrectionSubmit(e) {
                         <p class="text-green-100 text-sm">Neutro</p>
                         <p class="text-green-200 text-xs mt-1">${byArtigo.das.length} palavra(s)</p>
                     </div>
-                    <div class="p-4 space-y-2 max-h-96 overflow-y-auto">
+                    <div class="p-4 space-y-2">
             `;
             if (byArtigo.das.length === 0) {
                 html += `<p class="text-slate-500 text-center text-sm py-4">Nenhuma palavra com DAS</p>`;
