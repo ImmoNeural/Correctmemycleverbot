@@ -3859,23 +3859,143 @@ SPRACHE:
             });
         }
 
-        // Botões de tópicos
+        // Dados dos cenários
+        const scenarioData = {
+            'restaurante-a2': {
+                level: 'A2',
+                levelColor: 'green',
+                title: 'Almoço com Colegas',
+                subtitle: 'Pratique pedir comida em um restaurante tradicional alemão',
+                context: 'Você está em Berlim visitando a sede da sua empresa. Três colegas alemães (Anna, Markus e Sofia) convidam você para almoçar em um típico "Gasthaus" (restaurante tradicional). Você precisa pedir comida, fazer perguntas simples sobre o cardápio e conversar de forma básica sobre preferências alimentares.',
+                objective: 'Pedir comida, fazer perguntas simples sobre o cardápio e conversar de forma básica sobre preferências alimentares.',
+                vocabulary: [
+                    { de: 'die Speisekarte', pt: 'o cardápio' },
+                    { de: 'Ich hätte gern...', pt: 'Eu gostaria de...' },
+                    { de: 'Was empfehlen Sie?', pt: 'O que você recomenda?' },
+                    { de: 'das Tagesgericht', pt: 'o prato do dia' },
+                    { de: 'Ich bin allergisch gegen...', pt: 'Sou alérgico a...' },
+                    { de: 'Noch etwas zu trinken?', pt: 'Mais algo para beber?' },
+                    { de: 'Zusammen oder getrennt?', pt: 'Juntos ou separado?' },
+                    { de: 'Stimmt so', pt: 'Está certo assim (gorjeta)' },
+                    { de: 'Das schmeckt ausgezeichnet!', pt: 'Isso está excelente!' }
+                ],
+                tip: 'A IA (Anna) vai falar devagar e usar frases simples. Ela corrigirá gentilmente seus erros de artigos e ordem das palavras. Não tenha medo de errar!'
+            },
+            'restaurante-b1': {
+                level: 'B1',
+                levelColor: 'yellow',
+                title: 'Celebração com Problemas',
+                subtitle: 'Pratique fazer reclamações educadas e negociar soluções',
+                context: 'Você está em um restaurante mais sofisticado em Munique celebrando seu aniversário com amigos alemães. Surgem alguns problemas: seu prato chegou frio, o vinho não é o que você pediu, e você precisa negociar soluções com o garçom de forma educada mas firme.',
+                objective: 'Reclamar de problemas de forma educada, usar o Konjunktiv II para pedidos corteses, e negociar soluções mantendo a calma.',
+                vocabulary: [
+                    { de: 'Entschuldigung, aber...', pt: 'Desculpe, mas...' },
+                    { de: 'Das ist nicht in Ordnung', pt: 'Isso não está certo' },
+                    { de: 'Könnten Sie bitte...', pt: 'Você poderia por favor...' },
+                    { de: 'etwas reklamieren', pt: 'reclamar algo' },
+                    { de: 'eine Beschwerde vorbringen', pt: 'apresentar uma reclamação' },
+                    { de: 'inakzeptabel', pt: 'inaceitável' },
+                    { de: 'eine Entschädigung', pt: 'uma compensação' },
+                    { de: 'die Rechnung überprüfen', pt: 'verificar a conta' },
+                    { de: 'Das lasse ich mir nicht gefallen', pt: 'Não vou aceitar isso' }
+                ],
+                tip: 'O garçom será inicialmente defensivo. Use o Konjunktiv II (könnten, würden) para ser mais educado - isso fará ele cooperar mais! Mantenha a calma mesmo quando frustrado.'
+            }
+        };
+
+        // Estado do cenário atual
+        let currentScenario = null;
+
+        // Função para mostrar cenário
+        function showScenario(scenarioId) {
+            const data = scenarioData[scenarioId];
+            if (!data) {
+                // Se não tem dados específicos, usa comportamento antigo (inicia direto)
+                return false;
+            }
+
+            currentScenario = scenarioId;
+
+            // Esconder estado inicial, mostrar cenário
+            document.getElementById('conv-no-scenario')?.classList.add('hidden');
+            document.getElementById('conv-scenario-display')?.classList.remove('hidden');
+
+            // Preencher dados
+            const levelBadge = document.getElementById('scenario-level-badge');
+            if (levelBadge) {
+                levelBadge.textContent = data.level;
+                levelBadge.className = `text-xs font-bold px-2 py-1 rounded ${data.levelColor === 'green' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`;
+            }
+
+            document.getElementById('scenario-title').textContent = data.title;
+            document.getElementById('scenario-subtitle').textContent = data.subtitle;
+            document.getElementById('scenario-context').textContent = data.context;
+            document.getElementById('scenario-objective').textContent = data.objective;
+            document.getElementById('scenario-tip').textContent = data.tip;
+
+            // Preencher vocabulário
+            const vocabContainer = document.getElementById('scenario-vocabulary');
+            if (vocabContainer) {
+                vocabContainer.innerHTML = data.vocabulary.map(v => `
+                    <div class="px-3 py-2 bg-slate-900/50 rounded-lg">
+                        <span class="text-cyan-300 font-medium">${v.de}</span>
+                        <span class="text-slate-500 mx-2">→</span>
+                        <span class="text-slate-400 text-sm">${v.pt}</span>
+                    </div>
+                `).join('');
+            }
+
+            return true;
+        }
+
+        // Função para esconder cenário
+        function hideScenario() {
+            currentScenario = null;
+            document.getElementById('conv-no-scenario')?.classList.remove('hidden');
+            document.getElementById('conv-scenario-display')?.classList.add('hidden');
+        }
+
+        // Botões de cenário (com data-scenario)
+        const scenarioBtns = document.querySelectorAll('.conv-scenario-btn');
+        scenarioBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const scenarioId = btn.dataset.scenario;
+                if (scenarioId) {
+                    showScenario(scenarioId);
+                }
+            });
+        });
+
+        // Botões de tópicos simples (sem cenário específico)
         const topicBtns = document.querySelectorAll('.conv-topic-btn');
         topicBtns.forEach(btn => {
             btn.addEventListener('click', () => {
-                // Verificar se tem um cenário específico (data-scenario)
-                const scenario = btn.dataset.scenario;
-                if (scenario) {
-                    startConversationWithTopic(scenario);
-                    return;
-                }
-
                 // Pegar o texto do segundo span (nome do tema, sem emoji)
                 const textSpan = btn.querySelectorAll('span')[1];
                 const topic = textSpan ? textSpan.textContent.trim() : btn.textContent.trim();
+
+                // Para temas simples, inicia direto a conversa
                 startConversationWithTopic(topic);
             });
         });
+
+        // Botão "Iniciar Conversa" do cenário
+        const startScenarioBtn = document.getElementById('start-scenario-btn');
+        if (startScenarioBtn) {
+            startScenarioBtn.addEventListener('click', () => {
+                if (currentScenario) {
+                    startConversationWithTopic(currentScenario);
+                    // Mostrar visualizador de áudio
+                    document.getElementById('conv-audio-visual')?.classList.remove('hidden');
+                }
+            });
+        }
+
+        // Botão fechar cenário
+        const closeScenarioBtn = document.getElementById('close-scenario-btn');
+        if (closeScenarioBtn) {
+            closeScenarioBtn.addEventListener('click', hideScenario);
+        }
 
         // Voice select
         const voiceSelect = document.getElementById('conv-voice-select');
@@ -4809,6 +4929,7 @@ WICHTIG: Reagiere realistisch auf Beschwerden. Wenn ich unhöflich werde, zeig d
         const waveContainer = document.getElementById('conv-wave-container');
         const idleText = document.getElementById('conv-idle-text');
         const muteBtn = document.getElementById('conv-mute-btn');
+        const audioVisual = document.getElementById('conv-audio-visual');
 
         if (!micBtn) return;
 
@@ -4817,24 +4938,26 @@ WICHTIG: Reagiere realistisch auf Beschwerden. Wenn ich unhöflich werde, zeig d
                 micBtn.classList.add('active');
                 micIcon.classList.add('hidden');
                 stopIcon.classList.remove('hidden');
-                pulseRing.classList.remove('opacity-0');
+                pulseRing?.classList.remove('opacity-0');
                 if (idleText) idleText.classList.add('hidden');
+                if (audioVisual) audioVisual.classList.remove('hidden');
                 break;
 
             case 'recording':
                 micBtn.classList.add('active');
                 micIcon.classList.add('hidden');
                 stopIcon.classList.remove('hidden');
-                pulseRing.classList.remove('opacity-0');
-                waveContainer.classList.add('conv-wave-active');
-                waveContainer.classList.remove('hidden');
+                pulseRing?.classList.remove('opacity-0');
+                waveContainer?.classList.add('conv-wave-active');
+                waveContainer?.classList.remove('hidden');
                 if (idleText) idleText.classList.add('hidden');
                 if (muteBtn) muteBtn.disabled = false;
+                if (audioVisual) audioVisual.classList.remove('hidden');
                 break;
 
             case 'playing':
-                waveContainer.classList.add('conv-wave-active');
-                pulseRing.classList.add('opacity-0');
+                waveContainer?.classList.add('conv-wave-active');
+                pulseRing?.classList.add('opacity-0');
                 break;
 
             case 'idle':
@@ -4842,13 +4965,17 @@ WICHTIG: Reagiere realistisch auf Beschwerden. Wenn ich unhöflich werde, zeig d
                 micBtn.classList.remove('active');
                 micIcon.classList.remove('hidden');
                 stopIcon.classList.add('hidden');
-                pulseRing.classList.add('opacity-0');
-                waveContainer.classList.remove('conv-wave-active');
+                pulseRing?.classList.add('opacity-0');
+                waveContainer?.classList.remove('conv-wave-active');
                 if (conversacaoState.conversationHistory.length === 0) {
                     if (idleText) idleText.classList.remove('hidden');
-                    waveContainer.classList.add('hidden');
+                    waveContainer?.classList.add('hidden');
                 }
                 if (muteBtn) muteBtn.disabled = true;
+                // Esconder audio visual quando desconectado
+                if (audioVisual && !conversacaoState.isConnected) {
+                    audioVisual.classList.add('hidden');
+                }
                 break;
         }
     }
@@ -4860,7 +4987,7 @@ WICHTIG: Reagiere realistisch auf Beschwerden. Wenn ich unhöflich werde, zeig d
         if (statusText) statusText.textContent = text;
 
         if (statusDot) {
-            statusDot.className = 'w-3 h-3 rounded-full';
+            statusDot.className = 'w-2.5 h-2.5 rounded-full';
             switch (state) {
                 case 'connecting':
                     statusDot.classList.add('connecting');
