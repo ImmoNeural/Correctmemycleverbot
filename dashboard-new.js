@@ -4026,8 +4026,8 @@ SPRACHE:
             updateStatus('Conectando...', 'connecting');
             updateConversacaoUI('connecting');
 
-            // Limpar correções da sessão anterior
-            clearCorrections();
+            // Limpar correções da sessão anterior (forçar reset completo)
+            clearCorrections(true);
 
             // Obter API key do backend
             if (!conversacaoState.apiKey) {
@@ -4416,8 +4416,8 @@ SPRACHE:
             source.connect(conversacaoState.workletNode);
             conversacaoState.isRecording = true;
 
-            // Iniciar verificação de silêncio
-            startSilenceDetection();
+            // Removida verificação de silêncio - deixar o aluno decidir quando parar
+            // startSilenceDetection();
 
             console.log('Captura de áudio iniciada');
 
@@ -4767,7 +4767,8 @@ SPRACHE:
         conversacaoState.ws = null;
         conversacaoState.connectionStartTime = null;
 
-        // Parar keep-alive e detecção de silêncio
+        // Parar timer, keep-alive e detecção de silêncio
+        stopTimer();
         stopKeepAlive();
         stopSilenceDetection();
 
@@ -4900,7 +4901,14 @@ VOKABELN ZUM ÜBEN: Entschuldigung, aber..., Das ist nicht in Ordnung, könnten 
 
 STARTE SO: Bring mir mein Hauptgericht (das offensichtlich kalt ist) und frage freundlich "Hier ist Ihr Wiener Schnitzel. Darf es sonst noch etwas sein?"
 
-WICHTIG: Reagiere realistisch auf Beschwerden. Wenn ich unhöflich werde, zeig dass das nicht funktioniert. Wenn ich den Konjunktiv II benutze, sei kooperativer. Gib mir am Ende Feedback zu meiner Kommunikation.`
+WICHTIG - PROAKTIVES VERHALTEN:
+- NIEMALS still bleiben und auf mich warten! Du musst die Szene lebendig halten.
+- Wenn du sagst, dass du das Essen erwärmen wirst, geh weg und komm nach 2-3 Sekunden zurück mit einer Nachricht wie: "So, ich habe das Schnitzel in die Küche gebracht. Es wird etwa 5 Minuten dauern. Möchten Sie in der Zwischenzeit etwas trinken?"
+- Simuliere die Bewegungen: "Ich gehe jetzt zur Küche..." dann nach einer Pause "...So, ich bin wieder da."
+- Mach kleine Geräusche oder beschreibe was du tust: "Moment, ich räume hier kurz ab..."
+- Halte die Konversation am Leben mit Fragen und Updates.
+
+REAKTION AUF BESCHWERDEN: Wenn ich unhöflich werde, zeig dass das nicht funktioniert. Wenn ich den Konjunktiv II benutze, sei kooperativer. Gib mir am Ende Feedback zu meiner Kommunikation.`
             };
 
             const prompt = topicPrompts[topic] || `Beginne ein lockeres Gespräch auf Deutsch über: ${topic}. Frage mich zuerst nach meiner Meinung dazu. WICHTIG: Reagiere immer auf das, was ICH sage.`;
@@ -5008,11 +5016,17 @@ WICHTIG: Reagiere realistisch auf Beschwerden. Wenn ich unhöflich werde, zeig d
     }
 
     function startTimer() {
+        // Parar timer anterior se existir
+        stopTimer();
+
         conversacaoState.totalSeconds = 0;
         updateTimerDisplay();
         conversacaoState.timerInterval = setInterval(() => {
-            conversacaoState.totalSeconds++;
-            updateTimerDisplay();
+            // Só contar se ainda conectado
+            if (conversacaoState.isConnected) {
+                conversacaoState.totalSeconds++;
+                updateTimerDisplay();
+            }
         }, 1000);
     }
 
@@ -5021,6 +5035,7 @@ WICHTIG: Reagiere realistisch auf Beschwerden. Wenn ich unhöflich werde, zeig d
             clearInterval(conversacaoState.timerInterval);
             conversacaoState.timerInterval = null;
         }
+        console.log('⏱️ Timer parado');
     }
 
     function updateTimerDisplay() {
