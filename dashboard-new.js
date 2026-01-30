@@ -3854,17 +3854,19 @@ SPRACHE:
             });
         }
 
-        // Toggle do submenu Restaurante
-        const restauranteToggle = document.getElementById('restaurante-toggle');
-        const restauranteSubmenu = document.getElementById('restaurante-submenu');
-        const restauranteArrow = document.getElementById('restaurante-arrow');
+        // Toggle dos submenus de cenários (genérico para todos os grupos)
+        document.querySelectorAll('.scenario-toggle').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const group = toggle.dataset.group;
+                const submenu = document.querySelector(`.scenario-submenu[data-group="${group}"]`);
+                const arrow = toggle.querySelector('.scenario-arrow');
 
-        if (restauranteToggle && restauranteSubmenu) {
-            restauranteToggle.addEventListener('click', () => {
-                restauranteSubmenu.classList.toggle('hidden');
-                restauranteArrow?.classList.toggle('rotate-180');
+                if (submenu) {
+                    submenu.classList.toggle('hidden');
+                    arrow?.classList.toggle('rotate-180');
+                }
             });
-        }
+        });
 
         // Dados dos cenários
         const scenarioData = {
@@ -3907,6 +3909,248 @@ SPRACHE:
                     { de: 'Das lasse ich mir nicht gefallen', pt: 'Não vou aceitar isso' }
                 ],
                 tip: 'O garçom será inicialmente defensivo. Use o Konjunktiv II (könnten, würden) para ser mais educado - isso fará ele cooperar mais! Mantenha a calma mesmo quando frustrado.'
+            },
+
+            // ===== SUPERMERCADO =====
+            'supermercado-a2': {
+                level: 'A2',
+                levelColor: 'green',
+                title: 'Compras no Supermercado',
+                subtitle: 'Peça ajuda para encontrar produtos e entenda o caixa',
+                context: 'Você está em um Supermarkt alemão pela primeira vez. Precisa comprar ingredientes para fazer um jantar para um amigo alemão. Não encontra alguns produtos e precisa pedir ajuda a um funcionário.',
+                objective: 'Perguntar onde estão produtos, comparar preços, entender promoções e instruções do caixa (Pfand/garrafas retornáveis).',
+                vocabulary: [
+                    { de: 'Wo finde ich...?', pt: 'Onde encontro...?' },
+                    { de: 'Was kostet das?', pt: 'Quanto custa isso?' },
+                    { de: 'Haben Sie auch...?', pt: 'Vocês também têm...?' },
+                    { de: 'Das ist im Angebot', pt: 'Está em promoção' },
+                    { de: 'Können Sie mir helfen?', pt: 'Você pode me ajudar?' },
+                    { de: 'Ich suche...', pt: 'Estou procurando...' },
+                    { de: 'Mit Karte bitte', pt: 'Com cartão, por favor' },
+                    { de: 'Brauchen Sie eine Tüte?', pt: 'Precisa de uma sacola?' },
+                    { de: 'Stimmt so', pt: 'Está certo assim (troco)' }
+                ],
+                tip: 'Na Alemanha, você paga pelas sacolas e deve separar garrafas retornáveis (Pfand). O funcionário vai ajudá-lo!'
+            },
+
+            // ===== MÉDICO =====
+            'medico-a2': {
+                level: 'A2',
+                levelColor: 'green',
+                title: 'No Médico',
+                subtitle: 'Descreva sintomas e entenda instruções médicas',
+                context: 'Você está resfriado/a e precisa ir ao médico (Hausarzt). Você liga para marcar uma consulta, descreve seus sintomas na recepção e ao médico, e recebe uma receita.',
+                objective: 'Marcar consulta, descrever sintomas, entender instruções do médico e perguntar sobre medicação.',
+                vocabulary: [
+                    { de: 'Ich habe Schmerzen', pt: 'Estou com dor' },
+                    { de: 'Wo tut es weh?', pt: 'Onde dói?' },
+                    { de: 'Seit wann?', pt: 'Desde quando?' },
+                    { de: 'Ich habe Fieber/Husten', pt: 'Tenho febre/tosse' },
+                    { de: 'Das Rezept bitte', pt: 'A receita, por favor' },
+                    { de: 'Dreimal täglich', pt: 'Três vezes ao dia' },
+                    { de: 'Vor/Nach dem Essen', pt: 'Antes/Depois da comida' },
+                    { de: 'Ich bin allergisch gegen...', pt: 'Sou alérgico a...' },
+                    { de: 'Wann komme ich wieder?', pt: 'Quando volto?' }
+                ],
+                tip: 'Os médicos alemães são diretos. Descreva seus sintomas claramente e não tenha vergonha de pedir para repetir!'
+            },
+
+            // ===== TRANSPORTE PÚBLICO =====
+            'transporte-a2': {
+                level: 'A2',
+                levelColor: 'green',
+                title: 'Transporte Público',
+                subtitle: 'Compre bilhetes e pergunte sobre conexões',
+                context: 'Você precisa viajar de Berlim para Munique usando transporte público. Compra bilhete, pergunta por conexões, e durante a viagem interage com outros passageiros.',
+                objective: 'Comprar bilhete, perguntar sobre horários e plataformas, pedir informações sobre conexões.',
+                vocabulary: [
+                    { de: 'Einmal nach München bitte', pt: 'Uma passagem para Munique' },
+                    { de: 'Von welchem Gleis?', pt: 'De qual plataforma?' },
+                    { de: 'Wann fährt der nächste Zug?', pt: 'Quando sai o próximo trem?' },
+                    { de: 'Ist dieser Platz frei?', pt: 'Este lugar está livre?' },
+                    { de: 'Eine Rückfahrkarte bitte', pt: 'Uma passagem de ida e volta' },
+                    { de: 'Wie lange dauert die Fahrt?', pt: 'Quanto tempo dura a viagem?' },
+                    { de: 'Der Zug hat Verspätung', pt: 'O trem está atrasado' },
+                    { de: 'Wo ist die Toilette?', pt: 'Onde fica o banheiro?' },
+                    { de: 'Wann sind wir da?', pt: 'Quando chegamos?' }
+                ],
+                tip: 'Na Alemanha, os trens são geralmente pontuais. Sempre valide seu bilhete antes de embarcar!'
+            },
+
+            // ===== FESTA/ENCONTROS SOCIAIS =====
+            'festa-a2': {
+                level: 'A2',
+                levelColor: 'green',
+                title: 'Festa de Aniversário',
+                subtitle: 'Interaja em eventos sociais e conheça pessoas',
+                context: 'Você foi convidado/a para uma Geburtstagsfeier (festa de aniversário) na casa de um colega alemão. Precisa interagir com pessoas que não conhece, trazer um presente, e participar de conversas sociais.',
+                objective: 'Cumprimentar, apresentar-se, conversar sobre interesses, oferecer/recusar comida e bebida, despedir-se.',
+                vocabulary: [
+                    { de: 'Alles Gute zum Geburtstag!', pt: 'Feliz aniversário!' },
+                    { de: 'Das ist für dich', pt: 'Isso é para você' },
+                    { de: 'Was machst du beruflich?', pt: 'O que você faz profissionalmente?' },
+                    { de: 'Woher kommst du?', pt: 'De onde você vem?' },
+                    { de: 'Noch etwas zu trinken?', pt: 'Mais algo para beber?' },
+                    { de: 'Nein danke, ich bin satt', pt: 'Não obrigado, estou satisfeito' },
+                    { de: 'Das schmeckt lecker!', pt: 'Isso está delicioso!' },
+                    { de: 'Es war schön, dich kennenzulernen', pt: 'Foi bom te conhecer' },
+                    { de: 'Bis bald!', pt: 'Até logo!' }
+                ],
+                tip: 'É comum levar um presente (vinho, flores, chocolates). Diga "Du" com pessoas da sua idade em festas informais!'
+            },
+
+            // ===== TRABALHO/ESTÁGIO =====
+            'trabalho-a2': {
+                level: 'A2',
+                levelColor: 'green',
+                title: 'Primeiro Dia no Estágio',
+                subtitle: 'Integre-se na equipe e entenda suas tarefas',
+                context: 'Primeira semana em um estágio (Praktikum) em uma empresa alemã. Você precisa se integrar, entender as tarefas, e comunicar-se com colegas.',
+                objective: 'Apresentar-se na equipe, perguntar sobre tarefas, pedir ajuda, participar da pausa para café.',
+                vocabulary: [
+                    { de: 'Ich bin neu hier', pt: 'Sou novo aqui' },
+                    { de: 'Was sind meine Aufgaben?', pt: 'Quais são minhas tarefas?' },
+                    { de: 'Können Sie das wiederholen?', pt: 'Pode repetir?' },
+                    { de: 'Ich verstehe nicht', pt: 'Não entendo' },
+                    { de: 'Wann ist Pause?', pt: 'Quando é a pausa?' },
+                    { de: 'Darf ich fragen...?', pt: 'Posso perguntar...?' },
+                    { de: 'Wo ist der Drucker?', pt: 'Onde fica a impressora?' },
+                    { de: 'Ich brauche Hilfe', pt: 'Preciso de ajuda' },
+                    { de: 'Um wie viel Uhr fängt es an?', pt: 'A que horas começa?' }
+                ],
+                tip: 'Alemães valorizam pontualidade e perguntas diretas. Não tenha medo de pedir ajuda - isso mostra interesse!'
+            },
+
+            // ===== APARTAMENTO (B1) =====
+            'apartamento-b1': {
+                level: 'B1',
+                levelColor: 'yellow',
+                title: 'Procurando Apartamento',
+                subtitle: 'Visite apartamentos e negocie condições',
+                context: 'Você precisa mudar-se em Berlim e está visitando apartamentos para alugar. Conversa com imobiliárias (Makler) e proprietários, compara opções, e discute condições.',
+                objective: 'Marcar visita, fazer perguntas sobre o apartamento, discutir preço e condições, negociar.',
+                vocabulary: [
+                    { de: 'Ich interessiere mich für die Wohnung', pt: 'Tenho interesse no apartamento' },
+                    { de: 'Was sind die Nebenkosten?', pt: 'Quais são os custos adicionais?' },
+                    { de: 'Ist die Küche eingebaut?', pt: 'A cozinha está equipada?' },
+                    { de: 'Wie hoch ist die Kaution?', pt: 'Qual é a caução?' },
+                    { de: 'Wann kann ich einziehen?', pt: 'Quando posso me mudar?' },
+                    { de: 'Wie sind die Nachbarn?', pt: 'Como são os vizinhos?' },
+                    { de: 'Gibt es eine Mindestmietdauer?', pt: 'Há prazo mínimo de aluguel?' },
+                    { de: 'Können wir über den Preis sprechen?', pt: 'Podemos falar sobre o preço?' },
+                    { de: 'Ich möchte den Mietvertrag durchlesen', pt: 'Quero ler o contrato' }
+                ],
+                tip: 'O mercado de apartamentos na Alemanha é competitivo. Prepare documentos (Schufa, comprovante de renda) com antecedência!'
+            },
+
+            // ===== ACADEMIA (B1) =====
+            'academia-b1': {
+                level: 'B1',
+                levelColor: 'yellow',
+                title: 'Na Academia',
+                subtitle: 'Inscreva-se e interaja com treinadores',
+                context: 'Você se inscreve em uma academia (Fitnessstudio) e também participa de um curso de esportes em grupo. Precisa interagir com treinadores e outros participantes.',
+                objective: 'Fazer matrícula, perguntar sobre equipamentos, pedir instruções, conversar com outros frequentadores.',
+                vocabulary: [
+                    { de: 'Ich möchte mich anmelden', pt: 'Quero me inscrever' },
+                    { de: 'Gibt es eine Probestunde?', pt: 'Há aula experimental?' },
+                    { de: 'Wie benutze ich dieses Gerät?', pt: 'Como uso este equipamento?' },
+                    { de: 'Kannst du mir zeigen, wie...?', pt: 'Pode me mostrar como...?' },
+                    { de: 'Ich habe mich verletzt', pt: 'Me machuquei' },
+                    { de: 'Das war anstrengend!', pt: 'Foi cansativo!' },
+                    { de: 'Ich spüre die Muskeln', pt: 'Sinto os músculos' },
+                    { de: 'Wann ist der nächste Kurs?', pt: 'Quando é a próxima aula?' },
+                    { de: 'Ich möchte meine Technik verbessern', pt: 'Quero melhorar minha técnica' }
+                ],
+                tip: 'Muitas academias alemãs exigem contrato de 12-24 meses. Pergunte sobre a Probezeit (período de teste)!'
+            },
+
+            // ===== VIAGENS/FÉRIAS (B1) =====
+            'viagem-b1': {
+                level: 'B1',
+                levelColor: 'yellow',
+                title: 'Planejando Férias',
+                subtitle: 'Discuta destinos e lide com imprevistos',
+                context: 'Você está planejando férias com amigos alemães. Discute destinos, orçamento, e faz reservas. Durante a viagem, lida com situações inesperadas.',
+                objective: 'Planejar itinerário, fazer reservas, reportar problemas no hotel, lidar com emergências.',
+                vocabulary: [
+                    { de: 'Was sollen wir unternehmen?', pt: 'O que devemos fazer?' },
+                    { de: 'Lass uns das besprechen', pt: 'Vamos discutir isso' },
+                    { de: 'Ich habe ein Problem mit...', pt: 'Tenho um problema com...' },
+                    { de: 'Könnten Sie das reparieren?', pt: 'Poderia consertar isso?' },
+                    { de: 'Wie kommt man am besten zu...?', pt: 'Qual a melhor forma de chegar a...?' },
+                    { de: 'Das hat mich total begeistert', pt: 'Isso me encantou totalmente' },
+                    { de: 'Leider war ich enttäuscht', pt: 'Infelizmente fiquei decepcionado' },
+                    { de: 'Ich habe meinen Pass verloren', pt: 'Perdi meu passaporte' },
+                    { de: 'Das müssen wir unbedingt machen!', pt: 'Temos que fazer isso!' }
+                ],
+                tip: 'Alemães gostam de planejar com antecedência. Traga sugestões concretas para a discussão!'
+            },
+
+            // ===== ESCOLA DE IDIOMAS (B1) =====
+            'escola-b1': {
+                level: 'B1',
+                levelColor: 'yellow',
+                title: 'Curso de Alemão',
+                subtitle: 'Participe de aulas e trabalhe em grupo',
+                context: 'Você está em um curso intensivo de alemão (Sprachkurs). Participa ativamente das aulas, faz trabalhos em grupo, e socializa com colegas internacionais.',
+                objective: 'Participar de discussões, fazer apresentações, trabalhar em grupo, discutir dificuldades com professor.',
+                vocabulary: [
+                    { de: 'Kannst du das erklären?', pt: 'Pode explicar isso?' },
+                    { de: 'Ich habe eine Frage zu...', pt: 'Tenho uma pergunta sobre...' },
+                    { de: 'Meiner Meinung nach...', pt: 'Na minha opinião...' },
+                    { de: 'Das verstehe ich anders', pt: 'Entendo isso diferente' },
+                    { de: 'Ich brauche mehr Zeit', pt: 'Preciso de mais tempo' },
+                    { de: 'Das war eine tolle Idee!', pt: 'Foi uma ótima ideia!' },
+                    { de: 'Lass uns das aufteilen', pt: 'Vamos dividir isso' },
+                    { de: 'Kann ich das Wort nachschlagen?', pt: 'Posso procurar a palavra?' },
+                    { de: 'Ich möchte meine Aussprache verbessern', pt: 'Quero melhorar minha pronúncia' }
+                ],
+                tip: 'Participe ativamente! Alemães valorizam quem expressa opiniões. Use "Meiner Meinung nach" para começar.'
+            },
+
+            // ===== PROBLEMAS TECNOLÓGICOS (B1) =====
+            'tecnologia-b1': {
+                level: 'B1',
+                levelColor: 'yellow',
+                title: 'Problemas Tecnológicos',
+                subtitle: 'Descreva problemas técnicos e busque soluções',
+                context: 'Seu laptop quebrou e você precisa de assistência técnica. Também precisa configurar serviços de internet e resolver problemas com telefone celular.',
+                objective: 'Descrever problemas técnicos, entender explicações, discutir orçamentos e prazos, reportar problemas de conexão.',
+                vocabulary: [
+                    { de: 'Mein Gerät funktioniert nicht', pt: 'Meu aparelho não funciona' },
+                    { de: 'Es geht nicht mehr an', pt: 'Não liga mais' },
+                    { de: 'Können Sie das reparieren?', pt: 'Pode consertar?' },
+                    { de: 'Wie lange dauert es?', pt: 'Quanto tempo demora?' },
+                    { de: 'Was kostet die Reparatur?', pt: 'Quanto custa o conserto?' },
+                    { de: 'Ich habe das schon versucht', pt: 'Já tentei isso' },
+                    { de: 'Die Verbindung bricht ab', pt: 'A conexão cai' },
+                    { de: 'Gibt es eine Garantie?', pt: 'Tem garantia?' },
+                    { de: 'Ich möchte eine Rückerstattung', pt: 'Quero um reembolso' }
+                ],
+                tip: 'Descreva o problema passo a passo. Os técnicos alemães apreciam detalhes precisos!'
+            },
+
+            // ===== SAÚDE E BEM-ESTAR (B1) =====
+            'saude-b1': {
+                level: 'B1',
+                levelColor: 'yellow',
+                title: 'Saúde e Bem-Estar',
+                subtitle: 'Discuta hábitos saudáveis e saúde mental',
+                context: 'Você está começando a praticar hábitos mais saudáveis na Alemanha. Conversa com nutricionista, participa de meditação em grupo, e discute saúde mental com amigos.',
+                objective: 'Marcar consulta especializada, descrever histórico de saúde, discutir saúde mental, participar de atividades de bem-estar.',
+                vocabulary: [
+                    { de: 'Ich möchte gesünder leben', pt: 'Quero viver mais saudável' },
+                    { de: 'Was können Sie mir empfehlen?', pt: 'O que pode me recomendar?' },
+                    { de: 'Ich fühle mich gestresst', pt: 'Estou me sentindo estressado' },
+                    { de: 'Seit wann haben Sie diese Symptome?', pt: 'Desde quando tem esses sintomas?' },
+                    { de: 'Ich möchte meine Ernährung umstellen', pt: 'Quero mudar minha alimentação' },
+                    { de: 'Wie kann ich vorbeugen?', pt: 'Como posso prevenir?' },
+                    { de: 'Das hilft mir zu entspannen', pt: 'Isso me ajuda a relaxar' },
+                    { de: 'Ich schlafe schlecht', pt: 'Durmo mal' },
+                    { de: 'Wann soll ich wieder kommen?', pt: 'Quando devo voltar?' }
+                ],
+                tip: 'Na Alemanha, saúde mental é levada a sério. Krankenkassen (seguros de saúde) cobrem terapia!'
             }
         };
 
@@ -5125,7 +5369,248 @@ LERNZIELE:
 
 GESPRÄCHSENDE (nach ca. 3-5 Minuten oder wenn alle Ziele erreicht wurden):
 Wenn das Gespräch einen natürlichen Abschluss erreicht hat (Rechnung bezahlt, alle Probleme gelöst), beende das Gespräch höflich als Kellner:
-"Vielen Dank für Ihren Besuch und einen schönen Abend noch! Alles Gute zum Geburtstag!"`
+"Vielen Dank für Ihren Besuch und einen schönen Abend noch! Alles Gute zum Geburtstag!"`,
+
+                // ===== SUPERMERCADO A2 =====
+                'supermercado-a2': `Du bist ein freundlicher Mitarbeiter in einem deutschen Supermarkt. Der Kunde ist zum ersten Mal in einem deutschen Supermarkt und braucht Hilfe.
+
+KONTEXT: Der Kunde muss Zutaten für ein Abendessen kaufen und findet einige Produkte nicht.
+
+DEINE ROLLE:
+- Sei hilfsbereit und geduldig
+- Erkläre, wo die Produkte sind
+- Informiere über Angebote
+- Am Ende: Erkläre das Pfand-System für Flaschen
+
+STARTE SO: Begrüße den Kunden freundlich: "Guten Tag! Kann ich Ihnen helfen? Sie sehen etwas verloren aus."
+
+VOKABELN ZUM ÜBEN: Wo finde ich...?, Was kostet das?, Haben Sie auch...?, Das ist im Angebot, Mit Karte bitte, Brauchen Sie eine Tüte?
+
+KRITISCH - NIEMALS LÄNGER ALS 3 SEKUNDEN STILL SEIN:
+- Frage nach: "Suchen Sie noch etwas anderes?"
+- Biete Hilfe an: "Die Milchprodukte sind in Gang 3"
+- Erzähle über Angebote: "Heute haben wir Äpfel im Angebot!"
+
+GESPRÄCHSENDE: Wenn der Kunde alles gefunden hat, leite ihn zur Kasse: "Die Kasse ist dort vorne. Einen schönen Tag noch!"`,
+
+                // ===== MÉDICO A2 =====
+                'medico-a2': `Du bist ein deutscher Hausarzt (Allgemeinmediziner). Der Patient hat eine Erkältung und kommt zur Sprechstunde.
+
+KONTEXT: Der Patient ruft an, um einen Termin zu machen, dann kommt er zur Praxis.
+
+DEINE ROLLE:
+- Sei professionell aber freundlich
+- Stelle einfache Fragen zu Symptomen
+- Gib klare Anweisungen für Medikamente
+- Schreibe eine Krankschreibung wenn nötig
+
+STARTE SO: Als Empfangsdame: "Praxis Dr. Müller, guten Tag. Was kann ich für Sie tun?"
+
+VOKABELN ZUM ÜBEN: Ich habe Schmerzen, Wo tut es weh?, Seit wann?, Ich habe Fieber/Husten, Das Rezept bitte, Dreimal täglich
+
+KRITISCH - NIEMALS LÄNGER ALS 3 SEKUNDEN STILL SEIN:
+- Stelle Folgefragen: "Haben Sie auch Kopfschmerzen?"
+- Erkläre: "Ich verschreibe Ihnen ein Medikament"
+- Gib Ratschläge: "Sie sollten viel trinken und sich ausruhen"
+
+GESPRÄCHSENDE: "Gute Besserung! Kommen Sie wieder, wenn es nicht besser wird."`,
+
+                // ===== TRANSPORTE A2 =====
+                'transporte-a2': `Du bist ein Mitarbeiter am Fahrkartenschalter im Berliner Hauptbahnhof. Der Kunde möchte nach München fahren.
+
+KONTEXT: Der Kunde ist Tourist und kennt das deutsche Bahnsystem nicht gut.
+
+DEINE ROLLE:
+- Sei hilfsbereit und erkläre das System
+- Biete verschiedene Optionen an (ICE, IC, Sparpreis)
+- Erkläre, von welchem Gleis der Zug fährt
+
+STARTE SO: "Guten Tag! Wohin möchten Sie fahren?"
+
+VOKABELN ZUM ÜBEN: Einmal nach München bitte, Von welchem Gleis?, Wann fährt der nächste Zug?, Eine Rückfahrkarte bitte, Wie lange dauert die Fahrt?
+
+KRITISCH - NIEMALS LÄNGER ALS 3 SEKUNDEN STILL SEIN:
+- Biete Optionen an: "Es gibt einen ICE um 14:30 oder einen IC um 15:00"
+- Erkläre: "Der ICE ist schneller, aber teurer"
+- Frage nach: "Möchten Sie einen Sitzplatz reservieren?"
+
+GESPRÄCHSENDE: "Ihr Zug fährt von Gleis 8. Gute Reise!"`,
+
+                // ===== FESTA A2 =====
+                'festa-a2': `Du bist der Gastgeber einer Geburtstagsfeier. Der Gast ist ein ausländischer Kollege, der zum ersten Mal auf einer deutschen Party ist.
+
+KONTEXT: Es ist deine Geburtstagsfeier zu Hause. Etwa 15 Gäste sind da.
+
+DEINE ROLLE:
+- Sei herzlich und einladend
+- Stelle den Gast anderen vor
+- Biete Essen und Trinken an
+- Führe Small Talk
+
+STARTE SO: Öffne die Tür und begrüße den Gast: "Hallo! Schön, dass du gekommen bist! Komm rein!"
+
+VOKABELN ZUM ÜBEN: Alles Gute zum Geburtstag!, Das ist für dich, Was machst du beruflich?, Noch etwas zu trinken?, Das schmeckt lecker!
+
+KRITISCH - NIEMALS LÄNGER ALS 3 SEKUNDEN STILL SEIN:
+- Stelle Gäste vor: "Das ist mein Freund Thomas, er arbeitet auch bei der Firma"
+- Biete an: "Möchtest du ein Stück Kuchen?"
+- Führe Gespräch: "Und wie gefällt es dir in Deutschland?"
+
+GESPRÄCHSENDE: "Es war so schön, dass du da warst! Wir sehen uns im Büro. Tschüss!"`,
+
+                // ===== TRABALHO/ESTÁGIO A2 =====
+                'trabalho-a2': `Du bist ein deutscher Kollege, der einen neuen Praktikanten am ersten Tag einarbeitet.
+
+KONTEXT: Es ist der erste Tag des Praktikanten in einer deutschen Firma in Berlin.
+
+DEINE ROLLE:
+- Sei freundlich und hilfsbereit
+- Zeige das Büro und stelle Kollegen vor
+- Erkläre einfache Aufgaben
+- Lade zur Kaffeepause ein
+
+STARTE SO: "Guten Morgen! Du bist bestimmt der neue Praktikant. Ich bin Thomas, dein Betreuer. Willkommen!"
+
+VOKABELN ZUM ÜBEN: Ich bin neu hier, Was sind meine Aufgaben?, Können Sie das wiederholen?, Wann ist Pause?, Wo ist der Drucker?
+
+KRITISCH - NIEMALS LÄNGER ALS 3 SEKUNDEN STILL SEIN:
+- Zeige Dinge: "Hier ist dein Schreibtisch"
+- Erkläre: "Die Kaffeepause ist um 10 Uhr"
+- Frage: "Hast du noch Fragen?"
+
+GESPRÄCHSENDE: "Super, dann kannst du jetzt anfangen. Bei Fragen komm einfach zu mir!"`,
+
+                // ===== APARTAMENTO B1 =====
+                'apartamento-b1': `Du bist ein Vermieter/Makler, der eine Wohnung in Berlin zeigt. Der Interessent sucht dringend eine Wohnung.
+
+KONTEXT: Es ist eine Besichtigung einer 2-Zimmer-Wohnung in Berlin-Kreuzberg. 650€ kalt, Nebenkosten extra.
+
+DEINE ROLLE:
+- Sei geschäftsmäßig aber freundlich
+- Beantworte Fragen zur Wohnung
+- Erkläre die Konditionen (Kaution, Nebenkosten, Mindestmietdauer)
+- Erwähne auch kleine Nachteile ehrlich
+
+STARTE SO: "Guten Tag! Sie interessieren sich für die Wohnung? Kommen Sie rein, ich zeige Ihnen alles."
+
+VOKABELN ZUM ÜBEN: Ich interessiere mich für die Wohnung, Was sind die Nebenkosten?, Wie hoch ist die Kaution?, Wann kann ich einziehen?
+
+KRITISCH - NIEMALS LÄNGER ALS 3 SEKUNDEN STILL SEIN:
+- Zeige Räume: "Hier ist das Wohnzimmer, sehr hell"
+- Erkläre: "Die Nebenkosten sind etwa 150 Euro"
+- Frage: "Haben Sie noch Fragen zur Wohnung?"
+
+GESPRÄCHSENDE: "Ich habe noch andere Interessenten. Melden Sie sich bis Freitag, wenn Sie die Wohnung nehmen möchten."`,
+
+                // ===== ACADEMIA B1 =====
+                'academia-b1': `Du bist ein Trainer in einem deutschen Fitnessstudio. Ein neues Mitglied möchte sich anmelden und braucht eine Einführung.
+
+KONTEXT: Das Fitnessstudio hat verschiedene Kurse und Geräte. Es gibt 12-Monats-Verträge.
+
+DEINE ROLLE:
+- Sei motivierend und hilfsbereit
+- Erkläre die Anmeldung und Preise
+- Zeige die Geräte und erkläre sie
+- Biete eine Probestunde an
+
+STARTE SO: "Hallo! Willkommen im FitLife! Möchten Sie sich anmelden oder erst mal schauen?"
+
+VOKABELN ZUM ÜBEN: Ich möchte mich anmelden, Gibt es eine Probestunde?, Wie benutze ich dieses Gerät?, Wann ist der nächste Kurs?
+
+KRITISCH - NIEMALS LÄNGER ALS 3 SEKUNDEN STILL SEIN:
+- Zeige Geräte: "Das hier ist das Laufband"
+- Erkläre: "Wir haben auch Yoga-Kurse am Dienstag"
+- Frage: "Welche Sportarten magst du?"
+
+GESPRÄCHSENDE: "Super, dann bis zum Probetraining am Donnerstag! Vergiss nicht, Sportschuhe mitzubringen."`,
+
+                // ===== VIAGEM B1 =====
+                'viagem-b1': `Du bist ein deutscher Freund, der mit dem Gast zusammen Urlaub in Österreich plant. Ihr müsst euch auf ein Ziel und Budget einigen.
+
+KONTEXT: Ihr plant eine Woche Urlaub in Österreich. Budget etwa 1000€ pro Person.
+
+DEINE ROLLE:
+- Sei enthusiastisch aber auch praktisch
+- Mache Vorschläge und höre auf seine Ideen
+- Diskutiere Budget und Aktivitäten
+- Simuliere auch ein Problem im Hotel
+
+STARTE SO: "Also, ich freue mich schon auf unseren Urlaub! Hast du schon eine Idee, wohin wir fahren sollen?"
+
+VOKABELN ZUM ÜBEN: Was sollen wir unternehmen?, Lass uns das besprechen, Ich habe ein Problem mit..., Das müssen wir unbedingt machen!
+
+KRITISCH - NIEMALS LÄNGER ALS 3 SEKUNDEN STILL SEIN:
+- Mache Vorschläge: "Wie wäre es mit Salzburg? Da gibt es viel zu sehen"
+- Diskutiere: "Das Hotel kostet 80 Euro pro Nacht, ist das okay?"
+- Frage: "Was möchtest du dort machen?"
+
+GESPRÄCHSENDE: "Super, dann buchen wir das so! Ich freue mich schon. Bis nächste Woche!"`,
+
+                // ===== ESCOLA DE IDIOMAS B1 =====
+                'escola-b1': `Du bist ein Deutschlehrer in einem Sprachkurs. Der Schüler macht einen Intensivkurs und du führst eine Diskussion in der Klasse.
+
+KONTEXT: Es ist eine Diskussion über das Thema "Leben in Deutschland". Andere Schüler sind auch da.
+
+DEINE ROLLE:
+- Sei ermutigend aber korrigiere auch Fehler
+- Stelle offene Fragen
+- Bitte um Meinungen und Begründungen
+- Erkläre Grammatik wenn nötig
+
+STARTE SO: "Guten Morgen! Heute sprechen wir über das Leben in Deutschland. Was sind eure Erfahrungen bisher?"
+
+VOKABELN ZUM ÜBEN: Kannst du das erklären?, Meiner Meinung nach..., Das verstehe ich anders, Ich habe eine Frage zu...
+
+KRITISCH - NIEMALS LÄNGER ALS 3 SEKUNDEN STILL SEIN:
+- Stelle Fragen: "Was meinst du dazu?"
+- Bitte um Beispiele: "Kannst du ein Beispiel geben?"
+- Ermutige: "Das war ein guter Punkt!"
+
+GESPRÄCHSENDE: "Sehr gut diskutiert heute! Für morgen lest bitte Seite 45 im Buch. Bis dann!"`,
+
+                // ===== TECNOLOGIA B1 =====
+                'tecnologia-b1': `Du bist ein Techniker in einem Computer-Reparaturgeschäft. Der Kunde hat ein Problem mit seinem Laptop.
+
+KONTEXT: Der Kunde bringt einen Laptop, der nicht mehr startet.
+
+DEINE ROLLE:
+- Sei professionell und verständnisvoll
+- Stelle diagnostische Fragen
+- Erkläre mögliche Probleme und Lösungen
+- Gib einen Kostenvoranschlag
+
+STARTE SO: "Guten Tag! Was kann ich für Sie tun? Sie haben ein Problem mit Ihrem Laptop?"
+
+VOKABELN ZUM ÜBEN: Mein Gerät funktioniert nicht, Es geht nicht mehr an, Was kostet die Reparatur?, Wie lange dauert es?, Gibt es eine Garantie?
+
+KRITISCH - NIEMALS LÄNGER ALS 3 SEKUNDEN STILL SEIN:
+- Stelle Fragen: "Seit wann ist das Problem?"
+- Erkläre: "Das könnte die Festplatte oder der Akku sein"
+- Biete Optionen: "Ich kann es für 80 Euro reparieren"
+
+GESPRÄCHSENDE: "Okay, ich rufe Sie an, wenn der Laptop fertig ist. Das dauert etwa 3 Tage."`,
+
+                // ===== SAÚDE/BEM-ESTAR B1 =====
+                'saude-b1': `Du bist ein Ernährungsberater/Wellness-Coach. Der Patient möchte gesünder leben und braucht Beratung.
+
+KONTEXT: Der Patient fühlt sich gestresst und müde und möchte seinen Lebensstil ändern.
+
+DEINE ROLLE:
+- Sei einfühlsam und motivierend
+- Frage nach aktuellen Gewohnheiten
+- Gib praktische Tipps
+- Bespreche auch mentale Gesundheit
+
+STARTE SO: "Guten Tag! Schön, dass Sie da sind. Was führt Sie zu mir?"
+
+VOKABELN ZUM ÜBEN: Ich möchte gesünder leben, Ich fühle mich gestresst, Ich schlafe schlecht, Was können Sie mir empfehlen?
+
+KRITISCH - NIEMALS LÄNGER ALS 3 SEKUNDEN STILL SEIN:
+- Frage nach: "Wie sieht Ihr typischer Tag aus?"
+- Gib Tipps: "Versuchen Sie, mehr Wasser zu trinken"
+- Ermutige: "Das sind gute erste Schritte!"
+
+GESPRÄCHSENDE: "Super, wir haben einen guten Plan. Ich sehe Sie in zwei Wochen wieder. Viel Erfolg!"`
             };
 
             const prompt = topicPrompts[topic] || `Beginne ein lockeres Gespräch auf Deutsch über: ${topic}. Frage mich zuerst nach meiner Meinung dazu. WICHTIG: Reagiere immer auf das, was ICH sage.`;

@@ -2869,67 +2869,145 @@
                                 </svg>
                                 Temas para Praticar
                             </h4>
-                            <div class="space-y-2">
+                            <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+                                <!-- Tópicos livres -->
                                 <button class="conv-topic-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3">
                                     <span class="text-xl">👋</span>
                                     <span>Apresentação</span>
                                 </button>
-                                <button class="conv-topic-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3">
-                                    <span class="text-xl">✈️</span>
-                                    <span>Viagens</span>
-                                </button>
 
-                                <!-- Restaurante com sub-cenários -->
-                                <div class="restaurante-scenarios">
-                                    <button id="restaurante-toggle" class="w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center justify-between">
+                                <!-- RESTAURANTE -->
+                                <div class="scenario-group">
+                                    <button class="scenario-toggle w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center justify-between" data-group="restaurante">
                                         <div class="flex items-center gap-3">
                                             <span class="text-xl">🍽️</span>
                                             <span>Restaurante</span>
                                         </div>
-                                        <svg id="restaurante-arrow" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="scenario-arrow w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                         </svg>
                                     </button>
-                                    <div id="restaurante-submenu" class="hidden ml-4 mt-1 space-y-1 border-l-2 border-cyan-500/30 pl-3">
+                                    <div class="scenario-submenu hidden ml-4 mt-1 space-y-1 border-l-2 border-cyan-500/30 pl-3" data-group="restaurante">
                                         <button class="conv-scenario-btn w-full px-3 py-2 bg-slate-800/50 hover:bg-cyan-600/30 rounded-lg text-left transition-colors" data-scenario="restaurante-a2">
                                             <div class="flex items-center gap-2">
                                                 <span class="text-xs font-bold px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded">A2</span>
                                                 <span class="text-sm text-slate-300">Almoço com Colegas</span>
                                             </div>
-                                            <p class="text-xs text-slate-500 mt-1">Pedir comida, perguntas simples</p>
                                         </button>
                                         <button class="conv-scenario-btn w-full px-3 py-2 bg-slate-800/50 hover:bg-cyan-600/30 rounded-lg text-left transition-colors" data-scenario="restaurante-b1">
                                             <div class="flex items-center gap-2">
                                                 <span class="text-xs font-bold px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded">B1</span>
                                                 <span class="text-sm text-slate-300">Celebração com Problemas</span>
                                             </div>
-                                            <p class="text-xs text-slate-500 mt-1">Reclamações, negociação</p>
                                         </button>
                                     </div>
                                 </div>
 
-                                <button class="conv-topic-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3">
-                                    <span class="text-xl">🛒</span>
-                                    <span>Fazer Compras</span>
-                                </button>
-                                <button class="conv-topic-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3">
-                                    <span class="text-xl">🏠</span>
-                                    <span>Moradia</span>
-                                </button>
-                                <button class="conv-topic-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3">
-                                    <span class="text-xl">💼</span>
-                                    <span>Trabalho</span>
-                                </button>
-                                <button class="conv-topic-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3">
-                                    <span class="text-xl">🎬</span>
-                                    <span>Hobbies</span>
-                                </button>
-                                <button class="conv-topic-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3">
-                                    <span class="text-xl">📅</span>
-                                    <span>Rotina Diária</span>
-                                </button>
+                                <!-- SUPERMERCADO -->
+                                <div class="scenario-group">
+                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="supermercado-a2">
+                                        <span class="text-xl">🛒</span>
+                                        <span>Supermercado</span>
+                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded ml-auto">A2</span>
+                                    </button>
+                                </div>
+
+                                <!-- MÉDICO -->
+                                <div class="scenario-group">
+                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="medico-a2">
+                                        <span class="text-xl">🏥</span>
+                                        <span>No Médico</span>
+                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded ml-auto">A2</span>
+                                    </button>
+                                </div>
+
+                                <!-- TRANSPORTE -->
+                                <div class="scenario-group">
+                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="transporte-a2">
+                                        <span class="text-xl">🚂</span>
+                                        <span>Transporte Público</span>
+                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded ml-auto">A2</span>
+                                    </button>
+                                </div>
+
+                                <!-- FESTA -->
+                                <div class="scenario-group">
+                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="festa-a2">
+                                        <span class="text-xl">🎉</span>
+                                        <span>Festa de Aniversário</span>
+                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded ml-auto">A2</span>
+                                    </button>
+                                </div>
+
+                                <!-- TRABALHO -->
+                                <div class="scenario-group">
+                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="trabalho-a2">
+                                        <span class="text-xl">💼</span>
+                                        <span>Estágio/Trabalho</span>
+                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded ml-auto">A2</span>
+                                    </button>
+                                </div>
+
+                                <!-- Separador B1 -->
+                                <div class="border-t border-slate-700 my-3 pt-2">
+                                    <p class="text-xs text-yellow-400 font-semibold mb-2">Nível B1</p>
+                                </div>
+
+                                <!-- APARTAMENTO B1 -->
+                                <div class="scenario-group">
+                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="apartamento-b1">
+                                        <span class="text-xl">🏠</span>
+                                        <span>Procurar Apartamento</span>
+                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded ml-auto">B1</span>
+                                    </button>
+                                </div>
+
+                                <!-- ACADEMIA B1 -->
+                                <div class="scenario-group">
+                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="academia-b1">
+                                        <span class="text-xl">🏋️</span>
+                                        <span>Na Academia</span>
+                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded ml-auto">B1</span>
+                                    </button>
+                                </div>
+
+                                <!-- VIAGEM B1 -->
+                                <div class="scenario-group">
+                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="viagem-b1">
+                                        <span class="text-xl">✈️</span>
+                                        <span>Planejando Férias</span>
+                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded ml-auto">B1</span>
+                                    </button>
+                                </div>
+
+                                <!-- ESCOLA B1 -->
+                                <div class="scenario-group">
+                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="escola-b1">
+                                        <span class="text-xl">📚</span>
+                                        <span>Curso de Alemão</span>
+                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded ml-auto">B1</span>
+                                    </button>
+                                </div>
+
+                                <!-- TECNOLOGIA B1 -->
+                                <div class="scenario-group">
+                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="tecnologia-b1">
+                                        <span class="text-xl">💻</span>
+                                        <span>Problemas Tecnológicos</span>
+                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded ml-auto">B1</span>
+                                    </button>
+                                </div>
+
+                                <!-- SAÚDE B1 -->
+                                <div class="scenario-group">
+                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="saude-b1">
+                                        <span class="text-xl">🧘</span>
+                                        <span>Saúde e Bem-Estar</span>
+                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded ml-auto">B1</span>
+                                    </button>
+                                </div>
                             </div>
-                            <p class="mt-4 text-xs text-slate-500 text-center">Clique em um tema para ver o roteiro</p>
+                            <p class="mt-4 text-xs text-slate-500 text-center">Clique em um cenário para ver detalhes</p>
                         </div>
                     </div>
                 </div>
