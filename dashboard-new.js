@@ -3847,10 +3847,29 @@ SPRACHE:
             });
         }
 
+        // Toggle do submenu Restaurante
+        const restauranteToggle = document.getElementById('restaurante-toggle');
+        const restauranteSubmenu = document.getElementById('restaurante-submenu');
+        const restauranteArrow = document.getElementById('restaurante-arrow');
+
+        if (restauranteToggle && restauranteSubmenu) {
+            restauranteToggle.addEventListener('click', () => {
+                restauranteSubmenu.classList.toggle('hidden');
+                restauranteArrow?.classList.toggle('rotate-180');
+            });
+        }
+
         // Botões de tópicos
         const topicBtns = document.querySelectorAll('.conv-topic-btn');
         topicBtns.forEach(btn => {
             btn.addEventListener('click', () => {
+                // Verificar se tem um cenário específico (data-scenario)
+                const scenario = btn.dataset.scenario;
+                if (scenario) {
+                    startConversationWithTopic(scenario);
+                    return;
+                }
+
                 // Pegar o texto do segundo span (nome do tema, sem emoji)
                 const textSpan = btn.querySelectorAll('span')[1];
                 const topic = textSpan ? textSpan.textContent.trim() : btn.textContent.trim();
@@ -4728,7 +4747,40 @@ SPRACHE:
                 'Trabalho': `Beginne ein lockeres Gespräch auf Deutsch über Arbeit. Frage mich, was ICH beruflich mache. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort und zeige echtes Interesse.`,
                 'Hobbies': `Beginne ein lockeres Gespräch auf Deutsch über Hobbys. Frage mich, was ICH in meiner Freizeit gerne mache. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort.`,
                 'Fazer Compras': `Beginne ein lockeres Gespräch auf Deutsch über Einkaufen. Frage mich, wo ICH gerne einkaufe. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort und stelle Folgefragen dazu.`,
-                'Rotina Diária': `Beginne ein lockeres Gespräch auf Deutsch über Tagesroutine. Frage mich, wie MEIN typischer Tag aussieht. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort und zeige echtes Interesse.`
+                'Rotina Diária': `Beginne ein lockeres Gespräch auf Deutsch über Tagesroutine. Frage mich, wie MEIN typischer Tag aussieht. WICHTIG: Wenn ich antworte, reagiere auf MEINE Antwort und zeige echtes Interesse.`,
+
+                // ===== RESTAURANTE - CENÁRIO A2: Almoço com Colegas =====
+                'restaurante-a2': `Du bist Anna, eine deutsche Kollegin. Wir sind in Berlin in einem traditionellen Gasthaus zum Mittagessen.
+
+KONTEXT: Ich bin ein Besucher aus dem Ausland in der Berliner Firmenzentrale. Du und zwei andere Kollegen (Markus und Sofia) haben mich zum Mittagessen eingeladen.
+
+DEINE ROLLE:
+- Sei freundlich und geduldig mit meinem Deutsch (A2 Niveau)
+- Stelle einfache, direkte Fragen
+- Gib mir Zeit zu antworten
+- Korrigiere sanft häufige A2-Fehler (Artikel, Wortstellung)
+- Hilf mir, diese Vokabeln zu üben: die Speisekarte, Ich hätte gern..., Was empfehlen Sie?, das Tagesgericht, Zusammen oder getrennt?, Stimmt so
+
+STARTE SO: Begrüße mich herzlich als Kollegin Anna und frage, ob ich schon Hunger habe. Dann zeig mir die Speisekarte und frage, was ich gerne essen möchte.
+
+WICHTIG: Sprich langsam und deutlich. Verwende einfache Sätze. Wenn ich Fehler mache, korrigiere sie freundlich und erkläre kurz warum.`,
+
+                // ===== RESTAURANTE - CENÁRIO B1: Celebração com Problemas =====
+                'restaurante-b1': `Du bist ein Kellner in einem gehobenen Restaurant in München.
+
+KONTEXT: Ich feiere meinen Geburtstag mit Freunden. Es gibt Probleme: mein Essen ist kalt, der Wein ist falsch, und ich muss höflich aber bestimmt Lösungen aushandeln.
+
+DEINE ROLLE ALS KELLNER:
+- Sei anfangs etwas defensiv bei Beschwerden
+- Werde dann kooperativer, wenn ich höflich aber bestimmt bleibe
+- Teste meine Fähigkeit, Beschwerden angemessen zu eskalieren
+- Achte auf Konjunktiv II bei höflichen Bitten
+
+VOKABELN ZUM ÜBEN: Entschuldigung, aber..., Das ist nicht in Ordnung, könnten Sie bitte..., etwas reklamieren, eine Beschwerde vorbringen, eine Entschädigung, die Rechnung überprüfen
+
+STARTE SO: Bring mir mein Hauptgericht (das offensichtlich kalt ist) und frage freundlich "Hier ist Ihr Wiener Schnitzel. Darf es sonst noch etwas sein?"
+
+WICHTIG: Reagiere realistisch auf Beschwerden. Wenn ich unhöflich werde, zeig dass das nicht funktioniert. Wenn ich den Konjunktiv II benutze, sei kooperativer. Gib mir am Ende Feedback zu meiner Kommunikation.`
             };
 
             const prompt = topicPrompts[topic] || `Beginne ein lockeres Gespräch auf Deutsch über: ${topic}. Frage mich zuerst nach meiner Meinung dazu. WICHTIG: Reagiere immer auf das, was ICH sage.`;

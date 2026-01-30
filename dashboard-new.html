@@ -2763,10 +2763,36 @@
                                     <span class="text-xl">✈️</span>
                                     <span>Viagens</span>
                                 </button>
-                                <button class="conv-topic-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3">
-                                    <span class="text-xl">🍽️</span>
-                                    <span>Restaurante</span>
-                                </button>
+
+                                <!-- Restaurante com sub-cenários -->
+                                <div class="restaurante-scenarios">
+                                    <button id="restaurante-toggle" class="w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-xl">🍽️</span>
+                                            <span>Restaurante</span>
+                                        </div>
+                                        <svg id="restaurante-arrow" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </button>
+                                    <div id="restaurante-submenu" class="hidden ml-4 mt-1 space-y-1 border-l-2 border-cyan-500/30 pl-3">
+                                        <button class="conv-topic-btn w-full px-3 py-2 bg-slate-800/50 hover:bg-cyan-600/30 rounded-lg text-left transition-colors" data-scenario="restaurante-a2">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-bold px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded">A2</span>
+                                                <span class="text-sm text-slate-300">Almoço com Colegas</span>
+                                            </div>
+                                            <p class="text-xs text-slate-500 mt-1">Pedir comida, perguntas simples sobre cardápio</p>
+                                        </button>
+                                        <button class="conv-topic-btn w-full px-3 py-2 bg-slate-800/50 hover:bg-cyan-600/30 rounded-lg text-left transition-colors" data-scenario="restaurante-b1">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-bold px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded">B1</span>
+                                                <span class="text-sm text-slate-300">Celebração com Problemas</span>
+                                            </div>
+                                            <p class="text-xs text-slate-500 mt-1">Reclamações, negociar soluções educadamente</p>
+                                        </button>
+                                    </div>
+                                </div>
+
                                 <button class="conv-topic-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3">
                                     <span class="text-xl">🛒</span>
                                     <span>Fazer Compras</span>
