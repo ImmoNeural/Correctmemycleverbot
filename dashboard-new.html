@@ -2869,7 +2869,7 @@
                                 </svg>
                                 Temas para Praticar
                             </h4>
-                            <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+                            <div class="space-y-2">
                                 <!-- Tópicos livres -->
                                 <button class="conv-topic-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3">
                                     <span class="text-xl">👋</span>
@@ -2903,111 +2903,208 @@
                                     </div>
                                 </div>
 
-                                <!-- SUPERMERCADO -->
+                                <!-- COMPRAS/SUPERMERCADO -->
                                 <div class="scenario-group">
-                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="supermercado-a2">
-                                        <span class="text-xl">🛒</span>
-                                        <span>Supermercado</span>
-                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded ml-auto">A2</span>
+                                    <button class="scenario-toggle w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center justify-between" data-group="compras">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-xl">🛒</span>
+                                            <span>Fazer Compras</span>
+                                        </div>
+                                        <svg class="scenario-arrow w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
                                     </button>
+                                    <div class="scenario-submenu hidden ml-4 mt-1 space-y-1 border-l-2 border-cyan-500/30 pl-3" data-group="compras">
+                                        <button class="conv-scenario-btn w-full px-3 py-2 bg-slate-800/50 hover:bg-cyan-600/30 rounded-lg text-left transition-colors" data-scenario="supermercado-a2">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-bold px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded">A2</span>
+                                                <span class="text-sm text-slate-300">No Supermercado</span>
+                                            </div>
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <!-- MÉDICO -->
+                                <!-- SAÚDE -->
                                 <div class="scenario-group">
-                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="medico-a2">
-                                        <span class="text-xl">🏥</span>
-                                        <span>No Médico</span>
-                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded ml-auto">A2</span>
+                                    <button class="scenario-toggle w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center justify-between" data-group="saude">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-xl">🏥</span>
+                                            <span>Saúde</span>
+                                        </div>
+                                        <svg class="scenario-arrow w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
                                     </button>
+                                    <div class="scenario-submenu hidden ml-4 mt-1 space-y-1 border-l-2 border-cyan-500/30 pl-3" data-group="saude">
+                                        <button class="conv-scenario-btn w-full px-3 py-2 bg-slate-800/50 hover:bg-cyan-600/30 rounded-lg text-left transition-colors" data-scenario="medico-a2">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-bold px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded">A2</span>
+                                                <span class="text-sm text-slate-300">No Médico</span>
+                                            </div>
+                                        </button>
+                                        <button class="conv-scenario-btn w-full px-3 py-2 bg-slate-800/50 hover:bg-cyan-600/30 rounded-lg text-left transition-colors" data-scenario="saude-b1">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-bold px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded">B1</span>
+                                                <span class="text-sm text-slate-300">Saúde e Bem-Estar</span>
+                                            </div>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <!-- TRANSPORTE -->
                                 <div class="scenario-group">
-                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="transporte-a2">
-                                        <span class="text-xl">🚂</span>
-                                        <span>Transporte Público</span>
-                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded ml-auto">A2</span>
+                                    <button class="scenario-toggle w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center justify-between" data-group="transporte">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-xl">🚂</span>
+                                            <span>Transporte</span>
+                                        </div>
+                                        <svg class="scenario-arrow w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
                                     </button>
+                                    <div class="scenario-submenu hidden ml-4 mt-1 space-y-1 border-l-2 border-cyan-500/30 pl-3" data-group="transporte">
+                                        <button class="conv-scenario-btn w-full px-3 py-2 bg-slate-800/50 hover:bg-cyan-600/30 rounded-lg text-left transition-colors" data-scenario="transporte-a2">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-bold px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded">A2</span>
+                                                <span class="text-sm text-slate-300">Transporte Público</span>
+                                            </div>
+                                        </button>
+                                        <button class="conv-scenario-btn w-full px-3 py-2 bg-slate-800/50 hover:bg-cyan-600/30 rounded-lg text-left transition-colors" data-scenario="viagem-b1">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-bold px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded">B1</span>
+                                                <span class="text-sm text-slate-300">Planejando Férias</span>
+                                            </div>
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <!-- FESTA -->
+                                <!-- SOCIAL -->
                                 <div class="scenario-group">
-                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="festa-a2">
-                                        <span class="text-xl">🎉</span>
-                                        <span>Festa de Aniversário</span>
-                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded ml-auto">A2</span>
+                                    <button class="scenario-toggle w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center justify-between" data-group="social">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-xl">🎉</span>
+                                            <span>Social</span>
+                                        </div>
+                                        <svg class="scenario-arrow w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
                                     </button>
+                                    <div class="scenario-submenu hidden ml-4 mt-1 space-y-1 border-l-2 border-cyan-500/30 pl-3" data-group="social">
+                                        <button class="conv-scenario-btn w-full px-3 py-2 bg-slate-800/50 hover:bg-cyan-600/30 rounded-lg text-left transition-colors" data-scenario="festa-a2">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-bold px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded">A2</span>
+                                                <span class="text-sm text-slate-300">Festa de Aniversário</span>
+                                            </div>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <!-- TRABALHO -->
                                 <div class="scenario-group">
-                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="trabalho-a2">
-                                        <span class="text-xl">💼</span>
-                                        <span>Estágio/Trabalho</span>
-                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded ml-auto">A2</span>
+                                    <button class="scenario-toggle w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center justify-between" data-group="trabalho">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-xl">💼</span>
+                                            <span>Trabalho</span>
+                                        </div>
+                                        <svg class="scenario-arrow w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
                                     </button>
+                                    <div class="scenario-submenu hidden ml-4 mt-1 space-y-1 border-l-2 border-cyan-500/30 pl-3" data-group="trabalho">
+                                        <button class="conv-scenario-btn w-full px-3 py-2 bg-slate-800/50 hover:bg-cyan-600/30 rounded-lg text-left transition-colors" data-scenario="trabalho-a2">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-bold px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded">A2</span>
+                                                <span class="text-sm text-slate-300">Primeiro Dia no Estágio</span>
+                                            </div>
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <!-- Separador B1 -->
-                                <div class="border-t border-slate-700 my-3 pt-2">
-                                    <p class="text-xs text-yellow-400 font-semibold mb-2">Nível B1</p>
-                                </div>
-
-                                <!-- APARTAMENTO B1 -->
+                                <!-- MORADIA -->
                                 <div class="scenario-group">
-                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="apartamento-b1">
-                                        <span class="text-xl">🏠</span>
-                                        <span>Procurar Apartamento</span>
-                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded ml-auto">B1</span>
+                                    <button class="scenario-toggle w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center justify-between" data-group="moradia">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-xl">🏠</span>
+                                            <span>Moradia</span>
+                                        </div>
+                                        <svg class="scenario-arrow w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
                                     </button>
+                                    <div class="scenario-submenu hidden ml-4 mt-1 space-y-1 border-l-2 border-cyan-500/30 pl-3" data-group="moradia">
+                                        <button class="conv-scenario-btn w-full px-3 py-2 bg-slate-800/50 hover:bg-cyan-600/30 rounded-lg text-left transition-colors" data-scenario="apartamento-b1">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-bold px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded">B1</span>
+                                                <span class="text-sm text-slate-300">Procurando Apartamento</span>
+                                            </div>
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <!-- ACADEMIA B1 -->
+                                <!-- ESPORTES -->
                                 <div class="scenario-group">
-                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="academia-b1">
-                                        <span class="text-xl">🏋️</span>
-                                        <span>Na Academia</span>
-                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded ml-auto">B1</span>
+                                    <button class="scenario-toggle w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center justify-between" data-group="esportes">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-xl">🏋️</span>
+                                            <span>Esportes</span>
+                                        </div>
+                                        <svg class="scenario-arrow w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
                                     </button>
+                                    <div class="scenario-submenu hidden ml-4 mt-1 space-y-1 border-l-2 border-cyan-500/30 pl-3" data-group="esportes">
+                                        <button class="conv-scenario-btn w-full px-3 py-2 bg-slate-800/50 hover:bg-cyan-600/30 rounded-lg text-left transition-colors" data-scenario="academia-b1">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-bold px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded">B1</span>
+                                                <span class="text-sm text-slate-300">Na Academia</span>
+                                            </div>
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <!-- VIAGEM B1 -->
+                                <!-- EDUCAÇÃO -->
                                 <div class="scenario-group">
-                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="viagem-b1">
-                                        <span class="text-xl">✈️</span>
-                                        <span>Planejando Férias</span>
-                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded ml-auto">B1</span>
+                                    <button class="scenario-toggle w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center justify-between" data-group="educacao">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-xl">📚</span>
+                                            <span>Educação</span>
+                                        </div>
+                                        <svg class="scenario-arrow w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
                                     </button>
+                                    <div class="scenario-submenu hidden ml-4 mt-1 space-y-1 border-l-2 border-cyan-500/30 pl-3" data-group="educacao">
+                                        <button class="conv-scenario-btn w-full px-3 py-2 bg-slate-800/50 hover:bg-cyan-600/30 rounded-lg text-left transition-colors" data-scenario="escola-b1">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-bold px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded">B1</span>
+                                                <span class="text-sm text-slate-300">Curso de Alemão</span>
+                                            </div>
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <!-- ESCOLA B1 -->
+                                <!-- TECNOLOGIA -->
                                 <div class="scenario-group">
-                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="escola-b1">
-                                        <span class="text-xl">📚</span>
-                                        <span>Curso de Alemão</span>
-                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded ml-auto">B1</span>
+                                    <button class="scenario-toggle w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center justify-between" data-group="tecnologia">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-xl">💻</span>
+                                            <span>Tecnologia</span>
+                                        </div>
+                                        <svg class="scenario-arrow w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
                                     </button>
-                                </div>
-
-                                <!-- TECNOLOGIA B1 -->
-                                <div class="scenario-group">
-                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="tecnologia-b1">
-                                        <span class="text-xl">💻</span>
-                                        <span>Problemas Tecnológicos</span>
-                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded ml-auto">B1</span>
-                                    </button>
-                                </div>
-
-                                <!-- SAÚDE B1 -->
-                                <div class="scenario-group">
-                                    <button class="conv-scenario-btn w-full px-4 py-3 bg-slate-700/50 hover:bg-cyan-600/30 rounded-lg text-left text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-3" data-scenario="saude-b1">
-                                        <span class="text-xl">🧘</span>
-                                        <span>Saúde e Bem-Estar</span>
-                                        <span class="text-xs font-bold px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded ml-auto">B1</span>
-                                    </button>
+                                    <div class="scenario-submenu hidden ml-4 mt-1 space-y-1 border-l-2 border-cyan-500/30 pl-3" data-group="tecnologia">
+                                        <button class="conv-scenario-btn w-full px-3 py-2 bg-slate-800/50 hover:bg-cyan-600/30 rounded-lg text-left transition-colors" data-scenario="tecnologia-b1">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-bold px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded">B1</span>
+                                                <span class="text-sm text-slate-300">Problemas Tecnológicos</span>
+                                            </div>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <p class="mt-4 text-xs text-slate-500 text-center">Clique em um cenário para ver detalhes</p>
+                            <p class="mt-4 text-xs text-slate-500 text-center">Clique em um tema para ver os cenários</p>
                         </div>
                     </div>
                 </div>
