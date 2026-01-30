@@ -971,25 +971,38 @@ async function handleCorrectionSubmit(e) {
         button.textContent = 'Aguarde...';
 
         try {
-            console.log('Creating checkout session via Supabase function...');
-            const { data, error } = await _supabase.functions.invoke('create-checkout-session', {
-                body: { priceId }
+            console.log('Creating checkout session via Netlify function...');
+
+            const response = await fetch('/.netlify/functions/create-checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    priceId,
+                    userId: currentUser?.id,
+                    userEmail: currentUser?.email
+                })
             });
 
-            if (error) {
-                console.error('Supabase function error:', error);
-                throw new Error('Não foi possível iniciar o pagamento.');
+            const data = await response.json();
+
+            if (!response.ok) {
+                console.error('Checkout error:', data);
+                throw new Error(data.error || 'Não foi possível iniciar o pagamento.');
             }
 
             console.log('Session data:', data);
-            const { sessionId } = data;
 
-            if (!sessionId) {
+            // Redirecionar para o checkout do Stripe
+            if (data.url) {
+                // Redirecionar diretamente para a URL do checkout
+                window.location.href = data.url;
+            } else if (data.sessionId) {
+                // Usar Stripe.js para redirecionar
+                console.log('Redirecting to Stripe with session ID:', data.sessionId);
+                await stripe.redirectToCheckout({ sessionId: data.sessionId });
+            } else {
                 throw new Error('A sessão de pagamento não pôde ser criada.');
             }
-
-            console.log('Redirecting to Stripe with session ID:', sessionId);
-            await stripe.redirectToCheckout({ sessionId });
 
         } catch (error) {
             console.error('Erro ao processar compra:', error);
