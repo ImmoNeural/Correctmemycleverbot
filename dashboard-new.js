@@ -23,6 +23,250 @@ document.addEventListener('DOMContentLoaded', () => {
     let ultimaCorrecaoHTML = ''; // Armazena a última correção para persistir na tela
 
     // =================================================================
+    // SISTEMA DE INTERNACIONALIZAÇÃO (i18n)
+    // =================================================================
+
+    // Função para aplicar traduções dinâmicas a toda a interface
+    function applyDynamicTranslations() {
+        if (typeof window.t !== 'function') {
+            console.warn('Sistema de traduções não carregado ainda');
+            return;
+        }
+
+        const lang = window.getCurrentLanguage();
+        console.log('🌐 Aplicando traduções para:', lang);
+
+        // Sidebar Menu Items
+        const menuTranslations = {
+            'corrigir': 'sidebar.corrigirRedacao',
+            'parafrasear': 'sidebar.parafrasear',
+            'chatbot': 'sidebar.chatbot',
+            'conversacao': 'sidebar.conversacao',
+            'wordlist': 'sidebar.wordlist',
+            'artigos': 'sidebar.artigos',
+            'flashcards': 'sidebar.flashcards',
+            'forca': 'sidebar.forca',
+            'progresso': 'sidebar.progresso'
+        };
+
+        document.querySelectorAll('[data-section]').forEach(link => {
+            const section = link.getAttribute('data-section');
+            if (menuTranslations[section]) {
+                const textSpan = link.querySelector('.sidebar-text');
+                if (textSpan) {
+                    textSpan.textContent = window.t(menuTranslations[section]);
+                }
+            }
+        });
+
+        // Botão de sair
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            const textSpan = logoutBtn.querySelector('.sidebar-text');
+            if (textSpan) textSpan.textContent = window.t('sidebar.sair');
+        }
+
+        // Títulos das seções
+        const sectionTitles = {
+            'section-corrigir': { title: 'corrigir.title', subtitle: 'corrigir.subtitle' },
+            'section-parafrasear': { title: 'parafrasear.title', subtitle: 'parafrasear.subtitle' },
+            'section-chatbot': { title: 'chatbot.title', subtitle: 'chatbot.subtitle' },
+            'section-conversacao': { title: 'conversacao.title', subtitle: 'conversacao.subtitle' },
+            'section-wordlist': { title: 'wordlist.title', subtitle: 'wordlist.subtitle' },
+            'section-artigos': { title: 'artigos.title', subtitle: 'artigos.subtitle' },
+            'section-flashcards': { title: 'flashcards.title', subtitle: 'flashcards.subtitle' },
+            'section-forca': { title: 'forca.title', subtitle: 'forca.subtitle' },
+            'section-progresso': { title: 'progresso.title', subtitle: 'progresso.subtitle' }
+        };
+
+        Object.entries(sectionTitles).forEach(([sectionId, keys]) => {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                const h1 = section.querySelector('h1');
+                const subtitle = section.querySelector('h1 + p, .flex + p');
+                if (h1) h1.textContent = window.t(keys.title);
+                if (subtitle && !subtitle.classList.contains('text-yellow-400')) {
+                    subtitle.textContent = window.t(keys.subtitle);
+                }
+            }
+        });
+
+        // Corrigir Redação
+        const redacaoLabel = document.querySelector('label[for="redacao"]');
+        if (redacaoLabel) redacaoLabel.textContent = window.t('corrigir.textareaLabel');
+
+        const redacaoTextarea = document.getElementById('redacao');
+        if (redacaoTextarea) redacaoTextarea.placeholder = window.t('corrigir.textareaPlaceholder');
+
+        const correctionBtn = document.querySelector('#correction-form button[type="submit"]');
+        if (correctionBtn) {
+            const svg = correctionBtn.querySelector('svg');
+            correctionBtn.innerHTML = '';
+            if (svg) correctionBtn.appendChild(svg);
+            correctionBtn.appendChild(document.createTextNode(' ' + window.t('corrigir.submitBtn')));
+        }
+
+        // Dicas de escrita
+        const tipsTitle = document.querySelector('.text-amber-400.flex.items-center.gap-2');
+        if (tipsTitle && tipsTitle.closest('.bg-gradient-to-br')) {
+            const svg = tipsTitle.querySelector('svg');
+            tipsTitle.innerHTML = '';
+            if (svg) tipsTitle.appendChild(svg);
+            tipsTitle.appendChild(document.createTextNode(' ' + window.t('corrigir.tipsTitle')));
+        }
+
+        // Categorias de dicas
+        const tipCategories = [
+            { color: 'cyan', key: 'corrigir.tipsAddition' },
+            { color: 'pink', key: 'corrigir.tipsContrast' },
+            { color: 'amber', key: 'corrigir.tipsCause' },
+            { color: 'green', key: 'corrigir.tipsSequence' },
+            { color: 'violet', key: 'corrigir.tipsConclusion' }
+        ];
+
+        tipCategories.forEach(({ color, key }) => {
+            const header = document.querySelector(`.text-${color}-400.mb-2.flex.items-center.gap-2`);
+            if (header && header.closest('.p-4.space-y-4')) {
+                const dot = header.querySelector('span');
+                header.innerHTML = '';
+                if (dot) header.appendChild(dot);
+                header.appendChild(document.createTextNode(' ' + window.t(key)));
+            }
+        });
+
+        // Parafrasear
+        const paraphraseTextarea = document.getElementById('paraphrase-text');
+        if (paraphraseTextarea) paraphraseTextarea.placeholder = window.t('parafrasear.placeholder');
+
+        const paraphraseBtn = document.querySelector('#paraphrase-form button[type="submit"]');
+        if (paraphraseBtn) {
+            const svg = paraphraseBtn.querySelector('svg');
+            const originalText = paraphraseBtn.textContent.trim();
+            if (!originalText.includes('...')) {
+                paraphraseBtn.innerHTML = '';
+                if (svg) paraphraseBtn.appendChild(svg);
+                paraphraseBtn.appendChild(document.createTextNode(' ' + window.t('parafrasear.submitBtn')));
+            }
+        }
+
+        // Artigos
+        const artigosUpdateBtn = document.getElementById('btn-atualizar-artigos');
+        if (artigosUpdateBtn && !artigosUpdateBtn.disabled) {
+            const svg = artigosUpdateBtn.querySelector('svg');
+            artigosUpdateBtn.innerHTML = '';
+            if (svg) artigosUpdateBtn.appendChild(svg);
+            artigosUpdateBtn.appendChild(document.createTextNode(' ' + window.t('artigos.update')));
+        }
+
+        // Conversação
+        const convStatusText = document.getElementById('conv-status-text');
+        if (convStatusText) {
+            const currentText = convStatusText.textContent.trim();
+            if (currentText === 'Desconectado' || currentText === 'Disconnected') {
+                convStatusText.textContent = window.t('conversacao.disconnected');
+            } else if (currentText === 'Conectado' || currentText === 'Connected') {
+                convStatusText.textContent = window.t('conversacao.connected');
+            } else if (currentText === 'Conectando...' || currentText === 'Connecting...') {
+                convStatusText.textContent = window.t('conversacao.connecting');
+            }
+        }
+
+        const muteBtn = document.getElementById('conv-mute-btn');
+        if (muteBtn) {
+            const span = muteBtn.querySelector('span');
+            if (span) span.textContent = window.t('conversacao.mute');
+        }
+
+        const fluidLabel = document.querySelector('label[for="conv-continuous-mode"] span');
+        if (fluidLabel) fluidLabel.textContent = window.t('conversacao.fluid');
+
+        const ambientText = document.getElementById('conv-ambient-text');
+        if (ambientText) ambientText.textContent = '🍽️ ' + window.t('conversacao.ambientSound');
+
+        const selectTopicTitle = document.querySelector('#conv-no-scenario h3');
+        if (selectTopicTitle) selectTopicTitle.textContent = window.t('conversacao.selectTopic');
+
+        const selectTopicDesc = document.querySelector('#conv-no-scenario p');
+        if (selectTopicDesc) selectTopicDesc.textContent = window.t('conversacao.selectTopicDesc');
+
+        const startScenarioBtn = document.getElementById('start-scenario-btn');
+        if (startScenarioBtn) {
+            const svg = startScenarioBtn.querySelector('svg');
+            startScenarioBtn.innerHTML = '';
+            if (svg) startScenarioBtn.appendChild(svg);
+            startScenarioBtn.appendChild(document.createTextNode(' ' + window.t('conversacao.startConversation')));
+        }
+
+        const topicsTitle = document.querySelector('#section-conversacao .w-72 h4');
+        if (topicsTitle) {
+            const svg = topicsTitle.querySelector('svg');
+            topicsTitle.innerHTML = '';
+            if (svg) topicsTitle.appendChild(svg);
+            topicsTitle.appendChild(document.createTextNode(' ' + window.t('conversacao.topicsTitle')));
+        }
+
+        // Créditos labels
+        document.querySelectorAll('.text-slate-300 strong + span, strong + span').forEach(span => {
+            const text = span.textContent.trim();
+            if (text === 'créditos/correção' || text === 'credits/correction') {
+                span.textContent = window.t('corrigir.creditsPerCorrection');
+            } else if (text === 'créditos/uso' || text === 'credits/use') {
+                span.textContent = window.t('parafrasear.creditsPerUse');
+            } else if (text === 'créditos/min' || text === 'credits/min') {
+                span.textContent = window.t('conversacao.creditsPerMin');
+            }
+        });
+
+        // Lista de palavras
+        const addWordBtn = document.getElementById('add-word-btn');
+        if (addWordBtn) {
+            const svg = addWordBtn.querySelector('svg');
+            addWordBtn.innerHTML = '';
+            if (svg) addWordBtn.appendChild(svg);
+            addWordBtn.appendChild(document.createTextNode(' ' + window.t('wordlist.addWord')));
+        }
+
+        const createListBtn = document.getElementById('create-list-btn');
+        if (createListBtn) {
+            const svg = createListBtn.querySelector('svg');
+            createListBtn.innerHTML = '';
+            if (svg) createListBtn.appendChild(svg);
+            createListBtn.appendChild(document.createTextNode(' ' + window.t('wordlist.createList')));
+        }
+
+        const searchInput = document.getElementById('wordlist-search');
+        if (searchInput) searchInput.placeholder = window.t('wordlist.search');
+
+        // Progresso
+        const totalEssaysLabel = document.querySelector('#section-progresso .text-slate-400');
+        if (totalEssaysLabel && totalEssaysLabel.textContent.includes('Redações') || totalEssaysLabel?.textContent.includes('Essays')) {
+            // Atualiza o label de redações se necessário
+        }
+
+        console.log('✅ Traduções aplicadas');
+    }
+
+    // Escutar mudanças de idioma
+    window.addEventListener('languageChanged', (event) => {
+        console.log('🔄 Idioma alterado para:', event.detail.language);
+        applyDynamicTranslations();
+
+        // Notificar o iframe do chatbot sobre a mudança de idioma
+        const chatbotIframe = document.getElementById('chatbot-iframe');
+        if (chatbotIframe && chatbotIframe.contentWindow) {
+            chatbotIframe.contentWindow.postMessage({
+                type: 'languageChanged',
+                language: event.detail.language
+            }, '*');
+        }
+    });
+
+    // Aplicar traduções após carregar a página
+    setTimeout(() => {
+        applyDynamicTranslations();
+    }, 500);
+
+    // =================================================================
     // LÓGICA DE INICIALIZAÇÃO DA APLICAÇÃO
     // =================================================================
 

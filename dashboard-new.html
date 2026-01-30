@@ -1993,7 +1993,28 @@
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"></path>
                         </svg>
                         <span id="user-credits" class="sidebar-text font-bold text-lg">0</span>
-                        <span class="sidebar-text text-sm text-slate-400">créditos</span>
+                        <span class="sidebar-text text-sm text-slate-400" data-i18n="profile.credits">créditos</span>
+                    </div>
+
+                    <!-- Seletor de Idioma com Bandeiras -->
+                    <div class="language-selector flex items-center gap-3 mt-4">
+                        <button id="flag-br" onclick="setLanguage('pt-BR')" class="w-8 h-8 rounded-full overflow-hidden border-2 border-transparent hover:scale-110 transition-all cursor-pointer ring-2 ring-cyan-400" title="Português">
+                            <svg viewBox="0 0 512 512" class="w-full h-full">
+                                <rect fill="#009B3A" width="512" height="512"/>
+                                <polygon fill="#FEDF00" points="256,64 480,256 256,448 32,256"/>
+                                <circle fill="#002776" cx="256" cy="256" r="96"/>
+                                <path fill="#FFFFFF" d="M160,256 Q256,200 352,256" stroke="#FFFFFF" stroke-width="12" fill="none"/>
+                            </svg>
+                        </button>
+                        <button id="flag-en" onclick="setLanguage('en')" class="w-8 h-8 rounded-full overflow-hidden border-2 border-transparent hover:scale-110 transition-all cursor-pointer opacity-50" title="English">
+                            <svg viewBox="0 0 512 512" class="w-full h-full">
+                                <rect fill="#012169" width="512" height="512"/>
+                                <path fill="#FFFFFF" d="M0,0 L512,512 M512,0 L0,512" stroke="#FFFFFF" stroke-width="60"/>
+                                <path fill="#C8102E" d="M0,0 L512,512 M512,0 L0,512" stroke="#C8102E" stroke-width="40"/>
+                                <path fill="#FFFFFF" d="M256,0 V512 M0,256 H512" stroke="#FFFFFF" stroke-width="100"/>
+                                <path fill="#C8102E" d="M256,0 V512 M0,256 H512" stroke="#C8102E" stroke-width="60"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -3494,6 +3515,8 @@
     <!-- FIM DO CÓDIGO DE INTEGRAÇÃO DO CHATBOT                              -->
     <!-- =================================================================== -->
 
+    <!-- Sistema de Traduções i18n -->
+    <script src="translations.js"></script>
     <script src="dashboard-new.js"></script>
 
     <script>

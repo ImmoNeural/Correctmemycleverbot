@@ -570,6 +570,115 @@
 
     console.log('🔧 Bot inicializado com userId:', currentUserId, 'email:', currentUserEmail);
 
+    // =================================================================
+    // SISTEMA DE TRADUÇÕES DO BOT
+    // =================================================================
+    const botTranslations = {
+        'pt-BR': {
+            greeting: 'Olá! Sou seu assistente de alemão!\n\nWas möchtest du lernen? / O que você quer aprender?',
+            studyGrammar: 'Estudar Gramática 📚',
+            practiceWriting: 'Treinar Escrita ✍️',
+            selectOption: 'Por favor, selecione uma opção acima.',
+            selectTopic: 'Por favor, selecione um tópico acima.',
+            typeMessage: 'Digite sua mensagem...',
+            chooseLevel: 'Excelente! Qual é o seu nível de proficiência?',
+            beginner: 'Iniciante (A1/A2)',
+            intermediate: 'Intermediário (B1/B2)',
+            advanced: 'Avançado (C1/C2)',
+            grammarTopicsIntro: 'Aqui estão os tópicos para o nível',
+            writingTopicsIntro: 'Sobre qual tema você gostaria de escrever? Escolha um:',
+            startWriting: 'Escreva sua redação sobre o tema:',
+            analyzing: 'Analisando sua redação...',
+            errorOccurred: 'Ocorreu um erro. Por favor, tente novamente.',
+            branding: {
+                name: 'Do erro à excelência, palavra por palavra',
+                slogan: 'Escreva alemão com confiança.'
+            }
+        },
+        'en': {
+            greeting: 'Hello! I\'m your German assistant!\n\nWas möchtest du lernen? / What would you like to learn?',
+            studyGrammar: 'Study Grammar 📚',
+            practiceWriting: 'Practice Writing ✍️',
+            selectOption: 'Please select an option above.',
+            selectTopic: 'Please select a topic above.',
+            typeMessage: 'Type your message...',
+            chooseLevel: 'Excellent! What is your proficiency level?',
+            beginner: 'Beginner (A1/A2)',
+            intermediate: 'Intermediate (B1/B2)',
+            advanced: 'Advanced (C1/C2)',
+            grammarTopicsIntro: 'Here are the topics for level',
+            writingTopicsIntro: 'What topic would you like to write about? Choose one:',
+            startWriting: 'Write your essay about:',
+            analyzing: 'Analyzing your essay...',
+            errorOccurred: 'An error occurred. Please try again.',
+            branding: {
+                name: 'From error to excellence, word by word',
+                slogan: 'Write German with confidence.'
+            }
+        }
+    };
+
+    // Função para obter o idioma atual (do localStorage ou parent)
+    function getBotLanguage() {
+        try {
+            // Tentar do localStorage (funciona se estiver no mesmo domínio)
+            const lang = localStorage.getItem('correctme-language');
+            if (lang) return lang;
+
+            // Tentar do parent window
+            if (window.parent && window.parent.getCurrentLanguage) {
+                return window.parent.getCurrentLanguage();
+            }
+        } catch (e) {
+            console.log('Não foi possível obter idioma do parent');
+        }
+        return 'pt-BR'; // Padrão
+    }
+
+    // Função para obter tradução do bot
+    function bt(key) {
+        const lang = getBotLanguage();
+        const trans = botTranslations[lang] || botTranslations['pt-BR'];
+        const keys = key.split('.');
+        let value = trans;
+        for (const k of keys) {
+            if (value && value[k]) {
+                value = value[k];
+            } else {
+                return key;
+            }
+        }
+        return value;
+    }
+
+    // Escutar mudanças de idioma do parent
+    window.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'languageChanged') {
+            console.log('🌐 Bot recebeu mudança de idioma:', event.data.language);
+            // Atualizar interface se necessário
+            updateBotInterface();
+        }
+    });
+
+    // Função para atualizar interface do bot com novo idioma
+    function updateBotInterface() {
+        const lang = getBotLanguage();
+        console.log('🔄 Atualizando interface do bot para:', lang);
+
+        // Atualizar placeholder do textarea
+        if (messageTextarea) {
+            const isDisabled = messageTextarea.disabled;
+            messageTextarea.placeholder = isDisabled ? bt('selectOption') : bt('typeMessage');
+        }
+
+        // Atualizar branding
+        const headerTitle = document.querySelector('.chat-header-title');
+        if (headerTitle) headerTitle.textContent = bt('branding.name');
+
+        const headerSlogan = document.querySelector('.chat-header-slogan');
+        if (headerSlogan) headerSlogan.textContent = bt('branding.slogan');
+    }
+
     // Create widget DOM structure
     const widgetRoot = document.createElement('div');
     widgetRoot.className = 'chat-assist-widget';
@@ -651,15 +760,11 @@
         isChatInitialized = true;
         conversationId = createSessionId();
 
-        addBotMessage(`Hallo! 😊 Ich bin dein deutscher Sprachassistent!
-
-Olá! Sou seu assistente de alemão!
-
-Was möchtest du lernen? / O que você quer aprender?`, [
-            { text: 'Estudar Gramática 📚', action: 'showLevelSelection' },
-            { text: 'Treinar Escrita ✍️', action: 'showWritingTopics' }
+        addBotMessage(`Hallo! 😊 Ich bin dein deutscher Sprachassistent!\n\n${bt('greeting')}`, [
+            { text: bt('studyGrammar'), action: 'showLevelSelection' },
+            { text: bt('practiceWriting'), action: 'showWritingTopics' }
         ]);
-        toggleTextInput(true, 'Por favor, selecione uma opção acima.');
+        toggleTextInput(true, bt('selectOption'));
     };
     
     const addBotMessage = (text, buttons = []) => {
@@ -691,9 +796,9 @@ Was möchtest du lernen? / O que você quer aprender?`, [
         const hasButtons = buttons.length > 0;
 
         if (isWritingFlow && !hasButtons) {
-            toggleTextInput(false, 'Digite sua mensagem...');
+            toggleTextInput(false, bt('typeMessage'));
         } else {
-            toggleTextInput(true, 'Por favor, selecione uma opção acima.');
+            toggleTextInput(true, bt('selectOption'));
         }
 
         messageContainer.querySelectorAll('.action-button').forEach(button => {
@@ -797,10 +902,10 @@ Was möchtest du lernen? / O que você quer aprender?`, [
     };
     
     const showLevelSelection = () => {
-        addBotMessage('Excelente! Qual é o seu nível de proficiência?', [
-            { text: 'Iniciante (A1/A2)', action: 'showGrammarTopics' },
-            { text: 'Intermediário (B1/B2)', action: 'showGrammarTopics' },
-            { text: 'Avançado (C1/C2)', action: 'showGrammarTopics' }
+        addBotMessage(bt('chooseLevel'), [
+            { text: bt('beginner'), action: 'showGrammarTopics' },
+            { text: bt('intermediate'), action: 'showGrammarTopics' },
+            { text: bt('advanced'), action: 'showGrammarTopics' }
         ]);
     };
 
@@ -811,12 +916,12 @@ Was möchtest du lernen? / O que você quer aprender?`, [
         const container = document.createElement('div');
         container.className = 'dynamic-buttons-container';
         container.innerHTML = topics.map(topic => `<button class="dynamic-button" data-action="selectTopic">${topic}</button>`).join('');
-        
-        addBotMessage(`Ótimo! Aqui estão os tópicos para o nível ${level}. Escolha um para começar:`, []);
+
+        addBotMessage(`${bt('grammarTopicsIntro')} ${level}:`, []);
         messagesContainer.lastChild.querySelector('.chat-bubble .markdown-content').appendChild(container);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
         
-        toggleTextInput(true, 'Por favor, selecione um tópico acima.');
+        toggleTextInput(true, bt('selectTopic'));
 
         container.querySelectorAll('.dynamic-button').forEach(button => {
             button.addEventListener('click', () => handleAction('selectTopic', button.textContent));
@@ -828,11 +933,11 @@ Was möchtest du lernen? / O que você quer aprender?`, [
         container.className = 'dynamic-buttons-container';
         container.innerHTML = conversationTopicsData.map(topic => `<button class="dynamic-button" data-action="selectTopic">${topic}</button>`).join('');
 
-        addBotMessage('Ótima escolha! Sobre qual tema você gostaria de escrever?', []);
+        addBotMessage(bt('writingTopicsIntro'), []);
         messagesContainer.lastChild.querySelector('.chat-bubble .markdown-content').appendChild(container);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-        toggleTextInput(true, 'Por favor, selecione um tema acima.');
+        toggleTextInput(true, bt('selectTopic'));
 
         container.querySelectorAll('.dynamic-button').forEach(button => {
             button.addEventListener('click', () => handleAction('selectTopic', button.textContent));
@@ -946,9 +1051,9 @@ Was möchtest du lernen? / O que você quer aprender?`, [
         }
     };
 
-    const toggleTextInput = (disabled, placeholder = 'Digite sua mensagem...') => {
+    const toggleTextInput = (disabled, placeholder = null) => {
         messageTextarea.disabled = disabled;
-        messageTextarea.placeholder = placeholder;
+        messageTextarea.placeholder = placeholder || bt('typeMessage');
         if (disabled) {
             chatInputArea.classList.add('disabled');
         } else {
