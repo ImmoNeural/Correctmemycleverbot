@@ -1737,6 +1737,233 @@
             /* Todas as colunas começam do mesmo ponto superior */
             margin-top: 0;
         }
+
+        /* =============================================
+           RESPONSIVIDADE PARA CONVERSAÇÃO - MOBILE
+           ============================================= */
+        @media (max-width: 900px) {
+            /* Título e créditos da seção */
+            #section-conversacao > .flex.items-center.justify-between {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+
+            #section-conversacao h1 {
+                font-size: 1.75rem !important;
+            }
+
+            /* Layout principal em coluna no mobile */
+            #conv-layout {
+                flex-direction: column !important;
+                gap: 1rem !important;
+            }
+
+            /* Painéis ocupam largura total */
+            #conv-left-panel,
+            #conv-center-panel,
+            #conv-layout > .w-72 {
+                width: 100% !important;
+                flex-shrink: 0 !important;
+            }
+
+            /* Reordenar: Tópicos primeiro, depois controles */
+            #conv-layout {
+                display: flex !important;
+            }
+
+            #conv-layout > .w-72 {
+                order: 1 !important;
+            }
+
+            #conv-center-panel {
+                order: 2 !important;
+            }
+
+            #conv-left-panel {
+                order: 3 !important;
+            }
+
+            /* Painel de tópicos mais compacto */
+            #conv-layout > .w-72 .sticky {
+                position: relative !important;
+                top: auto !important;
+            }
+
+            /* Controles em layout horizontal compacto no mobile */
+            #conv-left-panel .sticky {
+                position: relative !important;
+                top: auto !important;
+            }
+
+            /* Botão do microfone menor no mobile */
+            #conv-mic-btn {
+                width: 4rem !important;
+                height: 4rem !important;
+            }
+
+            #conv-mic-btn svg {
+                width: 1.5rem !important;
+                height: 1.5rem !important;
+            }
+
+            /* Controles em grid compacto */
+            #conv-left-panel > div > div {
+                padding: 0.75rem !important;
+            }
+
+            /* Timer mais compacto */
+            #conv-timer {
+                font-size: 1rem !important;
+            }
+
+            /* Análise de erros compacta */
+            #conv-corrections {
+                max-height: 150px !important;
+            }
+
+            /* Cenário compacto */
+            #conv-scenario-display .bg-slate-800\\/50 {
+                padding: 1rem !important;
+            }
+
+            #scenario-title {
+                font-size: 1.25rem !important;
+            }
+
+            /* Vocabulário em 1 coluna no mobile */
+            #scenario-vocabulary {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Estado inicial menor */
+            #conv-no-scenario {
+                padding: 2rem 1rem !important;
+                min-height: auto !important;
+            }
+
+            #conv-no-scenario .w-24 {
+                width: 4rem !important;
+                height: 4rem !important;
+            }
+
+            #conv-no-scenario svg {
+                width: 2rem !important;
+                height: 2rem !important;
+            }
+
+            #conv-no-scenario h3 {
+                font-size: 1.125rem !important;
+            }
+
+            #conv-no-scenario p {
+                font-size: 0.875rem !important;
+            }
+        }
+
+        /* Mobile Portrait específico */
+        @media (max-width: 600px) and (orientation: portrait) {
+            /* Layout mais compacto para telas estreitas */
+            #section-conversacao {
+                padding: 0.5rem !important;
+            }
+
+            /* Controles em linha horizontal */
+            #conv-left-panel > div > div {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                align-items: center;
+                justify-content: center;
+            }
+
+            /* Status e Timer lado a lado */
+            #conv-status {
+                flex: 1;
+                min-width: 120px;
+                margin-bottom: 0 !important;
+            }
+
+            #conv-left-panel .text-center.mb-4 {
+                flex: 1;
+                min-width: 100px;
+                margin-bottom: 0 !important;
+            }
+
+            /* Mic button centralizado */
+            #conv-left-panel .flex.justify-center.mb-4 {
+                width: 100%;
+                margin-bottom: 0.5rem !important;
+            }
+
+            /* Controles de voz em linha */
+            #conv-left-panel .space-y-2.mb-4 {
+                width: 100%;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+
+            #conv-voice-select {
+                flex: 1;
+                min-width: 140px;
+            }
+
+            #conv-left-panel .space-y-2.mb-4 > .flex.gap-2 {
+                flex: 1;
+                min-width: 140px;
+            }
+
+            /* Ocultar análise de erros por padrão no mobile portrait */
+            #conv-left-panel .border-t.border-slate-700.my-4,
+            #conv-left-panel > div > div > div:last-child {
+                display: none;
+            }
+
+            /* Mostrar quando houver erros */
+            #conv-left-panel.has-errors .border-t.border-slate-700.my-4,
+            #conv-left-panel.has-errors > div > div > div:last-child {
+                display: block;
+            }
+        }
+
+        /* Landscape mobile - manter colunas lado a lado se possível */
+        @media (max-width: 900px) and (orientation: landscape) {
+            #conv-layout {
+                flex-direction: row !important;
+                flex-wrap: wrap !important;
+            }
+
+            #conv-left-panel {
+                width: 200px !important;
+                order: 1 !important;
+            }
+
+            #conv-center-panel {
+                flex: 1 !important;
+                min-width: 300px !important;
+                order: 2 !important;
+            }
+
+            #conv-layout > .w-72 {
+                width: 100% !important;
+                order: 3 !important;
+            }
+
+            /* Tópicos em grid horizontal */
+            #conv-layout > .w-72 .space-y-2 {
+                display: grid !important;
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
+                gap: 0.5rem !important;
+            }
+
+            /* Botões de tópico mais compactos */
+            .conv-topic-btn,
+            .scenario-toggle {
+                padding: 0.5rem 0.75rem !important;
+                font-size: 0.8rem !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-900 text-white min-h-screen">
@@ -1873,43 +2100,116 @@
 
             <!-- Seção: Corrigir Redação -->
             <div id="section-corrigir" class="content-section">
-                <h1 class="text-4xl font-extrabold mb-2 bg-gradient-to-r from-purple-400 to-blue-500 text-transparent bg-clip-text">Corrija sua Redação</h1>
-                <p class="text-slate-400 mb-8">Envie seu texto e receba uma análise detalhada em minutos.</p>
+                <div class="flex items-center justify-between mb-2">
+                    <h1 class="text-4xl font-extrabold bg-gradient-to-r from-purple-400 to-blue-500 text-transparent bg-clip-text">Corrija sua Redação</h1>
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-lg border border-slate-700">
+                        <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-sm text-slate-300"><strong class="text-purple-400">20</strong> créditos/correção</span>
+                    </div>
+                </div>
+                <p class="text-slate-400 mb-6">Envie seu texto e receba uma análise detalhada em minutos.</p>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <!-- Coluna Esquerda: Formulário -->
                     <div>
                         <form id="correction-form" class="space-y-6">
                             <div>
-                                <label for="user-name" class="block text-sm font-medium text-slate-300 mb-2">Nome</label>
-                                <input type="text" id="user-name" class="w-full bg-slate-800 border border-slate-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Seu nome" required>
-                            </div>
-                            <div>
                                 <label for="redacao" class="block text-sm font-medium text-slate-300 mb-2">Sua redação</label>
-                                <textarea id="redacao" rows="10" class="w-full bg-slate-800 border border-slate-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Escreva seu texto aqui..." required spellcheck="false"></textarea>
+                                <textarea id="redacao" rows="12" class="w-full bg-slate-800 border border-slate-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Escreva seu texto aqui..." required spellcheck="false"></textarea>
                                 <div id="word-counter" class="text-right text-xs text-slate-400 mt-1"></div>
                             </div>
-                            <fieldset>
-                                <legend class="text-base font-medium text-slate-300 mb-4">Nível de alemão</legend>
-                                <div class="space-y-3">
-                                    <div class="flex items-center">
-                                        <input id="nivel-a" name="nivel" type="radio" value="A1/A2" class="h-4 w-4 text-purple-600" checked>
-                                        <label for="nivel-a" class="ml-3 text-sm">A1 / A2 (Básico)</label>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <input id="nivel-b" name="nivel" type="radio" value="B1/B2" class="h-4 w-4 text-purple-600">
-                                        <label for="nivel-b" class="ml-3 text-sm">B1 / B2 (Intermediário)</label>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <input id="nivel-c" name="nivel" type="radio" value="C1/C2" class="h-4 w-4 text-purple-600">
-                                        <label for="nivel-c" class="ml-3 text-sm">C1 / C2 (Avançado)</label>
-                                    </div>
-                                </div>
-                            </fieldset>
-                            <button type="submit" class="w-full py-3 px-6 rounded-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 transition-all">
+                            <button type="submit" class="w-full py-3 px-6 rounded-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 transition-all flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
                                 Corrigir agora!
                             </button>
                         </form>
+
+                        <!-- Dicas de Escrita -->
+                        <div class="mt-6 bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-xl border border-slate-700/50 overflow-hidden">
+                            <div class="bg-gradient-to-r from-amber-500/20 to-orange-500/20 px-4 py-3 border-b border-slate-700/50">
+                                <h3 class="text-lg font-semibold text-amber-400 flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                    </svg>
+                                    Dicas para Escrever Melhor
+                                </h3>
+                            </div>
+                            <div class="p-4 space-y-4">
+                                <!-- Conectores -->
+                                <div>
+                                    <h4 class="text-sm font-semibold text-cyan-400 mb-2 flex items-center gap-2">
+                                        <span class="w-2 h-2 bg-cyan-400 rounded-full"></span>
+                                        Conectores de Adição
+                                    </h4>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="px-2 py-1 bg-cyan-500/10 text-cyan-300 text-xs rounded-lg border border-cyan-500/30">außerdem</span>
+                                        <span class="px-2 py-1 bg-cyan-500/10 text-cyan-300 text-xs rounded-lg border border-cyan-500/30">darüber hinaus</span>
+                                        <span class="px-2 py-1 bg-cyan-500/10 text-cyan-300 text-xs rounded-lg border border-cyan-500/30">zusätzlich</span>
+                                        <span class="px-2 py-1 bg-cyan-500/10 text-cyan-300 text-xs rounded-lg border border-cyan-500/30">weiterhin</span>
+                                    </div>
+                                </div>
+                                <!-- Contraste -->
+                                <div>
+                                    <h4 class="text-sm font-semibold text-pink-400 mb-2 flex items-center gap-2">
+                                        <span class="w-2 h-2 bg-pink-400 rounded-full"></span>
+                                        Conectores de Contraste
+                                    </h4>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="px-2 py-1 bg-pink-500/10 text-pink-300 text-xs rounded-lg border border-pink-500/30">jedoch</span>
+                                        <span class="px-2 py-1 bg-pink-500/10 text-pink-300 text-xs rounded-lg border border-pink-500/30">allerdings</span>
+                                        <span class="px-2 py-1 bg-pink-500/10 text-pink-300 text-xs rounded-lg border border-pink-500/30">trotzdem</span>
+                                        <span class="px-2 py-1 bg-pink-500/10 text-pink-300 text-xs rounded-lg border border-pink-500/30">dennoch</span>
+                                        <span class="px-2 py-1 bg-pink-500/10 text-pink-300 text-xs rounded-lg border border-pink-500/30">hingegen</span>
+                                    </div>
+                                </div>
+                                <!-- Causa/Consequência -->
+                                <div>
+                                    <h4 class="text-sm font-semibold text-amber-400 mb-2 flex items-center gap-2">
+                                        <span class="w-2 h-2 bg-amber-400 rounded-full"></span>
+                                        Causa e Consequência
+                                    </h4>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="px-2 py-1 bg-amber-500/10 text-amber-300 text-xs rounded-lg border border-amber-500/30">deshalb</span>
+                                        <span class="px-2 py-1 bg-amber-500/10 text-amber-300 text-xs rounded-lg border border-amber-500/30">daher</span>
+                                        <span class="px-2 py-1 bg-amber-500/10 text-amber-300 text-xs rounded-lg border border-amber-500/30">deswegen</span>
+                                        <span class="px-2 py-1 bg-amber-500/10 text-amber-300 text-xs rounded-lg border border-amber-500/30">folglich</span>
+                                        <span class="px-2 py-1 bg-amber-500/10 text-amber-300 text-xs rounded-lg border border-amber-500/30">weil</span>
+                                        <span class="px-2 py-1 bg-amber-500/10 text-amber-300 text-xs rounded-lg border border-amber-500/30">da</span>
+                                    </div>
+                                </div>
+                                <!-- Sequência/Tempo -->
+                                <div>
+                                    <h4 class="text-sm font-semibold text-green-400 mb-2 flex items-center gap-2">
+                                        <span class="w-2 h-2 bg-green-400 rounded-full"></span>
+                                        Sequência e Tempo
+                                    </h4>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="px-2 py-1 bg-green-500/10 text-green-300 text-xs rounded-lg border border-green-500/30">zuerst</span>
+                                        <span class="px-2 py-1 bg-green-500/10 text-green-300 text-xs rounded-lg border border-green-500/30">dann</span>
+                                        <span class="px-2 py-1 bg-green-500/10 text-green-300 text-xs rounded-lg border border-green-500/30">danach</span>
+                                        <span class="px-2 py-1 bg-green-500/10 text-green-300 text-xs rounded-lg border border-green-500/30">schließlich</span>
+                                        <span class="px-2 py-1 bg-green-500/10 text-green-300 text-xs rounded-lg border border-green-500/30">zuletzt</span>
+                                    </div>
+                                </div>
+                                <!-- Conclusão -->
+                                <div>
+                                    <h4 class="text-sm font-semibold text-violet-400 mb-2 flex items-center gap-2">
+                                        <span class="w-2 h-2 bg-violet-400 rounded-full"></span>
+                                        Conclusão e Resumo
+                                    </h4>
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="px-2 py-1 bg-violet-500/10 text-violet-300 text-xs rounded-lg border border-violet-500/30">zusammenfassend</span>
+                                        <span class="px-2 py-1 bg-violet-500/10 text-violet-300 text-xs rounded-lg border border-violet-500/30">abschließend</span>
+                                        <span class="px-2 py-1 bg-violet-500/10 text-violet-300 text-xs rounded-lg border border-violet-500/30">insgesamt</span>
+                                        <span class="px-2 py-1 bg-violet-500/10 text-violet-300 text-xs rounded-lg border border-violet-500/30">letztendlich</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Coluna Direita: Resultado da Correção -->
