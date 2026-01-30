@@ -8,7 +8,7 @@ const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 
 // Custos em créditos
 const GRAMMAR_COST = 5;
-const WRITING_COST = 25;
+const WRITING_COST = 2.5;
 const MIN_CREDITS = 10;
 
 // Tabela oficial de tópicos gramaticais
@@ -205,7 +205,7 @@ async function deductCredits(userId, amount) {
     const profile = await getUserProfile(userId);
     if (!profile) return false;
 
-    const newCredits = parseInt(profile.credits) - amount;
+    const newCredits = parseFloat(profile.credits) - amount;
 
     await supabaseRequest(`/rest/v1/profiles?id=eq.${userId}`, {
         method: 'PATCH',
@@ -344,7 +344,7 @@ exports.handler = async (event) => {
                 };
             }
 
-            const credits = parseInt(profile.credits) || 0;
+            const credits = parseFloat(profile.credits) || 0;
             console.log('Parsed credits:', credits, 'MIN_CREDITS:', MIN_CREDITS);
 
             if (credits < MIN_CREDITS) {
