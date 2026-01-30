@@ -42,6 +42,10 @@ exports.handler = async (event) => {
     }
 
     try {
+        console.log('Iniciando criação de checkout...');
+        console.log('STRIPE_SECRET_KEY exists:', !!STRIPE_SECRET_KEY);
+        console.log('STRIPE_SECRET_KEY prefix:', STRIPE_SECRET_KEY?.substring(0, 7));
+
         const body = JSON.parse(event.body);
         const { priceId, userId, userEmail } = body;
 
@@ -67,15 +71,24 @@ exports.handler = async (event) => {
         }
 
         // Inicializar Stripe
-        const stripe = new Stripe(STRIPE_SECRET_KEY, {
-            apiVersion: '2023-10-16'
-        });
+        console.log('Inicializando Stripe SDK...');
+        let stripe;
+        try {
+            stripe = new Stripe(STRIPE_SECRET_KEY, {
+                apiVersion: '2023-10-16'
+            });
+            console.log('Stripe SDK inicializado com sucesso');
+        } catch (stripeInitError) {
+            console.error('Erro ao inicializar Stripe:', stripeInitError.message);
+            throw new Error(`Falha ao inicializar Stripe: ${stripeInitError.message}`);
+        }
 
         // URL base para redirecionamento
         const baseUrl = event.headers.origin || event.headers.referer?.replace(/\/[^/]*$/, '') || 'https://correctme.club';
         console.log('Base URL:', baseUrl);
 
         // Criar sessão de checkout
+        console.log('Criando checkout session com price:', priceId);
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: [
@@ -108,12 +121,25 @@ exports.handler = async (event) => {
     } catch (error) {
         console.error('Erro ao criar checkout session:', error.message);
         console.error('Stack:', error.stack);
+        console.error('Error type:', error.type);
+        console.error('Error code:', error.code);
+
+        // Stripe-specific error handling
+        let errorMessage = error.message;
+        if (error.type === 'StripeInvalidRequestError') {
+            errorMessage = `Stripe error: ${error.message}`;
+            if (error.param) {
+                errorMessage += ` (param: ${error.param})`;
+            }
+        }
+
         return {
             statusCode: 500,
             headers,
             body: JSON.stringify({
                 error: 'Erro ao criar sessão de pagamento',
-                details: error.message
+                details: errorMessage,
+                type: error.type || 'unknown'
             })
         };
     }

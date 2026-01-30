@@ -1,0 +1,9 @@
+{
+  "name": "correctme-club",
+  "version": "1.0.0",
+  "description": "CorrectMe German Learning Platform",
+  "private": true,
+  "dependencies": {
+    "stripe": "^14.0.0"
+  }
+}
