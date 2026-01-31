@@ -298,6 +298,47 @@ document.addEventListener('DOMContentLoaded', () => {
         const ambientText = document.getElementById('conv-ambient-text');
         if (ambientText) ambientText.textContent = '🍽️ ' + window.t('conversacao.ambientSound');
 
+        // Error analysis section title
+        const errorAnalysisTitle = document.querySelector('#section-conversacao h4.text-sm.font-semibold');
+        if (errorAnalysisTitle && (errorAnalysisTitle.textContent.includes('Análise') || errorAnalysisTitle.textContent.includes('Analysis'))) {
+            const svg = errorAnalysisTitle.querySelector('svg');
+            errorAnalysisTitle.innerHTML = '';
+            if (svg) errorAnalysisTitle.appendChild(svg);
+            errorAnalysisTitle.appendChild(document.createTextNode(' ' + window.t('conversacao.errorAnalysis')));
+        }
+
+        // Errors will appear here placeholder
+        const errorsPlaceholder = document.querySelector('#conv-corrections > p.text-slate-500');
+        if (errorsPlaceholder && (errorsPlaceholder.textContent.includes('Erros aparecerão') || errorsPlaceholder.textContent.includes('Errors will appear'))) {
+            errorsPlaceholder.textContent = window.t('conversacao.errorsWillAppear');
+        }
+
+        // Error count label
+        const errorCountLabel = document.querySelector('#conv-error-count');
+        if (errorCountLabel) {
+            const countSpan = document.getElementById('conv-total-errors');
+            const count = countSpan ? countSpan.textContent : '0';
+            errorCountLabel.innerHTML = `<span id="conv-total-errors">${count}</span> ${window.t('conversacao.errors')}`;
+        }
+
+        // Voice select options
+        const voiceSelect = document.getElementById('conv-voice-select');
+        if (voiceSelect) {
+            voiceSelect.querySelectorAll('option').forEach(option => {
+                const text = option.textContent;
+                if (text.includes('Feminina') || text.includes('Female')) {
+                    const voiceName = text.split(' ')[0];
+                    option.textContent = `${voiceName} (${window.t('conversacao.voiceFemale')})`;
+                } else if (text.includes('Masculina') || text.includes('Male')) {
+                    const voiceName = text.split(' ')[0];
+                    option.textContent = `${voiceName} (${window.t('conversacao.voiceMale')})`;
+                } else if (text.includes('Neutra') || text.includes('Neutral')) {
+                    const voiceName = text.split(' ')[0];
+                    option.textContent = `${voiceName} (${window.t('conversacao.voiceNeutral')})`;
+                }
+            });
+        }
+
         const selectTopicTitle = document.querySelector('#conv-no-scenario h3');
         if (selectTopicTitle) selectTopicTitle.textContent = window.t('conversacao.selectTopic');
 
@@ -318,6 +359,110 @@ document.addEventListener('DOMContentLoaded', () => {
             topicsTitle.innerHTML = '';
             if (svg) topicsTitle.appendChild(svg);
             topicsTitle.appendChild(document.createTextNode(' ' + window.t('conversacao.topicsTitle')));
+        }
+
+        // === CONVERSAÇÃO - Scenario subtopics ===
+        const scenarioTranslations = {
+            'Almoço com Colegas': 'scenarios.lunchWithColleagues',
+            'Lunch with Colleagues': 'scenarios.lunchWithColleagues',
+            'Celebração com Problemas': 'scenarios.celebrationWithProblems',
+            'Celebration with Problems': 'scenarios.celebrationWithProblems',
+            'No Supermercado': 'scenarios.atSupermarket',
+            'At the Supermarket': 'scenarios.atSupermarket',
+            'No Médico': 'scenarios.atDoctor',
+            'At the Doctor': 'scenarios.atDoctor',
+            'Saúde e Bem-Estar': 'scenarios.healthWellness',
+            'Health and Wellness': 'scenarios.healthWellness',
+            'Transporte Público': 'scenarios.publicTransport',
+            'Public Transport': 'scenarios.publicTransport',
+            'Fazer Compras': 'scenarios.shopping',
+            'Shopping': 'scenarios.shopping'
+        };
+
+        // Translate scenario submenu items
+        document.querySelectorAll('.conv-scenario-btn .text-sm.text-slate-300').forEach(span => {
+            const text = span.textContent.trim();
+            if (scenarioTranslations[text]) {
+                span.textContent = window.t(scenarioTranslations[text]);
+            }
+        });
+
+        // Translate scenario toggle buttons (main topics in left sidebar)
+        document.querySelectorAll('.scenario-toggle span:not(.text-xl)').forEach(span => {
+            const text = span.textContent.trim();
+            if (scenarioTranslations[text]) {
+                span.textContent = window.t(scenarioTranslations[text]);
+            }
+        });
+
+        // === PROGRESSO - Statistics page ===
+        const progressSection = document.getElementById('section-progresso');
+        if (progressSection) {
+            // Estatísticas Gerais title
+            const generalStatsTitle = progressSection.querySelector('.bg-slate-800 h3');
+            if (generalStatsTitle && (generalStatsTitle.textContent.includes('Estatísticas') || generalStatsTitle.textContent.includes('Statistics'))) {
+                generalStatsTitle.textContent = window.t('progresso.generalStats');
+            }
+
+            // Data de Início label
+            const startDateLabel = progressSection.querySelector('.text-slate-400');
+            if (startDateLabel && (startDateLabel.textContent.includes('Data de Início') || startDateLabel.textContent.includes('Start Date'))) {
+                startDateLabel.textContent = window.t('progresso.startDate');
+            }
+
+            // Redações Enviadas label
+            const allLabels = progressSection.querySelectorAll('.text-slate-400');
+            allLabels.forEach(label => {
+                const text = label.textContent.trim();
+                if (text === 'Data de Início:' || text === 'Start Date:') {
+                    label.textContent = window.t('progresso.startDate');
+                } else if (text === 'Redações Enviadas:' || text === 'Essays Submitted:') {
+                    label.textContent = window.t('progresso.essaysSent');
+                }
+            });
+
+            // Section titles
+            const allH3 = progressSection.querySelectorAll('h3');
+            allH3.forEach(h3 => {
+                const text = h3.textContent.trim();
+                if (text === 'Estatísticas Gerais' || text === 'General Statistics') {
+                    h3.textContent = window.t('progresso.generalStats');
+                } else if (text === 'Distribuição de Erros' || text === 'Error Distribution') {
+                    h3.textContent = window.t('progresso.errorDistribution');
+                } else if (text === 'Erros por Categoria' || text === 'Errors by Category') {
+                    h3.textContent = window.t('progresso.errorsByCategory');
+                } else if (text === 'Histórico de Erros' || text === 'Error History') {
+                    h3.textContent = window.t('progresso.errorHistory');
+                }
+            });
+
+            // Error category labels
+            const categoryLabels = progressSection.querySelectorAll('.text-sm.text-slate-400.mt-1');
+            categoryLabels.forEach(label => {
+                const text = label.textContent.trim();
+                if (text === 'Declinação' || text === 'Declension') {
+                    label.textContent = window.t('progresso.declension');
+                } else if (text === 'Conjugação' || text === 'Conjugation') {
+                    label.textContent = window.t('progresso.conjugation');
+                } else if (text === 'Sintaxe' || text === 'Syntax') {
+                    label.textContent = window.t('progresso.syntax');
+                } else if (text === 'Preposição' || text === 'Prepositions') {
+                    label.textContent = window.t('progresso.prepositions');
+                } else if (text === 'Vocabulário' || text === 'Vocabulary') {
+                    label.textContent = window.t('progresso.vocabulary');
+                }
+            });
+
+            // Show last 10 button
+            const toggleBtn = document.getElementById('toggle-last-10');
+            if (toggleBtn) {
+                const text = toggleBtn.textContent.trim();
+                if (text.includes('últimas 10') || text.includes('last 10')) {
+                    toggleBtn.textContent = window.t('progresso.showLast10');
+                } else if (text.includes('todas') || text.includes('all')) {
+                    toggleBtn.textContent = window.t('progresso.showAll');
+                }
+            }
         }
 
         // === SIDEBAR - Comprar Créditos ===
@@ -480,7 +625,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // === WORDLIST - All buttons ===
-        const playFlashcardsBtn = document.getElementById('play-flashcards-btn');
+        // Using correct button IDs from HTML: btn-jogar-flashcards, btn-importar-csv, btn-adicionar-palavra, btn-criar-lista
+        const playFlashcardsBtn = document.getElementById('btn-jogar-flashcards');
         if (playFlashcardsBtn) {
             const svg = playFlashcardsBtn.querySelector('svg');
             playFlashcardsBtn.innerHTML = '';
@@ -488,7 +634,7 @@ document.addEventListener('DOMContentLoaded', () => {
             playFlashcardsBtn.appendChild(document.createTextNode(' ' + window.t('wordlist.playFlashcards')));
         }
 
-        const importCsvBtn = document.getElementById('import-csv-btn');
+        const importCsvBtn = document.getElementById('btn-importar-csv');
         if (importCsvBtn) {
             const svg = importCsvBtn.querySelector('svg');
             importCsvBtn.innerHTML = '';
@@ -496,7 +642,7 @@ document.addEventListener('DOMContentLoaded', () => {
             importCsvBtn.appendChild(document.createTextNode(' ' + window.t('wordlist.importCsv')));
         }
 
-        const addWordBtn = document.getElementById('add-word-btn');
+        const addWordBtn = document.getElementById('btn-adicionar-palavra');
         if (addWordBtn) {
             const svg = addWordBtn.querySelector('svg');
             addWordBtn.innerHTML = '';
@@ -504,26 +650,22 @@ document.addEventListener('DOMContentLoaded', () => {
             addWordBtn.appendChild(document.createTextNode(' ' + window.t('wordlist.addWord')));
         }
 
-        // My Lists title
-        const myListsTitle = document.querySelector('#listas-menu-container h3, #section-wordlist h3.text-cyan-400');
+        // My Lists title in sidebar
+        const myListsTitle = document.querySelector('#section-wordlist h3.text-purple-400');
         if (myListsTitle && (myListsTitle.textContent.includes('Minhas') || myListsTitle.textContent.includes('My'))) {
-            const svg = myListsTitle.querySelector('svg');
-            myListsTitle.innerHTML = '';
-            if (svg) myListsTitle.appendChild(svg);
-            myListsTitle.appendChild(document.createTextNode(' ' + window.t('wordlist.myLists')));
+            myListsTitle.textContent = window.t('wordlist.myLists');
         }
 
         // Lists total count
-        const listsCountEl = document.querySelector('#listas-menu-container .text-slate-400.text-sm');
+        const listsCountEl = document.getElementById('total-listas-count');
         if (listsCountEl) {
-            const match = listsCountEl.textContent.match(/\d+/);
-            if (match) {
-                listsCountEl.textContent = match[0] + ' ' + window.t('general.listsTotal');
-            }
+            const countSpan = listsCountEl.querySelector('span.font-semibold');
+            const count = countSpan ? countSpan.textContent : '0';
+            listsCountEl.innerHTML = `<span class="font-semibold text-white">${count}</span> ${window.t('wordlist.listsTotal')}`;
         }
 
         // New List button
-        const newListBtn = document.getElementById('btn-nova-lista');
+        const newListBtn = document.getElementById('btn-criar-lista');
         if (newListBtn) {
             const svg = newListBtn.querySelector('svg');
             newListBtn.innerHTML = '';
@@ -848,20 +990,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalEssaysEl = document.getElementById('total-essays');
         if (totalEssaysEl) totalEssaysEl.textContent = profile.total_essays || 0;
 
+        const errorsWord = window.t ? window.t('progresso.errors') : 'erros';
+
         const errorDeclinacaoEl = document.getElementById('error-declinacao');
-        if (errorDeclinacaoEl) errorDeclinacaoEl.textContent = `${profile.error_declinacao || 0} erros`;
+        if (errorDeclinacaoEl) errorDeclinacaoEl.textContent = `${profile.error_declinacao || 0} ${errorsWord}`;
 
         const errorConjugacaoEl = document.getElementById('error-conjugacao');
-        if (errorConjugacaoEl) errorConjugacaoEl.textContent = `${profile.error_conjugacao || 0} erros`;
+        if (errorConjugacaoEl) errorConjugacaoEl.textContent = `${profile.error_conjugacao || 0} ${errorsWord}`;
 
         const errorSintaxeEl = document.getElementById('error-sintaxe');
-        if (errorSintaxeEl) errorSintaxeEl.textContent = `${profile.error_sintaxe || 0} erros`;
+        if (errorSintaxeEl) errorSintaxeEl.textContent = `${profile.error_sintaxe || 0} ${errorsWord}`;
 
         const errorPreposicaoEl = document.getElementById('error-preposicao');
-        if (errorPreposicaoEl) errorPreposicaoEl.textContent = `${profile.error_preposicao || 0} erros`;
+        if (errorPreposicaoEl) errorPreposicaoEl.textContent = `${profile.error_preposicao || 0} ${errorsWord}`;
 
         const errorVocabularioEl = document.getElementById('error-vocabulario');
-        if (errorVocabularioEl) errorVocabularioEl.textContent = `${profile.error_vocabulario || 0} erros`;
+        if (errorVocabularioEl) errorVocabularioEl.textContent = `${profile.error_vocabulario || 0} ${errorsWord}`;
 
         renderErrorChart(profile);
 
@@ -1050,20 +1194,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Atualizar os números exibidos
+        const errorsWord = window.t ? window.t('progresso.errors') : 'erros';
+
         const errorDeclinacaoEl = document.getElementById('error-declinacao');
-        if (errorDeclinacaoEl) errorDeclinacaoEl.textContent = `${totals.declinacao} erros`;
+        if (errorDeclinacaoEl) errorDeclinacaoEl.textContent = `${totals.declinacao} ${errorsWord}`;
 
         const errorConjugacaoEl = document.getElementById('error-conjugacao');
-        if (errorConjugacaoEl) errorConjugacaoEl.textContent = `${totals.conjugacao} erros`;
+        if (errorConjugacaoEl) errorConjugacaoEl.textContent = `${totals.conjugacao} ${errorsWord}`;
 
         const errorSintaxeEl = document.getElementById('error-sintaxe');
-        if (errorSintaxeEl) errorSintaxeEl.textContent = `${totals.sintaxe} erros`;
+        if (errorSintaxeEl) errorSintaxeEl.textContent = `${totals.sintaxe} ${errorsWord}`;
 
         const errorPreposicaoEl = document.getElementById('error-preposicao');
-        if (errorPreposicaoEl) errorPreposicaoEl.textContent = `${totals.preposicao} erros`;
+        if (errorPreposicaoEl) errorPreposicaoEl.textContent = `${totals.preposicao} ${errorsWord}`;
 
         const errorVocabularioEl = document.getElementById('error-vocabulario');
-        if (errorVocabularioEl) errorVocabularioEl.textContent = `${totals.vocabulario} erros`;
+        if (errorVocabularioEl) errorVocabularioEl.textContent = `${totals.vocabulario} ${errorsWord}`;
 
         // Atualizar o gráfico de pizza
         renderErrorChart({

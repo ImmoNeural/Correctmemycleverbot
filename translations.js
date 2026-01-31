@@ -83,6 +83,7 @@ const translations = {
             title: 'Pratique Conversação',
             subtitle: 'Converse em tempo real com IA para praticar seu alemão falado.',
             creditsPerMin: 'créditos/min',
+            credits: 'créditos',
             disconnected: 'Desconectado',
             connected: 'Conectado',
             connecting: 'Conectando...',
@@ -99,7 +100,10 @@ const translations = {
             usefulVocab: 'Vocabulário Útil',
             startConversation: 'Iniciar Conversa',
             topicsTitle: 'Temas para Praticar',
-            presentation: 'Apresentação'
+            presentation: 'Apresentação',
+            voiceFemale: 'Feminina',
+            voiceMale: 'Masculina',
+            voiceNeutral: 'Neutra'
         },
 
         // Listas de Palavras
@@ -119,7 +123,13 @@ const translations = {
             playFlashcards: 'Jogar Flashcards',
             importCsv: 'Importar CSV',
             myLists: 'Minhas Listas',
-            newList: 'Nova Lista'
+            newList: 'Nova Lista',
+            listsTotal: 'listas no total',
+            words: 'palavras',
+            wordSingular: 'palavra',
+            selectList: 'Selecione uma lista para ver as palavras',
+            loadingLists: 'Carregando listas...',
+            createNewList: 'Criar Nova Lista'
         },
 
         // Artigos
@@ -201,7 +211,15 @@ const translations = {
             syntax: 'Sintaxe',
             prepositions: 'Preposições',
             vocabulary: 'Vocabulário',
-            errors: 'erros'
+            errors: 'erros',
+            generalStats: 'Estatísticas Gerais',
+            startDate: 'Data de Início:',
+            essaysSent: 'Redações Enviadas:',
+            errorDistribution: 'Distribuição de Erros',
+            errorsByCategory: 'Erros por Categoria',
+            errorHistory: 'Histórico de Erros',
+            showLast10: 'Mostrar últimas 10 redações',
+            showAll: 'Mostrar todas'
         },
 
         // Cenários de Conversação
@@ -230,7 +248,18 @@ const translations = {
             technology: 'Tecnologia',
             technologyB1: 'Suporte Técnico (B1)',
             health: 'Saúde/Bem-Estar',
-            healthB1: 'Farmácia (B1)'
+            healthB1: 'Farmácia (B1)',
+            // Exact scenario subtitles (without level suffix)
+            lunchWithColleagues: 'Almoço com Colegas',
+            celebrationWithProblems: 'Celebração com Problemas',
+            atSupermarket: 'No Supermercado',
+            atDoctor: 'No Médico',
+            healthWellness: 'Saúde e Bem-Estar',
+            publicTransport: 'Transporte Público',
+            socialEvent: 'Evento Social',
+            atWork: 'No Trabalho',
+            housing: 'Moradia',
+            shopping: 'Fazer Compras'
         },
 
         // Modais
@@ -381,6 +410,7 @@ const translations = {
             title: 'Practice Conversation',
             subtitle: 'Converse in real-time with AI to practice your spoken German.',
             creditsPerMin: 'credits/min',
+            credits: 'credits',
             disconnected: 'Disconnected',
             connected: 'Connected',
             connecting: 'Connecting...',
@@ -397,7 +427,10 @@ const translations = {
             usefulVocab: 'Useful Vocabulary',
             startConversation: 'Start Conversation',
             topicsTitle: 'Topics to Practice',
-            presentation: 'Introduction'
+            presentation: 'Introduction',
+            voiceFemale: 'Female',
+            voiceMale: 'Male',
+            voiceNeutral: 'Neutral'
         },
 
         // Listas de Palavras
@@ -417,7 +450,13 @@ const translations = {
             playFlashcards: 'Play Flashcards',
             importCsv: 'Import CSV',
             myLists: 'My Lists',
-            newList: 'New List'
+            newList: 'New List',
+            listsTotal: 'lists total',
+            words: 'words',
+            wordSingular: 'word',
+            selectList: 'Select a list to see the words',
+            loadingLists: 'Loading lists...',
+            createNewList: 'Create New List'
         },
 
         // Artigos
@@ -499,7 +538,15 @@ const translations = {
             syntax: 'Syntax',
             prepositions: 'Prepositions',
             vocabulary: 'Vocabulary',
-            errors: 'errors'
+            errors: 'errors',
+            generalStats: 'General Statistics',
+            startDate: 'Start Date:',
+            essaysSent: 'Essays Submitted:',
+            errorDistribution: 'Error Distribution',
+            errorsByCategory: 'Errors by Category',
+            errorHistory: 'Error History',
+            showLast10: 'Show last 10 essays',
+            showAll: 'Show all'
         },
 
         // Cenários de Conversação
@@ -528,7 +575,18 @@ const translations = {
             technology: 'Technology',
             technologyB1: 'Tech Support (B1)',
             health: 'Health/Wellness',
-            healthB1: 'Pharmacy (B1)'
+            healthB1: 'Pharmacy (B1)',
+            // Exact scenario subtitles (without level suffix)
+            lunchWithColleagues: 'Lunch with Colleagues',
+            celebrationWithProblems: 'Celebration with Problems',
+            atSupermarket: 'At the Supermarket',
+            atDoctor: 'At the Doctor',
+            healthWellness: 'Health and Wellness',
+            publicTransport: 'Public Transport',
+            socialEvent: 'Social Event',
+            atWork: 'At Work',
+            housing: 'Housing',
+            shopping: 'Shopping'
         },
 
         // Modais
