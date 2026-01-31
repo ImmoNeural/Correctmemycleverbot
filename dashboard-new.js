@@ -158,6 +158,37 @@ document.addEventListener('DOMContentLoaded', () => {
             artigosUpdateBtn.appendChild(document.createTextNode(' ' + window.t('artigos.update')));
         }
 
+        // Artigos tip text
+        const artigosTip = document.querySelector('#section-artigos .text-yellow-400.text-sm');
+        if (artigosTip) {
+            artigosTip.innerHTML = '💡 ' + window.t('artigos.tip');
+        }
+
+        // Flashcards game options
+        const flashcardVocabBtn = document.getElementById('btn-vocabulario-game');
+        if (flashcardVocabBtn) {
+            const h3 = flashcardVocabBtn.querySelector('h3');
+            const p = flashcardVocabBtn.querySelector('p');
+            if (h3) h3.textContent = window.t('flashcards.vocabulary');
+            if (p) p.textContent = window.t('flashcards.vocabDesc');
+        }
+
+        const flashcardArtigosBtn = document.getElementById('btn-artigos-game');
+        if (flashcardArtigosBtn) {
+            const h3 = flashcardArtigosBtn.querySelector('h3');
+            const p = flashcardArtigosBtn.querySelector('p');
+            if (h3) h3.textContent = window.t('flashcards.articles');
+            if (p) p.textContent = window.t('flashcards.articlesDesc');
+        }
+
+        const flashcardForcaBtn = document.getElementById('btn-forca-game');
+        if (flashcardForcaBtn) {
+            const h3 = flashcardForcaBtn.querySelector('h3');
+            const p = flashcardForcaBtn.querySelector('p');
+            if (h3) h3.textContent = window.t('flashcards.hangman');
+            if (p) p.textContent = window.t('flashcards.hangmanDesc');
+        }
+
         // Conversação
         const convStatusText = document.getElementById('conv-status-text');
         if (convStatusText) {
@@ -1896,18 +1927,27 @@ async function handleCorrectionSubmit(e) {
             // Renderizar no estilo da imagem: cores fortes APENAS nos labels, fundo escuro/neutro
             let html = '<div class="grid grid-cols-1 md:grid-cols-3 gap-6">';
 
+            // Get translations
+            const masculine = window.t ? window.t('artigos.masculine') : 'Masculino';
+            const feminine = window.t ? window.t('artigos.feminine') : 'Feminino';
+            const neuter = window.t ? window.t('artigos.neuter') : 'Neutro';
+            const wordsLabel = window.t ? window.t('artigos.words') : 'palavra(s)';
+            const noWordsWithDer = window.t ? window.t('artigos.noWordsWithArticle') + ' DER' : 'Nenhuma palavra com DER';
+            const noWordsWithDie = window.t ? window.t('artigos.noWordsWithArticle') + ' DIE' : 'Nenhuma palavra com DIE';
+            const noWordsWithDas = window.t ? window.t('artigos.noWordsWithArticle') + ' DAS' : 'Nenhuma palavra com DAS';
+
             // DER - Masculino (Label azul, fundo escuro)
             html += `
                 <div class="bg-slate-800 rounded-xl shadow-lg overflow-hidden">
                     <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-4 text-center">
                         <h3 class="text-5xl font-bold text-white mb-1">DER</h3>
-                        <p class="text-blue-100 text-sm">Masculino</p>
-                        <p class="text-blue-200 text-xs mt-1">${byArtigo.der.length} palavra(s)</p>
+                        <p class="text-blue-100 text-sm">${masculine}</p>
+                        <p class="text-blue-200 text-xs mt-1">${byArtigo.der.length} ${wordsLabel}</p>
                     </div>
                     <div class="p-4 space-y-2">
             `;
             if (byArtigo.der.length === 0) {
-                html += `<p class="text-slate-500 text-center text-sm py-4">Nenhuma palavra com DER</p>`;
+                html += `<p class="text-slate-500 text-center text-sm py-4">${noWordsWithDer}</p>`;
             } else {
                 byArtigo.der.forEach((word, index) => {
                     html += renderWord(word, index, 'der', 'border-blue-500');
@@ -1920,13 +1960,13 @@ async function handleCorrectionSubmit(e) {
                 <div class="bg-slate-800 rounded-xl shadow-lg overflow-hidden">
                     <div class="bg-gradient-to-r from-pink-600 to-pink-700 p-4 text-center">
                         <h3 class="text-5xl font-bold text-white mb-1">DIE</h3>
-                        <p class="text-pink-100 text-sm">Feminino</p>
-                        <p class="text-pink-200 text-xs mt-1">${byArtigo.die.length} palavra(s)</p>
+                        <p class="text-pink-100 text-sm">${feminine}</p>
+                        <p class="text-pink-200 text-xs mt-1">${byArtigo.die.length} ${wordsLabel}</p>
                     </div>
                     <div class="p-4 space-y-2">
             `;
             if (byArtigo.die.length === 0) {
-                html += `<p class="text-slate-500 text-center text-sm py-4">Nenhuma palavra com DIE</p>`;
+                html += `<p class="text-slate-500 text-center text-sm py-4">${noWordsWithDie}</p>`;
             } else {
                 byArtigo.die.forEach((word, index) => {
                     html += renderWord(word, index, 'die', 'border-pink-500');
@@ -1939,13 +1979,13 @@ async function handleCorrectionSubmit(e) {
                 <div class="bg-slate-800 rounded-xl shadow-lg overflow-hidden">
                     <div class="bg-gradient-to-r from-green-600 to-green-700 p-4 text-center">
                         <h3 class="text-5xl font-bold text-white mb-1">DAS</h3>
-                        <p class="text-green-100 text-sm">Neutro</p>
-                        <p class="text-green-200 text-xs mt-1">${byArtigo.das.length} palavra(s)</p>
+                        <p class="text-green-100 text-sm">${neuter}</p>
+                        <p class="text-green-200 text-xs mt-1">${byArtigo.das.length} ${wordsLabel}</p>
                     </div>
                     <div class="p-4 space-y-2">
             `;
             if (byArtigo.das.length === 0) {
-                html += `<p class="text-slate-500 text-center text-sm py-4">Nenhuma palavra com DAS</p>`;
+                html += `<p class="text-slate-500 text-center text-sm py-4">${noWordsWithDas}</p>`;
             } else {
                 byArtigo.das.forEach((word, index) => {
                     html += renderWord(word, index, 'das', 'border-green-500');
