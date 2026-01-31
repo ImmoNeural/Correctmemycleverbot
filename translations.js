@@ -115,7 +115,11 @@ const translations = {
             list: 'Lista',
             actions: 'Ações',
             noWords: 'Nenhuma palavra encontrada',
-            addFirstWord: 'Adicione sua primeira palavra!'
+            addFirstWord: 'Adicione sua primeira palavra!',
+            playFlashcards: 'Jogar Flashcards',
+            importCsv: 'Importar CSV',
+            myLists: 'Minhas Listas',
+            newList: 'Nova Lista'
         },
 
         // Artigos
@@ -231,7 +235,27 @@ const translations = {
             warning: 'Atenção',
             noCredits: 'Créditos insuficientes',
             buyCredits: 'Comprar Créditos',
-            words: 'palavras'
+            words: 'palavras',
+            word: 'palavra',
+            listsTotal: 'listas no total',
+            credits: 'créditos',
+            resultPlaceholder: 'O texto parafraseado aparecerá aqui',
+            clickTheme: 'Clique em um tema para ver os cenários'
+        },
+
+        // Tópicos de Conversação
+        topics: {
+            presentation: 'Apresentação',
+            restaurant: 'Restaurante',
+            shopping: 'Fazer Compras',
+            health: 'Saúde',
+            transport: 'Transporte',
+            social: 'Social',
+            work: 'Trabalho',
+            housing: 'Moradia',
+            sports: 'Esportes',
+            education: 'Educação',
+            technology: 'Tecnologia'
         },
 
         // Bot/Chatbot
@@ -365,7 +389,11 @@ const translations = {
             list: 'List',
             actions: 'Actions',
             noWords: 'No words found',
-            addFirstWord: 'Add your first word!'
+            addFirstWord: 'Add your first word!',
+            playFlashcards: 'Play Flashcards',
+            importCsv: 'Import CSV',
+            myLists: 'My Lists',
+            newList: 'New List'
         },
 
         // Artigos
@@ -481,7 +509,27 @@ const translations = {
             warning: 'Warning',
             noCredits: 'Insufficient credits',
             buyCredits: 'Buy Credits',
-            words: 'words'
+            words: 'words',
+            word: 'word',
+            listsTotal: 'lists total',
+            credits: 'credits',
+            resultPlaceholder: 'Paraphrased text will appear here',
+            clickTheme: 'Click on a theme to see scenarios'
+        },
+
+        // Tópicos de Conversação
+        topics: {
+            presentation: 'Introduction',
+            restaurant: 'Restaurant',
+            shopping: 'Shopping',
+            health: 'Health',
+            transport: 'Transportation',
+            social: 'Social',
+            work: 'Work',
+            housing: 'Housing',
+            sports: 'Sports',
+            education: 'Education',
+            technology: 'Technology'
         },
 
         // Bot/Chatbot

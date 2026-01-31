@@ -205,19 +205,182 @@ document.addEventListener('DOMContentLoaded', () => {
             topicsTitle.appendChild(document.createTextNode(' ' + window.t('conversacao.topicsTitle')));
         }
 
-        // Créditos labels
-        document.querySelectorAll('.text-slate-300 strong + span, strong + span').forEach(span => {
-            const text = span.textContent.trim();
-            if (text === 'créditos/correção' || text === 'credits/correction') {
-                span.textContent = window.t('corrigir.creditsPerCorrection');
-            } else if (text === 'créditos/uso' || text === 'credits/use') {
-                span.textContent = window.t('parafrasear.creditsPerUse');
-            } else if (text === 'créditos/min' || text === 'credits/min') {
-                span.textContent = window.t('conversacao.creditsPerMin');
+        // === SIDEBAR - Comprar Créditos ===
+        const buyCreditsLink = document.querySelector('[data-section="creditos"]');
+        if (buyCreditsLink) {
+            const textSpan = buyCreditsLink.querySelector('.sidebar-text');
+            if (textSpan) textSpan.textContent = window.t('general.buyCredits');
+        }
+
+        // === CORRIGIR - Word count ===
+        const wordCountEl = document.getElementById('word-count');
+        if (wordCountEl) {
+            const countText = wordCountEl.textContent;
+            const match = countText.match(/(\d+)\s*\/\s*(\d+)/);
+            if (match) {
+                wordCountEl.textContent = `${match[1]} / ${match[2]} ${window.t('general.words')}`;
+            }
+        }
+
+        // === CORRIGIR - Credit badge ===
+        const corrigirCreditBadge = document.querySelector('#section-corrigir .text-xs.text-slate-300');
+        if (corrigirCreditBadge && (corrigirCreditBadge.textContent.includes('créditos') || corrigirCreditBadge.textContent.includes('credits'))) {
+            corrigirCreditBadge.innerHTML = '<strong class="text-cyan-400">20</strong> ' + window.t('corrigir.creditsPerCorrection');
+        }
+
+        // === PARAFRASEAR - All elements ===
+        const originalTextLabel = document.querySelector('#section-parafrasear label.text-slate-300');
+        if (originalTextLabel) originalTextLabel.textContent = window.t('parafrasear.originalText');
+
+        const paraphraseResult = document.getElementById('paraphrase-result');
+        if (paraphraseResult && (paraphraseResult.textContent.includes('parafraseado') || paraphraseResult.textContent.includes('Paraphrased'))) {
+            paraphraseResult.textContent = window.t('general.resultPlaceholder');
+        }
+
+        const styleTitle = document.querySelector('#section-parafrasear .text-slate-300.mb-3');
+        if (styleTitle && (styleTitle.textContent.includes('Estilo') || styleTitle.textContent.includes('style'))) {
+            styleTitle.textContent = window.t('parafrasear.styleTitle');
+        }
+
+        // Style cards - find by radio input values
+        const styleLabels = document.querySelectorAll('#section-parafrasear .paraphrase-style-option');
+        styleLabels.forEach(label => {
+            const radio = label.querySelector('input[type="radio"]');
+            if (!radio) return;
+            const style = radio.value;
+            const div = label.querySelector('div');
+            if (!div) return;
+            const titleEl = div.querySelector('.text-sm.font-medium');
+            const descEl = div.querySelector('.text-xs.text-slate-400');
+
+            if (style && titleEl && descEl) {
+                const styleMap = {
+                    'formal': { title: 'parafrasear.styleFormal', desc: 'parafrasear.styleFormalDesc' },
+                    'educado': { title: 'parafrasear.stylePolite', desc: 'parafrasear.stylePoliteDesc' },
+                    'despojado': { title: 'parafrasear.styleCasual', desc: 'parafrasear.styleCasualDesc' },
+                    'original': { title: 'parafrasear.styleOriginal', desc: 'parafrasear.styleOriginalDesc' },
+                    'emojis': { title: 'parafrasear.styleEmoji', desc: 'parafrasear.styleEmojiDesc' },
+                    'simples': { title: 'parafrasear.styleSimple', desc: 'parafrasear.styleSimpleDesc' }
+                };
+                if (styleMap[style]) {
+                    titleEl.textContent = window.t(styleMap[style].title);
+                    descEl.textContent = window.t(styleMap[style].desc);
+                }
             }
         });
 
-        // Lista de palavras
+        // Parafrasear credit badge
+        const parafrasearCreditBadge = document.querySelector('#section-parafrasear .text-xs.text-slate-300');
+        if (parafrasearCreditBadge && (parafrasearCreditBadge.textContent.includes('créditos') || parafrasearCreditBadge.textContent.includes('credits'))) {
+            parafrasearCreditBadge.innerHTML = '<strong class="text-cyan-400">5</strong> ' + window.t('parafrasear.creditsPerUse');
+        }
+
+        // === CHATBOT - Credit badges ===
+        const chatbotCreditBadges = document.querySelectorAll('#section-chatbot .text-xs.text-slate-300');
+        chatbotCreditBadges.forEach(badge => {
+            const text = badge.textContent;
+            if (text.includes('Gram') || text.includes('Grammar')) {
+                badge.innerHTML = window.t('chatbot.grammar') + ': <strong class="text-green-400">5</strong>';
+            } else if (text.includes('Escr') || text.includes('Writing')) {
+                badge.innerHTML = window.t('chatbot.writing') + ': <strong class="text-emerald-400">2.5</strong>';
+            }
+        });
+
+        // === CONVERSAÇÃO - All elements ===
+        const convCreditBadge = document.querySelector('#section-conversacao .text-xs.text-slate-300');
+        if (convCreditBadge && (convCreditBadge.textContent.includes('créditos') || convCreditBadge.textContent.includes('credits'))) {
+            convCreditBadge.innerHTML = '<strong class="text-cyan-400">10</strong> ' + window.t('conversacao.creditsPerMin');
+        }
+
+        // Credits counter
+        const creditsCounter = document.getElementById('conv-credits-counter');
+        if (creditsCounter) {
+            const match = creditsCounter.textContent.match(/[\d.]+/);
+            if (match) {
+                creditsCounter.textContent = match[0] + ' ' + window.t('general.credits');
+            }
+        }
+
+        // Error analysis
+        const errorAnalysisTitle = document.querySelector('#conv-errors-container > .flex > span');
+        if (errorAnalysisTitle && (errorAnalysisTitle.textContent.includes('Análise') || errorAnalysisTitle.textContent.includes('Analysis'))) {
+            errorAnalysisTitle.textContent = window.t('conversacao.errorAnalysis');
+        }
+
+        const errorPlaceholder = document.getElementById('conv-errors-placeholder');
+        if (errorPlaceholder) {
+            errorPlaceholder.textContent = window.t('conversacao.errorsWillAppear');
+        }
+
+        // Topics panel - by data-group attribute
+        const topicsByGroup = {
+            'restaurante': 'topics.restaurant',
+            'compras': 'topics.shopping',
+            'saude': 'topics.health',
+            'transporte': 'topics.transport',
+            'social': 'topics.social',
+            'trabalho': 'topics.work',
+            'moradia': 'topics.housing',
+            'esportes': 'topics.sports',
+            'educacao': 'topics.education',
+            'tecnologia': 'topics.technology'
+        };
+
+        // Translate scenario group titles
+        document.querySelectorAll('#section-conversacao .scenario-toggle').forEach(btn => {
+            const group = btn.getAttribute('data-group');
+            if (group && topicsByGroup[group]) {
+                const textSpan = btn.querySelector('.flex.items-center.gap-3 > span:last-child');
+                if (textSpan) {
+                    textSpan.textContent = window.t(topicsByGroup[group]);
+                }
+            }
+        });
+
+        // Translate "Apresentação" topic
+        const apresentacaoBtn = document.querySelector('#section-conversacao .conv-topic-btn');
+        if (apresentacaoBtn) {
+            const textSpan = apresentacaoBtn.querySelector('span:last-child');
+            if (textSpan && (textSpan.textContent.includes('Apresentação') || textSpan.textContent.includes('Introduction'))) {
+                textSpan.textContent = window.t('topics.presentation');
+            }
+        }
+
+        // Topics panel title
+        const topicsPanelTitle = document.querySelector('#section-conversacao .w-72 h4, #section-conversacao h4.text-lg');
+        if (topicsPanelTitle) {
+            const svg = topicsPanelTitle.querySelector('svg');
+            const currentText = topicsPanelTitle.textContent.trim();
+            if (currentText.includes('Temas') || currentText.includes('Topics')) {
+                topicsPanelTitle.innerHTML = '';
+                if (svg) topicsPanelTitle.appendChild(svg);
+                topicsPanelTitle.appendChild(document.createTextNode(' ' + window.t('conversacao.topicsTitle')));
+            }
+        }
+
+        // Click theme hint at bottom
+        const clickThemeHint = document.querySelector('#section-conversacao p.text-xs.text-slate-500');
+        if (clickThemeHint && (clickThemeHint.textContent.includes('Clique') || clickThemeHint.textContent.includes('Click'))) {
+            clickThemeHint.textContent = window.t('general.clickTheme');
+        }
+
+        // === WORDLIST - All buttons ===
+        const playFlashcardsBtn = document.getElementById('play-flashcards-btn');
+        if (playFlashcardsBtn) {
+            const svg = playFlashcardsBtn.querySelector('svg');
+            playFlashcardsBtn.innerHTML = '';
+            if (svg) playFlashcardsBtn.appendChild(svg);
+            playFlashcardsBtn.appendChild(document.createTextNode(' ' + window.t('wordlist.playFlashcards')));
+        }
+
+        const importCsvBtn = document.getElementById('import-csv-btn');
+        if (importCsvBtn) {
+            const svg = importCsvBtn.querySelector('svg');
+            importCsvBtn.innerHTML = '';
+            if (svg) importCsvBtn.appendChild(svg);
+            importCsvBtn.appendChild(document.createTextNode(' ' + window.t('wordlist.importCsv')));
+        }
+
         const addWordBtn = document.getElementById('add-word-btn');
         if (addWordBtn) {
             const svg = addWordBtn.querySelector('svg');
@@ -226,22 +389,64 @@ document.addEventListener('DOMContentLoaded', () => {
             addWordBtn.appendChild(document.createTextNode(' ' + window.t('wordlist.addWord')));
         }
 
-        const createListBtn = document.getElementById('create-list-btn');
-        if (createListBtn) {
-            const svg = createListBtn.querySelector('svg');
-            createListBtn.innerHTML = '';
-            if (svg) createListBtn.appendChild(svg);
-            createListBtn.appendChild(document.createTextNode(' ' + window.t('wordlist.createList')));
+        // My Lists title
+        const myListsTitle = document.querySelector('#listas-menu-container h3, #section-wordlist h3.text-cyan-400');
+        if (myListsTitle && (myListsTitle.textContent.includes('Minhas') || myListsTitle.textContent.includes('My'))) {
+            const svg = myListsTitle.querySelector('svg');
+            myListsTitle.innerHTML = '';
+            if (svg) myListsTitle.appendChild(svg);
+            myListsTitle.appendChild(document.createTextNode(' ' + window.t('wordlist.myLists')));
+        }
+
+        // Lists total count
+        const listsCountEl = document.querySelector('#listas-menu-container .text-slate-400.text-sm');
+        if (listsCountEl) {
+            const match = listsCountEl.textContent.match(/\d+/);
+            if (match) {
+                listsCountEl.textContent = match[0] + ' ' + window.t('general.listsTotal');
+            }
+        }
+
+        // New List button
+        const newListBtn = document.getElementById('btn-nova-lista');
+        if (newListBtn) {
+            const svg = newListBtn.querySelector('svg');
+            newListBtn.innerHTML = '';
+            if (svg) newListBtn.appendChild(svg);
+            newListBtn.appendChild(document.createTextNode(' ' + window.t('wordlist.newList')));
+        }
+
+        // Words count in lists
+        document.querySelectorAll('#listas-menu .text-slate-400.text-xs').forEach(countEl => {
+            const text = countEl.textContent;
+            const match = text.match(/(\d+)/);
+            if (match) {
+                const num = parseInt(match[1]);
+                if (num === 1) {
+                    countEl.textContent = num + ' ' + window.t('general.word');
+                } else {
+                    countEl.textContent = num + ' ' + window.t('general.words');
+                }
+            }
+        });
+
+        // List title (palavras count)
+        const listTitleWords = document.querySelector('#wordlist-content h3 .text-slate-400');
+        if (listTitleWords) {
+            const text = listTitleWords.textContent;
+            const match = text.match(/\((\d+)/);
+            if (match) {
+                const num = parseInt(match[1]);
+                if (num === 1) {
+                    listTitleWords.textContent = `(${num} ${window.t('general.word')})`;
+                } else {
+                    listTitleWords.textContent = `(${num} ${window.t('general.words')})`;
+                }
+            }
         }
 
         const searchInput = document.getElementById('wordlist-search');
         if (searchInput) searchInput.placeholder = window.t('wordlist.search');
-
-        // Progresso
-        const totalEssaysLabel = document.querySelector('#section-progresso .text-slate-400');
-        if (totalEssaysLabel && totalEssaysLabel.textContent.includes('Redações') || totalEssaysLabel?.textContent.includes('Essays')) {
-            // Atualiza o label de redações se necessário
-        }
 
         console.log('✅ Traduções aplicadas');
     }

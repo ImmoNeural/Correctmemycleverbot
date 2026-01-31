@@ -695,13 +695,19 @@
         flagBr: `<svg class="flag-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 6"><rect width="9" height="6" fill="#009B3A"/><path d="M4.5 0.5L8.5 3L4.5 5.5L0.5 3Z" fill="#FFCC29"/><circle cx="4.5" cy="3" r="1.75" fill="#002776"/></svg>`
     };
     
+    // Get initial branding based on current language
+    const initialBranding = {
+        name: bt('branding.name'),
+        slogan: bt('branding.slogan')
+    };
+
     const headerHTML = `
         <div class="chat-header">
-             <img class="chat-header-logo" src="${settings.branding.logo}" alt="${settings.branding.name}">
+             <img class="chat-header-logo" src="${settings.branding.logo}" alt="${initialBranding.name}">
              <div class="header-content">
-                <span class="chat-header-title">${settings.branding.name}</span>
+                <span class="chat-header-title">${initialBranding.name}</span>
                 <div class="slogan-container">
-                    <span class="chat-header-slogan">${settings.branding.slogan}</span>
+                    <span class="chat-header-slogan">${initialBranding.slogan}</span>
                     ${icons.flagDe}
                     ${icons.flagBr}
                 </div>
@@ -719,7 +725,7 @@
                         ${icons.attachment}
                     </label>
                     <input type="file" id="chat-file-upload" class="file-upload-input">
-                    <textarea class="chat-textarea" placeholder="Digite sua mensagem..." rows="1"></textarea>
+                    <textarea class="chat-textarea" placeholder="${bt('typeMessage')}" rows="1"></textarea>
                 </div>
                 <button class="control-btn chat-submit">${icons.send}</button>
             </div>
