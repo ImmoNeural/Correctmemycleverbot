@@ -376,7 +376,21 @@ document.addEventListener('DOMContentLoaded', () => {
             'Transporte Público': 'scenarios.publicTransport',
             'Public Transport': 'scenarios.publicTransport',
             'Fazer Compras': 'scenarios.shopping',
-            'Shopping': 'scenarios.shopping'
+            'Shopping': 'scenarios.shopping',
+            'Planejando Férias': 'scenarios.planningVacation',
+            'Planning Vacation': 'scenarios.planningVacation',
+            'Festa de Aniversário': 'scenarios.birthdayParty',
+            'Birthday Party': 'scenarios.birthdayParty',
+            'Primeiro Dia no Estágio': 'scenarios.firstDayInternship',
+            'First Day at Internship': 'scenarios.firstDayInternship',
+            'Procurando Apartamento': 'scenarios.lookingForApartment',
+            'Looking for Apartment': 'scenarios.lookingForApartment',
+            'Na Academia': 'scenarios.atGym',
+            'At the Gym': 'scenarios.atGym',
+            'Curso de Alemão': 'scenarios.germanCourse',
+            'German Course': 'scenarios.germanCourse',
+            'Problemas Tecnológicos': 'scenarios.techProblems',
+            'Tech Problems': 'scenarios.techProblems'
         };
 
         // Translate scenario submenu items
@@ -471,6 +485,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const textSpan = buyCreditsLink.querySelector('.sidebar-text');
             if (textSpan) textSpan.textContent = window.t('general.buyCredits');
         }
+
+        // === CREDITOS - Buy buttons ===
+        const buyButtons = document.querySelectorAll('.buy-credits-btn');
+        const priceTranslations = {
+            'price_1RusAKCYJo68kcPWjlHcTBSC': 'creditos.buy500',
+            'price_1RusCBCYJo68kcPWGnvYB6f8': 'creditos.buy1000',
+            'price_1RusDPCYJo68kcPWTlp9t9hz': 'creditos.buy1500'
+        };
+        buyButtons.forEach(btn => {
+            const priceId = btn.dataset.priceId;
+            if (priceId && priceTranslations[priceId]) {
+                btn.textContent = window.t(priceTranslations[priceId]);
+            }
+        });
 
         // === CORRIGIR - Word count ===
         const wordCountEl = document.getElementById('word-count');
@@ -1044,8 +1072,15 @@ document.addEventListener('DOMContentLoaded', () => {
              if(noDataMessage) noDataMessage.remove();
         }
 
+        const chartLabels = [
+            window.t ? window.t('progresso.declension') : 'Declinação',
+            window.t ? window.t('progresso.conjugation') : 'Conjugação',
+            window.t ? window.t('progresso.syntax') : 'Sintaxe',
+            window.t ? window.t('progresso.prepositions') : 'Preposição',
+            window.t ? window.t('progresso.vocabulary') : 'Vocabulário'
+        ];
         const data = {
-            labels: ['Declinação', 'Conjugação', 'Sintaxe', 'Preposição', 'Vocabulário'],
+            labels: chartLabels,
             datasets: [{
                 data: errorData,
                 backgroundColor: ['#f472b6', '#c084fc', '#fb923c', '#60a5fa', '#4ade80'],
@@ -1111,23 +1146,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (historyChart) historyChart.destroy();
 
-        const labels = historyData.map((_, index) => `Redação ${index + 1}`);
+        const essayLabel = window.t ? window.t('progresso.essay') : 'Redação';
+        const labels = historyData.map((_, index) => `${essayLabel} ${index + 1}`);
         const declinacaoData = historyData.map(h => h.error_declinacao || 0);
         const conjugacaoData = historyData.map(h => h.error_conjugacao || 0);
         const sintaxeData = historyData.map(h => h.error_sintaxe || 0);
         const preposicaoData = historyData.map(h => h.error_preposicao || 0);
         const vocabularioData = historyData.map(h => h.error_vocabulario || 0);
 
+        // Translated labels for chart legend
+        const declensionLabel = window.t ? window.t('progresso.declension') : 'Declinação';
+        const conjugationLabel = window.t ? window.t('progresso.conjugation') : 'Conjugação';
+        const syntaxLabel = window.t ? window.t('progresso.syntax') : 'Sintaxe';
+        const prepositionsLabel = window.t ? window.t('progresso.prepositions') : 'Preposição';
+        const vocabularyLabel = window.t ? window.t('progresso.vocabulary') : 'Vocabulário';
+
         historyChart = new Chart(chartCanvas, {
             type: 'bar',
             data: {
                 labels: labels,
                 datasets: [
-                    { label: 'Declinação', data: declinacaoData, backgroundColor: '#f472b6' },
-                    { label: 'Conjugação', data: conjugacaoData, backgroundColor: '#c084fc' },
-                    { label: 'Sintaxe', data: sintaxeData, backgroundColor: '#fb923c' },
-                    { label: 'Preposição', data: preposicaoData, backgroundColor: '#60a5fa' },
-                    { label: 'Vocabulário', data: vocabularioData, backgroundColor: '#4ade80' }
+                    { label: declensionLabel, data: declinacaoData, backgroundColor: '#f472b6' },
+                    { label: conjugationLabel, data: conjugacaoData, backgroundColor: '#c084fc' },
+                    { label: syntaxLabel, data: sintaxeData, backgroundColor: '#fb923c' },
+                    { label: prepositionsLabel, data: preposicaoData, backgroundColor: '#60a5fa' },
+                    { label: vocabularyLabel, data: vocabularioData, backgroundColor: '#4ade80' }
                 ]
             },
             options: {
@@ -1754,15 +1797,17 @@ async function handleCorrectionSubmit(e) {
         let words = text.trim().split(/\s+/).filter(Boolean);
         let wordCount = text.trim() === '' ? 0 : words.length;
 
+        const wordsLabel = window.t ? window.t('wordlist.words') : 'palavras';
+        const limitExceeded = window.t ? window.t('corrigir.wordLimit') : 'O texto excede o limite de 350 palavras.';
         if (wordCount > 350) {
-            wordCounterEl.textContent = `${wordCount} / 350 palavras (Limite excedido!)`;
+            wordCounterEl.textContent = `${wordCount} / 350 ${wordsLabel} (Limite excedido!)`;
             wordCounterEl.classList.add('text-red-400');
             wordCounterEl.classList.remove('text-slate-400');
             // MOSTRAR ERRO: Mostra o erro de limite no painel de mensagem
-            if (formMessageEl) formMessageEl.innerHTML = '<p class="text-red-400">O texto excede o limite de 350 palavras.</p>';
-        
+            if (formMessageEl) formMessageEl.innerHTML = `<p class="text-red-400">${limitExceeded}</p>`;
+
         } else {
-            wordCounterEl.textContent = `${wordCount} / 350 palavras`;
+            wordCounterEl.textContent = `${wordCount} / 350 ${wordsLabel}`;
             wordCounterEl.classList.remove('text-red-400');
             wordCounterEl.classList.add('text-slate-400');
             
@@ -1824,7 +1869,8 @@ async function handleCorrectionSubmit(e) {
                 console.log('Nenhuma palavra encontrada');
                 listasMenu.innerHTML = '<p class="text-slate-400 text-sm text-center py-8">Nenhuma lista encontrada</p>';
                 if (totalListasCount) {
-                    totalListasCount.innerHTML = '<span class="font-semibold text-white">0</span> listas no total';
+                    const listsText = window.t ? window.t('wordlist.listsTotal') : 'listas no total';
+                    totalListasCount.innerHTML = `<span class="font-semibold text-white">0</span> ${listsText}`;
                 }
                 const contentDiv = document.getElementById('wordlist-content');
                 if (contentDiv) {
@@ -1871,14 +1917,18 @@ async function handleCorrectionSubmit(e) {
 
         // Atualizar contador total
         if (totalListasCount) {
-            totalListasCount.innerHTML = `<span class="font-semibold text-white">${totalListas}</span> lista${totalListas !== 1 ? 's' : ''} no total`;
+            const listsText = window.t ? window.t('wordlist.listsTotal') : 'listas no total';
+            totalListasCount.innerHTML = `<span class="font-semibold text-white">${totalListas}</span> ${listsText}`;
         }
 
         // Renderizar botões das listas
         let html = '';
+        const wordsText = window.t ? window.t('wordlist.words') : 'palavras';
+        const wordText = window.t ? window.t('wordlist.wordSingular') : 'palavra';
         Object.keys(allWordsByList).forEach(listName => {
             const wordCount = allWordsByList[listName].length;
             const isActive = listName === activeListName;
+            const wordLabel = wordCount !== 1 ? wordsText : wordText;
 
             html += `
                 <div class="relative group">
@@ -1894,7 +1944,7 @@ async function handleCorrectionSubmit(e) {
                             <div class="flex-1 min-w-0">
                                 <p class="font-semibold text-white truncate">${escapeHtml(listName)}</p>
                                 <p class="text-xs ${isActive ? 'text-purple-100' : 'text-slate-400'} mt-1">
-                                    ${wordCount} palavra${wordCount !== 1 ? 's' : ''}
+                                    ${wordCount} ${wordLabel}
                                 </p>
                             </div>
                             <div class="ml-2 flex-shrink-0">
@@ -2013,6 +2063,10 @@ async function handleCorrectionSubmit(e) {
 
         console.log(`Renderizando ${listWords.length} palavras da lista "${listName}"`);
 
+        const wordsTextLabel = window.t ? window.t('wordlist.words') : 'palavras';
+        const wordTextLabel = window.t ? window.t('wordlist.wordSingular') : 'palavra';
+        const countLabel = listWords.length !== 1 ? wordsTextLabel : wordTextLabel;
+
         let html = `
             <div class="bg-slate-800 p-6 rounded-lg shadow-lg">
                 <h3 class="text-2xl font-bold mb-6 text-purple-400 flex items-center gap-3">
@@ -2020,7 +2074,7 @@ async function handleCorrectionSubmit(e) {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                     </svg>
                     ${escapeHtml(listName)}
-                    <span class="text-sm font-normal text-slate-400">(${listWords.length} palavra${listWords.length !== 1 ? 's' : ''})</span>
+                    <span class="text-sm font-normal text-slate-400">(${listWords.length} ${countLabel})</span>
                 </h3>
                 <div class="space-y-3">
         `;
@@ -4302,7 +4356,10 @@ async function handleCorrectionSubmit(e) {
         if (textarea && counter) {
             const text = textarea.value.trim();
             const wordCount = text ? text.split(/\s+/).length : 0;
-            counter.textContent = `${wordCount} palavra${wordCount !== 1 ? 's' : ''}`;
+            const wordsText = window.t ? window.t('wordlist.words') : 'palavras';
+            const wordText = window.t ? window.t('wordlist.wordSingular') : 'palavra';
+            const wordLabel = wordCount !== 1 ? wordsText : wordText;
+            counter.textContent = `${wordCount} ${wordLabel}`;
         }
     }
 

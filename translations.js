@@ -219,7 +219,8 @@ const translations = {
             errorsByCategory: 'Erros por Categoria',
             errorHistory: 'Histórico de Erros',
             showLast10: 'Mostrar últimas 10 redações',
-            showAll: 'Mostrar todas'
+            showAll: 'Mostrar todas',
+            essay: 'Redação'
         },
 
         // Cenários de Conversação
@@ -259,7 +260,14 @@ const translations = {
             socialEvent: 'Evento Social',
             atWork: 'No Trabalho',
             housing: 'Moradia',
-            shopping: 'Fazer Compras'
+            shopping: 'Fazer Compras',
+            planningVacation: 'Planejando Férias',
+            birthdayParty: 'Festa de Aniversário',
+            firstDayInternship: 'Primeiro Dia no Estágio',
+            lookingForApartment: 'Procurando Apartamento',
+            atGym: 'Na Academia',
+            germanCourse: 'Curso de Alemão',
+            techProblems: 'Problemas Tecnológicos'
         },
 
         // Modais
@@ -293,7 +301,10 @@ const translations = {
         // Página de Créditos
         creditos: {
             title: 'Comprar Créditos',
-            subtitle: 'Adquira mais créditos para continuar aprendendo.'
+            subtitle: 'Adquira mais créditos para continuar aprendendo.',
+            buy500: 'Comprar 500 Créditos',
+            buy1000: 'Comprar 1000 Créditos',
+            buy1500: 'Comprar 1500 Créditos'
         },
 
         // Tópicos de Conversação
@@ -546,7 +557,8 @@ const translations = {
             errorsByCategory: 'Errors by Category',
             errorHistory: 'Error History',
             showLast10: 'Show last 10 essays',
-            showAll: 'Show all'
+            showAll: 'Show all',
+            essay: 'Essay'
         },
 
         // Cenários de Conversação
@@ -586,7 +598,14 @@ const translations = {
             socialEvent: 'Social Event',
             atWork: 'At Work',
             housing: 'Housing',
-            shopping: 'Shopping'
+            shopping: 'Shopping',
+            planningVacation: 'Planning Vacation',
+            birthdayParty: 'Birthday Party',
+            firstDayInternship: 'First Day at Internship',
+            lookingForApartment: 'Looking for Apartment',
+            atGym: 'At the Gym',
+            germanCourse: 'German Course',
+            techProblems: 'Tech Problems'
         },
 
         // Modais
@@ -620,7 +639,10 @@ const translations = {
         // Credits Page
         creditos: {
             title: 'Buy Credits',
-            subtitle: 'Get more credits to continue learning.'
+            subtitle: 'Get more credits to continue learning.',
+            buy500: 'Buy 500 Credits',
+            buy1000: 'Buy 1000 Credits',
+            buy1500: 'Buy 1500 Credits'
         },
 
         // Tópicos de Conversação
