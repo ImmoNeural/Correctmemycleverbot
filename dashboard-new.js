@@ -561,10 +561,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Error analysis
-        const errorAnalysisTitle = document.querySelector('#conv-errors-container > .flex > span');
-        if (errorAnalysisTitle && (errorAnalysisTitle.textContent.includes('Análise') || errorAnalysisTitle.textContent.includes('Analysis'))) {
-            errorAnalysisTitle.textContent = window.t('conversacao.errorAnalysis');
+        // Error analysis (secondary selector)
+        const errorAnalysisTitleAlt = document.querySelector('#conv-errors-container > .flex > span');
+        if (errorAnalysisTitleAlt && (errorAnalysisTitleAlt.textContent.includes('Análise') || errorAnalysisTitleAlt.textContent.includes('Analysis'))) {
+            errorAnalysisTitleAlt.textContent = window.t('conversacao.errorAnalysis');
         }
 
         const errorPlaceholder = document.getElementById('conv-errors-placeholder');
