@@ -4123,8 +4123,9 @@ async function handleCorrectionSubmit(e) {
                     console.log('[DICA] Mostrando dica', indiceDica + 1, ':', novaDica);
 
                     // Mostrar todas as dicas usadas
+                    const hintLabel = window.t('forca.hint');
                     const dicasHtml = forcaGameState.dicasUsadas.map((d, i) =>
-                        `<span class="block mb-1"><strong>Dica ${i + 1}:</strong> ${d}</span>`
+                        `<span class="block mb-1"><strong>${hintLabel} ${i + 1}:</strong> ${d}</span>`
                     ).join('');
                     updateDicaText(dicasHtml);
 
@@ -6756,14 +6757,14 @@ GESPRÄCHSENDE: Nach dem Gespräch: "Das war ein gutes erstes Gespräch! Versuch
         // Calcular créditos em tempo real (10 créditos por minuto)
         if (creditsEl) {
             const creditsUsed = (conversacaoState.totalSeconds / 60) * 10;
-            creditsEl.textContent = `${creditsUsed.toFixed(1)} créditos`;
+            creditsEl.textContent = `${creditsUsed.toFixed(1)} ${window.t('conversacao.credits')}`;
         }
     }
 
     function updateCreditsUsed() {
         const creditsEl = document.getElementById('conv-credits-used');
         if (creditsEl) {
-            creditsEl.textContent = `${conversacaoState.creditsUsed.toFixed(1)} créditos usados`;
+            creditsEl.textContent = `${conversacaoState.creditsUsed.toFixed(1)} ${window.t('conversacao.credits')}`;
         }
     }
 
