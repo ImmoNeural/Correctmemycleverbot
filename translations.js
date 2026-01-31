@@ -103,7 +103,11 @@ const translations = {
             presentation: 'Apresentação',
             voiceFemale: 'Feminina',
             voiceMale: 'Masculina',
-            voiceNeutral: 'Neutra'
+            voiceNeutral: 'Neutra',
+            analyzing: 'Analisando sua conversa...',
+            noPhraseCaptured: 'Nenhuma frase sua foi captada para análise.',
+            analysisError: 'Erro na análise. Tente novamente.',
+            noErrorsFound: 'Parabéns! Nenhum erro encontrado na sua conversa.'
         },
 
         // Listas de Palavras
@@ -450,7 +454,11 @@ const translations = {
             presentation: 'Introduction',
             voiceFemale: 'Female',
             voiceMale: 'Male',
-            voiceNeutral: 'Neutral'
+            voiceNeutral: 'Neutral',
+            analyzing: 'Analyzing your conversation...',
+            noPhraseCaptured: 'No phrases were captured for analysis.',
+            analysisError: 'Analysis error. Try again.',
+            noErrorsFound: 'Congratulations! No errors found in your conversation.'
         },
 
         // Listas de Palavras
