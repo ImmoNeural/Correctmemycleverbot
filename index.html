@@ -319,6 +319,23 @@
         .faq-question.open .faq-icon {
             transform: rotate(45deg);
         }
+        /* Language Flags */
+        .lang-flag {
+            opacity: 0.5;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            padding: 2px;
+            border-radius: 4px;
+            border: 2px solid transparent;
+        }
+        .lang-flag:hover {
+            opacity: 0.8;
+        }
+        .lang-flag.active {
+            opacity: 1;
+            border-color: rgba(168, 85, 247, 0.6);
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+        }
     </style>
 </head>
 <body class="text-white overflow-x-hidden">
@@ -340,15 +357,39 @@
                          loading="eager" decoding="async">
                 </a>
                 <div class="hidden md:flex items-center space-x-8">
-                    <a href="#features" class="nav-link">Recursos</a>
-                    <a href="#how-it-works" class="nav-link">Como Funciona</a>
+                    <a href="#features" class="nav-link" data-i18n="nav.features">Recursos</a>
+                    <a href="#how-it-works" class="nav-link" data-i18n="nav.howItWorks">Como Funciona</a>
                     <a href="#faq" class="nav-link">FAQ</a>
                 </div>
-                <a href="login.html">
-                    <button class="shiny-button text-white font-semibold py-2.5 px-6 rounded-full text-sm">
-                        Comece Agora
-                    </button>
-                </a>
+                <div class="flex items-center gap-4">
+                    <!-- Language Switcher -->
+                    <div class="flex items-center gap-2">
+                        <button id="lang-pt" class="lang-flag active" title="Português">
+                            <svg width="24" height="18" viewBox="0 0 640 480" class="rounded shadow-sm">
+                                <g stroke-width="1pt">
+                                    <path fill="#229e45" d="M0 0h640v480H0z"/>
+                                    <path fill="#f8e509" d="M321.4 436L37.2 240 321.4 44l284.2 196z"/>
+                                    <circle fill="#2b49a3" cx="321.4" cy="240" r="100"/>
+                                    <path fill="#fff" d="M221.4 240a100 55 0 0 1 200 0 100 55 0 0 1-200 0"/>
+                                </g>
+                            </svg>
+                        </button>
+                        <button id="lang-en" class="lang-flag" title="English">
+                            <svg width="24" height="18" viewBox="0 0 640 480" class="rounded shadow-sm">
+                                <path fill="#012169" d="M0 0h640v480H0z"/>
+                                <path fill="#FFF" d="m75 0 244 181L562 0h78v62L400 241l240 178v61h-80L320 301 81 480H0v-60l239-178L0 64V0h75z"/>
+                                <path fill="#C8102E" d="m424 281 216 159v40L369 281h55zm-184 20 6 35L54 480H0l240-179zM640 0v3L391 191l2-44L590 0h50zM0 0l239 176h-60L0 42V0z"/>
+                                <path fill="#FFF" d="M241 0v480h160V0H241zM0 160v160h640V160H0z"/>
+                                <path fill="#C8102E" d="M0 193v96h640v-96H0zM273 0v480h96V0h-96z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <a href="login.html">
+                        <button class="shiny-button text-white font-semibold py-2.5 px-6 rounded-full text-sm" data-i18n="nav.startNow">
+                            Comece Agora
+                        </button>
+                    </a>
+                </div>
             </nav>
         </header>
 
@@ -356,23 +397,23 @@
         <section class="container mx-auto px-6 pt-12 md:pt-20 pb-20">
             <div class="text-center max-w-4xl mx-auto mb-16">
                 <div class="inline-flex items-center px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 mb-6">
-                    <span class="text-purple-400 text-sm font-medium">Plataforma de Aprendizado de Alemão com IA</span>
+                    <span class="text-purple-400 text-sm font-medium" data-i18n="hero.badge">Plataforma de Aprendizado de Alemão com IA</span>
                 </div>
                 <h1 class="text-4xl md:text-6xl lg:text-7xl font-extrabold leading-tight mb-6">
-                    Domine o Alemão com
-                    <span class="gradient-text">Inteligência Artificial</span>
+                    <span data-i18n="hero.title1">Domine o Alemão com</span>
+                    <span class="gradient-text" data-i18n="hero.title2">Inteligência Artificial</span>
                 </h1>
-                <p class="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10">
+                <p class="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10" data-i18n="hero.subtitle">
                     Correção inteligente, feedback detalhado e ferramentas interativas para acelerar seu aprendizado de forma eficaz.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                     <a href="login.html">
-                        <button class="shiny-button text-white font-bold py-4 px-10 rounded-full text-lg w-full sm:w-auto">
+                        <button class="shiny-button text-white font-bold py-4 px-10 rounded-full text-lg w-full sm:w-auto" data-i18n="hero.tryFree">
                             Experimente Grátis
                         </button>
                     </a>
                     <a href="#features">
-                        <button class="bg-white/5 border border-white/10 text-white font-semibold py-4 px-10 rounded-full text-lg hover:bg-white/10 transition-all w-full sm:w-auto">
+                        <button class="bg-white/5 border border-white/10 text-white font-semibold py-4 px-10 rounded-full text-lg hover:bg-white/10 transition-all w-full sm:w-auto" data-i18n="hero.seeFeatures">
                             Ver Recursos
                         </button>
                     </a>
@@ -396,19 +437,19 @@
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 max-w-4xl mx-auto">
                 <div class="stat-card rounded-xl p-6 text-center">
                     <p class="text-3xl md:text-4xl font-bold gradient-text">+60</p>
-                    <p class="text-gray-400 text-sm mt-2">Tópicos de Gramática</p>
+                    <p class="text-gray-400 text-sm mt-2" data-i18n="stats.grammar">Tópicos de Gramática</p>
                 </div>
                 <div class="stat-card rounded-xl p-6 text-center">
                     <p class="text-3xl md:text-4xl font-bold gradient-text">+50</p>
-                    <p class="text-gray-400 text-sm mt-2">Temas de Conversa</p>
+                    <p class="text-gray-400 text-sm mt-2" data-i18n="stats.conversation">Temas de Conversa</p>
                 </div>
                 <div class="stat-card rounded-xl p-6 text-center">
                     <p class="text-3xl md:text-4xl font-bold gradient-text">5</p>
-                    <p class="text-gray-400 text-sm mt-2">Categorias de Erros</p>
+                    <p class="text-gray-400 text-sm mt-2" data-i18n="stats.errorTypes">Categorias de Erros</p>
                 </div>
                 <div class="stat-card rounded-xl p-6 text-center">
                     <p class="text-3xl md:text-4xl font-bold gradient-text">24/7</p>
-                    <p class="text-gray-400 text-sm mt-2">Disponível Sempre</p>
+                    <p class="text-gray-400 text-sm mt-2" data-i18n="stats.available">Disponível Sempre</p>
                 </div>
             </div>
         </section>
@@ -418,10 +459,10 @@
             <div class="container mx-auto px-6">
                 <div class="text-center mb-16">
                     <h2 class="text-3xl md:text-5xl font-bold mb-4">
-                        Tudo que você precisa para
-                        <span class="gradient-text">dominar o alemão</span>
+                        <span data-i18n="features.title1">Tudo que você precisa para</span>
+                        <span class="gradient-text" data-i18n="features.title2">dominar o alemão</span>
                     </h2>
-                    <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+                    <p class="text-gray-400 text-lg max-w-2xl mx-auto" data-i18n="features.subtitle">
                         Uma plataforma completa com ferramentas inteligentes para cada etapa do seu aprendizado.
                     </p>
                 </div>
@@ -435,34 +476,34 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                 </svg>
                             </div>
-                            <span class="text-pink-400 font-semibold">Correção Inteligente</span>
+                            <span class="text-pink-400 font-semibold" data-i18n="feature1.tag">Correção Inteligente</span>
                         </div>
-                        <h3 class="text-3xl md:text-4xl font-bold mb-4">
+                        <h3 class="text-3xl md:text-4xl font-bold mb-4" data-i18n="feature1.title">
                             Feedback detalhado para cada erro
                         </h3>
-                        <p class="text-gray-400 text-lg mb-6">
+                        <p class="text-gray-400 text-lg mb-6" data-i18n="feature1.desc">
                             Nossa IA identifica erros de declinação, conjugação, sintaxe, preposições e vocabulário, destacando cada um com cores diferentes para fácil identificação.
                         </p>
                         <div class="space-y-3">
                             <div class="flex items-center gap-3">
                                 <span class="color-dot bg-pink-500"></span>
-                                <span class="text-gray-300">Declinação (Genus, Numerus, Kasus)</span>
+                                <span class="text-gray-300" data-i18n="feature1.declination">Declinação (Genus, Numerus, Kasus)</span>
                             </div>
                             <div class="flex items-center gap-3">
                                 <span class="color-dot bg-purple-500"></span>
-                                <span class="text-gray-300">Conjugação verbal</span>
+                                <span class="text-gray-300" data-i18n="feature1.conjugation">Conjugação verbal</span>
                             </div>
                             <div class="flex items-center gap-3">
                                 <span class="color-dot bg-blue-500"></span>
-                                <span class="text-gray-300">Preposições</span>
+                                <span class="text-gray-300" data-i18n="feature1.prepositions">Preposições</span>
                             </div>
                             <div class="flex items-center gap-3">
                                 <span class="color-dot bg-orange-500"></span>
-                                <span class="text-gray-300">Sintaxe</span>
+                                <span class="text-gray-300" data-i18n="feature1.syntax">Sintaxe</span>
                             </div>
                             <div class="flex items-center gap-3">
                                 <span class="color-dot bg-green-500"></span>
-                                <span class="text-gray-300">Vocabulário</span>
+                                <span class="text-gray-300" data-i18n="feature1.vocabulary">Vocabulário</span>
                             </div>
                         </div>
                     </div>
@@ -486,12 +527,12 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                                 </svg>
                             </div>
-                            <span class="text-purple-400 font-semibold">Acompanhe seu Progresso</span>
+                            <span class="text-purple-400 font-semibold" data-i18n="feature2.tag">Acompanhe seu Progresso</span>
                         </div>
-                        <h3 class="text-3xl md:text-4xl font-bold mb-4">
+                        <h3 class="text-3xl md:text-4xl font-bold mb-4" data-i18n="feature2.title">
                             Visualize sua evolução em tempo real
                         </h3>
-                        <p class="text-gray-400 text-lg mb-6">
+                        <p class="text-gray-400 text-lg mb-6" data-i18n="feature2.desc">
                             Dashboard completo com gráficos e estatísticas detalhadas. Acompanhe quantas redações enviou, distribuição de erros por categoria e histórico de evolução.
                         </p>
                         <ul class="space-y-3 text-gray-300">
@@ -499,19 +540,19 @@
                                 <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                 </svg>
-                                Gráfico de pizza com distribuição de erros
+                                <span data-i18n="feature2.item1">Gráfico de pizza com distribuição de erros</span>
                             </li>
                             <li class="flex items-center gap-3">
                                 <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                 </svg>
-                                Histórico de erros por redação
+                                <span data-i18n="feature2.item2">Histórico de erros por redação</span>
                             </li>
                             <li class="flex items-center gap-3">
                                 <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                 </svg>
-                                Estatísticas gerais de performance
+                                <span data-i18n="feature2.item3">Estatísticas gerais de performance</span>
                             </li>
                         </ul>
                     </div>
@@ -535,12 +576,12 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                                 </svg>
                             </div>
-                            <span class="text-green-400 font-semibold">Listas de Vocabulário</span>
+                            <span class="text-green-400 font-semibold" data-i18n="feature3.tag">Listas de Vocabulário</span>
                         </div>
-                        <h3 class="text-3xl md:text-4xl font-bold mb-4">
+                        <h3 class="text-3xl md:text-4xl font-bold mb-4" data-i18n="feature3.title">
                             Organize e pratique seu vocabulário
                         </h3>
-                        <p class="text-gray-400 text-lg mb-6">
+                        <p class="text-gray-400 text-lg mb-6" data-i18n="feature3.desc">
                             Crie listas personalizadas, importe palavras via CSV e classifique por nível de dificuldade. Cada palavra mostra a tradução e seu nível de domínio.
                         </p>
                         <ul class="space-y-3 text-gray-300">
@@ -548,19 +589,19 @@
                                 <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                 </svg>
-                                Múltiplas listas organizadas
+                                <span data-i18n="feature3.item1">Múltiplas listas organizadas</span>
                             </li>
                             <li class="flex items-center gap-3">
                                 <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                 </svg>
-                                Importação de CSV
+                                <span data-i18n="feature3.item2">Importação de CSV</span>
                             </li>
                             <li class="flex items-center gap-3">
                                 <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                 </svg>
-                                Classificação por dificuldade (vermelho/amarelo/verde)
+                                <span data-i18n="feature3.item3">Classificação por dificuldade (vermelho/amarelo/verde)</span>
                             </li>
                         </ul>
                     </div>
@@ -584,26 +625,26 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                                 </svg>
                             </div>
-                            <span class="text-blue-400 font-semibold">Jogo de Flashcards</span>
+                            <span class="text-blue-400 font-semibold" data-i18n="feature4.tag">Jogo de Flashcards</span>
                         </div>
-                        <h3 class="text-3xl md:text-4xl font-bold mb-4">
+                        <h3 class="text-3xl md:text-4xl font-bold mb-4" data-i18n="feature4.title">
                             Pratique de forma interativa
                         </h3>
-                        <p class="text-gray-400 text-lg mb-6">
+                        <p class="text-gray-400 text-lg mb-6" data-i18n="feature4.desc">
                             Teste seu conhecimento com flashcards interativos. Filtre por nível de dificuldade e pratique vocabulário, artigos e conjugações de forma divertida.
                         </p>
                         <ul class="space-y-3 text-gray-300">
                             <li class="flex items-center gap-3">
                                 <span class="color-dot bg-red-500"></span>
-                                <span>Vermelho - Palavras difíceis</span>
+                                <span data-i18n="feature4.red">Vermelho - Palavras difíceis</span>
                             </li>
                             <li class="flex items-center gap-3">
                                 <span class="color-dot bg-yellow-500"></span>
-                                <span>Amarelo - Nível médio</span>
+                                <span data-i18n="feature4.yellow">Amarelo - Nível médio</span>
                             </li>
                             <li class="flex items-center gap-3">
                                 <span class="color-dot bg-green-500"></span>
-                                <span>Verde - Palavras fáceis</span>
+                                <span data-i18n="feature4.green">Verde - Palavras fáceis</span>
                             </li>
                         </ul>
                     </div>
@@ -626,9 +667,9 @@
             <div class="container mx-auto px-6">
                 <div class="text-center mb-16">
                     <h2 class="text-3xl md:text-5xl font-bold mb-4">
-                        Como <span class="gradient-text">funciona</span>
+                        <span data-i18n="howItWorks.title1">Como</span> <span class="gradient-text" data-i18n="howItWorks.title2">funciona</span>
                     </h2>
-                    <p class="text-gray-400 text-lg">Em 3 passos simples</p>
+                    <p class="text-gray-400 text-lg" data-i18n="howItWorks.subtitle">Em 3 passos simples</p>
                 </div>
 
                 <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -636,24 +677,24 @@
                         <div class="w-16 h-16 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center mx-auto mb-6">
                             <span class="text-2xl font-bold">1</span>
                         </div>
-                        <h3 class="text-xl font-bold mb-3">Escreva seu texto</h3>
-                        <p class="text-gray-400">Cole ou digite sua redação em alemão. Escolha seu nível: básico, intermediário ou avançado.</p>
+                        <h3 class="text-xl font-bold mb-3" data-i18n="howItWorks.step1Title">Escreva seu texto</h3>
+                        <p class="text-gray-400" data-i18n="howItWorks.step1Desc">Cole ou digite sua redação em alemão. Escolha seu nível: básico, intermediário ou avançado.</p>
                     </div>
 
                     <div class="feature-card rounded-2xl p-8 text-center">
                         <div class="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center mx-auto mb-6">
                             <span class="text-2xl font-bold">2</span>
                         </div>
-                        <h3 class="text-xl font-bold mb-3">Receba a análise</h3>
-                        <p class="text-gray-400">Nossa IA corrige erros, explica a gramática e cria exercícios personalizados.</p>
+                        <h3 class="text-xl font-bold mb-3" data-i18n="howItWorks.step2Title">Receba a análise</h3>
+                        <p class="text-gray-400" data-i18n="howItWorks.step2Desc">Nossa IA corrige erros, explica a gramática e cria exercícios personalizados.</p>
                     </div>
 
                     <div class="feature-card rounded-2xl p-8 text-center">
                         <div class="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-green-500 flex items-center justify-center mx-auto mb-6">
                             <span class="text-2xl font-bold">3</span>
                         </div>
-                        <h3 class="text-xl font-bold mb-3">Acompanhe a evolução</h3>
-                        <p class="text-gray-400">Visualize seu progresso, pratique com flashcards e melhore continuamente.</p>
+                        <h3 class="text-xl font-bold mb-3" data-i18n="howItWorks.step3Title">Acompanhe a evolução</h3>
+                        <p class="text-gray-400" data-i18n="howItWorks.step3Desc">Visualize seu progresso, pratique com flashcards e melhore continuamente.</p>
                     </div>
                 </div>
             </div>
@@ -799,14 +840,14 @@
                 <div class="max-w-3xl mx-auto">
                     <div class="text-center mb-16">
                         <h2 class="text-3xl md:text-5xl font-bold mb-4">
-                            Perguntas <span class="gradient-text">frequentes</span>
+                            <span data-i18n="faq.title1">Perguntas</span> <span class="gradient-text" data-i18n="faq.title2">frequentes</span>
                         </h2>
                     </div>
 
                     <div class="space-y-4">
                         <div class="faq-item rounded-xl overflow-hidden">
                             <button class="faq-question w-full p-6 text-left flex justify-between items-center">
-                                <span class="font-semibold">Quantos créditos gasto por redação?</span>
+                                <span class="font-semibold" data-i18n="faq.q1">Quantos créditos gasto por correção?</span>
                                 <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
                                     <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
@@ -814,13 +855,13 @@
                                 </div>
                             </button>
                             <div class="faq-answer">
-                                <p class="px-6 pb-6 text-gray-400">Cada correção de redação consome 100 créditos, independente do nível escolhido (básico, intermediário ou avançado).</p>
+                                <p class="px-6 pb-6 text-gray-400" data-i18n="faq.a1">Cada correção de redação consome 20 créditos. O paráfrase consome 5 créditos por uso. A prática de conversação consome 10 créditos por minuto.</p>
                             </div>
                         </div>
 
                         <div class="faq-item rounded-xl overflow-hidden">
                             <button class="faq-question w-full p-6 text-left flex justify-between items-center">
-                                <span class="font-semibold">Minhas redações ficam armazenadas?</span>
+                                <span class="font-semibold" data-i18n="faq.q2">Minhas redações ficam armazenadas?</span>
                                 <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
                                     <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
@@ -828,13 +869,13 @@
                                 </div>
                             </button>
                             <div class="faq-answer">
-                                <p class="px-6 pb-6 text-gray-400">Não. Nós não armazenamos suas redações. Apenas as estatísticas de erros são mantidas para seu acompanhamento de progresso.</p>
+                                <p class="px-6 pb-6 text-gray-400" data-i18n="faq.a2">Não. Nós não armazenamos suas redações. Apenas as estatísticas de erros são mantidas para seu acompanhamento de progresso.</p>
                             </div>
                         </div>
 
                         <div class="faq-item rounded-xl overflow-hidden">
                             <button class="faq-question w-full p-6 text-left flex justify-between items-center">
-                                <span class="font-semibold">O chatbot também consome créditos?</span>
+                                <span class="font-semibold" data-i18n="faq.q3">O chatbot também consome créditos?</span>
                                 <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
                                     <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
@@ -842,13 +883,13 @@
                                 </div>
                             </button>
                             <div class="faq-answer">
-                                <p class="px-6 pb-6 text-gray-400">Sim. Ao tirar dúvidas, a cada 4 respostas consome 100 créditos. Nas conversas, a cada 20 mensagens do chatbot são consumidos 100 créditos.</p>
+                                <p class="px-6 pb-6 text-gray-400" data-i18n="faq.a3">Sim. O chatbot para tirar dúvidas de gramática consome 5 créditos por mensagem. A prática de conversação por voz consome 10 créditos por minuto de conversa.</p>
                             </div>
                         </div>
 
                         <div class="faq-item rounded-xl overflow-hidden">
                             <button class="faq-question w-full p-6 text-left flex justify-between items-center">
-                                <span class="font-semibold">Sou professor. O site é indicado para mim?</span>
+                                <span class="font-semibold" data-i18n="faq.q4">Sou professor. O site é indicado para mim?</span>
                                 <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
                                     <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
@@ -856,13 +897,13 @@
                                 </div>
                             </button>
                             <div class="faq-answer">
-                                <p class="px-6 pb-6 text-gray-400">Sim! O portal ajuda a maximizar sua produtividade, corrigindo mais redações em menos tempo e identificando pontos fracos dos alunos. Entre em contato para planos especiais.</p>
+                                <p class="px-6 pb-6 text-gray-400" data-i18n="faq.a4">Sim! O portal ajuda a maximizar sua produtividade, corrigindo mais redações em menos tempo e identificando pontos fracos dos alunos. Entre em contato para planos especiais.</p>
                             </div>
                         </div>
 
                         <div class="faq-item rounded-xl overflow-hidden">
                             <button class="faq-question w-full p-6 text-left flex justify-between items-center">
-                                <span class="font-semibold">Como funciona o sistema de correção?</span>
+                                <span class="font-semibold" data-i18n="faq.q5">Como funciona o sistema de correção?</span>
                                 <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
                                     <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
@@ -870,13 +911,13 @@
                                 </div>
                             </button>
                             <div class="faq-answer">
-                                <p class="px-6 pb-6 text-gray-400">Nossa IA analisa seu texto e identifica erros em 5 categorias: declinação (gênero, número, caso), conjugação verbal, preposições, sintaxe e vocabulário. Cada tipo de erro é destacado com uma cor diferente para fácil identificação.</p>
+                                <p class="px-6 pb-6 text-gray-400" data-i18n="faq.a5">Nossa IA analisa seu texto e identifica erros em 5 categorias: declinação (gênero, número, caso), conjugação verbal, preposições, sintaxe e vocabulário. Cada tipo de erro é destacado com uma cor diferente para fácil identificação.</p>
                             </div>
                         </div>
 
                         <div class="faq-item rounded-xl overflow-hidden">
                             <button class="faq-question w-full p-6 text-left flex justify-between items-center">
-                                <span class="font-semibold">Quais níveis de alemão são suportados?</span>
+                                <span class="font-semibold" data-i18n="faq.q6">Quais níveis de alemão são suportados?</span>
                                 <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
                                     <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
@@ -884,13 +925,13 @@
                                 </div>
                             </button>
                             <div class="faq-answer">
-                                <p class="px-6 pb-6 text-gray-400">A plataforma suporta três níveis: básico (A1-A2), intermediário (B1-B2) e avançado (C1-C2). A IA adapta o feedback e as sugestões de acordo com o nível selecionado.</p>
+                                <p class="px-6 pb-6 text-gray-400" data-i18n="faq.a6">A plataforma suporta três níveis: básico (A1-A2), intermediário (B1-B2) e avançado (C1-C2). A IA adapta o feedback e as sugestões de acordo com o nível selecionado.</p>
                             </div>
                         </div>
 
                         <div class="faq-item rounded-xl overflow-hidden">
                             <button class="faq-question w-full p-6 text-left flex justify-between items-center">
-                                <span class="font-semibold">Posso usar em dispositivos móveis?</span>
+                                <span class="font-semibold" data-i18n="faq.q7">Posso usar em dispositivos móveis?</span>
                                 <div class="faq-icon w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0 ml-4">
                                     <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"></path>
@@ -898,14 +939,14 @@
                                 </div>
                             </button>
                             <div class="faq-answer">
-                                <p class="px-6 pb-6 text-gray-400">Sim! Nossa plataforma é totalmente responsiva e funciona perfeitamente em smartphones, tablets e computadores. Você pode praticar alemão de qualquer lugar.</p>
+                                <p class="px-6 pb-6 text-gray-400" data-i18n="faq.a7">Sim! Nossa plataforma é totalmente responsiva e funciona perfeitamente em smartphones, tablets e computadores. Você pode praticar alemão de qualquer lugar.</p>
                             </div>
                         </div>
 
                         <!-- Botão para ver mais perguntas -->
                         <div class="text-center py-6">
                             <button id="show-more-faq" class="group inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 hover:border-purple-500/60 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20">
-                                <span class="text-purple-300 font-semibold group-hover:text-white transition-colors">Ver mais perguntas</span>
+                                <span class="text-purple-300 font-semibold group-hover:text-white transition-colors" data-i18n="faq.showMore">Ver mais perguntas</span>
                                 <svg id="faq-arrow" class="w-5 h-5 text-purple-400 group-hover:text-white transition-all duration-300 transform group-hover:translate-y-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                 </svg>
@@ -1037,14 +1078,14 @@
                 <div class="feature-card rounded-3xl p-12 md:p-16 text-center relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10"></div>
                     <div class="relative z-10">
-                        <h2 class="text-3xl md:text-5xl font-bold mb-6">
+                        <h2 class="text-3xl md:text-5xl font-bold mb-6" data-i18n="cta.title">
                             Pronto para dominar o alemão?
                         </h2>
-                        <p class="text-gray-400 text-lg mb-10 max-w-2xl mx-auto">
+                        <p class="text-gray-400 text-lg mb-10 max-w-2xl mx-auto" data-i18n="cta.subtitle">
                             Junte-se a milhares de estudantes que já estão acelerando seu aprendizado com nossa plataforma.
                         </p>
                         <a href="login.html">
-                            <button class="shiny-button text-white font-bold py-4 px-12 rounded-full text-lg">
+                            <button class="shiny-button text-white font-bold py-4 px-12 rounded-full text-lg" data-i18n="cta.button">
                                 Comece Grátis Agora
                             </button>
                         </a>
@@ -1061,12 +1102,12 @@
                          alt="CorrectMe Logo" class="h-16 brightness-0 invert opacity-50"
                          loading="lazy">
                     <div class="flex gap-6 text-sm text-gray-500">
-                        <a href="#" class="hover:text-gray-300 transition-colors">Política de Privacidade</a>
-                        <a href="#" class="hover:text-gray-300 transition-colors">Termos de Uso</a>
-                        <a href="mailto:contato@correctme.com.br" class="hover:text-gray-300 transition-colors">Contato</a>
+                        <a href="#" class="hover:text-gray-300 transition-colors" data-i18n="footer.privacy">Política de Privacidade</a>
+                        <a href="#" class="hover:text-gray-300 transition-colors" data-i18n="footer.terms">Termos de Uso</a>
+                        <a href="mailto:contato@correctme.com.br" class="hover:text-gray-300 transition-colors" data-i18n="footer.contact">Contato</a>
                     </div>
                 </div>
-                <div class="text-center mt-8 text-gray-500 text-sm">
+                <div class="text-center mt-8 text-gray-500 text-sm" data-i18n="footer.copyright">
                     &copy; 2025 CorrectMe. CNPJ: 62.050.286/0001-77. Todos os direitos reservados.
                 </div>
             </div>
@@ -1121,7 +1162,7 @@
                         moreFaq.style.opacity = '1';
                         moreFaq.style.transform = 'translateY(0)';
                     }, 10);
-                    showMoreBtn.querySelector('span').textContent = 'Ver menos perguntas';
+                    showMoreBtn.querySelector('span').textContent = currentLang === 'en' ? 'Show less' : 'Ver menos perguntas';
                     faqArrow.style.transform = 'rotate(180deg)';
                 } else {
                     moreFaq.style.opacity = '0';
@@ -1129,10 +1170,228 @@
                     setTimeout(() => {
                         moreFaq.classList.add('hidden');
                     }, 400);
-                    showMoreBtn.querySelector('span').textContent = 'Ver mais perguntas';
+                    showMoreBtn.querySelector('span').textContent = currentLang === 'en' ? 'Show more questions' : 'Ver mais perguntas';
                     faqArrow.style.transform = 'rotate(0deg)';
                 }
             });
+        }
+
+        // ===============================================
+        // LANGUAGE SWITCHER / TRANSLATION SYSTEM
+        // ===============================================
+
+        let currentLang = localStorage.getItem('landing-lang') || 'pt';
+
+        const translations = {
+            en: {
+                // Navigation
+                'nav.features': 'Features',
+                'nav.howItWorks': 'How It Works',
+                'nav.startNow': 'Get Started',
+
+                // Hero
+                'hero.badge': 'AI-Powered German Learning Platform',
+                'hero.title1': 'Master German with',
+                'hero.title2': 'Artificial Intelligence',
+                'hero.subtitle': 'Smart correction, detailed feedback, and interactive tools to accelerate your learning effectively.',
+                'hero.tryFree': 'Try for Free',
+                'hero.seeFeatures': 'See Features',
+
+                // Stats
+                'stats.grammar': 'Grammar Topics',
+                'stats.conversation': 'Conversation Topics',
+                'stats.errorTypes': 'Error Categories',
+                'stats.available': 'Always Available',
+
+                // Features
+                'features.title1': 'Everything you need to',
+                'features.title2': 'master German',
+                'features.subtitle': 'A complete platform with intelligent tools for every stage of your learning.',
+
+                // Feature 1
+                'feature1.tag': 'Smart Correction',
+                'feature1.title': 'Detailed feedback for every error',
+                'feature1.desc': 'Our AI identifies declension, conjugation, syntax, preposition, and vocabulary errors, highlighting each with different colors for easy identification.',
+                'feature1.declination': 'Declension (Gender, Number, Case)',
+                'feature1.conjugation': 'Verb Conjugation',
+                'feature1.prepositions': 'Prepositions',
+                'feature1.syntax': 'Syntax',
+                'feature1.vocabulary': 'Vocabulary',
+
+                // Feature 2
+                'feature2.tag': 'Track Your Progress',
+                'feature2.title': 'Visualize your evolution in real time',
+                'feature2.desc': 'Complete dashboard with graphs and detailed statistics. Track how many essays you\'ve submitted, error distribution by category, and evolution history.',
+                'feature2.item1': 'Pie chart with error distribution',
+                'feature2.item2': 'Error history per essay',
+                'feature2.item3': 'General performance statistics',
+
+                // Feature 3
+                'feature3.tag': 'Vocabulary Lists',
+                'feature3.title': 'Organize and practice your vocabulary',
+                'feature3.desc': 'Create personalized lists, import words via CSV, and classify by difficulty level. Each word shows the translation and your mastery level.',
+                'feature3.item1': 'Multiple organized lists',
+                'feature3.item2': 'CSV Import',
+                'feature3.item3': 'Classification by difficulty (red/yellow/green)',
+
+                // Feature 4
+                'feature4.tag': 'Flashcard Game',
+                'feature4.title': 'Practice interactively',
+                'feature4.desc': 'Test your knowledge with interactive flashcards. Filter by difficulty level and practice vocabulary, articles, and conjugations in a fun way.',
+                'feature4.red': 'Red - Difficult words',
+                'feature4.yellow': 'Yellow - Medium level',
+                'feature4.green': 'Green - Easy words',
+
+                // How It Works
+                'howItWorks.title1': 'How it',
+                'howItWorks.title2': 'works',
+                'howItWorks.subtitle': 'In 3 simple steps',
+                'howItWorks.step1Title': 'Write your text',
+                'howItWorks.step1Desc': 'Paste or type your German essay. Choose your level: basic, intermediate, or advanced.',
+                'howItWorks.step2Title': 'Receive analysis',
+                'howItWorks.step2Desc': 'Our AI corrects errors, explains grammar, and creates personalized exercises.',
+                'howItWorks.step3Title': 'Track your evolution',
+                'howItWorks.step3Desc': 'Visualize your progress, practice with flashcards, and continuously improve.',
+
+                // FAQ
+                'faq.title1': 'Frequently',
+                'faq.title2': 'asked questions',
+                'faq.q1': 'How many credits per correction?',
+                'faq.a1': 'Each essay correction uses 20 credits. Paraphrase uses 5 credits per use. Conversation practice uses 10 credits per minute.',
+                'faq.q2': 'Are my essays stored?',
+                'faq.a2': 'No. We do not store your essays. Only error statistics are kept for your progress tracking.',
+                'faq.q3': 'Does the chatbot also use credits?',
+                'faq.a3': 'Yes. The grammar chatbot uses 5 credits per message. Voice conversation practice uses 10 credits per minute.',
+                'faq.q4': 'I\'m a teacher. Is the site right for me?',
+                'faq.a4': 'Yes! The platform helps maximize your productivity, correcting more essays in less time and identifying students\' weak points. Contact us for special plans.',
+                'faq.q5': 'How does the correction system work?',
+                'faq.a5': 'Our AI analyzes your text and identifies errors in 5 categories: declension (gender, number, case), verb conjugation, prepositions, syntax, and vocabulary. Each error type is highlighted with a different color.',
+                'faq.q6': 'What German levels are supported?',
+                'faq.a6': 'The platform supports three levels: basic (A1-A2), intermediate (B1-B2), and advanced (C1-C2). The AI adapts feedback and suggestions according to the selected level.',
+                'faq.q7': 'Can I use it on mobile devices?',
+                'faq.a7': 'Yes! Our platform is fully responsive and works perfectly on smartphones, tablets, and computers. You can practice German from anywhere.',
+                'faq.showMore': 'Show more questions',
+                'faq.showLess': 'Show less',
+
+                // CTA
+                'cta.title': 'Ready to master German?',
+                'cta.subtitle': 'Join thousands of students who are already accelerating their learning with our platform.',
+                'cta.button': 'Start Free Now',
+
+                // Footer
+                'footer.privacy': 'Privacy Policy',
+                'footer.terms': 'Terms of Use',
+                'footer.contact': 'Contact',
+                'footer.copyright': '© 2025 CorrectMe. All rights reserved.'
+            },
+            pt: {
+                // All Portuguese translations (original text)
+                'nav.features': 'Recursos',
+                'nav.howItWorks': 'Como Funciona',
+                'nav.startNow': 'Comece Agora',
+                'hero.badge': 'Plataforma de Aprendizado de Alemão com IA',
+                'hero.title1': 'Domine o Alemão com',
+                'hero.title2': 'Inteligência Artificial',
+                'hero.subtitle': 'Correção inteligente, feedback detalhado e ferramentas interativas para acelerar seu aprendizado de forma eficaz.',
+                'hero.tryFree': 'Experimente Grátis',
+                'hero.seeFeatures': 'Ver Recursos',
+                'stats.grammar': 'Tópicos de Gramática',
+                'stats.conversation': 'Temas de Conversa',
+                'stats.errorTypes': 'Categorias de Erros',
+                'stats.available': 'Disponível Sempre',
+                'features.title1': 'Tudo que você precisa para',
+                'features.title2': 'dominar o alemão',
+                'features.subtitle': 'Uma plataforma completa com ferramentas inteligentes para cada etapa do seu aprendizado.',
+                'feature1.tag': 'Correção Inteligente',
+                'feature1.title': 'Feedback detalhado para cada erro',
+                'feature1.desc': 'Nossa IA identifica erros de declinação, conjugação, sintaxe, preposições e vocabulário, destacando cada um com cores diferentes para fácil identificação.',
+                'feature1.declination': 'Declinação (Genus, Numerus, Kasus)',
+                'feature1.conjugation': 'Conjugação verbal',
+                'feature1.prepositions': 'Preposições',
+                'feature1.syntax': 'Sintaxe',
+                'feature1.vocabulary': 'Vocabulário',
+                'feature2.tag': 'Acompanhe seu Progresso',
+                'feature2.title': 'Visualize sua evolução em tempo real',
+                'feature2.desc': 'Dashboard completo com gráficos e estatísticas detalhadas. Acompanhe quantas redações enviou, distribuição de erros por categoria e histórico de evolução.',
+                'feature2.item1': 'Gráfico de pizza com distribuição de erros',
+                'feature2.item2': 'Histórico de erros por redação',
+                'feature2.item3': 'Estatísticas gerais de performance',
+                'feature3.tag': 'Listas de Vocabulário',
+                'feature3.title': 'Organize e pratique seu vocabulário',
+                'feature3.desc': 'Crie listas personalizadas, importe palavras via CSV e classifique por nível de dificuldade. Cada palavra mostra a tradução e seu nível de domínio.',
+                'feature3.item1': 'Múltiplas listas organizadas',
+                'feature3.item2': 'Importação de CSV',
+                'feature3.item3': 'Classificação por dificuldade (vermelho/amarelo/verde)',
+                'feature4.tag': 'Jogo de Flashcards',
+                'feature4.title': 'Pratique de forma interativa',
+                'feature4.desc': 'Teste seu conhecimento com flashcards interativos. Filtre por nível de dificuldade e pratique vocabulário, artigos e conjugações de forma divertida.',
+                'feature4.red': 'Vermelho - Palavras difíceis',
+                'feature4.yellow': 'Amarelo - Nível médio',
+                'feature4.green': 'Verde - Palavras fáceis',
+                'howItWorks.title1': 'Como',
+                'howItWorks.title2': 'funciona',
+                'howItWorks.subtitle': 'Em 3 passos simples',
+                'howItWorks.step1Title': 'Escreva seu texto',
+                'howItWorks.step1Desc': 'Cole ou digite sua redação em alemão. Escolha seu nível: básico, intermediário ou avançado.',
+                'howItWorks.step2Title': 'Receba a análise',
+                'howItWorks.step2Desc': 'Nossa IA corrige erros, explica a gramática e cria exercícios personalizados.',
+                'howItWorks.step3Title': 'Acompanhe a evolução',
+                'howItWorks.step3Desc': 'Visualize seu progresso, pratique com flashcards e melhore continuamente.',
+                'faq.title1': 'Perguntas',
+                'faq.title2': 'frequentes',
+                'faq.q1': 'Quantos créditos gasto por correção?',
+                'faq.a1': 'Cada correção de redação consome 20 créditos. O paráfrase consome 5 créditos por uso. A prática de conversação consome 10 créditos por minuto.',
+                'faq.q2': 'Minhas redações ficam armazenadas?',
+                'faq.a2': 'Não. Nós não armazenamos suas redações. Apenas as estatísticas de erros são mantidas para seu acompanhamento de progresso.',
+                'faq.q3': 'O chatbot também consome créditos?',
+                'faq.a3': 'Sim. O chatbot para tirar dúvidas de gramática consome 5 créditos por mensagem. A prática de conversação por voz consome 10 créditos por minuto de conversa.',
+                'faq.q4': 'Sou professor. O site é indicado para mim?',
+                'faq.a4': 'Sim! O portal ajuda a maximizar sua produtividade, corrigindo mais redações em menos tempo e identificando pontos fracos dos alunos. Entre em contato para planos especiais.',
+                'faq.q5': 'Como funciona o sistema de correção?',
+                'faq.a5': 'Nossa IA analisa seu texto e identifica erros em 5 categorias: declinação (gênero, número, caso), conjugação verbal, preposições, sintaxe e vocabulário. Cada tipo de erro é destacado com uma cor diferente para fácil identificação.',
+                'faq.q6': 'Quais níveis de alemão são suportados?',
+                'faq.a6': 'A plataforma suporta três níveis: básico (A1-A2), intermediário (B1-B2) e avançado (C1-C2). A IA adapta o feedback e as sugestões de acordo com o nível selecionado.',
+                'faq.q7': 'Posso usar em dispositivos móveis?',
+                'faq.a7': 'Sim! Nossa plataforma é totalmente responsiva e funciona perfeitamente em smartphones, tablets e computadores. Você pode praticar alemão de qualquer lugar.',
+                'faq.showMore': 'Ver mais perguntas',
+                'faq.showLess': 'Ver menos perguntas',
+                'cta.title': 'Pronto para dominar o alemão?',
+                'cta.subtitle': 'Junte-se a milhares de estudantes que já estão acelerando seu aprendizado com nossa plataforma.',
+                'cta.button': 'Comece Grátis Agora',
+                'footer.privacy': 'Política de Privacidade',
+                'footer.terms': 'Termos de Uso',
+                'footer.contact': 'Contato',
+                'footer.copyright': '© 2025 CorrectMe. CNPJ: 62.050.286/0001-77. Todos os direitos reservados.'
+            }
+        };
+
+        function applyTranslations(lang) {
+            currentLang = lang;
+            localStorage.setItem('landing-lang', lang);
+
+            // Update flag buttons
+            document.getElementById('lang-pt').classList.toggle('active', lang === 'pt');
+            document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+
+            // Apply translations to all elements with data-i18n
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    el.textContent = translations[lang][key];
+                }
+            });
+
+            // Update HTML lang attribute
+            document.documentElement.lang = lang === 'en' ? 'en' : 'pt-BR';
+        }
+
+        // Initialize language switcher
+        document.getElementById('lang-pt').addEventListener('click', () => applyTranslations('pt'));
+        document.getElementById('lang-en').addEventListener('click', () => applyTranslations('en'));
+
+        // Apply saved language on load
+        if (currentLang === 'en') {
+            applyTranslations('en');
         }
     </script>
 
