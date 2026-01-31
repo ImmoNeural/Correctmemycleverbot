@@ -59,8 +59,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Botão de sair
-        const logoutBtn = document.getElementById('logout-btn');
+        // Botão de sair (logout-button é o ID correto no HTML)
+        const logoutBtn = document.getElementById('logout-button');
         if (logoutBtn) {
             const textSpan = logoutBtn.querySelector('.sidebar-text');
             if (textSpan) textSpan.textContent = window.t('sidebar.sair');
@@ -76,7 +76,8 @@ document.addEventListener('DOMContentLoaded', () => {
             'section-artigos': { title: 'artigos.title', subtitle: 'artigos.subtitle' },
             'section-flashcards': { title: 'flashcards.title', subtitle: 'flashcards.subtitle' },
             'section-forca': { title: 'forca.title', subtitle: 'forca.subtitle' },
-            'section-progresso': { title: 'progresso.title', subtitle: 'progresso.subtitle' }
+            'section-progresso': { title: 'progresso.title', subtitle: 'progresso.subtitle' },
+            'section-creditos': { title: 'creditos.title', subtitle: 'creditos.subtitle' }
         };
 
         Object.entries(sectionTitles).forEach(([sectionId, keys]) => {
@@ -188,6 +189,89 @@ document.addEventListener('DOMContentLoaded', () => {
             if (h3) h3.textContent = window.t('flashcards.hangman');
             if (p) p.textContent = window.t('flashcards.hangmanDesc');
         }
+
+        // Flashcards setup screens
+        // Vocabulario setup
+        const backFromVocabBtn = document.getElementById('back-from-vocab-setup');
+        if (backFromVocabBtn) backFromVocabBtn.textContent = window.t('flashcards.back');
+
+        const vocabSetupTitle = document.querySelector('#vocabulario-setup h3');
+        if (vocabSetupTitle) vocabSetupTitle.textContent = window.t('flashcards.configVocab');
+
+        const vocabSelectLabel = document.querySelector('#vocabulario-setup label.block');
+        if (vocabSelectLabel) vocabSelectLabel.textContent = window.t('flashcards.selectCards');
+
+        const vocabRedLabel = document.querySelector('#vocab-red')?.parentElement?.querySelector('span');
+        if (vocabRedLabel) vocabRedLabel.textContent = window.t('flashcards.redCards');
+
+        const vocabYellowLabel = document.querySelector('#vocab-yellow')?.parentElement?.querySelector('span');
+        if (vocabYellowLabel) vocabYellowLabel.textContent = window.t('flashcards.yellowCards');
+
+        const vocabGreenLabel = document.querySelector('#vocab-green')?.parentElement?.querySelector('span');
+        if (vocabGreenLabel) vocabGreenLabel.textContent = window.t('flashcards.greenCards');
+
+        const startVocabBtn = document.getElementById('start-vocab-game');
+        if (startVocabBtn) startVocabBtn.textContent = window.t('flashcards.startGame');
+
+        // Artigos setup
+        const backFromArtigosBtn = document.getElementById('back-from-artigos-setup');
+        if (backFromArtigosBtn) backFromArtigosBtn.textContent = window.t('flashcards.back');
+
+        const artigosSetupTitle = document.querySelector('#artigos-setup h3');
+        if (artigosSetupTitle) artigosSetupTitle.textContent = window.t('flashcards.articlesGame');
+
+        const artigosSetupDesc = document.querySelector('#artigos-setup p.text-slate-400');
+        if (artigosSetupDesc) artigosSetupDesc.textContent = window.t('flashcards.articlesGameDesc');
+
+        const startArtigosBtn = document.getElementById('start-artigos-game');
+        if (startArtigosBtn) startArtigosBtn.textContent = window.t('flashcards.startGame');
+
+        // Forca setup
+        const backFromForcaBtn = document.getElementById('back-from-forca-setup');
+        if (backFromForcaBtn) backFromForcaBtn.textContent = window.t('flashcards.back');
+
+        const forcaSetupTitle = document.querySelector('#forca-setup h3');
+        if (forcaSetupTitle) forcaSetupTitle.textContent = window.t('flashcards.configHangman');
+
+        const forcaSelectLabel = document.querySelector('#forca-setup label.block');
+        if (forcaSelectLabel) forcaSelectLabel.textContent = window.t('flashcards.selectCards');
+
+        const forcaRedLabel = document.querySelector('#forca-red')?.parentElement?.querySelector('span');
+        if (forcaRedLabel) forcaRedLabel.textContent = window.t('flashcards.redCards');
+
+        const forcaYellowLabel = document.querySelector('#forca-yellow')?.parentElement?.querySelector('span');
+        if (forcaYellowLabel) forcaYellowLabel.textContent = window.t('flashcards.yellowCards');
+
+        const forcaGreenLabel = document.querySelector('#forca-green')?.parentElement?.querySelector('span');
+        if (forcaGreenLabel) forcaGreenLabel.textContent = window.t('flashcards.greenCards');
+
+        const forcaNoteDiv = document.querySelector('#forca-setup .bg-amber-900\\/30');
+        if (forcaNoteDiv) {
+            forcaNoteDiv.innerHTML = '<span class="font-semibold">Note:</span> ' + window.t('flashcards.hangmanNote');
+        }
+
+        const startForcaBtn = document.getElementById('start-forca-game');
+        if (startForcaBtn) startForcaBtn.textContent = window.t('flashcards.startHangman');
+
+        // Game results
+        const resultsTitle = document.querySelector('#flashcard-results h2');
+        if (resultsTitle) resultsTitle.textContent = window.t('flashcards.congratulations');
+
+        const resultsDesc = document.querySelector('#flashcard-results p.text-slate-400');
+        if (resultsDesc) resultsDesc.textContent = window.t('flashcards.gameComplete');
+
+        const correctLabel = document.querySelector('#flashcard-results .bg-green-800 .text-green-300');
+        if (correctLabel) correctLabel.textContent = window.t('flashcards.hits');
+
+        const wrongLabel = document.querySelector('#flashcard-results .bg-red-800 .text-red-300');
+        if (wrongLabel) wrongLabel.textContent = window.t('flashcards.errors');
+
+        const restartBtn = document.getElementById('restart-game-btn');
+        if (restartBtn) restartBtn.textContent = window.t('flashcards.playAgain');
+
+        // Exit game button (in flashcard game header)
+        const exitGameBtn = document.getElementById('exit-game-btn');
+        if (exitGameBtn) exitGameBtn.textContent = window.t('flashcards.exit');
 
         // Conversação
         const convStatusText = document.getElementById('conv-status-text');
@@ -1911,14 +1995,24 @@ async function handleCorrectionSubmit(e) {
             // Função auxiliar para renderizar cada palavra
             const renderWord = (word, index, artigo, borderColor) => {
                 const palavraTexto = word.palavra ? escapeHtml(word.palavra) : '';
-                const traducaoTexto = word.traducao ? escapeHtml(word.traducao) : '';
+
+                // Escolher tradução baseado no idioma atual
+                const currentLang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+                let traducaoTexto;
+                if (currentLang === 'en') {
+                    traducaoTexto = word.translation_en ? escapeHtml(word.translation_en) : (word.traducao ? escapeHtml(word.traducao) : '');
+                } else {
+                    traducaoTexto = word.traducao ? escapeHtml(word.traducao) : '';
+                }
+
+                const clickToUpdateText = window.t ? window.t('artigos.clickToTranslate') : 'Clique em Atualizar para obter a tradução';
 
                 return `
                     <div class="bg-slate-700 hover:bg-slate-600 p-3 rounded-lg border-l-4 ${borderColor} cursor-pointer transition-all"
                          onclick="window.toggleTraducao('${artigo}-${index}')">
                         <p class="text-white font-semibold">${artigo} ${palavraTexto}</p>
                         <div id="${artigo}-${index}" class="text-slate-300 text-sm mt-2 hidden">
-                            ${traducaoTexto ? `<p class="text-emerald-400">📚 ${traducaoTexto}</p>` : '<p class="text-slate-500 italic">Clique em Atualizar para obter a tradução</p>'}
+                            ${traducaoTexto ? `<p class="text-emerald-400">📚 ${traducaoTexto}</p>` : `<p class="text-slate-500 italic">${clickToUpdateText}</p>`}
                         </div>
                     </div>
                 `;

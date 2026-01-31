@@ -150,14 +150,32 @@ const translations = {
             articles: 'Artigos',
             articlesDesc: 'Adivinhe der, die ou das',
             hangman: 'Jogo da Forca',
-            hangmanDesc: 'Adivinhe a palavra',
-            back: 'Voltar',
+            hangmanDesc: 'Adivinhe a palavra letra por letra',
+            back: '← Voltar',
             startGame: 'Iniciar Jogo',
+            startHangman: 'Iniciar Jogo da Forca',
             correct: 'Correto',
             wrong: 'Errado',
             showAnswer: 'Mostrar Resposta',
             next: 'Próximo',
-            finish: 'Finalizar'
+            finish: 'Finalizar',
+            configVocab: 'Configuração - Vocabulário',
+            configHangman: 'Configuração - Jogo da Forca',
+            articlesGame: 'Jogo de Artigos',
+            articlesGameDesc: 'Pratique der, die e das com seus substantivos!',
+            selectCards: 'Selecione os cartões para praticar:',
+            redCards: '🔴 Vermelho (difíceis)',
+            yellowCards: '🟡 Amarelo (médios)',
+            greenCards: '🟢 Verde (fáceis)',
+            hangmanNote: 'Apenas palavras com exemplos cadastrados serão usadas no jogo da forca para gerar dicas mais precisas.',
+            congratulations: 'Parabéns!',
+            gameComplete: 'Você completou o jogo!',
+            hits: 'Acertos',
+            errors: 'Erros',
+            playAgain: 'Jogar Novamente',
+            noCardsSelected: 'Selecione pelo menos uma categoria de cartões',
+            noWordsAvailable: 'Nenhuma palavra disponível para esta categoria',
+            exit: '← Sair'
         },
 
         // Jogo da Forca
@@ -241,6 +259,12 @@ const translations = {
             credits: 'créditos',
             resultPlaceholder: 'O texto parafraseado aparecerá aqui',
             clickTheme: 'Clique em um tema para ver os cenários'
+        },
+
+        // Página de Créditos
+        creditos: {
+            title: 'Comprar Créditos',
+            subtitle: 'Adquira mais créditos para continuar aprendendo.'
         },
 
         // Tópicos de Conversação
@@ -424,14 +448,32 @@ const translations = {
             articles: 'Articles',
             articlesDesc: 'Guess der, die or das',
             hangman: 'Hangman',
-            hangmanDesc: 'Guess the word',
-            back: 'Back',
+            hangmanDesc: 'Guess the word letter by letter',
+            back: '← Back',
             startGame: 'Start Game',
+            startHangman: 'Start Hangman',
             correct: 'Correct',
             wrong: 'Wrong',
             showAnswer: 'Show Answer',
             next: 'Next',
-            finish: 'Finish'
+            finish: 'Finish',
+            configVocab: 'Setup - Vocabulary',
+            configHangman: 'Setup - Hangman',
+            articlesGame: 'Articles Game',
+            articlesGameDesc: 'Practice der, die and das with your nouns!',
+            selectCards: 'Select cards to practice:',
+            redCards: '🔴 Red (difficult)',
+            yellowCards: '🟡 Yellow (medium)',
+            greenCards: '🟢 Green (easy)',
+            hangmanNote: 'Only words with registered examples will be used in hangman to generate more accurate hints.',
+            congratulations: 'Congratulations!',
+            gameComplete: 'You completed the game!',
+            hits: 'Correct',
+            errors: 'Wrong',
+            playAgain: 'Play Again',
+            noCardsSelected: 'Select at least one card category',
+            noWordsAvailable: 'No words available for this category',
+            exit: '← Exit'
         },
 
         // Jogo da Forca
@@ -515,6 +557,12 @@ const translations = {
             credits: 'credits',
             resultPlaceholder: 'Paraphrased text will appear here',
             clickTheme: 'Click on a theme to see scenarios'
+        },
+
+        // Credits Page
+        creditos: {
+            title: 'Buy Credits',
+            subtitle: 'Get more credits to continue learning.'
         },
 
         // Tópicos de Conversação

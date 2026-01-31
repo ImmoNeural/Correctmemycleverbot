@@ -1,5 +1,5 @@
-// Função para traduzir palavras alemãs para português usando DeepSeek
-// Atualiza a tabela flashcards com as traduções
+// Função para traduzir palavras alemãs para português E inglês usando DeepSeek
+// Atualiza a tabela flashcards com as traduções em ambos os idiomas
 
 const SUPABASE_URL = 'https://timqizyevfkvqgzvcrlx.supabase.co';
 const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbXFpenlldmZrdnFnenZjcmx4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NjAxOTAwNiwiZXhwIjoyMDYxNTk1MDA2fQ.mQcEtge5GlyTQHzJMlWO2oT42tiAG-KFl58o-39MEG0';
@@ -33,9 +33,9 @@ exports.handler = async (event) => {
             };
         }
 
-        // Buscar palavras sem tradução
+        // Buscar palavras sem tradução em português OU inglês
         const wordsResponse = await fetch(
-            `${SUPABASE_URL}/rest/v1/flashcards?user_id=eq.${user_id}&traducao=is.null&select=id,palavra,artigo`,
+            `${SUPABASE_URL}/rest/v1/flashcards?user_id=eq.${user_id}&or=(traducao.is.null,traducao.eq.,translation_en.is.null,translation_en.eq.)&select=id,palavra,artigo,traducao,translation_en`,
             {
                 headers: {
                     'apikey': SUPABASE_SERVICE_KEY,
@@ -44,23 +44,7 @@ exports.handler = async (event) => {
             }
         );
 
-        const wordsWithoutTranslation = await wordsResponse.json();
-
-        // Também buscar palavras com tradução vazia
-        const emptyResponse = await fetch(
-            `${SUPABASE_URL}/rest/v1/flashcards?user_id=eq.${user_id}&traducao=eq.&select=id,palavra,artigo`,
-            {
-                headers: {
-                    'apikey': SUPABASE_SERVICE_KEY,
-                    'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`
-                }
-            }
-        );
-
-        const wordsWithEmptyTranslation = await emptyResponse.json();
-
-        // Combinar as duas listas
-        const allWordsToTranslate = [...(wordsWithoutTranslation || []), ...(wordsWithEmptyTranslation || [])];
+        const allWordsToTranslate = await wordsResponse.json();
 
         if (!allWordsToTranslate || allWordsToTranslate.length === 0) {
             return {
@@ -68,93 +52,163 @@ exports.handler = async (event) => {
                 headers,
                 body: JSON.stringify({
                     success: true,
-                    message: 'Todas as palavras já possuem tradução',
+                    message: 'Todas as palavras já possuem tradução em ambos os idiomas',
                     translated: 0
                 })
             };
         }
 
-        console.log(`Traduzindo ${allWordsToTranslate.length} palavras...`);
+        console.log(`Processando ${allWordsToTranslate.length} palavras...`);
 
-        // Limitar a 20 palavras por vez para não sobrecarregar
-        const wordsToProcess = allWordsToTranslate.slice(0, 20);
+        // Limitar a 15 palavras por vez para não sobrecarregar
+        const wordsToProcess = allWordsToTranslate.slice(0, 15);
 
-        // Preparar lista de palavras para tradução em batch
-        const wordsList = wordsToProcess.map(w => `${w.artigo} ${w.palavra}`).join('\n');
+        // Separar palavras que precisam de tradução PT e/ou EN
+        const needsPT = wordsToProcess.filter(w => !w.traducao || w.traducao.trim() === '');
+        const needsEN = wordsToProcess.filter(w => !w.translation_en || w.translation_en.trim() === '');
 
-        // Chamar DeepSeek para traduzir todas de uma vez
-        const response = await fetch(DEEPSEEK_API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
-            },
-            body: JSON.stringify({
-                model: 'deepseek-chat',
-                messages: [
-                    {
-                        role: 'system',
-                        content: `Você é um tradutor alemão-português.
+        let updatedCount = 0;
+
+        // Traduzir para Português se necessário
+        if (needsPT.length > 0) {
+            const wordsList = needsPT.map(w => `${w.artigo} ${w.palavra}`).join('\n');
+
+            const ptResponse = await fetch(DEEPSEEK_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: 'deepseek-chat',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: `Você é um tradutor alemão-português.
 Traduza cada substantivo alemão para português de forma concisa (1-3 palavras).
-Responda APENAS no formato JSON: {"traduções": ["tradução1", "tradução2", ...]}
+Responda APENAS no formato JSON: {"translations": ["tradução1", "tradução2", ...]}
 Mantenha a mesma ordem das palavras.
 Não inclua o artigo na tradução, apenas o substantivo traduzido.`
-                    },
-                    {
-                        role: 'user',
-                        content: `Traduza estes substantivos alemães para português:\n${wordsList}`
-                    }
-                ],
-                temperature: 0.3,
-                max_tokens: 1000
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error('Erro ao chamar API de tradução');
-        }
-
-        const data = await response.json();
-        const content = data.choices?.[0]?.message?.content || '';
-
-        // Extrair JSON da resposta
-        let translations = [];
-        try {
-            const jsonMatch = content.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-                const parsed = JSON.parse(jsonMatch[0]);
-                translations = parsed.traduções || parsed.traducoes || parsed.translations || [];
-            }
-        } catch (e) {
-            console.error('Erro ao parsear traduções:', e);
-            // Tentar extrair linha por linha
-            translations = content.split('\n').filter(line => line.trim());
-        }
-
-        // Atualizar cada palavra no banco
-        let updatedCount = 0;
-        for (let i = 0; i < wordsToProcess.length && i < translations.length; i++) {
-            const word = wordsToProcess[i];
-            const translation = translations[i]?.trim();
-
-            if (translation && translation.length > 0) {
-                await fetch(
-                    `${SUPABASE_URL}/rest/v1/flashcards?id=eq.${word.id}`,
-                    {
-                        method: 'PATCH',
-                        headers: {
-                            'apikey': SUPABASE_SERVICE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
-                            'Content-Type': 'application/json',
-                            'Prefer': 'return=minimal'
                         },
-                        body: JSON.stringify({ traducao: translation })
+                        {
+                            role: 'user',
+                            content: `Traduza estes substantivos alemães para português:\n${wordsList}`
+                        }
+                    ],
+                    temperature: 0.3,
+                    max_tokens: 1000
+                })
+            });
+
+            if (ptResponse.ok) {
+                const data = await ptResponse.json();
+                const content = data.choices?.[0]?.message?.content || '';
+
+                let translations = [];
+                try {
+                    const jsonMatch = content.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        const parsed = JSON.parse(jsonMatch[0]);
+                        translations = parsed.translations || parsed.traduções || parsed.traducoes || [];
                     }
-                );
-                updatedCount++;
-                console.log(`Traduzido: ${word.artigo} ${word.palavra} -> ${translation}`);
+                } catch (e) {
+                    translations = content.split('\n').filter(line => line.trim());
+                }
+
+                for (let i = 0; i < needsPT.length && i < translations.length; i++) {
+                    const word = needsPT[i];
+                    const translation = translations[i]?.trim();
+                    if (translation && translation.length > 0) {
+                        await fetch(
+                            `${SUPABASE_URL}/rest/v1/flashcards?id=eq.${word.id}`,
+                            {
+                                method: 'PATCH',
+                                headers: {
+                                    'apikey': SUPABASE_SERVICE_KEY,
+                                    'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+                                    'Content-Type': 'application/json',
+                                    'Prefer': 'return=minimal'
+                                },
+                                body: JSON.stringify({ traducao: translation })
+                            }
+                        );
+                        console.log(`PT: ${word.artigo} ${word.palavra} -> ${translation}`);
+                    }
+                }
             }
         }
+
+        // Traduzir para Inglês se necessário
+        if (needsEN.length > 0) {
+            const wordsList = needsEN.map(w => `${w.artigo} ${w.palavra}`).join('\n');
+
+            const enResponse = await fetch(DEEPSEEK_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: 'deepseek-chat',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: `You are a German-English translator.
+Translate each German noun to English concisely (1-3 words).
+Respond ONLY in JSON format: {"translations": ["translation1", "translation2", ...]}
+Keep the same order of words.
+Do not include the article in the translation, only the translated noun.`
+                        },
+                        {
+                            role: 'user',
+                            content: `Translate these German nouns to English:\n${wordsList}`
+                        }
+                    ],
+                    temperature: 0.3,
+                    max_tokens: 1000
+                })
+            });
+
+            if (enResponse.ok) {
+                const data = await enResponse.json();
+                const content = data.choices?.[0]?.message?.content || '';
+
+                let translations = [];
+                try {
+                    const jsonMatch = content.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        const parsed = JSON.parse(jsonMatch[0]);
+                        translations = parsed.translations || [];
+                    }
+                } catch (e) {
+                    translations = content.split('\n').filter(line => line.trim());
+                }
+
+                for (let i = 0; i < needsEN.length && i < translations.length; i++) {
+                    const word = needsEN[i];
+                    const translation = translations[i]?.trim();
+                    if (translation && translation.length > 0) {
+                        await fetch(
+                            `${SUPABASE_URL}/rest/v1/flashcards?id=eq.${word.id}`,
+                            {
+                                method: 'PATCH',
+                                headers: {
+                                    'apikey': SUPABASE_SERVICE_KEY,
+                                    'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+                                    'Content-Type': 'application/json',
+                                    'Prefer': 'return=minimal'
+                                },
+                                body: JSON.stringify({ translation_en: translation })
+                            }
+                        );
+                        updatedCount++;
+                        console.log(`EN: ${word.artigo} ${word.palavra} -> ${translation}`);
+                    }
+                }
+            }
+        }
+
+        updatedCount = Math.max(needsPT.length, needsEN.length);
 
         return {
             statusCode: 200,
@@ -163,7 +217,9 @@ Não inclua o artigo na tradução, apenas o substantivo traduzido.`
                 success: true,
                 message: `${updatedCount} palavras traduzidas com sucesso`,
                 translated: updatedCount,
-                remaining: allWordsToTranslate.length - updatedCount
+                remaining: allWordsToTranslate.length - wordsToProcess.length,
+                pt_translated: needsPT.length,
+                en_translated: needsEN.length
             })
         };
 
