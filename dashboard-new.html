@@ -3492,8 +3492,8 @@
         };
     </script>
 
-    <!-- Script principal do Chatbot CorrectMe -->
-    <script src="bot_051.js" defer></script>
+    <!-- NOTA: bot_051.js é carregado APENAS dentro do iframe do chatbot -->
+    <!-- NÃO carregar aqui para evitar que o widget apareça em todas as páginas -->
 
     <!-- =================================================================== -->
     <!-- FIM DO CÓDIGO DE INTEGRAÇÃO DO CHATBOT                              -->
@@ -3504,35 +3504,9 @@
     <script src="dashboard-new.js"></script>
 
     <script>
-        // CSS para FORÇAR esconder APENAS o bubble do chatbot (não outros divs)
-        const hideBubbleCSS = document.createElement('style');
-        hideBubbleCSS.textContent = `
-            /* Esconder APENAS o botão launcher do chatbot (floating bubble) */
-            .chat-assist-widget > .chat-launcher,
-            button.chat-launcher[style*="position: fixed"],
-            body > .chat-assist-widget > button.chat-launcher {
-                display: none !important;
-                visibility: hidden !important;
-                opacity: 0 !important;
-                pointer-events: none !important;
-                z-index: -99999 !important;
-                width: 0 !important;
-                height: 0 !important;
-                overflow: hidden !important;
-            }
-
-            /* Classe adicional para elementos marcados */
-            .chatbot-bubble-hidden {
-                display: none !important;
-                visibility: hidden !important;
-                opacity: 0 !important;
-                pointer-events: none !important;
-                z-index: -99999 !important;
-                width: 0 !important;
-                height: 0 !important;
-                overflow: hidden !important;
-            }
-
+        // CSS para garantir visibilidade dos resultados de correção
+        const formMessageCSS = document.createElement('style');
+        formMessageCSS.textContent = `
             /* GARANTIR que form-message seja sempre visível */
             #form-message {
                 display: block !important;
@@ -3567,60 +3541,7 @@
                 display: block !important;
             }
         `;
-        document.head.appendChild(hideBubbleCSS);
-
-        // Função para esconder bubble AGRESSIVAMENTE
-        const hideChatbotBubble = () => {
-            const embeddedContainer = document.getElementById('chatbot-prompt-container');
-
-            // Procurar todos os divs no body
-            document.querySelectorAll('body > div').forEach(div => {
-                // Não esconder se faz parte do container integrado
-                if (embeddedContainer && embeddedContainer.contains(div)) {
-                    return;
-                }
-
-                const style = window.getComputedStyle(div);
-
-                // Detectar bubble: position fixed + bottom + button
-                if (style.position === 'fixed') {
-                    const hasButton = div.querySelector('button');
-                    const hasBottom = style.bottom !== 'auto' || div.style.bottom;
-                    const hasRight = style.right !== 'auto' || div.style.right;
-
-                    if (hasButton && (hasBottom || hasRight)) {
-                        console.log('🚫 Bubble detectado e escondido:', div);
-                        div.classList.add('chatbot-bubble-hidden');
-                        div.remove(); // REMOVER completamente do DOM
-                    }
-                }
-            });
-        };
-
-        // Executar múltiplas vezes
-        hideChatbotBubble();
-        setTimeout(hideChatbotBubble, 100);
-        setTimeout(hideChatbotBubble, 500);
-        setTimeout(hideChatbotBubble, 1000);
-        setTimeout(hideChatbotBubble, 2000);
-
-        // Monitorar DOM changes
-        const observer = new MutationObserver(() => {
-            hideChatbotBubble();
-        });
-
-        // Começar a observar quando o DOM carregar
-        if (document.body) {
-            observer.observe(document.body, {
-                childList: true,
-                subtree: false  // Apenas filhos diretos do body
-            });
-        }
-
-        window.addEventListener('load', () => {
-            hideChatbotBubble();
-            setInterval(hideChatbotBubble, 300);
-        });
+        document.head.appendChild(formMessageCSS);
     </script>
 </body>
 </html>
