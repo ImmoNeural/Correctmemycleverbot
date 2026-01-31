@@ -4016,20 +4016,23 @@ async function handleCorrectionSubmit(e) {
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Gerando...
+                    ${window.t('forca.generating')}
                 `;
                 updateDicaBtns(true, loadingHtml);
-                updateDicaText('<span class="text-gray-400 animate-pulse">Gerando dicas...</span>');
+                updateDicaText(`<span class="text-gray-400 animate-pulse">${window.t('forca.generatingHints')}</span>`);
 
                 try {
                     // LOG DETALHADO para debug
+                    const currentLang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
                     const dadosEnvio = {
                         palavra: forcaGameState.originalWord,
-                        traducao: forcaGameState.currentHint
+                        traducao: forcaGameState.currentHint,
+                        lang: currentLang
                     };
                     console.log('[DICA] ===== ENVIANDO PARA API =====');
                     console.log('[DICA] Palavra:', dadosEnvio.palavra);
                     console.log('[DICA] Tradução:', dadosEnvio.traducao);
+                    console.log('[DICA] Idioma:', dadosEnvio.lang);
                     console.log('[DICA] currentWord capturado:', currentWord);
                     console.log('[DICA] ================================');
 
@@ -4060,7 +4063,7 @@ async function handleCorrectionSubmit(e) {
                         // VERIFICAÇÃO EXTRA: Confirmar que as dicas são para a palavra correta
                         if (data.palavraOrigem && data.palavraOrigem.toLowerCase() !== currentWord.toLowerCase()) {
                             console.log('[DICA] Dicas descartadas: palavraOrigem não corresponde (API:', data.palavraOrigem, ', esperado:', currentWord, ')');
-                            updateDicaText('Erro de sincronização. Tente novamente.');
+                            updateDicaText(window.t('forca.syncError'));
                             return;
                         }
 
@@ -4071,7 +4074,7 @@ async function handleCorrectionSubmit(e) {
                         // Mostrar a primeira dica
                         mostrarProximaDica();
                     } else {
-                        updateDicaText('Erro ao gerar dicas. Tente novamente.');
+                        updateDicaText(window.t('forca.errorGenerating'));
                     }
                 } catch (error) {
                     console.error('[DICA] Erro ao buscar dicas:', error);
@@ -4079,7 +4082,7 @@ async function handleCorrectionSubmit(e) {
                     if (currentRequestId === forcaGameState.dicaRequestId &&
                         currentWordIndex === forcaGameState.currentIndex &&
                         currentWord === forcaGameState.originalWord) {
-                        updateDicaText('Erro de conexão. Tente novamente.');
+                        updateDicaText(window.t('forca.connectionError'));
                     }
                 } finally {
                     // Só resetar dicasCarregando se ESTA é a requisição que está marcada como ativa

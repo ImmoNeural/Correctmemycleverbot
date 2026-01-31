@@ -201,7 +201,12 @@ const translations = {
             wrongLetters: 'Letras erradas:',
             won: 'Parabéns! Você acertou!',
             lost: 'Você perdeu! A palavra era:',
-            playAgain: 'Jogar Novamente'
+            playAgain: 'Jogar Novamente',
+            generating: 'Gerando...',
+            generatingHints: 'Gerando dicas...',
+            errorGenerating: 'Erro ao gerar dicas. Tente novamente.',
+            syncError: 'Erro de sincronização. Tente novamente.',
+            connectionError: 'Erro de conexão. Tente novamente.'
         },
 
         // Progresso
@@ -543,7 +548,12 @@ const translations = {
             wrongLetters: 'Wrong letters:',
             won: 'Congratulations! You got it!',
             lost: 'You lost! The word was:',
-            playAgain: 'Play Again'
+            playAgain: 'Play Again',
+            generating: 'Generating...',
+            generatingHints: 'Generating hints...',
+            errorGenerating: 'Error generating hints. Try again.',
+            syncError: 'Sync error. Try again.',
+            connectionError: 'Connection error. Try again.'
         },
 
         // Progresso
