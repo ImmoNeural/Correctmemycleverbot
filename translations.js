@@ -185,7 +185,10 @@ const translations = {
             playAgain: 'Jogar Novamente',
             noCardsSelected: 'Selecione pelo menos uma categoria de cartões',
             noWordsAvailable: 'Nenhuma palavra disponível para esta categoria',
-            exit: '← Sair'
+            exit: '← Sair',
+            wordOf: 'Palavra',
+            of: 'de',
+            whatIsCorrectArticle: 'Qual é o artigo correto?'
         },
 
         // Jogo da Forca
@@ -195,6 +198,7 @@ const translations = {
             attempts: 'tentativas',
             hint: 'Dica',
             getHint: 'Pedir Dica',
+            wrongLetters: 'Letras erradas:',
             won: 'Parabéns! Você acertou!',
             lost: 'Você perdeu! A palavra era:',
             playAgain: 'Jogar Novamente'
@@ -523,7 +527,10 @@ const translations = {
             playAgain: 'Play Again',
             noCardsSelected: 'Select at least one card category',
             noWordsAvailable: 'No words available for this category',
-            exit: '← Exit'
+            exit: '← Exit',
+            wordOf: 'Word',
+            of: 'of',
+            whatIsCorrectArticle: 'What is the correct article?'
         },
 
         // Jogo da Forca
@@ -533,6 +540,7 @@ const translations = {
             attempts: 'attempts',
             hint: 'Hint',
             getHint: 'Get Hint',
+            wrongLetters: 'Wrong letters:',
             won: 'Congratulations! You got it!',
             lost: 'You lost! The word was:',
             playAgain: 'Play Again'

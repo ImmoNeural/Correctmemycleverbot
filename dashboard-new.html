@@ -2603,9 +2603,9 @@
                 <div id="flashcard-game-area" class="hidden max-w-4xl">
                     <!-- Header com progresso -->
                     <div class="mb-6 flex justify-between items-center">
-                        <button id="exit-game-btn" class="text-slate-400 hover:text-slate-200 text-sm">← Sair</button>
+                        <button id="exit-game-btn" class="text-slate-400 hover:text-slate-200 text-sm" data-i18n="flashcards.exit">← Exit</button>
                         <div class="flex gap-6 text-sm text-slate-400">
-                            <span id="game-progress-text">Palavra 1 de 10</span>
+                            <span id="game-progress-text" data-i18n-template="flashcards.wordOf">Word 1 of 10</span>
                             <span class="text-green-400">✓ <span id="game-correct-count">0</span></span>
                             <span class="text-red-400">✗ <span id="game-wrong-count">0</span></span>
                         </div>
@@ -2638,7 +2638,7 @@
                     <div id="artigos-flashcard-container" class="hidden">
                         <div id="artigos-flashcard" class="bg-slate-800 border-2 border-slate-700 rounded-xl p-10 min-h-[350px] flex flex-col items-center justify-center transition-all">
                             <h2 id="artigos-word" class="text-4xl font-bold text-slate-100 text-center mb-6">Substantivo</h2>
-                            <p id="artigos-question" class="text-sm text-slate-400 mb-6">Qual é o artigo correto?</p>
+                            <p id="artigos-question" class="text-sm text-slate-400 mb-6" data-i18n="flashcards.whatIsCorrectArticle">What is the correct article?</p>
                             <p id="artigos-feedback" class="text-2xl font-semibold text-center mb-6 hidden"></p>
                             <div id="artigos-buttons" class="flex gap-4">
                                 <button class="artigo-btn bg-blue-700 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg text-xl transition-colors" data-artigo="der">der</button>
@@ -2777,7 +2777,7 @@
 
                                     <!-- Letras erradas -->
                                     <div id="forca-letras-erradas-container">
-                                        <p class="text-slate-500 text-xs mb-2">Letras erradas:</p>
+                                        <p id="forca-wrong-letters-label" class="text-slate-500 text-xs mb-2" data-i18n="forca.wrongLetters">Letras erradas:</p>
                                         <div id="forca-letras-erradas">
                                             <!-- Letras erradas serão mostradas aqui -->
                                         </div>
