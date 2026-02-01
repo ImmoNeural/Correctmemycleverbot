@@ -5790,11 +5790,11 @@ SPRACHE:
                 console.log('WebSocket conectado');
 
                 // Enviar configuração de setup conforme documentação oficial
-                // Usando gemini-2.0-flash-exp para Live API
+                // Modelo Gemini 2.5 Flash Native Audio
                 // IMPORTANTE: responseModalities só pode ser AUDIO ou TEXT, não ambos!
                 const setupMessage = {
                     setup: {
-                        model: 'models/gemini-2.0-flash-exp',
+                        model: 'models/gemini-2.5-flash-native-audio-preview-12-2025',
                         generationConfig: {
                             responseModalities: ['AUDIO'],
                             speechConfig: {
@@ -6105,7 +6105,12 @@ SPRACHE:
 
                     // Log a cada 50 chunks (~3 segundos de áudio)
                     if (audioChunksSent % 50 === 0) {
-                        console.log(`🎙️ Áudio enviado: ${audioChunksSent} chunks (${Math.round(totalBytesEnviados/1024)}KB), som: ${hasSound}, RMS: ${rmsLevel?.toFixed(4) || 'N/A'}`);
+                        console.log(`🎙️ Áudio enviado: ${audioChunksSent} chunks (${Math.round(totalBytesEnviados/1024)}KB), som: ${hasSound}, RMS: ${rmsLevel?.toFixed(4) || 'N/A'}, isAISpeaking: ${conversacaoState.isAISpeaking}`);
+                    }
+
+                    // Log quando som é detectado (para debug)
+                    if (hasSound && rmsLevel > 0.01) {
+                        console.log(`🔊 SOM DETECTADO! RMS: ${rmsLevel?.toFixed(4)}, isAISpeaking: ${conversacaoState.isAISpeaking}`);
                     }
                 }
             };
