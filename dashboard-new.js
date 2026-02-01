@@ -5790,11 +5790,11 @@ SPRACHE:
                 console.log('WebSocket conectado');
 
                 // Enviar configuração de setup conforme documentação oficial
-                // Modelo Gemini Live 2.5 Flash Preview - otimizado para conversas ao vivo
+                // Modelo Gemini 2.5 Flash Native Audio (único que funciona com v1alpha)
                 // IMPORTANTE: responseModalities só pode ser AUDIO ou TEXT, não ambos!
                 const setupMessage = {
                     setup: {
-                        model: 'models/gemini-live-2.5-flash-preview',
+                        model: 'models/gemini-2.5-flash-native-audio-preview-12-2025',
                         generationConfig: {
                             responseModalities: ['AUDIO'],
                             speechConfig: {
