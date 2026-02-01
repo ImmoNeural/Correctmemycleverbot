@@ -5808,32 +5808,6 @@ SPRACHE:
                         systemInstruction: {
                             parts: [{ text: GERMAN_TUTOR_INSTRUCTION }]
                         },
-                        // Configuração de entrada de áudio em tempo real
-                        realtimeInputConfig: {
-                            // Voice Activity Detection - detecta quando o usuário fala/para de falar
-                            voiceActivityDetection: {
-                                // Sensibilidade para DETECTAR início da fala (LOW = menos falsos positivos)
-                                startSensitivity: 'MEDIUM',
-                                // Sensibilidade para DETECTAR fim da fala (HIGH = espera mais antes de considerar que parou)
-                                endSensitivity: 'LOW',
-                                // Padding antes da fala detectada (ms) - captura início da fala
-                                prefixPaddingMs: 300,
-                                // Duração do silêncio necessário para considerar fim da fala (ms)
-                                silenceDurationMs: 1000
-                            },
-                            // Ativar áudio proativo - permite IA iniciar fala quando apropriado
-                            automaticActivityDetection: {
-                                disabled: false
-                            }
-                        },
-                        // Ativar diálogo afetivo - modelo entende emoção e responde naturalmente
-                        affectiveDialog: {
-                            enabled: true
-                        },
-                        // Áudio proativo - permite que a IA inicie a conversa
-                        proactiveAudio: {
-                            enabled: true
-                        },
                         // Ativar transcrição de entrada para melhor compreensão
                         inputAudioTranscription: {},
                         // Ativar transcrição de saída para debug
