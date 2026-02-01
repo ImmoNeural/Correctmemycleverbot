@@ -5,18 +5,24 @@ const DEEPSEEK_API_KEY = 'sk-e080234eab8b442fb65fe8955d8947de';
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 
 // Prompt otimizado e mais curto para resposta rápida
-const ANALYSIS_PROMPT = `Analise os erros de alemão. Responda APENAS com JSON array.
+const ANALYSIS_PROMPT = `Você é um professor de ALEMÃO. Analise APENAS erros de ALEMÃO (Deutsch).
+
+IMPORTANTE:
+- O aluno está praticando ALEMÃO (idioma germânico)
+- IGNORE qualquer texto que não seja alemão
+- NÃO analise russo, inglês, português ou outros idiomas
+- Se o texto não for alemão, retorne []
 
 CATEGORIAS: declinacao, conjugacao, preposicoes, sintaxe, vocabulario
 
-FORMATO:
-[{"categoria":"X","contexto":"frase original","erro":"erro","correcao":"correto","explicacao":"explicação em português"}]
+FORMATO JSON:
+[{"categoria":"X","contexto":"frase em alemão","erro":"palavra/estrutura errada","correcao":"forma correta em alemão","explicacao":"explicação em português"}]
 
 REGRAS:
 - Máximo 5 erros
-- Se não houver erros: []
-- Explicação curta (1 frase)
-- Foque em gramática, ignore pronúncia`;
+- Se não houver erros de ALEMÃO: []
+- Explicação curta (1 frase) em português
+- Foque em gramática alemã: artigos (der/die/das), casos, conjugação verbal, ordem das palavras`;
 
 // Timeout reduzido para funcionar no Netlify
 async function callDeepSeek(userContent) {
