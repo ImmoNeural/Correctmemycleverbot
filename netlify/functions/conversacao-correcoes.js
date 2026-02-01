@@ -4,8 +4,33 @@
 const DEEPSEEK_API_KEY = 'sk-e080234eab8b442fb65fe8955d8947de';
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 
-// Prompt otimizado e mais curto para resposta rápida
-const ANALYSIS_PROMPT = `Você é um professor de ALEMÃO. Analise APENAS erros de ALEMÃO (Deutsch).
+// Get analysis prompt based on language
+function getAnalysisPrompt(language) {
+    const isEnglish = language === 'en' || language === 'en-US' || language === 'en-GB';
+
+    if (isEnglish) {
+        return `You are a GERMAN language teacher. Analyze ONLY GERMAN (Deutsch) errors.
+
+IMPORTANT:
+- The student is practicing GERMAN (Germanic language)
+- IGNORE any text that is not German
+- DO NOT analyze Russian, English, Portuguese or other languages
+- If the text is not German, return []
+
+CATEGORIES: declination, conjugation, prepositions, syntax, vocabulary
+
+JSON FORMAT:
+[{"categoria":"X","contexto":"German sentence","erro":"wrong word/structure","correcao":"correct German form","explicacao":"explanation in English"}]
+
+RULES:
+- Maximum 5 errors
+- If no GERMAN errors: []
+- Short explanation (1 sentence) in English
+- Focus on German grammar: articles (der/die/das), cases, verb conjugation, word order`;
+    }
+
+    // Default to Portuguese
+    return `Você é um professor de ALEMÃO. Analise APENAS erros de ALEMÃO (Deutsch).
 
 IMPORTANTE:
 - O aluno está praticando ALEMÃO (idioma germânico)
@@ -23,11 +48,14 @@ REGRAS:
 - Se não houver erros de ALEMÃO: []
 - Explicação curta (1 frase) em português
 - Foque em gramática alemã: artigos (der/die/das), casos, conjugação verbal, ordem das palavras`;
+}
 
 // Timeout reduzido para funcionar no Netlify
-async function callDeepSeek(userContent) {
+async function callDeepSeek(userContent, language = 'pt-BR') {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 segundos
+
+    const prompt = getAnalysisPrompt(language);
 
     try {
         const response = await fetch(DEEPSEEK_API_URL, {
@@ -39,7 +67,7 @@ async function callDeepSeek(userContent) {
             body: JSON.stringify({
                 model: 'deepseek-chat',
                 messages: [
-                    { role: 'system', content: ANALYSIS_PROMPT },
+                    { role: 'system', content: prompt },
                     { role: 'user', content: userContent }
                 ],
                 temperature: 0.1,
@@ -101,11 +129,11 @@ exports.handler = async (event) => {
 
     try {
         const body = JSON.parse(event.body);
-        const { transcripts, fullAnalysis } = body;
+        const { transcripts, fullAnalysis, language } = body;
 
         if (fullAnalysis && Array.isArray(transcripts)) {
             const formatted = formatTranscripts(transcripts);
-            console.log('Analisando:', formatted);
+            console.log('Analisando:', formatted, 'Language:', language);
 
             if (!formatted || formatted.length < 10) {
                 return {
@@ -116,7 +144,7 @@ exports.handler = async (event) => {
             }
 
             const userContent = `Frases do aluno:\n${formatted}`;
-            const rawResponse = await callDeepSeek(userContent);
+            const rawResponse = await callDeepSeek(userContent, language);
             console.log('Resposta:', rawResponse.substring(0, 200));
 
             const corrections = parseCorrections(rawResponse);
@@ -138,7 +166,7 @@ exports.handler = async (event) => {
             };
         }
 
-        const rawResponse = await callDeepSeek(`Frase: "${text}"`);
+        const rawResponse = await callDeepSeek(`Frase: "${text}"`, language);
         const corrections = parseCorrections(rawResponse);
 
         return {

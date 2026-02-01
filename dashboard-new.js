@@ -4559,6 +4559,7 @@ async function handleCorrectionSubmit(e) {
         startTime: null,
         timerInterval: null,
         totalSeconds: 0,
+        accumulatedSeconds: 0, // Accumulated time across reconnections
         conversationHistory: [],
         creditsUsed: 0,
         isAISpeaking: false,
@@ -4602,6 +4603,13 @@ async function handleCorrectionSubmit(e) {
 
     // System instruction para o tutor de alemão - MODO CONVERSACIONAL NATURAL
     const GERMAN_TUTOR_INSTRUCTION = `Du bist ein neugieriger, freundlicher Gesprächspartner für Deutschübungen.
+
+WICHTIG - SPRACHE DES BENUTZERS:
+- Der Benutzer wird IMMER auf DEUTSCH sprechen
+- Interpretiere alle Audioeingaben als DEUTSCH, auch wenn die Aussprache nicht perfekt ist
+- Der Benutzer ist ein Deutschlerner - erwarte Akzent und Aussprachefehler
+- NIEMALS annehmen, dass der Benutzer Türkisch, Arabisch, Englisch oder andere Sprachen spricht
+- Wenn etwas unklar klingt, frage höflich nach auf Deutsch
 
 DEINE PERSÖNLICHKEIT:
 - Du bist SEHR NEUGIERIG und willst ALLES über den Benutzer wissen
@@ -5898,6 +5906,7 @@ SPRACHE:
             // Setup complete - pronto para conversar
             if (message.setupComplete) {
                 console.log('✅ Setup completo - iniciando captura de áudio');
+                const isReconnection = conversacaoState.reconnectAttempts > 0;
                 conversacaoState.isConnected = true;
                 conversacaoState.isConnecting = false;
                 conversacaoState.reconnectAttempts = 0; // Reset contador de reconexão
@@ -5905,7 +5914,10 @@ SPRACHE:
                 updateStatus('Conectado - Fale agora!', 'connected');
                 updateConversacaoUI('recording');
                 startAudioCapture();
-                startTimer();
+                startTimer(isReconnection); // Pass flag to preserve timer on reconnection
+                if (isReconnection) {
+                    console.log(`🔄 Reconexão bem-sucedida - tempo acumulado preservado: ${conversacaoState.totalSeconds}s`);
+                }
                 // Keep-alive desativado - o streaming de áudio já mantém a conexão
                 // startKeepAlive();
 
@@ -6428,15 +6440,17 @@ SPRACHE:
     function disconnectConversation() {
         console.log('Desconectando...');
 
-        // Guardar duração antes de limpar
+        // Guardar duração antes de limpar (totalSeconds is preserved across reconnections)
         const conversationDuration = conversacaoState.totalSeconds;
+        const expectedCredits = Math.ceil((conversationDuration / 60) * 10);
 
         // Flush qualquer transcript pendente antes de desconectar
         flushUserTranscript();
 
         console.log('📊 Total de transcripts armazenados:', conversacaoState.transcripts.length);
         console.log('📊 Transcripts:', JSON.stringify(conversacaoState.transcripts, null, 2));
-        console.log(`⏱️ Duração da conversa: ${conversationDuration} segundos`);
+        console.log(`⏱️ Duração total da conversa: ${conversationDuration} segundos (${(conversationDuration/60).toFixed(2)} minutos)`);
+        console.log(`💰 Créditos esperados: ${expectedCredits} (10 créditos/minuto)`);
 
         if (conversacaoState.ws) {
             conversacaoState.ws.close();
@@ -7009,11 +7023,15 @@ GESPRÄCHSENDE: "Super, wir haben einen guten Plan. Ich sehe Sie in zwei Wochen 
         }
     }
 
-    function startTimer() {
+    function startTimer(isReconnection = false) {
         // Parar timer anterior se existir
         stopTimer();
 
-        conversacaoState.totalSeconds = 0;
+        // Se é reconexão, não resetar o totalSeconds - continuar de onde parou
+        if (!isReconnection) {
+            conversacaoState.totalSeconds = 0;
+            conversacaoState.accumulatedSeconds = 0;
+        }
         updateTimerDisplay();
         conversacaoState.timerInterval = setInterval(() => {
             // Só contar se ainda conectado
@@ -7136,9 +7154,12 @@ GESPRÄCHSENDE: "Super, wir haben einen guten Plan. Ich sehe Sie in zwei Wochen 
         showAnalysisStatus('Analisando sua conversa...');
 
         try {
+            // Get current language for error explanations
+            const currentLang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
             const requestBody = {
                 transcripts: userTranscripts,
-                fullAnalysis: true
+                fullAnalysis: true,
+                language: currentLang
             };
             console.log('📤 Enviando para DeepSeek:', JSON.stringify(requestBody, null, 2));
 
