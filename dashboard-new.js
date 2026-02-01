@@ -6766,6 +6766,86 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
         vocabulario: { hex: '#4ade80', name: 'Vocabulário' }
     };
 
+    // Contadores de erros por categoria
+    let errorCounts = {
+        declinacao: 0,
+        conjugacao: 0,
+        preposicoes: 0,
+        sintaxe: 0,
+        vocabulario: 0
+    };
+
+    // Função para atualizar o gráfico de pizza
+    function updatePieChart() {
+        const pieChart = document.getElementById('conv-pie-chart');
+        const noErrorsMsg = document.getElementById('conv-no-errors-msg');
+        if (!pieChart) return;
+
+        // Atualizar contadores na legenda
+        Object.keys(errorCounts).forEach(cat => {
+            const countEl = document.getElementById(`conv-count-${cat}`);
+            if (countEl) countEl.textContent = errorCounts[cat];
+        });
+
+        const total = Object.values(errorCounts).reduce((a, b) => a + b, 0);
+
+        // Atualizar contador total
+        const totalEl = document.getElementById('conv-total-errors');
+        if (totalEl) totalEl.textContent = total;
+
+        // Esconder mensagem de "sem erros" se houver erros
+        if (noErrorsMsg) {
+            noErrorsMsg.classList.toggle('hidden', total > 0);
+        }
+
+        // Remover fatias antigas (mantendo o círculo de fundo)
+        const slices = pieChart.querySelectorAll('.pie-slice');
+        slices.forEach(slice => slice.remove());
+
+        if (total === 0) {
+            // Mostrar círculo vazio
+            const bgCircle = pieChart.querySelector('.pie-chart-bg');
+            if (bgCircle) bgCircle.style.display = '';
+            return;
+        }
+
+        // Esconder círculo de fundo quando há erros
+        const bgCircle = pieChart.querySelector('.pie-chart-bg');
+        if (bgCircle) bgCircle.style.display = 'none';
+
+        // Calcular e criar fatias
+        const radius = 40;
+        const circumference = 2 * Math.PI * radius;
+        let currentOffset = 0;
+
+        const categories = ['declinacao', 'conjugacao', 'preposicoes', 'sintaxe', 'vocabulario'];
+
+        categories.forEach(cat => {
+            const count = errorCounts[cat];
+            if (count === 0) return;
+
+            const percentage = count / total;
+            const dashLength = percentage * circumference;
+            const gapLength = circumference - dashLength;
+
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', '50');
+            circle.setAttribute('cy', '50');
+            circle.setAttribute('r', String(radius));
+            circle.setAttribute('fill', 'none');
+            circle.setAttribute('stroke', CORRECTION_COLORS[cat].hex);
+            circle.setAttribute('stroke-width', '20');
+            circle.setAttribute('stroke-dasharray', `${dashLength} ${gapLength}`);
+            circle.setAttribute('stroke-dashoffset', String(-currentOffset));
+            circle.classList.add('pie-slice');
+            circle.style.transition = 'stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease';
+
+            pieChart.appendChild(circle);
+
+            currentOffset += dashLength;
+        });
+    }
+
     // Função para fazer flush do transcript acumulado do usuário
     function flushUserTranscript() {
         if (conversacaoState.transcriptFlushTimer) {
@@ -6878,49 +6958,55 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
 
     // Mostra status da análise
     function showAnalysisStatus(message) {
-        const correctionsEl = document.getElementById('conv-corrections');
-        if (!correctionsEl) return;
-
-        // Remover mensagem inicial se existir
-        const emptyMsg = correctionsEl.querySelector('.text-center');
-        if (emptyMsg) emptyMsg.remove();
-
-        const statusDiv = document.createElement('div');
-        statusDiv.className = 'analysis-status text-center py-4';
-        statusDiv.innerHTML = `
-            <div class="flex items-center justify-center gap-2 text-cyan-400">
-                <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>${escapeHtml(message)}</span>
-            </div>
-        `;
-        correctionsEl.appendChild(statusDiv);
+        // Esconder mensagem de "sem erros" e mostrar status no gráfico de pizza
+        const noErrorsMsg = document.getElementById('conv-no-errors-msg');
+        if (noErrorsMsg) {
+            noErrorsMsg.innerHTML = `
+                <div class="flex items-center justify-center gap-2 text-cyan-400">
+                    <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="text-xs">${escapeHtml(message)}</span>
+                </div>
+            `;
+            noErrorsMsg.classList.remove('hidden');
+        }
     }
 
     // Função para exibir correções na UI com contexto completo
     function displayCorrections(corrections) {
         const correctionsEl = document.getElementById('conv-corrections');
+        const analysisSection = document.getElementById('conv-error-analysis-section');
         if (!correctionsEl) return;
 
         // Limpa tudo
         correctionsEl.innerHTML = '';
 
-        // Mostrar contador de erros
-        const errorCountEl = document.getElementById('conv-error-count');
-        if (errorCountEl) {
-            errorCountEl.classList.remove('hidden');
+        // Resetar contadores
+        errorCounts = {
+            declinacao: 0,
+            conjugacao: 0,
+            preposicoes: 0,
+            sintaxe: 0,
+            vocabulario: 0
+        };
+
+        // Mostrar seção de análise detalhada
+        if (analysisSection) {
+            analysisSection.classList.remove('hidden');
         }
 
         corrections.forEach(corr => {
-            const color = CORRECTION_COLORS[corr.categoria] || CORRECTION_COLORS.vocabulario;
+            const categoria = corr.categoria || 'vocabulario';
+            const color = CORRECTION_COLORS[categoria] || CORRECTION_COLORS.vocabulario;
             conversacaoState.totalCorrections++;
 
-            // Atualizar contador
-            const totalEl = document.getElementById('conv-total-errors');
-            if (totalEl) {
-                totalEl.textContent = conversacaoState.totalCorrections;
+            // Incrementar contador por categoria
+            if (errorCounts.hasOwnProperty(categoria)) {
+                errorCounts[categoria]++;
+            } else {
+                errorCounts.vocabulario++;
             }
 
             // Criar card de correção com contexto
@@ -6932,7 +7018,6 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
                 border-left: 4px solid ${color.hex};
                 border-radius: 8px;
                 padding: 12px;
-                margin-bottom: 12px;
                 animation: slideIn 0.3s ease-out;
             `;
 
@@ -6952,25 +7037,26 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
 
             corrDiv.innerHTML = `
                 ${corr.contexto ? `
-                <div style="margin-bottom: 10px; padding: 10px; background: #0f172a; border-radius: 6px; font-style: italic; color: #e2e8f0; font-size: 14px; line-height: 1.5;">
+                <div style="margin-bottom: 10px; padding: 8px; background: #0f172a; border-radius: 6px; font-style: italic; color: #e2e8f0; font-size: 12px; line-height: 1.4;">
                     "${contextHtml}"
                 </div>` : ''}
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                    <span style="display: inline-block; width: 10px; height: 10px; background: ${color.hex}; border-radius: 50%;"></span>
-                    <span style="color: ${color.hex}; font-size: 12px; font-weight: 600; text-transform: uppercase;">${color.name}</span>
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                    <span style="display: inline-block; width: 8px; height: 8px; background: ${color.hex}; border-radius: 50%;"></span>
+                    <span style="color: ${color.hex}; font-size: 10px; font-weight: 600; text-transform: uppercase;">${color.name}</span>
                 </div>
-                <div style="margin-bottom: 8px;">
-                    <span style="color: #ef4444; text-decoration: line-through; font-weight: 500;">${escapeHtml(corr.erro || '')}</span>
-                    <span style="color: #94a3b8; margin: 0 8px;">→</span>
-                    <span style="color: #4ade80; font-weight: 600;">${escapeHtml(corr.correcao || '')}</span>
+                <div style="margin-bottom: 6px;">
+                    <span style="color: #ef4444; text-decoration: line-through; font-weight: 500; font-size: 12px;">${escapeHtml(corr.erro || '')}</span>
+                    <span style="color: #94a3b8; margin: 0 6px;">→</span>
+                    <span style="color: #4ade80; font-weight: 600; font-size: 12px;">${escapeHtml(corr.correcao || '')}</span>
                 </div>
-                <p style="color: #cbd5e1; font-size: 13px; margin: 0; line-height: 1.5;">${escapeHtml(corr.explicacao || '')}</p>
+                <p style="color: #cbd5e1; font-size: 11px; margin: 0; line-height: 1.4;">${escapeHtml(corr.explicacao || '')}</p>
             `;
 
             correctionsEl.appendChild(corrDiv);
         });
 
-        correctionsEl.scrollTop = 0; // Volta ao topo para ver todas as correções
+        // Atualizar gráfico de pizza
+        updatePieChart();
     }
 
     // Função legada - agora apenas armazena transcripts
@@ -6991,13 +7077,21 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
 
         const correctionsEl = document.getElementById('conv-corrections');
         if (correctionsEl) {
-            correctionsEl.innerHTML = `
-                <div class="text-center text-slate-500 py-4">
-                    <p>Suas correções aparecerão aqui.</p>
-                    <p class="text-sm mt-1">Ao final da conversa, seus erros serão analisados!</p>
-                </div>
-            `;
+            correctionsEl.innerHTML = '';
         }
+
+        // Esconder seção de análise detalhada
+        const analysisSection = document.getElementById('conv-error-analysis-section');
+        if (analysisSection) {
+            analysisSection.classList.add('hidden');
+        }
+
+        // Mostrar mensagem de "sem erros"
+        const noErrorsMsg = document.getElementById('conv-no-errors-msg');
+        if (noErrorsMsg) {
+            noErrorsMsg.classList.remove('hidden');
+        }
+
         // Reset estado
         conversacaoState.totalCorrections = 0;
         conversacaoState.transcripts = [];
@@ -7011,20 +7105,26 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
             clearTimeout(conversacaoState.analysisTimer);
             conversacaoState.analysisTimer = null;
         }
-        const totalEl = document.getElementById('conv-total-errors');
-        if (totalEl) totalEl.textContent = '0';
-        const errorCountEl = document.getElementById('conv-error-count');
-        if (errorCountEl) errorCountEl.classList.add('hidden');
+
+        // Resetar contadores de erro por categoria
+        errorCounts = {
+            declinacao: 0,
+            conjugacao: 0,
+            preposicoes: 0,
+            sintaxe: 0,
+            vocabulario: 0
+        };
+
+        // Atualizar gráfico de pizza (vai mostrar vazio)
+        updatePieChart();
     }
 
     function showConversacaoError(message) {
-        const correctionsEl = document.getElementById('conv-corrections');
-        if (correctionsEl) {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'p-3 bg-red-900/30 border border-red-500/50 rounded-lg text-center';
-            errorDiv.innerHTML = `<p class="text-red-400 text-sm">${escapeHtml(message)}</p>`;
-            correctionsEl.appendChild(errorDiv);
-            correctionsEl.scrollTop = correctionsEl.scrollHeight;
+        // Mostrar erro na área de status do gráfico de pizza
+        const noErrorsMsg = document.getElementById('conv-no-errors-msg');
+        if (noErrorsMsg) {
+            noErrorsMsg.innerHTML = `<p class="text-red-400 text-xs">${escapeHtml(message)}</p>`;
+            noErrorsMsg.classList.remove('hidden');
         }
     }
 
