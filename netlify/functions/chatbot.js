@@ -83,18 +83,18 @@ const GRAMMAR_TOPICS_TABLE = `
 68. „Viel" und „wenig"
 `;
 
-// System prompt para conversação em alemão (escrita) - COM FORMATAÇÃO
-const CONVERSATION_SYSTEM_PROMPT = `Você é CorrectMe, tutor de alemão para brasileiros.
+// System prompt für Konversation auf Deutsch (Schreiben) - MIT FORMATIERUNG
+const CONVERSATION_SYSTEM_PROMPT = `Du bist CorrectMe, ein Deutschtutor.
 
-**REGRAS IMPORTANTES:**
-1. Converse em ALEMÃO sobre o tópico dado
-2. Quando o aluno errar, use EXATAMENTE este formato:
-   - **Correção:** [frase correta em alemão]
-   - **Explicação (em português):** [explique o erro EM PORTUGUÊS BRASILEIRO]
-3. A explicação DEVE ser SEMPRE em PORTUGUÊS, nunca em alemão
-4. Se o aluno pedir vocabulário ou expressões, forneça com exemplos
-5. Continue a conversa em alemão após a correção
-6. Seja natural e amigável`;
+**WICHTIGE REGELN:**
+1. Unterhalte dich auf DEUTSCH über das gegebene Thema
+2. Wenn der Schüler einen Fehler macht, verwende GENAU dieses Format:
+   - **Korrektur:** [korrekter Satz auf Deutsch]
+   - **Erklärung:** [erkläre den Fehler AUF DEUTSCH]
+3. Die Erklärung muss IMMER auf DEUTSCH sein
+4. Wenn der Schüler nach Vokabular oder Ausdrücken fragt, gib Beispiele
+5. Setze das Gespräch auf Deutsch nach der Korrektur fort
+6. Sei natürlich und freundlich`;
 
 // Helper function to call DeepSeek API with timeout
 async function callDeepSeek(systemPrompt, userPrompt, temperature = 0.5, maxTokens = 800) {
@@ -140,7 +140,7 @@ async function callDeepSeek(systemPrompt, userPrompt, temperature = 0.5, maxToke
     } catch (error) {
         clearTimeout(timeoutId);
         if (error.name === 'AbortError') {
-            throw new Error('DeepSeek API timeout - resposta demorou muito');
+            throw new Error('DeepSeek API Timeout - Antwort dauerte zu lange');
         }
         throw error;
     }
@@ -244,14 +244,14 @@ function getWorkflowType(workflow) {
     return 'general';
 }
 
-// Combined prompt for direct grammar explanation (single API call)
-const DIRECT_GRAMMAR_PROMPT = `Você é um professor de alemão. Explique o tópico de forma BREVE e DIRETA em português. Inclua 2-3 exemplos em alemão com tradução. Máximo 200 palavras.`;
+// Kombinierter Prompt für direkte Grammatikerklärung (einzelner API-Aufruf)
+const DIRECT_GRAMMAR_PROMPT = `Du bist ein Deutschlehrer. Erkläre das Thema KURZ und DIREKT auf Deutsch. Füge 2-3 Beispiele auf Deutsch hinzu. Maximal 200 Wörter.`;
 
 // Handle grammar study (iniciante, intermediario, avancado) - optimized single API call
 async function handleGrammarRequest(message, workflow) {
     console.log('Handling grammar request:', message, workflow);
 
-    const userPrompt = `Explique "${message}" para nível ${workflow}. Seja breve.`;
+    const userPrompt = `Erkläre "${message}" für das Niveau ${workflow}. Sei kurz.`;
 
     const explanation = await callDeepSeek(DIRECT_GRAMMAR_PROMPT, userPrompt, 0.5, 600);
     return explanation;
@@ -266,11 +266,11 @@ async function handleWritingRequest(message, tema, sessionId) {
 
     let userPrompt;
     if (isFirstMessage) {
-        // Primeira mensagem: iniciar conversa sobre o tópico
-        userPrompt = `O aluno escolheu o tópico "${message}" para conversar. Diga "Ótimo! Vamos conversar sobre este tópico." em português, depois inicie uma conversa em alemão fazendo uma pergunta sobre o tema.`;
+        // Erste Nachricht: Gespräch über das Thema beginnen
+        userPrompt = `Der Schüler hat das Thema "${message}" zum Gespräch gewählt. Sage "Super! Lass uns über dieses Thema sprechen." auf Deutsch, dann beginne ein Gespräch auf Deutsch mit einer Frage zum Thema.`;
     } else {
-        // Mensagens seguintes: conversa normal
-        userPrompt = `Tópico: ${tema}. Aluno disse: "${message}". Responda em alemão, corrija erros se houver.`;
+        // Folgende Nachrichten: normales Gespräch
+        userPrompt = `Thema: ${tema}. Der Schüler sagte: "${message}". Antworte auf Deutsch, korrigiere Fehler wenn vorhanden.`;
     }
 
     const response = await callDeepSeek(CONVERSATION_SYSTEM_PROMPT, userPrompt, 0.6, 600);
@@ -337,9 +337,9 @@ exports.handler = async (event) => {
                     statusCode: 402,
                     headers,
                     body: JSON.stringify({
-                        error: 'Perfil não encontrado',
-                        output: 'Não foi possível encontrar seu perfil. Por favor, faça login novamente.',
-                        credito: 'Perfil não encontrado.'
+                        error: 'Profil nicht gefunden',
+                        output: 'Dein Profil konnte nicht gefunden werden. Bitte melde dich erneut an.',
+                        credito: 'Profil nicht gefunden.'
                     })
                 };
             }
@@ -352,9 +352,9 @@ exports.handler = async (event) => {
                     statusCode: 402,
                     headers,
                     body: JSON.stringify({
-                        error: 'Sem crédito suficiente',
-                        output: `Você tem ${credits} créditos, mas precisa de pelo menos ${MIN_CREDITS}. Por favor, adquira mais créditos.`,
-                        credito: 'Sem crédito suficiente.'
+                        error: 'Nicht genug Guthaben',
+                        output: `Du hast ${credits} Credits, aber du brauchst mindestens ${MIN_CREDITS}. Bitte kaufe mehr Credits.`,
+                        credito: 'Nicht genug Guthaben.'
                     })
                 };
             }
@@ -385,7 +385,7 @@ exports.handler = async (event) => {
         }
 
         if (!output) {
-            output = 'Desculpe, não consegui processar sua solicitação. Por favor, tente novamente.';
+            output = 'Entschuldigung, ich konnte deine Anfrage nicht verarbeiten. Bitte versuche es erneut.';
         }
 
         return {
@@ -406,7 +406,7 @@ exports.handler = async (event) => {
             body: JSON.stringify({
                 error: 'Internal server error',
                 details: error.message,
-                output: 'Ocorreu um erro. Por favor, tente novamente.'
+                output: 'Ein Fehler ist aufgetreten. Bitte versuche es erneut.'
             })
         };
     }
