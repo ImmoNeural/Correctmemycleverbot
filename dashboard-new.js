@@ -4963,6 +4963,244 @@ SPRACHE:
             }
         };
 
+        // English translations for scenarios
+        const scenarioDataEN = {
+            'restaurante-a2': {
+                title: 'Lunch with Colleagues',
+                subtitle: 'Practice ordering food at a traditional German restaurant',
+                context: 'You are in Berlin visiting your company headquarters. Three German colleagues (Anna, Markus and Sofia) invite you to lunch at a typical "Gasthaus" (traditional restaurant). You need to order food, ask simple questions about the menu and have basic conversations about food preferences.',
+                objective: 'Order food, ask simple questions about the menu and have basic conversations about food preferences.',
+                vocabulary: [
+                    { de: 'die Speisekarte', en: 'the menu' },
+                    { de: 'Ich hätte gern...', en: 'I would like...' },
+                    { de: 'Was empfehlen Sie?', en: 'What do you recommend?' },
+                    { de: 'das Tagesgericht', en: 'the dish of the day' },
+                    { de: 'Ich bin allergisch gegen...', en: 'I am allergic to...' },
+                    { de: 'Noch etwas zu trinken?', en: 'Anything else to drink?' },
+                    { de: 'Zusammen oder getrennt?', en: 'Together or separate?' },
+                    { de: 'Stimmt so', en: 'Keep the change (tip)' },
+                    { de: 'Das schmeckt ausgezeichnet!', en: 'This is excellent!' }
+                ],
+                tip: 'The AI (Anna) will speak slowly and use simple phrases. She will gently correct your article errors and word order. Don\'t be afraid to make mistakes!'
+            },
+            'restaurante-b1': {
+                title: 'Celebration with Problems',
+                subtitle: 'Practice making polite complaints and negotiating solutions',
+                context: 'You are at a more upscale restaurant in Munich celebrating your birthday with German friends. Some problems arise: your dish arrived cold, the wine is not what you ordered, and you need to negotiate solutions with the waiter politely but firmly.',
+                objective: 'Complain about problems politely, use Konjunktiv II for courteous requests, and negotiate solutions while staying calm.',
+                vocabulary: [
+                    { de: 'Entschuldigung, aber...', en: 'Excuse me, but...' },
+                    { de: 'Das ist nicht in Ordnung', en: 'That is not right' },
+                    { de: 'Könnten Sie bitte...', en: 'Could you please...' },
+                    { de: 'etwas reklamieren', en: 'to complain about something' },
+                    { de: 'eine Beschwerde vorbringen', en: 'to make a complaint' },
+                    { de: 'inakzeptabel', en: 'unacceptable' },
+                    { de: 'eine Entschädigung', en: 'compensation' },
+                    { de: 'die Rechnung überprüfen', en: 'to check the bill' },
+                    { de: 'Das lasse ich mir nicht gefallen', en: 'I won\'t accept this' }
+                ],
+                tip: 'The waiter will initially be defensive. Use Konjunktiv II (könnten, würden) to be more polite - this will make him cooperate more! Stay calm even when frustrated.'
+            },
+            'supermercado-a2': {
+                title: 'Supermarket Shopping',
+                subtitle: 'Ask for help finding products and understand the checkout',
+                context: 'You are at a German Supermarkt for the first time. You need to buy ingredients to make dinner for a German friend. You can\'t find some products and need to ask an employee for help.',
+                objective: 'Ask where products are, compare prices, understand promotions and checkout instructions (Pfand/returnable bottles).',
+                vocabulary: [
+                    { de: 'Wo finde ich...?', en: 'Where can I find...?' },
+                    { de: 'Was kostet das?', en: 'How much is this?' },
+                    { de: 'Haben Sie auch...?', en: 'Do you also have...?' },
+                    { de: 'Das ist im Angebot', en: 'It\'s on sale' },
+                    { de: 'Können Sie mir helfen?', en: 'Can you help me?' },
+                    { de: 'Ich suche...', en: 'I\'m looking for...' },
+                    { de: 'Mit Karte bitte', en: 'By card please' },
+                    { de: 'Brauchen Sie eine Tüte?', en: 'Do you need a bag?' },
+                    { de: 'Stimmt so', en: 'Keep the change' }
+                ],
+                tip: 'In Germany, you pay for bags and must separate returnable bottles (Pfand). The employee will help you!'
+            },
+            'medico-a2': {
+                title: 'At the Doctor',
+                subtitle: 'Describe symptoms and understand medical instructions',
+                context: 'You have a cold and need to go to the doctor (Hausarzt). You call to make an appointment, describe your symptoms at reception and to the doctor, and receive a prescription.',
+                objective: 'Make an appointment, describe symptoms, understand doctor\'s instructions and ask about medication.',
+                vocabulary: [
+                    { de: 'Ich habe Schmerzen', en: 'I have pain' },
+                    { de: 'Wo tut es weh?', en: 'Where does it hurt?' },
+                    { de: 'Seit wann?', en: 'Since when?' },
+                    { de: 'Ich habe Fieber/Husten', en: 'I have fever/cough' },
+                    { de: 'Das Rezept bitte', en: 'The prescription please' },
+                    { de: 'Dreimal täglich', en: 'Three times daily' },
+                    { de: 'Vor/Nach dem Essen', en: 'Before/After meals' },
+                    { de: 'Ich bin allergisch gegen...', en: 'I am allergic to...' },
+                    { de: 'Wann komme ich wieder?', en: 'When should I come back?' }
+                ],
+                tip: 'German doctors are direct. Describe your symptoms clearly and don\'t be embarrassed to ask them to repeat!'
+            },
+            'transporte-a2': {
+                title: 'Public Transport',
+                subtitle: 'Buy tickets and ask about connections',
+                context: 'You need to travel from Berlin to Munich using public transport. Buy a ticket, ask about connections, and interact with other passengers during the journey.',
+                objective: 'Buy a ticket, ask about times and platforms, request information about connections.',
+                vocabulary: [
+                    { de: 'Einmal nach München bitte', en: 'One ticket to Munich please' },
+                    { de: 'Von welchem Gleis?', en: 'From which platform?' },
+                    { de: 'Wann fährt der nächste Zug?', en: 'When does the next train leave?' },
+                    { de: 'Ist dieser Platz frei?', en: 'Is this seat free?' },
+                    { de: 'Eine Rückfahrkarte bitte', en: 'A round trip ticket please' },
+                    { de: 'Wie lange dauert die Fahrt?', en: 'How long is the journey?' },
+                    { de: 'Der Zug hat Verspätung', en: 'The train is delayed' },
+                    { de: 'Wo ist die Toilette?', en: 'Where is the bathroom?' },
+                    { de: 'Wann sind wir da?', en: 'When do we arrive?' }
+                ],
+                tip: 'In Germany, trains are usually punctual. Always validate your ticket before boarding!'
+            },
+            'festa-a2': {
+                title: 'Birthday Party',
+                subtitle: 'Interact at social events and meet people',
+                context: 'You have been invited to a Geburtstagsfeier (birthday party) at a German colleague\'s house. You need to interact with people you don\'t know, bring a gift, and participate in social conversations.',
+                objective: 'Greet, introduce yourself, talk about interests, offer/decline food and drinks, say goodbye.',
+                vocabulary: [
+                    { de: 'Alles Gute zum Geburtstag!', en: 'Happy birthday!' },
+                    { de: 'Das ist für dich', en: 'This is for you' },
+                    { de: 'Was machst du beruflich?', en: 'What do you do for work?' },
+                    { de: 'Woher kommst du?', en: 'Where are you from?' },
+                    { de: 'Noch etwas zu trinken?', en: 'Something else to drink?' },
+                    { de: 'Nein danke, ich bin satt', en: 'No thanks, I\'m full' },
+                    { de: 'Das schmeckt lecker!', en: 'This is delicious!' },
+                    { de: 'Es war schön, dich kennenzulernen', en: 'It was nice meeting you' },
+                    { de: 'Bis bald!', en: 'See you soon!' }
+                ],
+                tip: 'It\'s common to bring a gift (wine, flowers, chocolates). Say "Du" with people your age at informal parties!'
+            },
+            'trabalho-a2': {
+                title: 'First Day at Internship',
+                subtitle: 'Integrate with the team and understand your tasks',
+                context: 'First week at an internship (Praktikum) at a German company. You need to integrate, understand the tasks, and communicate with colleagues.',
+                objective: 'Introduce yourself to the team, ask about tasks, request help, participate in coffee break.',
+                vocabulary: [
+                    { de: 'Ich bin neu hier', en: 'I\'m new here' },
+                    { de: 'Was sind meine Aufgaben?', en: 'What are my tasks?' },
+                    { de: 'Können Sie das wiederholen?', en: 'Can you repeat that?' },
+                    { de: 'Ich verstehe nicht', en: 'I don\'t understand' },
+                    { de: 'Wann ist Pause?', en: 'When is the break?' },
+                    { de: 'Darf ich fragen...?', en: 'May I ask...?' },
+                    { de: 'Wo ist der Drucker?', en: 'Where is the printer?' },
+                    { de: 'Ich brauche Hilfe', en: 'I need help' },
+                    { de: 'Um wie viel Uhr fängt es an?', en: 'What time does it start?' }
+                ],
+                tip: 'Germans value punctuality and direct questions. Don\'t be afraid to ask for help - it shows interest!'
+            },
+            'apartamento-b1': {
+                title: 'Looking for Apartment',
+                subtitle: 'Visit apartments and negotiate conditions',
+                context: 'You need to move in Berlin and are visiting apartments to rent. Talk with real estate agents (Makler) and owners, compare options, and discuss conditions.',
+                objective: 'Schedule a visit, ask questions about the apartment, discuss price and conditions, negotiate.',
+                vocabulary: [
+                    { de: 'Ich interessiere mich für die Wohnung', en: 'I\'m interested in the apartment' },
+                    { de: 'Was sind die Nebenkosten?', en: 'What are the additional costs?' },
+                    { de: 'Ist die Küche eingebaut?', en: 'Is the kitchen fitted?' },
+                    { de: 'Wie hoch ist die Kaution?', en: 'What is the deposit?' },
+                    { de: 'Wann kann ich einziehen?', en: 'When can I move in?' },
+                    { de: 'Wie sind die Nachbarn?', en: 'What are the neighbors like?' },
+                    { de: 'Gibt es eine Mindestmietdauer?', en: 'Is there a minimum rental period?' },
+                    { de: 'Können wir über den Preis sprechen?', en: 'Can we talk about the price?' },
+                    { de: 'Ich möchte den Mietvertrag durchlesen', en: 'I want to read the contract' }
+                ],
+                tip: 'The apartment market in Germany is competitive. Prepare documents (Schufa, proof of income) in advance!'
+            },
+            'academia-b1': {
+                title: 'At the Gym',
+                subtitle: 'Sign up and interact with trainers',
+                context: 'You are signing up at a gym (Fitnessstudio) and also participating in a group sports class. You need to interact with trainers and other participants.',
+                objective: 'Register, ask about equipment, request instructions, talk with other gym-goers.',
+                vocabulary: [
+                    { de: 'Ich möchte mich anmelden', en: 'I want to register' },
+                    { de: 'Gibt es eine Probestunde?', en: 'Is there a trial class?' },
+                    { de: 'Wie benutze ich dieses Gerät?', en: 'How do I use this equipment?' },
+                    { de: 'Kannst du mir zeigen, wie...?', en: 'Can you show me how...?' },
+                    { de: 'Ich habe mich verletzt', en: 'I hurt myself' },
+                    { de: 'Das war anstrengend!', en: 'That was exhausting!' },
+                    { de: 'Ich spüre die Muskeln', en: 'I can feel my muscles' },
+                    { de: 'Wann ist der nächste Kurs?', en: 'When is the next class?' },
+                    { de: 'Ich möchte meine Technik verbessern', en: 'I want to improve my technique' }
+                ],
+                tip: 'Many German gyms require 12-24 month contracts. Ask about the Probezeit (trial period)!'
+            },
+            'viagem-b1': {
+                title: 'Planning Vacation',
+                subtitle: 'Discuss destinations and deal with unexpected situations',
+                context: 'You are planning a vacation with German friends. Discuss destinations, budget, and make reservations. During the trip, deal with unexpected situations.',
+                objective: 'Plan itinerary, make reservations, report hotel problems, handle emergencies.',
+                vocabulary: [
+                    { de: 'Was sollen wir unternehmen?', en: 'What should we do?' },
+                    { de: 'Lass uns das besprechen', en: 'Let\'s discuss this' },
+                    { de: 'Ich habe ein Problem mit...', en: 'I have a problem with...' },
+                    { de: 'Könnten Sie das reparieren?', en: 'Could you fix this?' },
+                    { de: 'Wie kommt man am besten zu...?', en: 'What\'s the best way to get to...?' },
+                    { de: 'Das hat mich total begeistert', en: 'That totally amazed me' },
+                    { de: 'Leider war ich enttäuscht', en: 'Unfortunately I was disappointed' },
+                    { de: 'Ich habe meinen Pass verloren', en: 'I lost my passport' },
+                    { de: 'Das müssen wir unbedingt machen!', en: 'We absolutely have to do this!' }
+                ],
+                tip: 'Germans like to plan in advance. Bring concrete suggestions to the discussion!'
+            },
+            'escola-b1': {
+                title: 'German Course',
+                subtitle: 'Participate in classes and work in groups',
+                context: 'You are in an intensive German course (Sprachkurs). Actively participate in classes, do group work, and socialize with international colleagues.',
+                objective: 'Participate in discussions, give presentations, work in groups, discuss difficulties with the teacher.',
+                vocabulary: [
+                    { de: 'Kannst du das erklären?', en: 'Can you explain that?' },
+                    { de: 'Ich habe eine Frage zu...', en: 'I have a question about...' },
+                    { de: 'Meiner Meinung nach...', en: 'In my opinion...' },
+                    { de: 'Das verstehe ich anders', en: 'I understand that differently' },
+                    { de: 'Ich brauche mehr Zeit', en: 'I need more time' },
+                    { de: 'Das war eine tolle Idee!', en: 'That was a great idea!' },
+                    { de: 'Lass uns das aufteilen', en: 'Let\'s divide this up' },
+                    { de: 'Kann ich das Wort nachschlagen?', en: 'Can I look up the word?' },
+                    { de: 'Ich möchte meine Aussprache verbessern', en: 'I want to improve my pronunciation' }
+                ],
+                tip: 'Participate actively! Germans value people who express opinions. Use "Meiner Meinung nach" to begin.'
+            },
+            'tecnologia-b1': {
+                title: 'Tech Problems',
+                subtitle: 'Describe technical problems and find solutions',
+                context: 'Your laptop broke and you need technical assistance. You also need to set up internet services and solve mobile phone problems.',
+                objective: 'Describe technical problems, understand explanations, discuss budgets and deadlines, report connection issues.',
+                vocabulary: [
+                    { de: 'Mein Gerät funktioniert nicht', en: 'My device doesn\'t work' },
+                    { de: 'Es geht nicht mehr an', en: 'It won\'t turn on anymore' },
+                    { de: 'Können Sie das reparieren?', en: 'Can you fix it?' },
+                    { de: 'Wie lange dauert es?', en: 'How long will it take?' },
+                    { de: 'Was kostet die Reparatur?', en: 'What does the repair cost?' },
+                    { de: 'Ich habe das schon versucht', en: 'I already tried that' },
+                    { de: 'Die Verbindung bricht ab', en: 'The connection drops' },
+                    { de: 'Gibt es eine Garantie?', en: 'Is there a warranty?' },
+                    { de: 'Ich möchte eine Rückerstattung', en: 'I want a refund' }
+                ],
+                tip: 'Describe the problem step by step. German technicians appreciate precise details!'
+            },
+            'saude-b1': {
+                title: 'Health and Wellness',
+                subtitle: 'Discuss healthy habits and mental health',
+                context: 'You are starting to practice healthier habits in Germany. Talk with a nutritionist, participate in group meditation, and discuss mental health with friends.',
+                objective: 'Schedule specialist appointment, describe health history, discuss mental health, participate in wellness activities.',
+                vocabulary: [
+                    { de: 'Ich möchte gesünder leben', en: 'I want to live healthier' },
+                    { de: 'Was können Sie mir empfehlen?', en: 'What can you recommend?' },
+                    { de: 'Ich fühle mich gestresst', en: 'I feel stressed' },
+                    { de: 'Seit wann haben Sie diese Symptome?', en: 'Since when have you had these symptoms?' },
+                    { de: 'Ich möchte meine Ernährung umstellen', en: 'I want to change my diet' },
+                    { de: 'Wie kann ich vorbeugen?', en: 'How can I prevent this?' },
+                    { de: 'Das hilft mir zu entspannen', en: 'That helps me relax' },
+                    { de: 'Ich schlafe schlecht', en: 'I sleep poorly' },
+                    { de: 'Wann soll ich wieder kommen?', en: 'When should I come back?' }
+                ],
+                tip: 'In Germany, mental health is taken seriously. Krankenkassen (health insurance) cover therapy!'
+            }
+        };
+
         // Estado do cenário atual
         let currentScenario = null;
 
@@ -4987,6 +5225,11 @@ SPRACHE:
             document.getElementById('conv-no-scenario')?.classList.add('hidden');
             document.getElementById('conv-scenario-display')?.classList.remove('hidden');
 
+            // Get current language and translations
+            const lang = typeof getCurrentLanguage === 'function' ? getCurrentLanguage() : 'pt-BR';
+            const isEnglish = lang === 'en';
+            const enData = scenarioDataEN[scenarioId];
+
             // Preencher dados
             const levelBadge = document.getElementById('scenario-level-badge');
             if (levelBadge) {
@@ -4994,20 +5237,24 @@ SPRACHE:
                 levelBadge.className = `text-xs font-bold px-2 py-1 rounded ${data.levelColor === 'green' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`;
             }
 
-            document.getElementById('scenario-title').textContent = data.title;
-            document.getElementById('scenario-subtitle').textContent = data.subtitle;
-            document.getElementById('scenario-context').textContent = data.context;
-            document.getElementById('scenario-objective').textContent = data.objective;
-            document.getElementById('scenario-tip').textContent = data.tip;
+            document.getElementById('scenario-title').textContent = isEnglish && enData ? enData.title : data.title;
+            document.getElementById('scenario-subtitle').textContent = isEnglish && enData ? enData.subtitle : data.subtitle;
+            document.getElementById('scenario-context').textContent = isEnglish && enData ? enData.context : data.context;
+            document.getElementById('scenario-objective').textContent = isEnglish && enData ? enData.objective : data.objective;
+            document.getElementById('scenario-tip').textContent = isEnglish && enData ? enData.tip : data.tip;
 
             // Preencher vocabulário
             const vocabContainer = document.getElementById('scenario-vocabulary');
             if (vocabContainer) {
-                vocabContainer.innerHTML = data.vocabulary.map(v => `
+                // Use English or Portuguese translations based on language
+                const vocabData = isEnglish && enData ? enData.vocabulary : data.vocabulary;
+                const translationKey = isEnglish ? 'en' : 'pt';
+
+                vocabContainer.innerHTML = vocabData.map(v => `
                     <div class="px-3 py-2 bg-slate-900/50 rounded-lg">
                         <span class="text-cyan-300 font-medium">${v.de}</span>
                         <span class="text-slate-500 mx-2">→</span>
-                        <span class="text-slate-400 text-sm">${v.pt}</span>
+                        <span class="text-slate-400 text-sm">${v[translationKey] || v.pt || v.en}</span>
                     </div>
                 `).join('');
             }
@@ -5029,6 +5276,237 @@ SPRACHE:
             document.getElementById('conv-no-scenario')?.classList.remove('hidden');
             document.getElementById('conv-scenario-display')?.classList.add('hidden');
         }
+
+        // Function to apply translations to conversation page elements
+        function applyConversationTranslations() {
+            const lang = typeof getCurrentLanguage === 'function' ? getCurrentLanguage() : 'pt-BR';
+            const isEnglish = lang === 'en';
+
+            // Translation mappings for conversation page elements
+            const conversationTranslations = {
+                // Section labels
+                'scenario-context-label': isEnglish ? 'Context' : 'Contexto',
+                'scenario-objective-label': isEnglish ? 'Your Objective' : 'Seu Objetivo',
+                'scenario-vocab-label': isEnglish ? 'Useful Vocabulary' : 'Vocabulário Útil',
+
+                // Other UI elements
+                'conv-topics-title': isEnglish ? 'Topics to Practice' : 'Temas para Praticar',
+                'conv-select-topic': isEnglish ? 'Select a Topic' : 'Selecione um Tema',
+                'conv-select-topic-desc': isEnglish ? 'Choose a topic on the right to see the conversation script and start practicing.' : 'Escolha um tema à direita para ver o roteiro da conversa e começar a praticar.',
+                'conv-errors-placeholder': isEnglish ? 'Errors will appear here after the conversation.' : 'Erros aparecerão aqui após a conversa.',
+                'start-scenario-btn': isEnglish ? 'Start Conversation' : 'Iniciar Conversa'
+            };
+
+            // Topic category translations (bidirectional)
+            const topicCategoryTranslations = {
+                // Portuguese to target language
+                'Apresentação': isEnglish ? 'Introduction' : 'Apresentação',
+                'Restaurante': isEnglish ? 'Restaurant' : 'Restaurante',
+                'Fazer Compras': isEnglish ? 'Shopping' : 'Fazer Compras',
+                'Saúde': isEnglish ? 'Health' : 'Saúde',
+                'Transporte': isEnglish ? 'Transportation' : 'Transporte',
+                'Social': 'Social',
+                'Trabalho': isEnglish ? 'Work' : 'Trabalho',
+                'Moradia': isEnglish ? 'Housing' : 'Moradia',
+                'Esportes': isEnglish ? 'Sports' : 'Esportes',
+                'Educação': isEnglish ? 'Education' : 'Educação',
+                'Tecnologia': isEnglish ? 'Technology' : 'Tecnologia',
+                // English to target language (for reverse translation)
+                'Introduction': isEnglish ? 'Introduction' : 'Apresentação',
+                'Restaurant': isEnglish ? 'Restaurant' : 'Restaurante',
+                'Shopping': isEnglish ? 'Shopping' : 'Fazer Compras',
+                'Health': isEnglish ? 'Health' : 'Saúde',
+                'Transportation': isEnglish ? 'Transportation' : 'Transporte',
+                'Work': isEnglish ? 'Work' : 'Trabalho',
+                'Housing': isEnglish ? 'Housing' : 'Moradia',
+                'Sports': isEnglish ? 'Sports' : 'Esportes',
+                'Education': isEnglish ? 'Education' : 'Educação',
+                'Technology': isEnglish ? 'Technology' : 'Tecnologia'
+            };
+
+            // Scenario name translations (bidirectional)
+            const scenarioNameTranslations = {
+                // Portuguese to target language
+                'Almoço com Colegas': isEnglish ? 'Lunch with Colleagues' : 'Almoço com Colegas',
+                'Celebração com Problemas': isEnglish ? 'Celebration with Problems' : 'Celebração com Problemas',
+                'No Supermercado': isEnglish ? 'At the Supermarket' : 'No Supermercado',
+                'No Médico': isEnglish ? 'At the Doctor' : 'No Médico',
+                'Saúde e Bem-Estar': isEnglish ? 'Health and Wellness' : 'Saúde e Bem-Estar',
+                'Transporte Público': isEnglish ? 'Public Transport' : 'Transporte Público',
+                'Planejando Férias': isEnglish ? 'Planning Vacation' : 'Planejando Férias',
+                'Festa de Aniversário': isEnglish ? 'Birthday Party' : 'Festa de Aniversário',
+                'Primeiro Dia no Estágio': isEnglish ? 'First Day at Internship' : 'Primeiro Dia no Estágio',
+                'Procurando Apartamento': isEnglish ? 'Looking for Apartment' : 'Procurando Apartamento',
+                'Na Academia': isEnglish ? 'At the Gym' : 'Na Academia',
+                'Curso de Alemão': isEnglish ? 'German Course' : 'Curso de Alemão',
+                'Problemas Tecnológicos': isEnglish ? 'Tech Problems' : 'Problemas Tecnológicos',
+                // English to target language (for reverse translation)
+                'Lunch with Colleagues': isEnglish ? 'Lunch with Colleagues' : 'Almoço com Colegas',
+                'Celebration with Problems': isEnglish ? 'Celebration with Problems' : 'Celebração com Problemas',
+                'At the Supermarket': isEnglish ? 'At the Supermarket' : 'No Supermercado',
+                'At the Doctor': isEnglish ? 'At the Doctor' : 'No Médico',
+                'Health and Wellness': isEnglish ? 'Health and Wellness' : 'Saúde e Bem-Estar',
+                'Public Transport': isEnglish ? 'Public Transport' : 'Transporte Público',
+                'Planning Vacation': isEnglish ? 'Planning Vacation' : 'Planejando Férias',
+                'Birthday Party': isEnglish ? 'Birthday Party' : 'Festa de Aniversário',
+                'First Day at Internship': isEnglish ? 'First Day at Internship' : 'Primeiro Dia no Estágio',
+                'Looking for Apartment': isEnglish ? 'Looking for Apartment' : 'Procurando Apartamento',
+                'At the Gym': isEnglish ? 'At the Gym' : 'Na Academia',
+                'German Course': isEnglish ? 'German Course' : 'Curso de Alemão',
+                'Tech Problems': isEnglish ? 'Tech Problems' : 'Problemas Tecnológicos'
+            };
+
+            // Update section labels by finding elements with specific classes/text content
+            const contextLabel = document.querySelector('#conv-scenario-display h3:nth-of-type(1)');
+            if (contextLabel && contextLabel.textContent.includes('Contexto') || contextLabel?.textContent.includes('Context')) {
+                contextLabel.innerHTML = `📍 ${conversationTranslations['scenario-context-label']}`;
+            }
+
+            const objectiveLabel = document.querySelector('#conv-scenario-display h3:nth-of-type(2)');
+            if (objectiveLabel && (objectiveLabel.textContent.includes('Objetivo') || objectiveLabel.textContent.includes('Objective'))) {
+                objectiveLabel.innerHTML = `🎯 ${conversationTranslations['scenario-objective-label']}`;
+            }
+
+            const vocabLabel = document.querySelector('#conv-scenario-display h3:nth-of-type(3)');
+            if (vocabLabel && (vocabLabel.textContent.includes('Vocabulário') || vocabLabel.textContent.includes('Vocabulary'))) {
+                vocabLabel.innerHTML = `📚 ${conversationTranslations['scenario-vocab-label']}`;
+            }
+
+            // Update topics title
+            const topicsTitle = document.querySelector('#conv-topics-panel h4');
+            if (topicsTitle) {
+                const svg = topicsTitle.querySelector('svg');
+                topicsTitle.innerHTML = '';
+                if (svg) topicsTitle.appendChild(svg);
+                topicsTitle.appendChild(document.createTextNode(conversationTranslations['conv-topics-title']));
+            }
+
+            // Update select topic message
+            const selectTopicTitle = document.querySelector('#conv-no-scenario h3');
+            if (selectTopicTitle) {
+                selectTopicTitle.textContent = conversationTranslations['conv-select-topic'];
+            }
+            const selectTopicDesc = document.querySelector('#conv-no-scenario p');
+            if (selectTopicDesc) {
+                selectTopicDesc.textContent = conversationTranslations['conv-select-topic-desc'];
+            }
+
+            // Update errors placeholder
+            const errorsPlaceholder = document.querySelector('#conv-corrections p');
+            if (errorsPlaceholder) {
+                errorsPlaceholder.textContent = conversationTranslations['conv-errors-placeholder'];
+            }
+
+            // Update start conversation button
+            const startBtn = document.getElementById('start-scenario-btn');
+            if (startBtn) {
+                const svg = startBtn.querySelector('svg');
+                const textNode = Array.from(startBtn.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
+                if (textNode) {
+                    textNode.textContent = ' ' + conversationTranslations['start-scenario-btn'];
+                } else {
+                    // If no text node, recreate button content
+                    const svgHtml = svg ? svg.outerHTML : '';
+                    startBtn.innerHTML = svgHtml + ' ' + conversationTranslations['start-scenario-btn'];
+                }
+            }
+
+            // Update topic category names in the topics panel
+            document.querySelectorAll('.scenario-toggle span:last-child, .conv-topic-btn span:last-child').forEach(span => {
+                const text = span.textContent.trim();
+                if (topicCategoryTranslations[text]) {
+                    span.textContent = topicCategoryTranslations[text];
+                }
+            });
+
+            // Update scenario names in submenus
+            document.querySelectorAll('.conv-scenario-btn .text-sm').forEach(span => {
+                const text = span.textContent.trim();
+                if (scenarioNameTranslations[text]) {
+                    span.textContent = scenarioNameTranslations[text];
+                }
+            });
+
+            // Update voice options
+            const voiceTranslations = {
+                'Feminina': isEnglish ? 'Female' : 'Feminina',
+                'Masculina': isEnglish ? 'Male' : 'Masculina',
+                'Neutra': isEnglish ? 'Neutral' : 'Neutra',
+                'Female': isEnglish ? 'Female' : 'Feminina',
+                'Male': isEnglish ? 'Male' : 'Masculina',
+                'Neutral': isEnglish ? 'Neutral' : 'Neutra'
+            };
+
+            document.querySelectorAll('#conv-voice-select option').forEach(option => {
+                const text = option.textContent;
+                const match = text.match(/\(([^)]+)\)/);
+                if (match && voiceTranslations[match[1]]) {
+                    const voiceName = text.split(' (')[0];
+                    option.textContent = `${voiceName} (${voiceTranslations[match[1]]})`;
+                }
+            });
+
+            // Update Mute button
+            const muteSpan = document.querySelector('#conv-mute-btn span');
+            if (muteSpan) {
+                muteSpan.textContent = isEnglish ? 'Mute' : 'Mudo';
+            }
+
+            // Update Fluid mode label
+            const fluidSpan = document.querySelector('#conv-continuous-mode + span, label[title*="Fluido"] span, label[title*="Fluid"] span');
+            if (fluidSpan) {
+                fluidSpan.textContent = isEnglish ? 'Fluid' : 'Fluido';
+            }
+
+            // Update credits per min text
+            const creditsPerMinSpan = document.querySelector('#conv-credits-info span');
+            if (creditsPerMinSpan && (creditsPerMinSpan.textContent.includes('créditos/min') || creditsPerMinSpan.textContent.includes('credits/min'))) {
+                creditsPerMinSpan.innerHTML = `<strong class="text-cyan-400">10</strong> ${isEnglish ? 'credits/min' : 'créditos/min'}`;
+            }
+
+            // Update disconnected status text
+            const statusText = document.getElementById('conv-status-text');
+            if (statusText && (statusText.textContent === 'Desconectado' || statusText.textContent === 'Disconnected')) {
+                statusText.textContent = isEnglish ? 'Disconnected' : 'Desconectado';
+            }
+
+            // Update Ambient Sound button text
+            const ambientText = document.getElementById('conv-ambient-text');
+            if (ambientText) {
+                const hasEmoji = ambientText.textContent.includes('🍽️');
+                ambientText.textContent = hasEmoji
+                    ? (isEnglish ? '🍽️ Ambient Sound' : '🍽️ Som Ambiente')
+                    : (isEnglish ? 'Ambient Sound' : 'Som Ambiente');
+            }
+
+            // Update Error Analysis title
+            const errorAnalysisTitle = document.querySelector('#conv-error-analysis h4');
+            if (errorAnalysisTitle) {
+                const svg = errorAnalysisTitle.querySelector('svg');
+                const svgHtml = svg ? svg.outerHTML : '';
+                errorAnalysisTitle.innerHTML = svgHtml + (isEnglish ? 'Error Analysis' : 'Análise de Erros');
+            }
+
+            // Update error counter text
+            const errorCountContainer = document.getElementById('conv-error-count');
+            if (errorCountContainer) {
+                const count = document.getElementById('conv-total-errors')?.textContent || '0';
+                errorCountContainer.innerHTML = `<span id="conv-total-errors">${count}</span> ${isEnglish ? 'error(s)' : 'erro(s)'}`;
+            }
+
+            // If a scenario is currently displayed, re-render it with the new language
+            if (currentScenario) {
+                showScenario(currentScenario);
+            }
+        }
+
+        // Apply translations on page load
+        applyConversationTranslations();
+
+        // Listen for language changes
+        window.addEventListener('languageChanged', () => {
+            applyConversationTranslations();
+        });
 
         // Botões de cenário (com data-scenario)
         const scenarioBtns = document.querySelectorAll('.conv-scenario-btn');
