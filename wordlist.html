@@ -298,7 +298,7 @@
                 <!-- Header com progresso -->
                 <div class="flex justify-between items-center">
                     <div class="text-sm text-slate-400">
-                        <span id="game-progress">Palavra 1 de 10</span>
+                        <span id="game-progress" data-i18n-template="flashcards.wordOf">Word 1 of 10</span>
                     </div>
                     <div class="flex gap-4 text-sm">
                         <span class="text-green-400">✓ <span id="game-correct">0</span></span>
@@ -1653,7 +1653,7 @@
             isFlipped = false;
 
             // Atualizar progresso
-            document.getElementById('game-progress').textContent = `Palavra ${currentFlashcardIndex + 1} de ${flashcardWords.length}`;
+            document.getElementById('game-progress').textContent = `${window.t ? window.t('flashcards.wordOf') : 'Word'} ${currentFlashcardIndex + 1} ${window.t ? window.t('flashcards.of') : 'of'} ${flashcardWords.length}`;
             document.getElementById('game-correct').textContent = correctAnswers;
             document.getElementById('game-wrong').textContent = wrongAnswers;
 

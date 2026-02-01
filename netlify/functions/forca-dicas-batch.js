@@ -24,14 +24,18 @@ exports.handler = async (event) => {
 
     try {
         const body = JSON.parse(event.body);
-        const { palavra, traducao } = body;
+        const { palavra, traducao, lang = 'pt-BR' } = body;
 
         // Gerar ID único para evitar cache
         const requestId = Date.now() + '-' + Math.random().toString(36).substring(7);
 
+        // Detectar idioma
+        const isEnglish = lang === 'en' || lang === 'en-US';
+
         console.log('[FORCA-DICAS-BATCH] Request ID:', requestId);
         console.log('[FORCA-DICAS-BATCH] Palavra:', palavra);
         console.log('[FORCA-DICAS-BATCH] Tradução:', traducao);
+        console.log('[FORCA-DICAS-BATCH] Language:', lang, '(isEnglish:', isEnglish, ')');
 
         if (!palavra) {
             return {
@@ -46,23 +50,43 @@ exports.handler = async (event) => {
 
         // Se não tiver tradução, retornar dicas genéricas
         if (!traducaoLimpa) {
+            const genericHints = isEnglish ? [
+                `This word has ${palavraLimpa.length} letters.`,
+                `Try to think of common German words.`,
+                `The word starts with the letter ${palavraLimpa[0].toUpperCase()}.`
+            ] : [
+                `Esta palavra tem ${palavraLimpa.length} letras.`,
+                `Tente pensar em palavras alemãs comuns.`,
+                `A palavra começa com a letra ${palavraLimpa[0].toUpperCase()}.`
+            ];
             return {
                 statusCode: 200,
                 headers,
                 body: JSON.stringify({
                     success: true,
-                    dicas: [
-                        `Esta palavra tem ${palavraLimpa.length} letras.`,
-                        `Tente pensar em palavras alemãs comuns.`,
-                        `A palavra começa com a letra ${palavraLimpa[0].toUpperCase()}.`
-                    ],
+                    dicas: genericHints,
                     palavraOrigem: palavraLimpa
                 })
             };
         }
 
-        // Prompt MUITO simples e direto - foco APENAS na tradução
-        const systemPrompt = `Você cria dicas para um jogo da forca. O jogador precisa adivinhar uma palavra alemã.
+        // Prompt baseado no idioma
+        const systemPrompt = isEnglish ?
+            `You create hints for a hangman game. The player needs to guess a German word.
+
+TASK: Create 3 hints about the meaning "${traducaoLimpa}" (and ONLY about that).
+
+RULES:
+- Hint 1: General category (e.g., if the meaning is "house", say "It's a type of building")
+- Hint 2: Use or context (e.g., "A place where people live")
+- Hint 3: More direct description (e.g., "A dwelling with rooms, kitchen and bathroom")
+- DO NOT mention the word "${palavraLimpa}"
+- DO NOT talk about letters or number of letters
+- FOCUS only on the meaning "${traducaoLimpa}"
+
+Reply ONLY in JSON: {"dica1": "...", "dica2": "...", "dica3": "..."}`
+            :
+            `Você cria dicas para um jogo da forca. O jogador precisa adivinhar uma palavra alemã.
 
 TAREFA: Criar 3 dicas sobre o significado "${traducaoLimpa}" (e SOMENTE sobre isso).
 
@@ -76,7 +100,12 @@ REGRAS:
 
 Responda APENAS em JSON: {"dica1": "...", "dica2": "...", "dica3": "..."}`;
 
-        const userPrompt = `[ID: ${requestId}]
+        const userPrompt = isEnglish ?
+            `[ID: ${requestId}]
+Create 3 hints for the word that means "${traducaoLimpa}".
+JSON only:`
+            :
+            `[ID: ${requestId}]
 Crie 3 dicas para a palavra que significa "${traducaoLimpa}" em português.
 JSON apenas:`;
 
@@ -124,7 +153,11 @@ JSON apenas:`;
         } catch (parseError) {
             console.error('[FORCA-DICAS-BATCH] Erro ao parsear JSON:', parseError);
             // Fallback: dicas baseadas diretamente na tradução
-            dicas = [
+            dicas = isEnglish ? [
+                `Related to: ${traducaoLimpa}`,
+                `Think about the meaning of "${traducaoLimpa}"`,
+                `The translation is: ${traducaoLimpa}`
+            ] : [
                 `Relacionado a: ${traducaoLimpa}`,
                 `Pense no significado de "${traducaoLimpa}"`,
                 `A tradução é: ${traducaoLimpa}`
@@ -132,16 +165,18 @@ JSON apenas:`;
         }
 
         // Validar que as dicas não estão vazias
+        const translationHint = isEnglish ? `The translation is: ${traducaoLimpa}` : `A tradução é: ${traducaoLimpa}`;
+        const hintAbout = isEnglish ? `Hint about: ${traducaoLimpa}` : `Dica sobre: ${traducaoLimpa}`;
         dicas = dicas.map((d, i) => {
             if (!d || d.trim() === '') {
-                return i === 2 ? `A tradução é: ${traducaoLimpa}` : `Dica sobre: ${traducaoLimpa}`;
+                return i === 2 ? translationHint : hintAbout;
             }
             return d;
         });
 
         // Garantir que temos exatamente 3 dicas
         while (dicas.length < 3) {
-            dicas.push(`A tradução é: ${traducaoLimpa}`);
+            dicas.push(translationHint);
         }
 
         console.log('[FORCA-DICAS-BATCH] Dicas finais para', palavraLimpa, '(', traducaoLimpa, '):', dicas);

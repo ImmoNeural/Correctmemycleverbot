@@ -66,7 +66,13 @@ const translations = {
             styleSimpleDesc: 'Direto',
             submitBtn: 'Parafrasear texto',
             resultTitle: 'Texto Parafraseado',
-            processing: 'Processando...'
+            originalTextResult: 'Texto Original',
+            copyBtn: 'Copiar',
+            copied: 'Copiado!',
+            processing: 'Parafraseando...',
+            generatingVersion: 'Gerando versão',
+            errorTitle: 'Erro ao parafrasear',
+            placeholder2: 'O texto parafraseado aparecerá aqui'
         },
 
         // Chatbot
@@ -103,7 +109,11 @@ const translations = {
             presentation: 'Apresentação',
             voiceFemale: 'Feminina',
             voiceMale: 'Masculina',
-            voiceNeutral: 'Neutra'
+            voiceNeutral: 'Neutra',
+            analyzing: 'Analisando sua conversa...',
+            noPhraseCaptured: 'Nenhuma frase sua foi captada para análise.',
+            analysisError: 'Erro na análise. Tente novamente.',
+            noErrorsFound: 'Parabéns! Nenhum erro encontrado na sua conversa.'
         },
 
         // Listas de Palavras
@@ -185,7 +195,10 @@ const translations = {
             playAgain: 'Jogar Novamente',
             noCardsSelected: 'Selecione pelo menos uma categoria de cartões',
             noWordsAvailable: 'Nenhuma palavra disponível para esta categoria',
-            exit: '← Sair'
+            exit: '← Sair',
+            wordOf: 'Palavra',
+            of: 'de',
+            whatIsCorrectArticle: 'Qual é o artigo correto?'
         },
 
         // Jogo da Forca
@@ -195,9 +208,15 @@ const translations = {
             attempts: 'tentativas',
             hint: 'Dica',
             getHint: 'Pedir Dica',
+            wrongLetters: 'Letras erradas:',
             won: 'Parabéns! Você acertou!',
             lost: 'Você perdeu! A palavra era:',
-            playAgain: 'Jogar Novamente'
+            playAgain: 'Jogar Novamente',
+            generating: 'Gerando...',
+            generatingHints: 'Gerando dicas...',
+            errorGenerating: 'Erro ao gerar dicas. Tente novamente.',
+            syncError: 'Erro de sincronização. Tente novamente.',
+            connectionError: 'Erro de conexão. Tente novamente.'
         },
 
         // Progresso
@@ -404,7 +423,13 @@ const translations = {
             styleSimpleDesc: 'Direct',
             submitBtn: 'Paraphrase text',
             resultTitle: 'Paraphrased Text',
-            processing: 'Processing...'
+            originalTextResult: 'Original Text',
+            copyBtn: 'Copy',
+            copied: 'Copied!',
+            processing: 'Paraphrasing...',
+            generatingVersion: 'Generating',
+            errorTitle: 'Error paraphrasing',
+            placeholder2: 'Paraphrased text will appear here'
         },
 
         // Chatbot
@@ -441,7 +466,11 @@ const translations = {
             presentation: 'Introduction',
             voiceFemale: 'Female',
             voiceMale: 'Male',
-            voiceNeutral: 'Neutral'
+            voiceNeutral: 'Neutral',
+            analyzing: 'Analyzing your conversation...',
+            noPhraseCaptured: 'No phrases were captured for analysis.',
+            analysisError: 'Analysis error. Try again.',
+            noErrorsFound: 'Congratulations! No errors found in your conversation.'
         },
 
         // Listas de Palavras
@@ -523,7 +552,10 @@ const translations = {
             playAgain: 'Play Again',
             noCardsSelected: 'Select at least one card category',
             noWordsAvailable: 'No words available for this category',
-            exit: '← Exit'
+            exit: '← Exit',
+            wordOf: 'Word',
+            of: 'of',
+            whatIsCorrectArticle: 'What is the correct article?'
         },
 
         // Jogo da Forca
@@ -533,9 +565,15 @@ const translations = {
             attempts: 'attempts',
             hint: 'Hint',
             getHint: 'Get Hint',
+            wrongLetters: 'Wrong letters:',
             won: 'Congratulations! You got it!',
             lost: 'You lost! The word was:',
-            playAgain: 'Play Again'
+            playAgain: 'Play Again',
+            generating: 'Generating...',
+            generatingHints: 'Generating hints...',
+            errorGenerating: 'Error generating hints. Try again.',
+            syncError: 'Sync error. Try again.',
+            connectionError: 'Connection error. Try again.'
         },
 
         // Progresso
