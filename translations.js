@@ -66,7 +66,13 @@ const translations = {
             styleSimpleDesc: 'Direto',
             submitBtn: 'Parafrasear texto',
             resultTitle: 'Texto Parafraseado',
-            processing: 'Processando...'
+            originalTextResult: 'Texto Original',
+            copyBtn: 'Copiar',
+            copied: 'Copiado!',
+            processing: 'Parafraseando...',
+            generatingVersion: 'Gerando versão',
+            errorTitle: 'Erro ao parafrasear',
+            placeholder2: 'O texto parafraseado aparecerá aqui'
         },
 
         // Chatbot
@@ -417,7 +423,13 @@ const translations = {
             styleSimpleDesc: 'Direct',
             submitBtn: 'Paraphrase text',
             resultTitle: 'Paraphrased Text',
-            processing: 'Processing...'
+            originalTextResult: 'Original Text',
+            copyBtn: 'Copy',
+            copied: 'Copied!',
+            processing: 'Paraphrasing...',
+            generatingVersion: 'Generating',
+            errorTitle: 'Error paraphrasing',
+            placeholder2: 'Paraphrased text will appear here'
         },
 
         // Chatbot

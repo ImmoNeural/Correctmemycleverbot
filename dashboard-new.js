@@ -4399,7 +4399,7 @@ async function handleCorrectionSubmit(e) {
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            Parafraseando...
+            ${t('parafrasear.processing')}
         `;
 
         resultDiv.innerHTML = `
@@ -4408,7 +4408,7 @@ async function handleCorrectionSubmit(e) {
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <p class="text-slate-400">Gerando versão ${getStyleLabel(style)}...</p>
+                <p class="text-slate-400">${t('parafrasear.generatingVersion')} ${getStyleLabel(style)}...</p>
             </div>
         `;
 
@@ -4441,19 +4441,19 @@ async function handleCorrectionSubmit(e) {
 
                     <div class="bg-slate-800 border border-slate-700 rounded-lg p-4">
                         <div class="flex items-center justify-between mb-3">
-                            <h3 class="text-sm font-medium text-slate-400">Texto Parafraseado</h3>
+                            <h3 class="text-sm font-medium text-slate-400">${t('parafrasear.resultTitle')}</h3>
                             <button onclick="copyParaphraseResult()" class="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
                                 </svg>
-                                Copiar
+                                ${t('parafrasear.copyBtn')}
                             </button>
                         </div>
                         <p id="paraphrase-output" class="text-white whitespace-pre-wrap leading-relaxed">${escapeHtml(data.paraphrased)}</p>
                     </div>
 
                     <div class="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4">
-                        <h3 class="text-sm font-medium text-slate-400 mb-2">Texto Original</h3>
+                        <h3 class="text-sm font-medium text-slate-400 mb-2">${t('parafrasear.originalTextResult')}</h3>
                         <p class="text-slate-300 text-sm whitespace-pre-wrap">${escapeHtml(text)}</p>
                     </div>
                 </div>
@@ -4463,7 +4463,7 @@ async function handleCorrectionSubmit(e) {
             console.error('Erro ao parafrasear:', error);
             resultDiv.innerHTML = `
                 <div class="p-4 bg-red-900/30 border border-red-500/50 rounded-lg">
-                    <p class="text-red-400 font-medium mb-2">Erro ao parafrasear</p>
+                    <p class="text-red-400 font-medium mb-2">${t('parafrasear.errorTitle')}</p>
                     <p class="text-red-300 text-sm">${error.message}</p>
                 </div>
             `;
@@ -4473,19 +4473,19 @@ async function handleCorrectionSubmit(e) {
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                 </svg>
-                Parafrasear texto
+                ${t('parafrasear.submitBtn')}
             `;
         }
     }
 
     function getStyleLabel(style) {
         const labels = {
-            'formal': 'Formal',
-            'educado': 'Educado',
-            'despojado': 'Despojado',
-            'original': 'Original',
-            'emojis': 'Com Emojis',
-            'simples': 'Simples'
+            'formal': t('parafrasear.styleFormal'),
+            'educado': t('parafrasear.stylePolite'),
+            'despojado': t('parafrasear.styleCasual'),
+            'original': t('parafrasear.styleOriginal'),
+            'emojis': t('parafrasear.styleEmoji'),
+            'simples': t('parafrasear.styleSimple')
         };
         return labels[style] || style;
     }
@@ -4521,7 +4521,7 @@ async function handleCorrectionSubmit(e) {
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        Copiado!
+                        ${t('parafrasear.copied')}
                     `;
                     btn.classList.add('text-green-400');
                     setTimeout(() => {
