@@ -7110,7 +7110,6 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                         generationConfig: {
                             responseModalities: ['AUDIO'],
                             speechConfig: {
-                                languageCode: 'de-DE', // Alemão para melhor compreensão
                                 voiceConfig: {
                                     prebuiltVoiceConfig: {
                                         voiceName: conversacaoState.selectedVoice || 'Aoede'
@@ -7120,6 +7119,25 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                         },
                         systemInstruction: {
                             parts: [{ text: selectedPersona ? selectedPersona.systemInstruction : 'Du bist ein freundlicher Deutschlehrer. Sprich nur Deutsch.' }]
+                        },
+                        // Configuração de VAD (Voice Activity Detection) para melhor detecção de fala
+                        realtimeInputConfig: {
+                            // Interromper a IA quando o usuário começa a falar
+                            activityHandling: 'START_OF_ACTIVITY_INTERRUPTS',
+                            // Configurar detecção automática de atividade de voz
+                            automaticActivityDetection: {
+                                disabled: false,
+                                // Alta sensibilidade para detectar início de fala (captura voz mais fraca)
+                                startOfSpeechSensitivity: 'START_SENSITIVITY_HIGH',
+                                // Alta sensibilidade para detectar fim de fala (responde mais rápido ao silêncio)
+                                endOfSpeechSensitivity: 'END_SENSITIVITY_HIGH',
+                                // Padding antes do início da fala (ms)
+                                prefixPaddingMs: 100,
+                                // Duração do silêncio para considerar fim de fala (ms) - reduzido para resposta mais rápida
+                                silenceDurationMs: 500
+                            },
+                            // Incluir todo o input na conversa
+                            turnCoverage: 'TURN_INCLUDES_ALL_INPUT'
                         },
                         // Ativar transcrição de entrada para melhor compreensão
                         inputAudioTranscription: {},
@@ -7563,6 +7581,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                     this.buffer = new Float32Array(this.bufferSize);
                     this.bufferIndex = 0;
                     this.silenceThreshold = 0.0005; // Limiar MUITO baixo para detectar som
+                    this.gain = 2.5; // GANHO para amplificar o microfone (2.5x = +8dB)
                 }
 
                 process(inputs, outputs, parameters) {
@@ -7570,15 +7589,19 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                     if (input.length > 0) {
                         const channelData = input[0];
 
-                        // Calcular RMS (volume) do chunk atual
+                        // Calcular RMS (volume) do chunk atual COM GANHO APLICADO
                         let sumSquares = 0;
                         for (let i = 0; i < channelData.length; i++) {
-                            sumSquares += channelData[i] * channelData[i];
+                            const amplified = channelData[i] * this.gain;
+                            sumSquares += amplified * amplified;
                         }
                         const rms = Math.sqrt(sumSquares / channelData.length);
 
                         for (let i = 0; i < channelData.length; i++) {
-                            this.buffer[this.bufferIndex++] = channelData[i];
+                            // Aplicar ganho e armazenar no buffer
+                            const amplified = channelData[i] * this.gain;
+                            // Soft clipping para evitar distorção quando o ganho é alto
+                            this.buffer[this.bufferIndex++] = Math.tanh(amplified);
 
                             if (this.bufferIndex >= this.bufferSize) {
                                 // Converter para PCM 16-bit
