@@ -4603,7 +4603,14 @@ async function handleCorrectionSubmit(e) {
 
         // Acumulador de transcrição do usuário (junta fragmentos em frases)
         currentUserTranscript: '',
-        transcriptFlushTimer: null
+        transcriptFlushTimer: null,
+
+        // Watchdog para detectar travamentos
+        aiSpeakingWatchdog: null,
+        lastAudioChunkTime: null,
+        AI_SPEAKING_TIMEOUT: 15000, // 15 segundos sem atividade = provável travamento
+        micBlockedWatchdog: null,
+        MIC_BLOCKED_TIMEOUT: 20000 // 20 segundos com microfone bloqueado = forçar reset
     };
 
     let conversacaoInitialized = false;
@@ -7333,7 +7340,12 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                         if (!conversacaoState.isAISpeaking) {
                             console.log('🗣️ IA começou a falar...');
                             conversacaoState.isAISpeaking = true;
+                            startAISpeakingWatchdog();
                         }
+                        // Atualizar timestamp do último chunk (para watchdog)
+                        conversacaoState.lastAudioChunkTime = Date.now();
+                        resetAISpeakingWatchdog();
+
                         // Adicionar à fila de áudio
                         conversacaoState.audioQueue.push(part.inlineData.data);
                         // Iniciar playback se não estiver tocando
@@ -7348,7 +7360,15 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                     console.log('✅ Turno do servidor completo - IA terminou de falar');
                     console.log('👂 AGORA É SUA VEZ DE FALAR - O sistema está ouvindo...');
                     updateStatus('Sua vez de falar...', 'listening');
+
+                    // Parar watchdog e resetar flags de fala
+                    stopAISpeakingWatchdog();
                     conversacaoState.isAISpeaking = false;
+                    conversacaoState.lastAudioChunkTime = null;
+
+                    // Iniciar watchdog do microfone bloqueado
+                    startMicBlockedWatchdog();
+
                     conversacaoState.turnCount = (conversacaoState.turnCount || 0) + 1;
                     console.log(`📊 Turno #${conversacaoState.turnCount} completo`);
 
@@ -7368,6 +7388,9 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                 if (message.serverContent.inputTranscription) {
                     const fragment = message.serverContent.inputTranscription.text || '';
                     console.log('🎤 VOCÊ DISSE:', fragment);
+
+                    // Usuário está falando - parar watchdog do microfone bloqueado
+                    stopMicBlockedWatchdog();
 
                     // Acumula fragmentos na frase atual
                     conversacaoState.currentUserTranscript += fragment;
@@ -7560,6 +7583,106 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             clearInterval(conversacaoState.keepAliveInterval);
             conversacaoState.keepAliveInterval = null;
         }
+    }
+
+    // ========== WATCHDOG PARA DETECTAR TRAVAMENTOS ==========
+
+    // Watchdog que detecta se isAISpeaking ficou travado em TRUE
+    function startAISpeakingWatchdog() {
+        stopAISpeakingWatchdog(); // Limpar anterior
+
+        conversacaoState.aiSpeakingWatchdog = setTimeout(() => {
+            // Verificar se ainda está marcado como falando mas sem receber chunks
+            if (conversacaoState.isAISpeaking) {
+                const timeSinceLastChunk = conversacaoState.lastAudioChunkTime
+                    ? Date.now() - conversacaoState.lastAudioChunkTime
+                    : conversacaoState.AI_SPEAKING_TIMEOUT + 1000;
+
+                if (timeSinceLastChunk >= conversacaoState.AI_SPEAKING_TIMEOUT) {
+                    console.warn('⚠️ WATCHDOG: isAISpeaking travado por', Math.round(timeSinceLastChunk / 1000), 'segundos - forçando reset');
+                    forceResetSpeakingState();
+                } else {
+                    // Reiniciar watchdog se ainda está recebendo chunks
+                    resetAISpeakingWatchdog();
+                }
+            }
+        }, conversacaoState.AI_SPEAKING_TIMEOUT);
+    }
+
+    function resetAISpeakingWatchdog() {
+        if (conversacaoState.aiSpeakingWatchdog) {
+            clearTimeout(conversacaoState.aiSpeakingWatchdog);
+        }
+        // Só reiniciar se ainda está falando
+        if (conversacaoState.isAISpeaking) {
+            conversacaoState.aiSpeakingWatchdog = setTimeout(() => {
+                if (conversacaoState.isAISpeaking) {
+                    console.warn('⚠️ WATCHDOG: Sem novos chunks de áudio por', conversacaoState.AI_SPEAKING_TIMEOUT / 1000, 'segundos');
+                    forceResetSpeakingState();
+                }
+            }, conversacaoState.AI_SPEAKING_TIMEOUT);
+        }
+    }
+
+    function stopAISpeakingWatchdog() {
+        if (conversacaoState.aiSpeakingWatchdog) {
+            clearTimeout(conversacaoState.aiSpeakingWatchdog);
+            conversacaoState.aiSpeakingWatchdog = null;
+        }
+    }
+
+    // Watchdog que detecta se o microfone está bloqueado (usuário não consegue falar)
+    function startMicBlockedWatchdog() {
+        stopMicBlockedWatchdog(); // Limpar anterior
+
+        conversacaoState.micBlockedWatchdog = setTimeout(() => {
+            // Se ainda está em "sua vez de falar" mas nenhuma transcrição chegou
+            if (conversacaoState.isConnected && !conversacaoState.isAISpeaking && !conversacaoState.isPlayingAudio) {
+                console.warn('⚠️ WATCHDOG: Microfone possivelmente bloqueado por', conversacaoState.MIC_BLOCKED_TIMEOUT / 1000, 'segundos');
+                console.log('   - isAISpeaking:', conversacaoState.isAISpeaking);
+                console.log('   - isPlayingAudio:', conversacaoState.isPlayingAudio);
+                console.log('   - isRecording:', conversacaoState.isRecording);
+
+                // Tentar recuperar forçando reset das flags
+                forceResetSpeakingState();
+                updateStatus('Microfone liberado - fale agora!', 'listening');
+            }
+        }, conversacaoState.MIC_BLOCKED_TIMEOUT);
+    }
+
+    function stopMicBlockedWatchdog() {
+        if (conversacaoState.micBlockedWatchdog) {
+            clearTimeout(conversacaoState.micBlockedWatchdog);
+            conversacaoState.micBlockedWatchdog = null;
+        }
+    }
+
+    // Forçar reset de todas as flags de fala
+    function forceResetSpeakingState() {
+        console.log('🔄 FORÇA RESET: Liberando microfone...');
+
+        // Parar todos os watchdogs
+        stopAISpeakingWatchdog();
+        stopMicBlockedWatchdog();
+
+        // Resetar flags
+        conversacaoState.isAISpeaking = false;
+        conversacaoState.isPlayingAudio = false;
+        conversacaoState.lastAudioChunkTime = null;
+
+        // Limpar fila de áudio pendente (pode estar corrompida)
+        if (conversacaoState.audioQueue.length > 0) {
+            console.log('   - Limpando', conversacaoState.audioQueue.length, 'chunks de áudio pendentes');
+            conversacaoState.audioQueue = [];
+        }
+
+        // Atualizar UI
+        if (conversacaoState.isConnected) {
+            updateStatus('Sua vez de falar...', 'listening');
+            updateConversacaoUI('recording');
+        }
+
+        console.log('✅ FORÇA RESET: Microfone liberado - sistema pronto para ouvir');
     }
 
     function startSilenceDetection() {
@@ -7773,9 +7896,18 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             return;
         }
 
+        // Playback terminou completamente
         conversacaoState.isPlayingAudio = false;
+        console.log('🔊 Playback completo - isPlayingAudio:', conversacaoState.isPlayingAudio, ', isAISpeaking:', conversacaoState.isAISpeaking);
+
         if (conversacaoState.isConnected) {
             updateConversacaoUI('recording');
+
+            // Se turnComplete já foi recebido (isAISpeaking = false), iniciar watchdog do microfone
+            if (!conversacaoState.isAISpeaking) {
+                console.log('👂 Playback terminou e turno completo - microfone pronto');
+                startMicBlockedWatchdog();
+            }
         }
     }
 
@@ -7883,11 +8015,19 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         conversacaoState.connectionStartTime = null;
         conversacaoState.personaHasSpoken = false; // Reset para próxima conversa
 
-        // Parar timer, keep-alive, detecção de silêncio, session refresh e som ambiente
+        // Resetar flags de fala
+        conversacaoState.isAISpeaking = false;
+        conversacaoState.isPlayingAudio = false;
+        conversacaoState.lastAudioChunkTime = null;
+        conversacaoState.audioQueue = [];
+
+        // Parar timer, keep-alive, detecção de silêncio, session refresh, watchdogs e som ambiente
         stopTimer();
         stopKeepAlive();
         stopSilenceDetection();
         stopSessionRefreshTimer();
+        stopAISpeakingWatchdog();
+        stopMicBlockedWatchdog();
         // Parar som ambiente e atualizar botão
         if (conversacaoState.ambientEnabled) {
             stopAmbientSound();
