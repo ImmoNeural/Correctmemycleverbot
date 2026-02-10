@@ -4574,8 +4574,10 @@ async function handleCorrectionSubmit(e) {
 
         // Reconnection
         reconnectAttempts: 0,
-        maxReconnectAttempts: 3,
+        maxReconnectAttempts: 5,
         shouldReconnect: false,
+        sessionRefreshTimer: null, // Timer para reconexão proativa antes do timeout de 10min
+        SESSION_MAX_DURATION: 9 * 60 * 1000, // 9 minutos (reconectar antes do limite de 10min)
 
         // Settings
         continuousMode: true,
@@ -7084,10 +7086,17 @@ WICHTIG - BENUTZERSPRACHE:
                 }
 
                 // Códigos de erro que permitem reconexão
+                // Incluir 1000 (normal closure) se estamos em conversa ativa (sessão de 10min do Gemini)
                 const reconnectableCodes = [1006, 1001, 1011, 1012, 1013, 1014];
-                const shouldTryReconnect = reconnectableCodes.includes(event.code) &&
+                const isActiveConversation = conversacaoState.totalSeconds > 0;
+                const isSessionTimeout = event.code === 1000 && isActiveConversation;
+                const shouldTryReconnect = (reconnectableCodes.includes(event.code) || isSessionTimeout) &&
                                            conversacaoState.isConnected &&
                                            conversacaoState.reconnectAttempts < conversacaoState.maxReconnectAttempts;
+
+                if (isSessionTimeout) {
+                    console.log('🔄 Sessão de 10 minutos expirou - reconectando automaticamente...');
+                }
 
                 // Códigos de erro específicos do WebSocket
                 let errorMsg = '';
@@ -7149,6 +7158,7 @@ WICHTIG - BENUTZERSPRACHE:
                 startAudioCapture();
                 startTimer(isReconnection); // Pass flag to preserve timer on reconnection
                 startErrorAnalysisTimer(); // Inicia análise de erros a cada 5 min
+                startSessionRefreshTimer(); // Reconexão proativa antes do limite de 10min
                 if (isReconnection) {
                     console.log(`🔄 Reconexão bem-sucedida - tempo acumulado preservado: ${conversacaoState.totalSeconds}s`);
                 }
@@ -7513,26 +7523,33 @@ WICHTIG - BENUTZERSPRACHE:
                 sampleRate: 24000 // Gemini retorna áudio a 24kHz
             });
 
-            // Criar nós de processamento para melhor qualidade
+            // Criar nós de processamento para qualidade de voz natural e clara
             conversacaoState.gainNode = conversacaoState.playbackContext.createGain();
-            conversacaoState.gainNode.gain.value = 1.3; // Aumento de volume
+            conversacaoState.gainNode.gain.value = 1.15; // Volume levemente aumentado (menos distorção)
 
-            // Filtro passa-baixa mais suave - não cortar tanto a voz
+            // Filtro passa-alta para remover ruídos de baixa frequência (rumble)
+            const highPassFilter = conversacaoState.playbackContext.createBiquadFilter();
+            highPassFilter.type = 'highpass';
+            highPassFilter.frequency.value = 80; // Remove frequências abaixo de 80Hz
+            highPassFilter.Q.value = 0.7;
+
+            // Filtro passa-baixa suave - preservar clareza da voz
             conversacaoState.lowPassFilter = conversacaoState.playbackContext.createBiquadFilter();
             conversacaoState.lowPassFilter.type = 'lowpass';
-            conversacaoState.lowPassFilter.frequency.value = 12000; // Frequência mais alta para não cortar a voz
-            conversacaoState.lowPassFilter.Q.value = 0.5; // Q mais baixo = transição mais suave
+            conversacaoState.lowPassFilter.frequency.value = 11000; // Preservar harmônicos da voz
+            conversacaoState.lowPassFilter.Q.value = 0.7; // Transição suave
 
-            // Compressor mais suave para não distorcer
+            // Compressor muito suave - apenas para evitar clipping, não comprimir demais
             conversacaoState.compressor = conversacaoState.playbackContext.createDynamicsCompressor();
-            conversacaoState.compressor.threshold.value = -24;
-            conversacaoState.compressor.knee.value = 40;
-            conversacaoState.compressor.ratio.value = 3;
-            conversacaoState.compressor.attack.value = 0.01;
-            conversacaoState.compressor.release.value = 0.3;
+            conversacaoState.compressor.threshold.value = -18; // Threshold mais alto = menos compressão
+            conversacaoState.compressor.knee.value = 30; // Knee suave
+            conversacaoState.compressor.ratio.value = 2; // Ratio baixo = compressão suave
+            conversacaoState.compressor.attack.value = 0.003; // Attack rápido
+            conversacaoState.compressor.release.value = 0.25; // Release rápido para voz natural
 
-            // Conectar cadeia de áudio
-            conversacaoState.gainNode.connect(conversacaoState.lowPassFilter);
+            // Conectar cadeia de áudio: gain -> highpass -> lowpass -> compressor -> output
+            conversacaoState.gainNode.connect(highPassFilter);
+            highPassFilter.connect(conversacaoState.lowPassFilter);
             conversacaoState.lowPassFilter.connect(conversacaoState.compressor);
             conversacaoState.compressor.connect(conversacaoState.playbackContext.destination);
         }
@@ -7718,10 +7735,11 @@ WICHTIG - BENUTZERSPRACHE:
         conversacaoState.ws = null;
         conversacaoState.connectionStartTime = null;
 
-        // Parar timer, keep-alive, detecção de silêncio e som ambiente
+        // Parar timer, keep-alive, detecção de silêncio, session refresh e som ambiente
         stopTimer();
         stopKeepAlive();
         stopSilenceDetection();
+        stopSessionRefreshTimer();
         // Parar som ambiente e atualizar botão
         if (conversacaoState.ambientEnabled) {
             stopAmbientSound();
@@ -7787,6 +7805,32 @@ WICHTIG - BENUTZERSPRACHE:
         } catch (error) {
             console.error('Falha na reconexão:', error);
             // A próxima tentativa será feita pelo onclose/onerror
+        }
+    }
+
+    // Iniciar timer de refresh proativo da sessão (antes do limite de 10 minutos do Gemini)
+    function startSessionRefreshTimer() {
+        stopSessionRefreshTimer(); // Limpar timer anterior
+
+        conversacaoState.sessionRefreshTimer = setTimeout(() => {
+            if (conversacaoState.isConnected && conversacaoState.ws?.readyState === WebSocket.OPEN) {
+                console.log('🔄 Refresh proativo da sessão - reconectando antes do limite de 10 minutos...');
+                // Marcar que é um refresh proativo (não erro)
+                conversacaoState.shouldReconnect = true;
+                conversacaoState.reconnectAttempts = 0; // Reset para permitir tentativas
+
+                // Fechar conexão atual - o onclose vai reconectar automaticamente
+                conversacaoState.ws.close(1000, 'Session refresh');
+            }
+        }, conversacaoState.SESSION_MAX_DURATION);
+
+        console.log(`⏰ Timer de refresh da sessão iniciado - reconexão em ${conversacaoState.SESSION_MAX_DURATION / 60000} minutos`);
+    }
+
+    function stopSessionRefreshTimer() {
+        if (conversacaoState.sessionRefreshTimer) {
+            clearTimeout(conversacaoState.sessionRefreshTimer);
+            conversacaoState.sessionRefreshTimer = null;
         }
     }
 
