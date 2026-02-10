@@ -4568,6 +4568,7 @@ async function handleCorrectionSubmit(e) {
         creditsUsed: 0,
         isAISpeaking: false,
         turnCount: 0,
+        personaHasSpoken: false, // Flag para saber se a persona já falou pela primeira vez
 
         // Silence detection
         lastSoundTime: null,
@@ -7181,15 +7182,20 @@ WICHTIG - BENUTZERSPRACHE:
                 conversacaoState.isConnecting = false;
                 conversacaoState.reconnectAttempts = 0; // Reset contador de reconexão
                 conversacaoState.connectionStartTime = Date.now(); // Registrar início da conexão
-                updateStatus('Conectado - Aguarde a persona...', 'connected');
+                updateStatus('Aguarde...', 'connecting');
                 updateConversacaoUI('recording');
                 startAudioCapture();
-                startTimer(isReconnection); // Pass flag to preserve timer on reconnection
+
+                // Só iniciar timer se é reconexão (já estava conversando)
+                // Para nova conexão, esperar a persona falar primeiro
+                if (isReconnection) {
+                    startTimer(true); // Continuar timer na reconexão
+                    console.log(`🔄 Reconexão bem-sucedida - tempo acumulado preservado: ${conversacaoState.totalSeconds}s`);
+                    conversacaoState.personaHasSpoken = true; // Assume que já falou antes
+                }
+
                 startErrorAnalysisTimer(); // Inicia análise de erros a cada 5 min
                 startSessionRefreshTimer(); // Reconexão proativa antes do limite de 10min
-                if (isReconnection) {
-                    console.log(`🔄 Reconexão bem-sucedida - tempo acumulado preservado: ${conversacaoState.totalSeconds}s`);
-                }
                 // Keep-alive desativado - o streaming de áudio já mantém a conexão
                 // startKeepAlive();
 
@@ -7255,6 +7261,13 @@ WICHTIG - BENUTZERSPRACHE:
                     conversacaoState.isAISpeaking = false;
                     conversacaoState.turnCount = (conversacaoState.turnCount || 0) + 1;
                     console.log(`📊 Turno #${conversacaoState.turnCount} completo`);
+
+                    // Iniciar timer na PRIMEIRA VEZ que a persona fala
+                    if (!conversacaoState.personaHasSpoken) {
+                        conversacaoState.personaHasSpoken = true;
+                        startTimer(false); // Iniciar timer agora
+                        console.log('⏱️ Timer iniciado após primeira fala da persona');
+                    }
 
                     // Atualizar créditos (aproximado)
                     conversacaoState.creditsUsed += 0.5;
@@ -7364,6 +7377,12 @@ WICHTIG - BENUTZERSPRACHE:
                     // Atualizar timestamp se detectou som
                     if (hasSound) {
                         conversacaoState.lastSoundTime = Date.now();
+                    }
+
+                    // NÃO enviar áudio enquanto a IA está falando ou reproduzindo
+                    // Isso evita eco/feedback do alto-falante ser capturado pelo microfone
+                    if (conversacaoState.isAISpeaking || conversacaoState.isPlayingAudio) {
+                        return; // Silenciar microfone enquanto IA fala
                     }
 
                     // Converter para base64 e enviar
@@ -7767,6 +7786,7 @@ WICHTIG - BENUTZERSPRACHE:
         conversacaoState.isRecording = false;
         conversacaoState.ws = null;
         conversacaoState.connectionStartTime = null;
+        conversacaoState.personaHasSpoken = false; // Reset para próxima conversa
 
         // Parar timer, keep-alive, detecção de silêncio, session refresh e som ambiente
         stopTimer();
