@@ -7177,7 +7177,9 @@ WICHTIG - BENUTZERSPRACHE:
             // Setup complete - pronto para conversar
             if (message.setupComplete) {
                 console.log('✅ Setup completo - iniciando captura de áudio');
-                const isReconnection = conversacaoState.reconnectAttempts > 0;
+                // Detectar reconexão: ou tentativa de reconexão em andamento, ou já tinha tempo acumulado
+                const isReconnection = conversacaoState.reconnectAttempts > 0 || conversacaoState.totalSeconds > 0;
+                console.log(`🔗 isReconnection: ${isReconnection} (attempts: ${conversacaoState.reconnectAttempts}, totalSeconds: ${conversacaoState.totalSeconds})`);
                 conversacaoState.isConnected = true;
                 conversacaoState.isConnecting = false;
                 conversacaoState.reconnectAttempts = 0; // Reset contador de reconexão
@@ -7189,8 +7191,8 @@ WICHTIG - BENUTZERSPRACHE:
                 // Só iniciar timer se é reconexão (já estava conversando)
                 // Para nova conexão, esperar a persona falar primeiro
                 if (isReconnection) {
-                    startTimer(true); // Continuar timer na reconexão
-                    console.log(`🔄 Reconexão bem-sucedida - tempo acumulado preservado: ${conversacaoState.totalSeconds}s`);
+                    startTimer(true); // Continuar timer na reconexão - NÃO reseta totalSeconds
+                    console.log(`🔄 Reconexão bem-sucedida - tempo acumulado: ${conversacaoState.totalSeconds}s`);
                     conversacaoState.personaHasSpoken = true; // Assume que já falou antes
                 }
 
@@ -7208,6 +7210,9 @@ WICHTIG - BENUTZERSPRACHE:
                 // PERSONA FALA PRIMEIRO - enviar mensagem de início para a IA começar a conversa
                 if (!isReconnection) {
                     triggerPersonaGreeting();
+                } else {
+                    // Na reconexão, informar a IA que é uma continuação
+                    triggerReconnectionContinuation();
                 }
             }
 
@@ -7899,6 +7904,38 @@ WICHTIG - BENUTZERSPRACHE:
         setTimeout(() => {
             if (conversacaoState.isConnected) {
                 updateStatus('Ouvindo a persona...', 'listening');
+            }
+        }, 500);
+    }
+
+    // Função para CONTINUAR a conversa após reconexão
+    // Envia um prompt para a IA retomar a conversa de onde parou
+    function triggerReconnectionContinuation() {
+        if (conversacaoState.ws?.readyState !== WebSocket.OPEN) {
+            console.log('⚠️ WebSocket não está aberto - não é possível enviar continuação');
+            return;
+        }
+
+        // Mensagem que instrui a IA a continuar a conversa
+        const continuationPrompt = `WICHTIG: Das Gespräch geht weiter! Die Verbindung wurde kurz unterbrochen, aber wir machen nahtlos weiter. Sage kurz etwas wie "Entschuldigung, wo waren wir?" oder "Lass uns weitermachen!" und warte dann auf den Schüler. KEINE neue Vorstellung - das Gespräch läuft schon! Sprich JETZT!`;
+
+        const textMessage = {
+            clientContent: {
+                turns: [{
+                    role: 'user',
+                    parts: [{ text: continuationPrompt }]
+                }],
+                turnComplete: true
+            }
+        };
+
+        console.log('🔄 Enviando trigger para continuar conversa após reconexão...');
+        conversacaoState.ws.send(JSON.stringify(textMessage));
+
+        // Atualizar status
+        setTimeout(() => {
+            if (conversacaoState.isConnected) {
+                updateStatus('Conversa retomada...', 'listening');
             }
         }, 500);
     }
