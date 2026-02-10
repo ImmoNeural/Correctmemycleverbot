@@ -1,6 +1,6 @@
 {
   "name": "correctme-club",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CorrectMe German Learning Platform",
   "private": true,
   "dependencies": {
