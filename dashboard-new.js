@@ -4611,10 +4611,13 @@ async function handleCorrectionSubmit(e) {
             name: 'Julia Schneider',
             avatar: '👩‍💻',
             role: 'Engenheira de Software Senior',
+            roleEN: 'Senior Software Engineer',
             gender: 'female',
             age: 34,
             tags: ['Tecnologia', 'Cloud', 'Backend'],
+            tagsEN: ['Technology', 'Cloud', 'Backend'],
             shortBio: 'Brasileira de São Paulo, aprendeu alemão e se mudou para Berlim. Especialista em backend e cloud computing na SAP.',
+            shortBioEN: 'Brazilian from São Paulo, learned German and moved to Berlin. Backend and cloud computing specialist at SAP.',
             fullBio: `<p><strong>Origem e Infância:</strong> Julia nasceu em 1991 em São Paulo, no bairro da Mooca, filha de uma professora de matemática e um mecânico de automóveis. Cresceu em uma família de classe média baixa, estudou em escola pública estadual no Tatuapé. Desde pequena, era fascinada por computadores - seu pai conseguiu um PC usado quando ela tinha 12 anos, e ela passou noites aprendendo a programar sozinha.</p>
 
 <p><strong>Formação:</strong> Fez Técnico em Informática no IFSP (Instituto Federal) enquanto terminava o ensino médio. Conseguiu uma bolsa integral pelo ProUni na Universidade Mackenzie para Engenharia de Computação. Durante a faculdade, trabalhou como estagiária na Locaweb, onde aprendeu sobre servidores e infraestrutura.</p>
@@ -4672,10 +4675,13 @@ WICHTIG - BENUTZERSPRACHE:
             name: 'Markus Weber',
             avatar: '👨‍💼',
             role: 'Consultor SAP Senior',
+            roleEN: 'Senior SAP Consultant',
             gender: 'male',
             age: 42,
             tags: ['SAP', 'ERP', 'Consultoria'],
+            tagsEN: ['SAP', 'ERP', 'Consulting'],
             shortBio: 'Alemão de Munique, especialista em SAP há 18 anos. Implementou sistemas para grandes empresas na Europa e América Latina.',
+            shortBioEN: 'German from Munich, SAP specialist for 18 years. Implemented systems for major companies in Europe and Latin America.',
             fullBio: `<p><strong>Origem:</strong> Markus nasceu em 1983 em Munique (München), na Baviera. Cresceu em Schwabing, um bairro tradicionalmente artístico e boêmio. Seu pai era engenheiro na BMW e sua mãe trabalhava como contadora.</p>
 
 <p><strong>Formação:</strong> Estudou no prestigioso Gymnasium Max-Planck e depois cursou Wirtschaftsinformatik (Informática Empresarial) na TU München (Technische Universität München). Durante a faculdade, fez estágio na Siemens.</p>
@@ -4733,10 +4739,13 @@ WICHTIG - BENUTZERSPRACHE:
             name: 'Dr. Thomas Schmidt',
             avatar: '👨‍⚕️',
             role: 'Médico Clínico Geral',
+            roleEN: 'General Practitioner',
             gender: 'male',
             age: 52,
             tags: ['Medicina', 'Saúde', 'Clínica Geral'],
+            tagsEN: ['Medicine', 'Health', 'General Practice'],
             shortBio: 'Médico de família em Hamburgo há 25 anos. Trabalha em uma clínica comunitária atendendo pacientes de diversas origens.',
+            shortBioEN: 'Family doctor in Hamburg for 25 years. Works in a community clinic treating patients from diverse backgrounds.',
             fullBio: `<p><strong>Origem:</strong> Thomas nasceu em 1973 em Hamburgo, em uma família de classe média. Seu avô era médico em uma pequena cidade no interior, o que o inspirou desde cedo a seguir a medicina.</p>
 
 <p><strong>Formação:</strong> Estudou Medicina na Universität Hamburg de 1992 a 1999. Fez residência em Medicina Interna e depois se especializou em Medicina de Família (Allgemeinmedizin) no Universitätsklinikum Hamburg-Eppendorf.</p>
@@ -4796,10 +4805,13 @@ WICHTIG - BENUTZERSPRACHE:
             name: 'Hans Müller',
             avatar: '👨‍🍳',
             role: 'Chef de Cozinha',
+            roleEN: 'Head Chef',
             gender: 'male',
             age: 48,
             tags: ['Gastronomia', 'Cozinha Alemã', 'Restaurante'],
+            tagsEN: ['Gastronomy', 'German Cuisine', 'Restaurant'],
             shortBio: 'Chef executivo de um restaurante tradicional em Frankfurt. Mestre em culinária alemã e austríaca, com passagens por Paris e Viena.',
+            shortBioEN: 'Executive chef of a traditional restaurant in Frankfurt. Master of German and Austrian cuisine, with experience in Paris and Vienna.',
             fullBio: `<p><strong>Origem:</strong> Hans nasceu em 1977 em Frankfurt am Main, filho de donos de um pequeno Gasthaus (restaurante tradicional) no bairro de Sachsenhausen. Desde os 8 anos, ajudava na cozinha da família.</p>
 
 <p><strong>Formação:</strong> Aos 16 anos, começou sua Ausbildung (formação profissional) como Kochazubi no famoso Hotel Frankfurter Hof. Depois, trabalhou 2 anos em Paris no restaurante Le Meurice (2 estrelas Michelin) e 2 anos em Viena no Steirereck.</p>
@@ -4859,10 +4871,13 @@ WICHTIG - BENUTZERSPRACHE:
             name: 'Petra Fischer',
             avatar: '👩‍💼',
             role: 'Diretora de Vendas',
+            roleEN: 'Sales Director',
             gender: 'female',
             age: 45,
             tags: ['Negócios', 'Vendas', 'Liderança'],
+            tagsEN: ['Business', 'Sales', 'Leadership'],
             shortBio: 'Diretora de Vendas para Europa na Bosch. Começou como trainee e subiu na carreira por mérito. Expert em negociação B2B.',
+            shortBioEN: 'Sales Director for Europe at Bosch. Started as a trainee and rose through the ranks on merit. B2B negotiation expert.',
             fullBio: `<p><strong>Origem:</strong> Petra nasceu em 1980 em Stuttgart, berço da indústria automobilística alemã. Seu pai trabalhava como operário na Mercedes-Benz e sua mãe era secretária. Cresceu vendo a dedicação e ética de trabalho dos pais.</p>
 
 <p><strong>Formação:</strong> Foi a primeira da família a fazer faculdade. Estudou BWL (Betriebswirtschaftslehre - Administração de Empresas) na Universität Stuttgart com bolsa de estudos. Fez intercâmbio de 1 ano nos EUA (University of Michigan).</p>
@@ -4922,10 +4937,13 @@ WICHTIG - BENUTZERSPRACHE:
             name: 'Anna Becker',
             avatar: '👩‍🏫',
             role: 'Professora de Alemão',
+            roleEN: 'German Teacher',
             gender: 'female',
             age: 38,
             tags: ['Educação', 'Idiomas', 'Alemão'],
+            tagsEN: ['Education', 'Languages', 'German'],
             shortBio: 'Professora de alemão como língua estrangeira há 15 anos. Trabalha no Goethe-Institut e dá aulas particulares.',
+            shortBioEN: 'German as a foreign language teacher for 15 years. Works at Goethe-Institut and gives private lessons.',
             fullBio: `<p><strong>Origem:</strong> Anna nasceu em 1987 em Heidelberg, uma das cidades universitárias mais famosas da Alemanha. Seu pai era professor de literatura alemã na Universität Heidelberg e sua mãe, tradutora de inglês e francês.</p>
 
 <p><strong>Formação:</strong> Cresceu cercada de livros e idiomas. Estudou Germanistik (Estudos Germânicos) e DaF (Deutsch als Fremdsprache - Alemão como Língua Estrangeira) na Universität Heidelberg. Fez mestrado em Didática de Línguas.</p>
@@ -4992,10 +5010,13 @@ WICHTIG - BENUTZERSPRACHE:
             name: 'Stefan Hoffmann',
             avatar: '💼',
             role: 'Consultor Financeiro',
+            roleEN: 'Financial Advisor',
             gender: 'male',
             age: 50,
             tags: ['Finanças', 'Investimentos', 'Banco'],
+            tagsEN: ['Finance', 'Investments', 'Banking'],
             shortBio: 'Consultor financeiro independente em Frankfurt. Ex-diretor do Deutsche Bank com 25 anos de experiência em mercado financeiro.',
+            shortBioEN: 'Independent financial advisor in Frankfurt. Former Deutsche Bank director with 25 years of experience in financial markets.',
             fullBio: `<p><strong>Origem:</strong> Stefan nasceu em 1975 em Frankfurt, a capital financeira da Alemanha. Seu pai era corretor de seguros e sua mãe, funcionária do Bundesbank (Banco Central Alemão).</p>
 
 <p><strong>Formação:</strong> Estudou Volkswirtschaftslehre (Economia) na Goethe-Universität Frankfurt. Fez MBA em Finanças na London Business School com bolsa de estudos.</p>
@@ -5054,10 +5075,13 @@ WICHTIG - BENUTZERSPRACHE:
             name: 'Klaus Zimmermann',
             avatar: '👷',
             role: 'Engenheiro Mecânico',
+            roleEN: 'Mechanical Engineer',
             gender: 'male',
             age: 55,
             tags: ['Engenharia', 'Indústria', 'Automotivo'],
+            tagsEN: ['Engineering', 'Industry', 'Automotive'],
             shortBio: 'Engenheiro mecânico sênior na Volkswagen em Wolfsburg. 30 anos de experiência em desenvolvimento de motores e eletrificação.',
+            shortBioEN: 'Senior mechanical engineer at Volkswagen in Wolfsburg. 30 years of experience in engine development and electrification.',
             fullBio: `<p><strong>Origem:</strong> Klaus nasceu em 1970 em Wolfsburg, literalmente à sombra da fábrica da Volkswagen. Seu pai e avô também trabalharam na VW - a família tem três gerações na empresa.</p>
 
 <p><strong>Formação:</strong> Fez Ausbildung (formação técnica) como mecânico industrial na própria VW aos 16 anos. Depois, a empresa patrocinou seus estudos de Maschinenbau (Engenharia Mecânica) na TU Braunschweig.</p>
@@ -5116,10 +5140,13 @@ WICHTIG - BENUTZERSPRACHE:
             name: 'Dr. Andreas von Turing',
             avatar: '🧙‍♂️',
             role: 'Arquiteto de Software Lendário',
+            roleEN: 'Legendary Software Architect',
             gender: 'male',
             age: 58,
             tags: ['Lenda', 'Arquitetura', 'Open Source', 'Kernel', 'Compiladores'],
+            tagsEN: ['Legend', 'Architecture', 'Open Source', 'Kernel', 'Compilers'],
             shortBio: 'Considerado um dos maiores programadores vivos. Contribuiu para o kernel Linux, criou linguagens de programação, e é professor emérito da ETH Zurich.',
+            shortBioEN: 'Considered one of the greatest living programmers. Contributed to the Linux kernel, created programming languages, and is professor emeritus at ETH Zurich.',
             fullBio: `<p><strong>A Lenda Começa (1967-1985):</strong> Andreas nasceu em 1967 em Dresden, na então Alemanha Oriental (DDR), filho de um matemático dissidente e uma pianista. Seu pai, Professor Heinrich von Turing (sem parentesco com Alan Turing, mas uma coincidência que moldaria seu destino), foi preso por "pensamento subversivo" quando Andreas tinha 7 anos. Criado pela mãe em condições difíceis, Andreas encontrou refúgio nos números e na lógica.</p>
 
 <p>Aos 12 anos, conseguiu acesso clandestino a um computador Robotron KC 85 em um clube de jovens cientistas. Aprendeu assembly Z80 sozinho, lendo manuais técnicos soviéticos traduzidos para alemão. Aos 14, escreveu seu primeiro compilador rudimentar - um feito que chamou atenção da Stasi, que começou a monitorá-lo.</p>
@@ -5250,10 +5277,13 @@ WICHTIG - BENUTZERSPRACHE:
             name: 'Maria Schulz',
             avatar: '🎨',
             role: 'Curadora de Arte',
+            roleEN: 'Art Curator',
             gender: 'female',
             age: 41,
             tags: ['Arte', 'Cultura', 'Museu'],
+            tagsEN: ['Art', 'Culture', 'Museum'],
             shortBio: 'Curadora no Museu Städel em Frankfurt. Especialista em arte moderna alemã e expressionismo.',
+            shortBioEN: 'Curator at the Städel Museum in Frankfurt. Specialist in modern German art and expressionism.',
             fullBio: `<p><strong>Origem:</strong> Maria nasceu em 1984 em Düsseldorf, cidade conhecida pela sua cena artística vibrante. Sua mãe era pintora (não muito famosa, mas muito talentosa) e seu pai, arquiteto. Cresceu frequentando galerias e ateliês.</p>
 
 <p><strong>Formação:</strong> Estudou Kunstgeschichte (História da Arte) na Kunstakademie Düsseldorf e fez mestrado na Humboldt-Universität Berlin. Sua dissertação foi sobre o Expressionismo Alemão, especialmente Ernst Ludwig Kirchner.</p>
@@ -5321,6 +5351,9 @@ WICHTIG - BENUTZERSPRACHE:
         const grid = document.getElementById('conv-personas-grid');
         if (!grid) return;
 
+        const lang = typeof window.getCurrentLanguage === 'function' ? window.getCurrentLanguage() : 'pt-BR';
+        const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+
         grid.innerHTML = '';
 
         Object.values(PERSONAS).forEach(persona => {
@@ -5328,15 +5361,19 @@ WICHTIG - BENUTZERSPRACHE:
             card.className = 'persona-card cursor-pointer bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 hover:border-cyan-500/50 rounded-xl p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-cyan-500/10';
             card.dataset.personaId = persona.id;
 
+            // Use English or Portuguese based on language
+            const role = isEnglish && persona.roleEN ? persona.roleEN : persona.role;
+            const tags = isEnglish && persona.tagsEN ? persona.tagsEN : persona.tags;
+
             card.innerHTML = `
                 <div class="flex flex-col items-center text-center">
                     <div class="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500/20 to-teal-600/20 flex items-center justify-center text-3xl mb-3 border-2 border-slate-600">
                         ${persona.avatar}
                     </div>
                     <h4 class="font-semibold text-white text-sm mb-1">${persona.name}</h4>
-                    <p class="text-cyan-400 text-xs mb-2">${persona.role}</p>
+                    <p class="text-cyan-400 text-xs mb-2">${role}</p>
                     <div class="flex flex-wrap gap-1 justify-center">
-                        ${persona.tags.slice(0, 2).map(tag => `<span class="px-2 py-0.5 bg-slate-700 text-slate-400 text-xs rounded-full">${tag}</span>`).join('')}
+                        ${tags.slice(0, 2).map(tag => `<span class="px-2 py-0.5 bg-slate-700 text-slate-400 text-xs rounded-full">${tag}</span>`).join('')}
                     </div>
                 </div>
             `;
@@ -5344,6 +5381,17 @@ WICHTIG - BENUTZERSPRACHE:
             card.addEventListener('click', () => selectPersona(persona.id));
             grid.appendChild(card);
         });
+
+        // Update section title based on language
+        const sectionTitle = document.querySelector('#conv-personas-section h3');
+        if (sectionTitle) {
+            sectionTitle.innerHTML = `
+                <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+                ${isEnglish ? 'Choose a person to talk with' : 'Escolha uma pessoa para conversar'}
+            `;
+        }
     }
 
     // Seleciona uma persona
@@ -5354,23 +5402,48 @@ WICHTIG - BENUTZERSPRACHE:
         selectedPersona = persona;
         console.log('Persona selecionada:', persona.name);
 
+        const lang = typeof window.getCurrentLanguage === 'function' ? window.getCurrentLanguage() : 'pt-BR';
+        const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+
+        // Use English or Portuguese based on language
+        const role = isEnglish && persona.roleEN ? persona.roleEN : persona.role;
+        const shortBio = isEnglish && persona.shortBioEN ? persona.shortBioEN : persona.shortBio;
+        const fullBio = isEnglish && persona.fullBioEN ? persona.fullBioEN : persona.fullBio;
+        const tags = isEnglish && persona.tagsEN ? persona.tagsEN : persona.tags;
+
         // Atualiza a UI com info da persona
         document.getElementById('persona-avatar').textContent = persona.avatar;
         document.getElementById('persona-name').textContent = persona.name;
-        document.getElementById('persona-role').textContent = persona.role;
-        document.getElementById('persona-bio').textContent = persona.shortBio;
+        document.getElementById('persona-role').textContent = role;
+        document.getElementById('persona-bio').textContent = shortBio;
 
         // Tags
         const tagsContainer = document.getElementById('persona-tags');
-        tagsContainer.innerHTML = persona.tags.map(tag =>
+        tagsContainer.innerHTML = tags.map(tag =>
             `<span class="px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded-full">${tag}</span>`
         ).join('');
 
         // Modal info
         document.getElementById('modal-persona-avatar').textContent = persona.avatar;
         document.getElementById('modal-persona-name').textContent = persona.name;
-        document.getElementById('modal-persona-role').textContent = persona.role;
-        document.getElementById('modal-persona-fullbio').innerHTML = persona.fullBio;
+        document.getElementById('modal-persona-role').textContent = role;
+        document.getElementById('modal-persona-fullbio').innerHTML = fullBio;
+
+        // Update button texts based on language
+        const showBioBtn = document.getElementById('show-full-bio-btn');
+        if (showBioBtn) {
+            showBioBtn.innerHTML = `
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                ${isEnglish ? 'View full story' : 'Ver história completa'}
+            `;
+        }
+
+        const changePersonaBtn = document.getElementById('change-persona-btn');
+        if (changePersonaBtn) {
+            changePersonaBtn.textContent = isEnglish ? '← Choose another person' : '← Escolher outra pessoa';
+        }
 
         // Configura a voz preferida da persona
         const voiceSelect = document.getElementById('conv-voice-select');
