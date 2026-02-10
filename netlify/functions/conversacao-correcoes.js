@@ -17,16 +17,30 @@ IMPORTANT:
 - DO NOT analyze Russian, English, Portuguese or other languages
 - If the text is not German, return []
 
-CATEGORIES: declination, conjugation, prepositions, syntax, vocabulary
+CATEGORY DEFINITIONS (use EXACTLY these category names):
+1. "declination" - Article errors (der/die/das), incorrect case usage (Nominativ/Akkusativ/Dativ/Genitiv), adjective endings
+   Examples: "die Mann" → "der Mann", "mit der Auto" → "mit dem Auto", "ein großer Frau" → "eine große Frau"
+
+2. "conjugation" - Verb conjugation errors, incorrect tense, wrong verb forms
+   Examples: "ich gehe gestern" → "ich ging gestern", "er haben" → "er hat", "wir ist" → "wir sind"
+
+3. "prepositions" - Wrong preposition choice or missing prepositions
+   Examples: "ich warte auf du" → "ich warte auf dich", "in die Schule gehen" → "zur Schule gehen"
+
+4. "syntax" - Word order errors, sentence structure problems, missing words
+   Examples: "Ich gestern bin gegangen" → "Ich bin gestern gegangen", "Er hat gearbeitet nicht" → "Er hat nicht gearbeitet"
+
+5. "vocabulary" - Wrong word choice (not grammar), incorrect expressions, false friends
+   Examples: "Ich bin kalt" → "Mir ist kalt", "machen ein Foto" → "ein Foto machen"
 
 JSON FORMAT:
-[{"categoria":"X","contexto":"German sentence","erro":"wrong word/structure","correcao":"correct German form","explicacao":"explanation in English"}]
+[{"categoria":"declination|conjugation|prepositions|syntax|vocabulary","contexto":"full German sentence","erro":"specific wrong word/structure","correcao":"correct German form","explicacao":"brief explanation in English"}]
 
 RULES:
 - Maximum 5 errors
 - If no GERMAN errors: []
-- Short explanation (1 sentence) in English
-- Focus on German grammar: articles (der/die/das), cases, verb conjugation, word order`;
+- ALWAYS classify into the correct category based on the definitions above
+- Do NOT default everything to "vocabulary" - analyze carefully`;
     }
 
     // Default to Portuguese
@@ -38,16 +52,30 @@ IMPORTANTE:
 - NÃO analise russo, inglês, português ou outros idiomas
 - Se o texto não for alemão, retorne []
 
-CATEGORIAS: declinacao, conjugacao, preposicoes, sintaxe, vocabulario
+DEFINIÇÃO DAS CATEGORIAS (use EXATAMENTE estes nomes):
+1. "declinacao" - Erros de artigo (der/die/das), caso incorreto (Nominativ/Akkusativ/Dativ/Genitiv), terminações de adjetivos
+   Exemplos: "die Mann" → "der Mann", "mit der Auto" → "mit dem Auto", "ein großer Frau" → "eine große Frau"
+
+2. "conjugacao" - Erros de conjugação verbal, tempo incorreto, formas verbais erradas
+   Exemplos: "ich gehe gestern" → "ich ging gestern", "er haben" → "er hat", "wir ist" → "wir sind"
+
+3. "preposicoes" - Preposição errada ou faltando
+   Exemplos: "ich warte auf du" → "ich warte auf dich", "in die Schule gehen" → "zur Schule gehen"
+
+4. "sintaxe" - Ordem das palavras errada, estrutura da frase incorreta, palavras faltando
+   Exemplos: "Ich gestern bin gegangen" → "Ich bin gestern gegangen", "Er hat gearbeitet nicht" → "Er hat nicht gearbeitet"
+
+5. "vocabulario" - Palavra errada (não gramática), expressões incorretas, falsos cognatos
+   Exemplos: "Ich bin kalt" → "Mir ist kalt", "machen ein Foto" → "ein Foto machen"
 
 FORMATO JSON:
-[{"categoria":"X","contexto":"frase em alemão","erro":"palavra/estrutura errada","correcao":"forma correta em alemão","explicacao":"explicação em português"}]
+[{"categoria":"declinacao|conjugacao|preposicoes|sintaxe|vocabulario","contexto":"frase completa em alemão","erro":"palavra/estrutura específica errada","correcao":"forma correta em alemão","explicacao":"explicação breve em português"}]
 
 REGRAS:
 - Máximo 5 erros
 - Se não houver erros de ALEMÃO: []
-- Explicação curta (1 frase) em português
-- Foque em gramática alemã: artigos (der/die/das), casos, conjugação verbal, ordem das palavras`;
+- SEMPRE classifique na categoria correta baseado nas definições acima
+- NÃO coloque tudo como "vocabulario" - analise cuidadosamente`;
 }
 
 // Timeout reduzido para funcionar no Netlify

@@ -3145,7 +3145,7 @@
                                         <!-- Contador central -->
                                         <div class="absolute inset-0 flex flex-col items-center justify-center">
                                             <span id="conv-total-errors" class="text-2xl font-bold text-white">0</span>
-                                            <span class="text-xs text-slate-400">erros</span>
+                                            <span class="text-xs text-slate-400" data-i18n="conversacao.errorsWord">erros</span>
                                         </div>
                                     </div>
 
@@ -3153,33 +3153,33 @@
                                     <div id="conv-pie-legend" class="grid grid-cols-2 gap-x-3 gap-y-1 text-xs w-full">
                                         <div class="flex items-center gap-1.5 text-slate-400">
                                             <span class="w-2 h-2 rounded-sm flex-shrink-0" style="background: #f472b6;"></span>
-                                            <span>Dec</span>
+                                            <span data-i18n="conversacao.decShort">Dec</span>
                                             <span id="conv-count-declinacao" class="ml-auto text-slate-300">0</span>
                                         </div>
                                         <div class="flex items-center gap-1.5 text-slate-400">
                                             <span class="w-2 h-2 rounded-sm flex-shrink-0" style="background: #c084fc;"></span>
-                                            <span>Conj</span>
+                                            <span data-i18n="conversacao.conjShort">Conj</span>
                                             <span id="conv-count-conjugacao" class="ml-auto text-slate-300">0</span>
                                         </div>
                                         <div class="flex items-center gap-1.5 text-slate-400">
                                             <span class="w-2 h-2 rounded-sm flex-shrink-0" style="background: #60a5fa;"></span>
-                                            <span>Prep</span>
+                                            <span data-i18n="conversacao.prepShort">Prep</span>
                                             <span id="conv-count-preposicoes" class="ml-auto text-slate-300">0</span>
                                         </div>
                                         <div class="flex items-center gap-1.5 text-slate-400">
                                             <span class="w-2 h-2 rounded-sm flex-shrink-0" style="background: #fb923c;"></span>
-                                            <span>Sint</span>
+                                            <span data-i18n="conversacao.syntShort">Sint</span>
                                             <span id="conv-count-sintaxe" class="ml-auto text-slate-300">0</span>
                                         </div>
                                         <div class="flex items-center gap-1.5 text-slate-400 col-span-2 justify-center">
                                             <span class="w-2 h-2 rounded-sm flex-shrink-0" style="background: #4ade80;"></span>
-                                            <span>Voc</span>
+                                            <span data-i18n="conversacao.vocShort">Voc</span>
                                             <span id="conv-count-vocabulario" class="ml-auto text-slate-300">0</span>
                                         </div>
                                     </div>
 
                                     <!-- Mensagem quando não há erros -->
-                                    <p id="conv-no-errors-msg" class="text-slate-500 text-center text-xs mt-2">Erros aparecerão aqui após a conversa.</p>
+                                    <p id="conv-no-errors-msg" class="text-slate-500 text-center text-xs mt-2" data-i18n="conversacao.errorsWillAppear">Erros aparecerão aqui após a conversa.</p>
                                 </div>
                             </div>
                         </div>
@@ -3194,32 +3194,32 @@
                                 <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                Análise de Erros
-                                <span id="conv-analysis-timer" class="text-xs text-slate-500 font-normal">(atualiza a cada 5 min)</span>
+                                <span data-i18n="conversacao.errorAnalysis">Análise de Erros</span>
+                                <span id="conv-analysis-timer" class="text-xs text-slate-500 font-normal" data-i18n="conversacao.updatesEvery5Min">(atualiza a cada 5 min)</span>
                             </h4>
                             <!-- Legenda -->
                             <div class="flex flex-wrap gap-2 text-xs">
-                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-900/50 rounded" title="Declinação">
-                                    <span class="w-2 h-2 rounded" style="background: #f472b6;"></span>Declinação
+                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-900/50 rounded" data-i18n-title="conversacao.declension">
+                                    <span class="w-2 h-2 rounded" style="background: #f472b6;"></span><span data-i18n="conversacao.declension">Declinação</span>
                                 </span>
-                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-900/50 rounded" title="Conjugação">
-                                    <span class="w-2 h-2 rounded" style="background: #c084fc;"></span>Conjugação
+                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-900/50 rounded" data-i18n-title="conversacao.conjugation">
+                                    <span class="w-2 h-2 rounded" style="background: #c084fc;"></span><span data-i18n="conversacao.conjugation">Conjugação</span>
                                 </span>
-                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-900/50 rounded" title="Preposições">
-                                    <span class="w-2 h-2 rounded" style="background: #60a5fa;"></span>Preposições
+                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-900/50 rounded" data-i18n-title="conversacao.prepositions">
+                                    <span class="w-2 h-2 rounded" style="background: #60a5fa;"></span><span data-i18n="conversacao.prepositions">Preposições</span>
                                 </span>
-                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-900/50 rounded" title="Sintaxe">
-                                    <span class="w-2 h-2 rounded" style="background: #fb923c;"></span>Sintaxe
+                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-900/50 rounded" data-i18n-title="conversacao.syntax">
+                                    <span class="w-2 h-2 rounded" style="background: #fb923c;"></span><span data-i18n="conversacao.syntax">Sintaxe</span>
                                 </span>
-                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-900/50 rounded" title="Vocabulário">
-                                    <span class="w-2 h-2 rounded" style="background: #4ade80;"></span>Vocabulário
+                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-900/50 rounded" data-i18n-title="conversacao.vocabulary">
+                                    <span class="w-2 h-2 rounded" style="background: #4ade80;"></span><span data-i18n="conversacao.vocabulary">Vocabulário</span>
                                 </span>
                             </div>
                         </div>
 
                         <!-- Grid de Correções -->
                         <div id="conv-corrections" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <p class="text-slate-500 text-center py-8 col-span-full">
+                            <p class="text-slate-500 text-center py-8 col-span-full" data-i18n="conversacao.errorsWillAppearDuring">
                                 Erros aparecerão aqui durante a conversa (análise a cada 5 minutos).
                             </p>
                         </div>
@@ -3227,9 +3227,9 @@
                         <!-- Contador Total -->
                         <div id="conv-error-count" class="mt-4 pt-4 border-t border-slate-700 flex items-center justify-between hidden">
                             <span class="text-slate-400 text-sm">
-                                Total: <strong id="conv-total-errors" class="text-cyan-400">0</strong> erro(s) encontrado(s)
+                                <span data-i18n="conversacao.total">Total</span>: <strong id="conv-total-errors-bottom" class="text-cyan-400">0</strong> <span data-i18n="conversacao.errorsFoundCount">erro(s) encontrado(s)</span>
                             </span>
-                            <button id="conv-clear-errors" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-xs text-slate-400 transition-colors">
+                            <button id="conv-clear-errors" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-xs text-slate-400 transition-colors" data-i18n="conversacao.clearErrors">
                                 Limpar erros
                             </button>
                         </div>

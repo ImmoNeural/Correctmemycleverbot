@@ -98,7 +98,13 @@ const translations = {
             ambientSound: 'Som Ambiente',
             errorAnalysis: 'Análise de Erros',
             errorsWillAppear: 'Erros aparecerão aqui após a conversa.',
+            errorsWillAppearDuring: 'Erros aparecerão aqui durante a conversa (análise a cada 5 minutos).',
             errors: 'erro(s)',
+            errorsWord: 'erros',
+            errorsFoundCount: 'erro(s) encontrado(s)',
+            clearErrors: 'Limpar erros',
+            updatesEvery5Min: '(atualiza a cada 5 min)',
+            total: 'Total',
             selectTopic: 'Selecione um Tema',
             selectTopicDesc: 'Escolha um tema à direita para ver o roteiro da conversa e começar a praticar.',
             context: 'Contexto',
@@ -113,7 +119,18 @@ const translations = {
             analyzing: 'Analisando sua conversa...',
             noPhraseCaptured: 'Nenhuma frase sua foi captada para análise.',
             analysisError: 'Erro na análise. Tente novamente.',
-            noErrorsFound: 'Parabéns! Nenhum erro encontrado na sua conversa.'
+            noErrorsFound: 'Parabéns! Nenhum erro encontrado na sua conversa.',
+            // Categorias de erro
+            declension: 'Declinação',
+            conjugation: 'Conjugação',
+            prepositions: 'Preposições',
+            syntax: 'Sintaxe',
+            vocabulary: 'Vocabulário',
+            decShort: 'Dec',
+            conjShort: 'Conj',
+            prepShort: 'Prep',
+            syntShort: 'Sint',
+            vocShort: 'Voc'
         },
 
         // Listas de Palavras
@@ -455,7 +472,13 @@ const translations = {
             ambientSound: 'Ambient Sound',
             errorAnalysis: 'Error Analysis',
             errorsWillAppear: 'Errors will appear here after the conversation.',
+            errorsWillAppearDuring: 'Errors will appear here during the conversation (analysis every 5 minutes).',
             errors: 'error(s)',
+            errorsWord: 'errors',
+            errorsFoundCount: 'error(s) found',
+            clearErrors: 'Clear errors',
+            updatesEvery5Min: '(updates every 5 min)',
+            total: 'Total',
             selectTopic: 'Select a Topic',
             selectTopicDesc: 'Choose a topic on the right to see the conversation script and start practicing.',
             context: 'Context',
@@ -470,7 +493,18 @@ const translations = {
             analyzing: 'Analyzing your conversation...',
             noPhraseCaptured: 'No phrases were captured for analysis.',
             analysisError: 'Analysis error. Try again.',
-            noErrorsFound: 'Congratulations! No errors found in your conversation.'
+            noErrorsFound: 'Congratulations! No errors found in your conversation.',
+            // Error categories
+            declension: 'Declension',
+            conjugation: 'Conjugation',
+            prepositions: 'Prepositions',
+            syntax: 'Syntax',
+            vocabulary: 'Vocabulary',
+            decShort: 'Dec',
+            conjShort: 'Conj',
+            prepShort: 'Prep',
+            syntShort: 'Synt',
+            vocShort: 'Voc'
         },
 
         // Listas de Palavras

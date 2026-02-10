@@ -6971,13 +6971,20 @@ WICHTIG - BENUTZERSPRACHE:
     async function connectConversation() {
         if (conversacaoState.isConnecting || conversacaoState.isConnected) return;
 
+        // Detectar se é reconexão (já tinha tempo acumulado)
+        const isReconnecting = conversacaoState.totalSeconds > 0 || conversacaoState.reconnectAttempts > 0;
+
         try {
             conversacaoState.isConnecting = true;
             updateStatus('Conectando...', 'connecting');
             updateConversacaoUI('connecting');
 
-            // Limpar correções da sessão anterior (forçar reset completo)
-            clearCorrections(true);
+            // Só limpar correções se NÃO for reconexão (preservar erros na reconexão)
+            if (!isReconnecting) {
+                clearCorrections(true);
+            } else {
+                console.log('🔄 Reconexão detectada - preservando erros e timer');
+            }
 
             // Obter API key do backend
             if (!conversacaoState.apiKey) {
@@ -7174,7 +7181,7 @@ WICHTIG - BENUTZERSPRACHE:
                 conversacaoState.isConnecting = false;
                 conversacaoState.reconnectAttempts = 0; // Reset contador de reconexão
                 conversacaoState.connectionStartTime = Date.now(); // Registrar início da conexão
-                updateStatus('Conectado - Fale agora!', 'connected');
+                updateStatus('Conectado - Aguarde a persona...', 'connected');
                 updateConversacaoUI('recording');
                 startAudioCapture();
                 startTimer(isReconnection); // Pass flag to preserve timer on reconnection
@@ -7190,6 +7197,11 @@ WICHTIG - BENUTZERSPRACHE:
                 if (conversacaoState.currentScenario?.includes('restaurante')) {
                     startAmbientSound();
                     updateAmbientButtonUI(true);
+                }
+
+                // PERSONA FALA PRIMEIRO - enviar mensagem de início para a IA começar a conversa
+                if (!isReconnection) {
+                    triggerPersonaGreeting();
                 }
             }
 
@@ -7809,10 +7821,19 @@ WICHTIG - BENUTZERSPRACHE:
 
         updateStatus(`Reconectando (${conversacaoState.reconnectAttempts}/${conversacaoState.maxReconnectAttempts})...`, 'connecting');
 
-        // Limpar recursos antigos mas manter apiKey
+        // Preservar dados importantes antes de limpar
         const savedApiKey = conversacaoState.apiKey;
+        const savedTotalSeconds = conversacaoState.totalSeconds;
+        const savedTranscripts = [...conversacaoState.transcripts];
+        const savedAccumulatedErrors = [...accumulatedErrors];
+
         cleanupConversation();
+
+        // Restaurar dados preservados
         conversacaoState.apiKey = savedApiKey;
+        conversacaoState.totalSeconds = savedTotalSeconds;
+        conversacaoState.transcripts = savedTranscripts;
+        accumulatedErrors = savedAccumulatedErrors;
 
         // Aguardar antes de reconectar
         await new Promise(resolve => setTimeout(resolve, delay));
@@ -7827,6 +7848,39 @@ WICHTIG - BENUTZERSPRACHE:
             console.error('Falha na reconexão:', error);
             // A próxima tentativa será feita pelo onclose/onerror
         }
+    }
+
+    // Função para fazer a PERSONA FALAR PRIMEIRO
+    // Envia uma mensagem de texto que trigger a IA a iniciar a conversa
+    function triggerPersonaGreeting() {
+        if (conversacaoState.ws?.readyState !== WebSocket.OPEN) {
+            console.log('⚠️ WebSocket não está aberto - não é possível enviar greeting');
+            return;
+        }
+
+        // Mensagem que faz a IA começar a conversa naturalmente
+        // A IA vai se apresentar e mencionar a duração de até 45 minutos
+        const greetingPrompt = `Bitte beginne jetzt das Gespräch! Stelle dich kurz vor (nur 1-2 Sätze), begrüße den Schüler herzlich, und erwähne, dass ihr bis zu 45 Minuten Zeit habt zu üben. Dann stelle ihm eine einfache Frage, um das Gespräch zu starten. WICHTIG: Sprich SOFORT, warte nicht auf den Benutzer!`;
+
+        const textMessage = {
+            clientContent: {
+                turns: [{
+                    role: 'user',
+                    parts: [{ text: greetingPrompt }]
+                }],
+                turnComplete: true
+            }
+        };
+
+        console.log('🎙️ Enviando trigger para persona falar primeiro...');
+        conversacaoState.ws.send(JSON.stringify(textMessage));
+
+        // Atualizar status após enviar
+        setTimeout(() => {
+            if (conversacaoState.isConnected) {
+                updateStatus('Ouvindo a persona...', 'listening');
+            }
+        }, 500);
     }
 
     // Iniciar timer de refresh proativo da sessão (antes do limite de 10 minutos do Gemini)
@@ -8789,15 +8843,26 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
     }
 
     // Função para exibir correções na UI com contexto completo
-    function displayCorrections(corrections) {
+    // ACUMULA erros novos com os existentes (não substitui)
+    function displayCorrections(corrections, replaceAll = false) {
         const correctionsEl = document.getElementById('conv-corrections');
         const analysisSection = document.getElementById('conv-error-analysis-section');
         if (!correctionsEl) return;
 
-        // Limpa tudo
+        // Adicionar novos erros aos acumulados (evitando duplicatas)
+        corrections.forEach(err => {
+            const exists = accumulatedErrors.some(e =>
+                e.erro === err.erro && e.correcao === err.correcao
+            );
+            if (!exists) {
+                accumulatedErrors.push(err);
+            }
+        });
+
+        // Limpa a UI para re-renderizar todos os erros acumulados
         correctionsEl.innerHTML = '';
 
-        // Resetar contadores
+        // Resetar contadores (vamos recalcular com todos os erros acumulados)
         errorCounts = {
             declinacao: 0,
             conjugacao: 0,
@@ -8811,10 +8876,16 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
             analysisSection.classList.remove('hidden');
         }
 
-        corrections.forEach(corr => {
+        // Esconder mensagem de "sem erros"
+        const noErrorsMsg = document.getElementById('conv-no-errors-msg');
+        if (noErrorsMsg && accumulatedErrors.length > 0) {
+            noErrorsMsg.classList.add('hidden');
+        }
+
+        // Renderizar TODOS os erros acumulados
+        accumulatedErrors.forEach(corr => {
             const categoria = corr.categoria || 'vocabulario';
             const color = CORRECTION_COLORS[categoria] || CORRECTION_COLORS.vocabulario;
-            conversacaoState.totalCorrections++;
 
             // Incrementar contador por categoria
             if (errorCounts.hasOwnProperty(categoria)) {
@@ -8849,6 +8920,9 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
                 }
             }
 
+            // Obter nome da categoria traduzido
+            const categoryName = getCategoryName(categoria);
+
             corrDiv.innerHTML = `
                 ${corr.contexto ? `
                 <div style="margin-bottom: 10px; padding: 8px; background: #0f172a; border-radius: 6px; font-style: italic; color: #e2e8f0; font-size: 12px; line-height: 1.4;">
@@ -8856,7 +8930,7 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
                 </div>` : ''}
                 <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
                     <span style="display: inline-block; width: 8px; height: 8px; background: ${color.hex}; border-radius: 50%;"></span>
-                    <span style="color: ${color.hex}; font-size: 10px; font-weight: 600; text-transform: uppercase;">${color.name}</span>
+                    <span style="color: ${color.hex}; font-size: 10px; font-weight: 600; text-transform: uppercase;">${categoryName}</span>
                 </div>
                 <div style="margin-bottom: 6px;">
                     <span style="color: #ef4444; text-decoration: line-through; font-weight: 500; font-size: 12px;">${escapeHtml(corr.erro || '')}</span>
@@ -8869,8 +8943,31 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
             correctionsEl.appendChild(corrDiv);
         });
 
+        // Atualizar total de correções
+        conversacaoState.totalCorrections = accumulatedErrors.length;
+
         // Atualizar gráfico de pizza
         updatePieChart();
+
+        console.log(`📊 Total de erros acumulados: ${accumulatedErrors.length}`);
+    }
+
+    // Função auxiliar para obter o nome da categoria traduzido
+    function getCategoryName(categoria) {
+        const categoryMap = {
+            'declinacao': 'conversacao.declension',
+            'conjugacao': 'conversacao.conjugation',
+            'preposicoes': 'conversacao.prepositions',
+            'sintaxe': 'conversacao.syntax',
+            'vocabulario': 'conversacao.vocabulary',
+            'declination': 'conversacao.declension',
+            'conjugation': 'conversacao.conjugation',
+            'prepositions': 'conversacao.prepositions',
+            'syntax': 'conversacao.syntax',
+            'vocabulary': 'conversacao.vocabulary'
+        };
+        const key = categoryMap[categoria?.toLowerCase()] || 'conversacao.vocabulary';
+        return window.t ? window.t(key) : categoria;
     }
 
     // Função legada - agora apenas armazena transcripts
@@ -8900,9 +8997,10 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
             analysisSection.classList.add('hidden');
         }
 
-        // Mostrar mensagem de "sem erros"
+        // Mostrar mensagem de "sem erros" com texto traduzido
         const noErrorsMsg = document.getElementById('conv-no-errors-msg');
         if (noErrorsMsg) {
+            noErrorsMsg.textContent = window.t ? window.t('conversacao.errorsWillAppear') : 'Erros aparecerão aqui após a conversa.';
             noErrorsMsg.classList.remove('hidden');
         }
 
@@ -8919,6 +9017,9 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
             clearTimeout(conversacaoState.analysisTimer);
             conversacaoState.analysisTimer = null;
         }
+
+        // Limpar erros acumulados (apenas quando for nova sessão, não reconexão)
+        accumulatedErrors = [];
 
         // Resetar contadores de erro por categoria
         errorCounts = {
