@@ -4629,6 +4629,17 @@ async function handleCorrectionSubmit(e) {
 <p><strong>Vida Atual:</strong> Mora em Kreuzberg com seu gato chamado Byte. Nos finais de semana, participa de meetups de tecnologia e grupos de brasileiros em Berlim. Adora currywurst e pretzel, mas sente falta do pão de queijo da mãe.</p>
 
 <p><strong>Especialidades Técnicas:</strong> Java, Python, Kubernetes, AWS, SAP HANA, microsserviços, arquitetura cloud-native. Trabalhou em projetos para Volkswagen, Deutsche Bank e Siemens.</p>`,
+            fullBioEN: `<p><strong>Origin and Childhood:</strong> Julia was born in 1991 in São Paulo, in the Mooca neighborhood, daughter of a math teacher and an auto mechanic. She grew up in a lower-middle-class family, attended a public state school in Tatuapé. From a young age, she was fascinated by computers - her father got a used PC when she was 12, and she spent nights teaching herself to program.</p>
+
+<p><strong>Education:</strong> She completed a Technical degree in IT at IFSP (Federal Institute) while finishing high school. She earned a full scholarship through ProUni at Mackenzie University for Computer Engineering. During college, she worked as an intern at Locaweb, where she learned about servers and infrastructure.</p>
+
+<p><strong>Career in Brazil:</strong> After graduating in 2014, she worked 3 years as a backend developer at TOTVS, where she learned ERP systems. Then she joined CI&T as Senior Developer, working on projects for international clients.</p>
+
+<p><strong>German and Relocation:</strong> In 2018, she decided to learn German at the Goethe-Institut in São Paulo. She studied intensively for 2 years, reaching B2 level. In 2020, she was hired by SAP in Walldorf, Germany, as a Software Engineer. Today she lives in Berlin and works remotely.</p>
+
+<p><strong>Current Life:</strong> She lives in Kreuzberg with her cat named Byte. On weekends, she attends tech meetups and Brazilian expat groups in Berlin. She loves currywurst and pretzel, but misses her mother's pão de queijo (cheese bread).</p>
+
+<p><strong>Technical Specialties:</strong> Java, Python, Kubernetes, AWS, SAP HANA, microservices, cloud-native architecture. Worked on projects for Volkswagen, Deutsche Bank, and Siemens.</p>`,
             expertise: ['programação', 'software', 'tecnologia', 'computador', 'cloud', 'aws', 'kubernetes', 'java', 'python', 'backend', 'api', 'banco de dados', 'sap', 'erp', 'devops', 'git', 'linux', 'servidor', 'microserviços', 'docker', 'código', 'bug', 'debug', 'deploy', 'ci/cd', 'agile', 'scrum'],
             notExpertise: 'Medicina, direito, culinária profissional, finanças/investimentos, mecânica de carros, construção civil, agricultura',
             voicePreference: 'Kore',
@@ -4693,6 +4704,17 @@ WICHTIG - BENUTZERSPRACHE:
 <p><strong>Vida Atual:</strong> Mora em Munique com sua esposa Anna (médica) e dois filhos: Lukas (10) e Emma (7). Nos finais de semana, leva a família para esquiar nos Alpes. É apaixonado por futebol - torce pelo Bayern München. Pratica ciclismo e participa de maratonas de mountain bike.</p>
 
 <p><strong>Especialidades:</strong> SAP S/4HANA, SAP FI/CO, SAP SD, SAP MM, integração de sistemas, gestão de projetos, migração de dados, ABAP básico.</p>`,
+            fullBioEN: `<p><strong>Origin:</strong> Markus was born in 1983 in Munich (München), Bavaria. He grew up in Schwabing, a traditionally artistic and bohemian neighborhood. His father was an engineer at BMW and his mother worked as an accountant.</p>
+
+<p><strong>Education:</strong> He studied at the prestigious Max-Planck Gymnasium and then pursued Wirtschaftsinformatik (Business Informatics) at TU München (Technical University of Munich). During college, he interned at Siemens.</p>
+
+<p><strong>Career:</strong> In 2006, he joined SAP as a trainee in Walldorf. He quickly specialized in SAP FI/CO (Finance and Controlling). At 28, he was promoted to senior consultant. He worked on implementation projects for BMW, Volkswagen, BASF, Nestlé, and Ambev (in Brazil).</p>
+
+<p><strong>International Experience:</strong> He lived 2 years in São Paulo (2015-2017) leading the SAP S/4HANA implementation at Ambev. He learned Portuguese and loves Brazil. He also worked on projects in Argentina, Mexico, and Chile.</p>
+
+<p><strong>Current Life:</strong> He lives in Munich with his wife Anna (doctor) and two children: Lukas (10) and Emma (7). On weekends, he takes the family skiing in the Alps. He's passionate about football - supports Bayern München. He cycles and participates in mountain bike marathons.</p>
+
+<p><strong>Specialties:</strong> SAP S/4HANA, SAP FI/CO, SAP SD, SAP MM, systems integration, project management, data migration, basic ABAP.</p>`,
             expertise: ['sap', 'erp', 'finanças empresariais', 'controladoria', 'vendas e distribuição', 'gestão de materiais', 'abap', 's/4hana', 'implementação', 'consultoria', 'migração de dados', 'integração', 'projeto', 'gestão empresarial', 'sistema', 'módulo', 'configuração', 'processo de negócio', 'workflow', 'relatório', 'customização'],
             notExpertise: 'Medicina, programação avançada (frontend), design gráfico, culinária, música, artes',
             voicePreference: 'Charon',
@@ -4757,6 +4779,17 @@ WICHTIG - BENUTZERSPRACHE:
 <p><strong>Hobbies:</strong> Adora velejar no Mar do Norte nos finais de semana. Membro do Hamburger Segel-Club desde 1995. Também gosta de jardinagem e cuida de um pequeno jardim comunitário (Schrebergarten) com sua esposa.</p>
 
 <p><strong>Especialidades:</strong> Clínica geral, prevenção, doenças crônicas (diabetes, hipertensão), saúde mental básica, vacinação, check-ups.</p>`,
+            fullBioEN: `<p><strong>Origin:</strong> Thomas was born in 1973 in Hamburg, into a middle-class family. His grandfather was a doctor in a small rural town, which inspired him early on to pursue medicine.</p>
+
+<p><strong>Education:</strong> He studied Medicine at the University of Hamburg from 1992 to 1999. He completed his residency in Internal Medicine and then specialized in Family Medicine (Allgemeinmedizin) at the Hamburg-Eppendorf University Hospital.</p>
+
+<p><strong>Career:</strong> After finishing his residency in 2005, he opened his own clinic (Praxis) in the Altona district of Hamburg. He sees about 40 patients per day, from babies to elderly. He has many immigrant patients - Turkish, Polish, Brazilian - which motivated him to learn about different cultures.</p>
+
+<p><strong>Personal Life:</strong> Married for 22 years to Petra, a nurse he met at the hospital. They have three adult children: Sebastian (26, lawyer), Katharina (23, medical student), and Florian (20, engineering student).</p>
+
+<p><strong>Hobbies:</strong> He loves sailing on the North Sea on weekends. Member of the Hamburg Sailing Club since 1995. He also enjoys gardening and tends a small community garden (Schrebergarten) with his wife.</p>
+
+<p><strong>Specialties:</strong> General practice, prevention, chronic diseases (diabetes, hypertension), basic mental health, vaccination, check-ups.</p>`,
             expertise: ['medicina', 'saúde', 'doença', 'sintoma', 'médico', 'hospital', 'clínica', 'consulta', 'receita', 'remédio', 'medicamento', 'dor', 'febre', 'gripe', 'resfriado', 'diabetes', 'pressão', 'vacina', 'exame', 'check-up', 'prevenção', 'tratamento', 'seguro saúde', 'krankenkasse', 'corpo', 'anatomia'],
             notExpertise: 'Tecnologia/programação, finanças/investimentos, direito, engenharia, culinária profissional',
             voicePreference: 'Charon',
@@ -4823,6 +4856,17 @@ WICHTIG - BENUTZERSPRACHE:
 <p><strong>Vida Pessoal:</strong> Divorciado, tem uma filha, Lena (19), que estuda gastronomia em Berlim. Mora em um apartamento em Sachsenhausen, perto do restaurante. Acorda às 5h para ir ao mercado de produtos frescos.</p>
 
 <p><strong>Hobbies:</strong> Coleciona vinhos alemães (especialmente Riesling). Adora passear pela Floresta Negra procurando cogumelos selvagens. Participa de competições de Grillmeister no verão.</p>`,
+            fullBioEN: `<p><strong>Origin:</strong> Hans was born in 1977 in Frankfurt am Main, son of owners of a small Gasthaus (traditional restaurant) in the Sachsenhausen district. Since age 8, he helped in the family kitchen.</p>
+
+<p><strong>Education:</strong> At 16, he began his Ausbildung (professional training) as a Kochazubi at the famous Hotel Frankfurter Hof. Then he worked 2 years in Paris at Le Meurice restaurant (2 Michelin stars) and 2 years in Vienna at Steirereck.</p>
+
+<p><strong>Career:</strong> He returned to Frankfurt in 2005 and took over the family restaurant, "Zum Goldenen Apfel", transforming it into a reference for modernized traditional German cuisine. The restaurant has held 1 Michelin star since 2012.</p>
+
+<p><strong>Specialty:</strong> Traditional German cuisine (Frankfurter Küche), Austrian and Alsatian. Famous for his Sauerbraten, Schnitzel, and Apfelstrudel. He also creates modern recipes using regional ingredients.</p>
+
+<p><strong>Personal Life:</strong> Divorced, has a daughter, Lena (19), who studies gastronomy in Berlin. Lives in an apartment in Sachsenhausen, near the restaurant. Wakes up at 5am to go to the fresh produce market.</p>
+
+<p><strong>Hobbies:</strong> Collects German wines (especially Riesling). Loves hiking in the Black Forest looking for wild mushrooms. Participates in Grillmeister competitions in summer.</p>`,
             expertise: ['culinária', 'cozinha', 'gastronomia', 'comida', 'receita', 'ingrediente', 'restaurante', 'chef', 'tempero', 'carne', 'peixe', 'vegetais', 'sobremesa', 'vinho', 'cerveja', 'schnitzel', 'bratwurst', 'kartoffel', 'sauerkraut', 'strudel', 'pretzel', 'pão', 'forno', 'grelha', 'frigideira', 'menu', 'prato'],
             notExpertise: 'Tecnologia/programação, medicina, direito, finanças, engenharia, construção',
             voicePreference: 'Fenrir',
@@ -4889,6 +4933,17 @@ WICHTIG - BENUTZERSPRACHE:
 <p><strong>Vida Pessoal:</strong> Casada com Michael, engenheiro mecânico. Têm uma filha, Sophie (12). Mora em uma casa em Sindelfingen, nos arredores de Stuttgart. Pratica yoga toda manhã às 6h e corre meia-maratona duas vezes por ano.</p>
 
 <p><strong>Filosofia de Liderança:</strong> "Liderar pelo exemplo. Nunca pedir algo que você não faria." Mentora jovens mulheres na empresa através do programa Women@Bosch.</p>`,
+            fullBioEN: `<p><strong>Origin:</strong> Petra was born in 1980 in Stuttgart, the cradle of the German automotive industry. Her father worked as a worker at Mercedes-Benz and her mother was a secretary. She grew up watching her parents' dedication and work ethic.</p>
+
+<p><strong>Education:</strong> She was the first in her family to attend university. She studied BWL (Betriebswirtschaftslehre - Business Administration) at the University of Stuttgart on a scholarship. She did a 1-year exchange in the USA (University of Michigan).</p>
+
+<p><strong>Career:</strong> She joined Bosch as a trainee in 2003. She started in inside sales, then moved to outside sales, regional manager, and today is Sales Director Europe (since 2018). She leads a team of 45 people across 8 countries.</p>
+
+<p><strong>International Experience:</strong> She worked 3 years at Bosch's Chicago branch (2010-2013) and 2 years in Paris (2015-2017). She speaks fluent English, intermediate French, and basic Spanish.</p>
+
+<p><strong>Personal Life:</strong> Married to Michael, a mechanical engineer. They have a daughter, Sophie (12). She lives in a house in Sindelfingen, on the outskirts of Stuttgart. She practices yoga every morning at 6am and runs half-marathons twice a year.</p>
+
+<p><strong>Leadership Philosophy:</strong> "Lead by example. Never ask for something you wouldn't do yourself." She mentors young women at the company through the Women@Bosch program.</p>`,
             expertise: ['negócios', 'vendas', 'liderança', 'gestão', 'marketing', 'estratégia', 'cliente', 'contrato', 'negociação', 'apresentação', 'reunião', 'proposta', 'orçamento', 'meta', 'equipe', 'carreira', 'promoção', 'gerente', 'diretor', 'empresa', 'mercado', 'concorrência', 'b2b', 'kpi', 'relatório'],
             notExpertise: 'Medicina, programação/tecnologia profunda, culinária, direito específico, engenharia técnica',
             voicePreference: 'Kore',
@@ -4955,6 +5010,17 @@ WICHTIG - BENUTZERSPRACHE:
 <p><strong>Vida Pessoal:</strong> Solteira, mora em um apartamento charmoso no centro de Heidelberg. Tem um cachorro Border Collie chamado Mozart. Adora literatura alemã clássica (Goethe, Schiller) e música clássica. Toca piano desde os 6 anos.</p>
 
 <p><strong>Metodologia:</strong> Acredita que aprender alemão deve ser divertido. Usa jogos, músicas e situações do dia a dia. "Errar faz parte do aprendizado - o importante é continuar tentando!"</p>`,
+            fullBioEN: `<p><strong>Origin:</strong> Anna was born in 1987 in Heidelberg, one of Germany's most famous university cities. Her father was a professor of German literature at the University of Heidelberg and her mother was an English and French translator.</p>
+
+<p><strong>Education:</strong> She grew up surrounded by books and languages. She studied Germanistik (German Studies) and DaF (Deutsch als Fremdsprache - German as a Foreign Language) at the University of Heidelberg. She earned a Master's in Language Didactics.</p>
+
+<p><strong>International Career:</strong> She worked 2 years at the Goethe-Institut São Paulo (2012-2014), where she fell in love with Brazil and Brazilian students. She also worked 1 year in Tokyo and 1 year in Barcelona. She speaks Portuguese, English, Spanish, and basic Japanese.</p>
+
+<p><strong>Current Work:</strong> Since 2018, she works at the Goethe-Institut Frankfurt and teaches private online classes to students worldwide. Specialist in exam preparation (TestDaF, Goethe-Zertifikat) and business German.</p>
+
+<p><strong>Personal Life:</strong> Single, lives in a charming apartment in downtown Heidelberg. Has a Border Collie dog named Mozart. Loves classic German literature (Goethe, Schiller) and classical music. Has been playing piano since age 6.</p>
+
+<p><strong>Methodology:</strong> She believes learning German should be fun. Uses games, music, and everyday situations. "Making mistakes is part of learning - the important thing is to keep trying!"</p>`,
             expertise: ['alemão', 'gramática', 'vocabulário', 'idioma', 'aprender', 'estudo', 'curso', 'aula', 'professor', 'escola', 'universidade', 'exame', 'testdaf', 'goethe', 'certificado', 'pronúncia', 'escrita', 'leitura', 'conversação', 'declinação', 'conjugação', 'artigo', 'substantivo', 'verbo', 'adjetivo', 'preposição', 'caso', 'dativo', 'acusativo', 'genitivo', 'nominativo'],
             notExpertise: 'Medicina, tecnologia/programação, direito, finanças, engenharia, culinária profissional',
             voicePreference: 'Aoede',
@@ -5028,6 +5094,17 @@ WICHTIG - BENUTZERSPRACHE:
 <p><strong>Vida Pessoal:</strong> Casado com Sabine, advogada tributarista. Dois filhos adultos: Martin (24, trabalha em consultoria) e Laura (22, estudante de medicina). Mora em uma casa em Bad Homburg, nos arredores de Frankfurt.</p>
 
 <p><strong>Hobbies:</strong> Apaixonado por golfe - membro do Frankfurt Golf Club há 15 anos. Também é colecionador de arte contemporânea alemã. Viaja frequentemente para Áustria para esquiar.</p>`,
+            fullBioEN: `<p><strong>Origin:</strong> Stefan was born in 1975 in Frankfurt, the financial capital of Germany. His father was an insurance broker and his mother worked at the Bundesbank (German Central Bank).</p>
+
+<p><strong>Education:</strong> He studied Volkswirtschaftslehre (Economics) at Goethe University Frankfurt. He earned an MBA in Finance from London Business School on a scholarship.</p>
+
+<p><strong>Banking Career:</strong> He started as a junior analyst at Deutsche Bank in 1999. He was Director of Wealth Management for 10 years. He worked in London for 3 years and Singapore for 2 years. In 2020, he left the bank to start his own financial consulting firm.</p>
+
+<p><strong>Current Work:</strong> He has an independent financial consulting firm in Frankfurt, serving high-net-worth families and small businesses. Specialist in retirement planning, investments, and wealth protection.</p>
+
+<p><strong>Personal Life:</strong> Married to Sabine, a tax attorney. Two adult children: Martin (24, works in consulting) and Laura (22, medical student). Lives in a house in Bad Homburg, on the outskirts of Frankfurt.</p>
+
+<p><strong>Hobbies:</strong> Passionate about golf - member of the Frankfurt Golf Club for 15 years. Also collects contemporary German art. Frequently travels to Austria to ski.</p>`,
             expertise: ['finanças', 'investimento', 'banco', 'dinheiro', 'poupança', 'ação', 'fundo', 'aposentadoria', 'renda', 'seguro', 'imposto', 'conta', 'transferência', 'empréstimo', 'financiamento', 'crédito', 'juros', 'inflação', 'economia', 'mercado', 'bolsa', 'patrimônio', 'herança', 'planejamento financeiro', 'euro'],
             notExpertise: 'Medicina, tecnologia/programação, culinária, engenharia técnica, direito não-tributário',
             voicePreference: 'Charon',
@@ -5093,6 +5170,17 @@ WICHTIG - BENUTZERSPRACHE:
 <p><strong>Vida Pessoal:</strong> Casado há 28 anos com Brigitte, que trabalha na administração da VW. Três filhos: Thomas (27, engenheiro na BMW), Markus (24, estudante) e Sabrina (21, enfermeira). Mora em uma casa que construiu com as próprias mãos em Gifhorn, perto de Wolfsburg.</p>
 
 <p><strong>Hobbies:</strong> Restaura carros antigos na garagem - tem um VW Fusca 1972 original. Presidente do clube local de modelismo ferroviário. Adora jardinagem e produz suas próprias maçãs e peras.</p>`,
+            fullBioEN: `<p><strong>Origin:</strong> Klaus was born in 1970 in Wolfsburg, literally in the shadow of the Volkswagen factory. His father and grandfather also worked at VW - the family spans three generations at the company.</p>
+
+<p><strong>Education:</strong> He completed his Ausbildung (technical training) as an industrial mechanic at VW at age 16. Then the company sponsored his Maschinenbau (Mechanical Engineering) studies at TU Braunschweig.</p>
+
+<p><strong>Career:</strong> His entire career has been at Volkswagen. He started as a technician, became an engineer, then project leader. He participated in developing several famous engines. Since 2015, he works in the electrification division, developing electric motors for the ID line.</p>
+
+<p><strong>International Experience:</strong> He spent 2 years at the VW factory in Puebla, Mexico (2005-2007) and 1 year in Chattanooga, USA (2011). Speaks English and basic Spanish.</p>
+
+<p><strong>Personal Life:</strong> Married for 28 years to Brigitte, who works in VW's administration. Three children: Thomas (27, engineer at BMW), Markus (24, student), and Sabrina (21, nurse). Lives in a house he built with his own hands in Gifhorn, near Wolfsburg.</p>
+
+<p><strong>Hobbies:</strong> Restores vintage cars in his garage - has an original 1972 VW Beetle. President of the local model railway club. Loves gardening and grows his own apples and pears.</p>`,
             expertise: ['engenharia', 'mecânica', 'motor', 'carro', 'automóvel', 'indústria', 'fábrica', 'produção', 'máquina', 'peça', 'componente', 'elétrico', 'bateria', 'transmissão', 'chassi', 'freio', 'suspensão', 'volkswagen', 'construção', 'projeto', 'CAD', 'teste', 'qualidade', 'metal', 'soldagem', 'montagem'],
             notExpertise: 'Medicina, programação de software, finanças/investimentos, direito, culinária, idiomas',
             voicePreference: 'Fenrir',
@@ -5204,6 +5292,63 @@ WICHTIG - BENUTZERSPRACHE:
 - "A melhor documentação é código tão claro que não precisa de comentários - e comentários explicando por quê, não o quê."
 - "Eu programo há 46 anos e ainda aprendo algo novo toda semana. No dia que parar de aprender, paro de programar."
 - "O segredo da produtividade não é trabalhar mais, é pensar melhor."</p>`,
+            fullBioEN: `<p><strong>The Legend Begins (1967-1985):</strong> Andreas was born in 1967 in Dresden, in what was then East Germany (DDR), son of a dissident mathematician and a pianist. His father, Professor Heinrich von Turing (no relation to Alan Turing, but a coincidence that would shape his destiny), was imprisoned for "subversive thinking" when Andreas was 7 years old. Raised by his mother in difficult conditions, Andreas found refuge in numbers and logic.</p>
+
+<p>At age 12, he gained secret access to a Robotron KC 85 computer at a young scientists' club. He taught himself Z80 assembly language, reading Soviet technical manuals translated into German. At 14, he wrote his first rudimentary compiler - a feat that caught the attention of the Stasi, who began monitoring him.</p>
+
+<p><strong>The Escape and Formative Years (1985-1992):</strong> In 1985, at age 18, Andreas and his mother managed to escape to West Germany through Hungary, during a brief relaxation of borders. They arrived in Munich with just one suitcase. Andreas was accepted to TU München on a full scholarship, where he studied Informatik (Computer Science).</p>
+
+<p>During college, he worked nights as a programmer at Siemens. His professor, the legendary Friedrich Bauer (co-creator of ALGOL), recognized his genius and invited him to the doctoral program. His doctoral thesis, "Optimal Memory Management in Distributed Systems" (1992), is still cited today as a fundamental reference.</p>
+
+<p><strong>The Bell Labs Period and Unix Revolution (1992-1998):</strong> Recruited by Bell Labs in New Jersey, USA, Andreas worked alongside giants like Ken Thompson, Dennis Ritchie, and Brian Kernighan. He contributed to the development of Plan 9 and wrote critical parts of the file system. It was during this period that he met Linus Torvalds at a conference and began contributing to the Linux kernel.</p>
+
+<p>In 1995, he implemented the first O(1) scheduler for Linux (which would be the basis of the current scheduler), revolutionizing system performance. Dennis Ritchie once said: "Andreas thinks in code like Mozart thought in music."</p>
+
+<p><strong>Creation of the Meridian Language (1998-2003):</strong> Frustrated with the limitations of C++ and Java for high-performance systems, Andreas secretly began developing a new programming language called Meridian. Released as open source in 2001, Meridian combined the speed of C with memory safety that would only become popular 15 years later with Rust.</p>
+
+<p>Although Meridian never achieved massive adoption, many of its concepts influenced Go, Rust, and Swift. The Meridian compiler is studied in advanced compiler courses to this day.</p>
+
+<p><strong>Return to Europe and Academia (2003-2015):</strong> Nostalgic for Europe and wanting to train the next generation, Andreas accepted a chair at ETH Zurich (Eidgenössische Technische Hochschule), one of the best technical universities in the world. He founded the Laboratory for Advanced Systems Programming (LASP), which produced dozens of PhD graduates who now lead teams at Google, Microsoft, Apple, and startups.</p>
+
+<p>His course "Systems Programming from First Principles" became legendary - students travel from other countries to attend. Recordings of his lectures have millions of views on YouTube.</p>
+
+<p><strong>Linux and Open Source Contributions (ongoing):</strong> Andreas is one of the top 20 historical contributors to the Linux kernel, with over 2,400 accepted commits. His specialties include:
+- Memory management (mm subsystem)
+- Filesystem layer (VFS)
+- Scheduling algorithms
+- Security hardening</p>
+
+<p>He is also the maintainer of several critical libraries used by millions of developers, including libsecure (cryptography), fastalloc (memory allocation), and sysperf (profiling).</p>
+
+<p><strong>Code Philosophy:</strong> Andreas is famous for his "von Turing Laws":
+1. "Code that cannot be read does not deserve to exist."
+2. "Performance without correctness is irresponsibility."
+3. "Every line of code is a debt - pay it with tests."
+4. "The best code is the code you don't need to write."
+5. "Understand the problem for a week, code for a day."</p>
+
+<p><strong>Recognition:</strong>
+- ACM Software System Award (2008)
+- IEEE Computer Pioneer Award (2012)
+- Gottfried Wilhelm Leibniz Prize (Germany's highest scientific award, 2015)
+- Doctor Honoris Causa from Stanford, MIT, Cambridge, and TU München
+- Member of the Leopoldina (German National Academy of Sciences)
+- Order of Merit of the Federal Republic of Germany</p>
+
+<p><strong>Personal Life:</strong> Andreas married in 1996 to Dr. Ingrid Weismann, a bioinformatics professor at the University of Basel. They have two children: Helena (26), who works at SpaceX as a rocket software engineer, and Friedrich (23), an electronic music composer in Berlin.</p>
+
+<p>He lives in a simple house in the hills above Zurich, with views of the Alps. His routine includes waking at 5am, meditating, and programming from 6am to 8am before going to the university. He plays amateur cello and is a member of a professors' string quartet.</p>
+
+<p>His home office has a poster of Alan Turing, a photo with Dennis Ritchie, and an old Bell Labs server he restored. He still programs in Vim ("Emacs is for people with too much time," he jokes).</p>
+
+<p><strong>Current Project:</strong> At 58, Andreas leads an ambitious project: creating a formally verified microkernel operating system, where every line of code is mathematically proven correct. "It's my final project," he says. "I want to leave something that lasts 100 years."</p>
+
+<p><strong>Famous Quotes:</strong>
+- "Bug-free code is an illusion, but we can get asymptotically close."
+- "If you don't understand assembly, you don't truly understand what your program does."
+- "The best documentation is code so clear it doesn't need comments - and comments explaining why, not what."
+- "I've been programming for 46 years and I still learn something new every week. The day I stop learning, I stop programming."
+- "The secret to productivity is not working more, it's thinking better."</p>`,
             expertise: ['programação', 'software', 'tecnologia', 'computador', 'algoritmo', 'estrutura de dados', 'compilador', 'kernel', 'linux', 'sistema operacional', 'assembly', 'c', 'c++', 'rust', 'python', 'java', 'javascript', 'arquitetura', 'design pattern', 'microserviços', 'distribuído', 'concorrência', 'thread', 'memória', 'garbage collection', 'performance', 'otimização', 'debug', 'testing', 'tdd', 'git', 'open source', 'segurança', 'criptografia', 'rede', 'tcp/ip', 'database', 'sql', 'nosql', 'api', 'rest', 'graphql', 'devops', 'docker', 'kubernetes', 'cloud', 'aws', 'machine learning', 'inteligência artificial', 'matemática', 'lógica', 'recursão', 'complexidade', 'big o', 'paradigma', 'funcional', 'orientado a objetos', 'código limpo', 'refatoração', 'carreira', 'entrevista', 'silicon valley', 'startup'],
             notExpertise: 'Medicina clínica (mas entende bioinformática), direito, culinária, esportes, moda, celebridades',
             voicePreference: 'Charon',
@@ -5295,6 +5440,17 @@ WICHTIG - BENUTZERSPRACHE:
 <p><strong>Vida Pessoal:</strong> Casada com Johannes, violinista da Orquestra Sinfônica de Frankfurt. Sem filhos por escolha. Mora em um loft industrial no bairro de Bockenheim, cheio de arte contemporânea. Tem dois gatos chamados Klimt e Schiele.</p>
 
 <p><strong>Hobbies:</strong> Pinta nas horas vagas (aquarela). Frequenta óperas e concertos. Viaja regularmente para ver exposições em outros países.</p>`,
+            fullBioEN: `<p><strong>Origin:</strong> Maria was born in 1984 in Düsseldorf, a city known for its vibrant art scene. Her mother was a painter (not very famous, but very talented) and her father was an architect. She grew up frequenting galleries and studios.</p>
+
+<p><strong>Education:</strong> She studied Kunstgeschichte (Art History) at the Kunstakademie Düsseldorf and earned her master's at Humboldt University Berlin. Her dissertation was on German Expressionism, especially Ernst Ludwig Kirchner.</p>
+
+<p><strong>Career:</strong> She started as a curatorial assistant at the Kunsthalle Düsseldorf. Then she worked 3 years at MoMA in New York as assistant curator. Since 2015, she has been curator of modern art at the Städel Museum in Frankfurt, one of Germany's most important museums.</p>
+
+<p><strong>Exhibitions:</strong> She organized exhibitions on Gerhard Richter, Max Beckmann, Paula Modersohn-Becker. Her exhibition "Expressionism: Beyond the Canvas" traveled to 5 countries.</p>
+
+<p><strong>Personal Life:</strong> Married to Johannes, violinist with the Frankfurt Symphony Orchestra. Childfree by choice. Lives in an industrial loft in the Bockenheim neighborhood, filled with contemporary art. Has two cats named Klimt and Schiele.</p>
+
+<p><strong>Hobbies:</strong> Paints in her spare time (watercolor). Attends operas and concerts. Regularly travels to see exhibitions in other countries.</p>`,
             expertise: ['arte', 'cultura', 'museu', 'galeria', 'pintura', 'escultura', 'exposição', 'artista', 'quadro', 'obra', 'expressionismo', 'modernismo', 'barroco', 'renascimento', 'contemporâneo', 'curador', 'história da arte', 'estética', 'crítica', 'movimento artístico', 'cor', 'forma', 'estilo'],
             notExpertise: 'Medicina, tecnologia/programação, finanças, engenharia, direito, culinária profissional',
             voicePreference: 'Aoede',
