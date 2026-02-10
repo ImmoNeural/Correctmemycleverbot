@@ -5867,6 +5867,19 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         }
     }
 
+    // Função auxiliar para obter o nome da categoria traduzido (usada em displayAccumulatedErrors)
+    function getCategoryDisplayName(categoria) {
+        const categoryMap = {
+            'declinacao': 'conversacao.declension',
+            'conjugacao': 'conversacao.conjugation',
+            'preposicoes': 'conversacao.prepositions',
+            'sintaxe': 'conversacao.syntax',
+            'vocabulario': 'conversacao.vocabulary'
+        };
+        const key = categoryMap[categoria] || 'conversacao.vocabulary';
+        return window.t ? window.t(key) : categoria;
+    }
+
     // Exibe erros acumulados
     function displayAccumulatedErrors() {
         const container = document.getElementById('conv-corrections');
@@ -5881,26 +5894,39 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             return;
         }
 
-        const categoryColors = {
+        // Mapeamento de categorias normalizadas para cores
+        const normalizedCategoryColors = {
             'declinacao': '#f472b6',
             'conjugacao': '#c084fc',
             'preposicoes': '#60a5fa',
             'sintaxe': '#fb923c',
-            'vocabulario': '#4ade80',
-            'declination': '#f472b6',
-            'conjugation': '#c084fc',
-            'prepositions': '#60a5fa',
-            'syntax': '#fb923c',
-            'vocabulary': '#4ade80'
+            'vocabulario': '#4ade80'
+        };
+
+        // Função local para normalizar categorias (EN→PT)
+        const normalizeCat = (cat) => {
+            if (!cat) return 'vocabulario';
+            const c = cat.toLowerCase().trim();
+            const map = {
+                'declension': 'declinacao', 'declination': 'declinacao',
+                'conjugation': 'conjugacao', 'prepositions': 'preposicoes',
+                'preposition': 'preposicoes', 'syntax': 'sintaxe',
+                'vocabulary': 'vocabulario', 'declinacao': 'declinacao',
+                'conjugacao': 'conjugacao', 'preposicoes': 'preposicoes',
+                'sintaxe': 'sintaxe', 'vocabulario': 'vocabulario'
+            };
+            return map[c] || 'vocabulario';
         };
 
         container.innerHTML = accumulatedErrors.map(err => {
-            const color = categoryColors[err.categoria?.toLowerCase()] || '#94a3b8';
+            const normalizedCat = normalizeCat(err.categoria);
+            const color = normalizedCategoryColors[normalizedCat] || '#94a3b8';
+            const displayCat = getCategoryDisplayName(normalizedCat);
             return `
                 <div class="bg-slate-900/50 rounded-lg p-4 border-l-4" style="border-color: ${color}">
                     <div class="flex items-center gap-2 mb-2">
                         <span class="w-3 h-3 rounded-full" style="background: ${color}"></span>
-                        <span class="text-xs text-slate-400 uppercase">${err.categoria || 'Erro'}</span>
+                        <span class="text-xs text-slate-400 uppercase">${displayCat}</span>
                     </div>
                     <p class="text-red-400 text-sm line-through mb-1">${err.erro}</p>
                     <p class="text-green-400 text-sm font-medium mb-2">${err.correcao}</p>
@@ -8752,6 +8778,33 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
         vocabulario: { hex: '#4ade80', name: 'Vocabulário' }
     };
 
+    // Normaliza categorias em inglês para português (para compatibilidade)
+    function normalizeCategory(categoria) {
+        if (!categoria) return 'vocabulario';
+        const cat = categoria.toLowerCase().trim();
+        const mapping = {
+            // Inglês → Português
+            'declension': 'declinacao',
+            'declination': 'declinacao',
+            'conjugation': 'conjugacao',
+            'prepositions': 'preposicoes',
+            'preposition': 'preposicoes',
+            'syntax': 'sintaxe',
+            'vocabulary': 'vocabulario',
+            // Português já normalizado
+            'declinacao': 'declinacao',
+            'declinação': 'declinacao',
+            'conjugacao': 'conjugacao',
+            'conjugação': 'conjugacao',
+            'preposicoes': 'preposicoes',
+            'preposições': 'preposicoes',
+            'sintaxe': 'sintaxe',
+            'vocabulario': 'vocabulario',
+            'vocabulário': 'vocabulario'
+        };
+        return mapping[cat] || 'vocabulario';
+    }
+
     // Contadores de erros por categoria
     let errorCounts = {
         declinacao: 0,
@@ -9005,15 +9058,12 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
 
         // Renderizar TODOS os erros acumulados
         accumulatedErrors.forEach(corr => {
-            const categoria = corr.categoria || 'vocabulario';
+            // Normaliza categoria para português (suporta EN e PT)
+            const categoria = normalizeCategory(corr.categoria);
             const color = CORRECTION_COLORS[categoria] || CORRECTION_COLORS.vocabulario;
 
-            // Incrementar contador por categoria
-            if (errorCounts.hasOwnProperty(categoria)) {
-                errorCounts[categoria]++;
-            } else {
-                errorCounts.vocabulario++;
-            }
+            // Incrementar contador por categoria (já normalizada)
+            errorCounts[categoria]++;
 
             // Criar card de correção com contexto
             const corrDiv = document.createElement('div');
