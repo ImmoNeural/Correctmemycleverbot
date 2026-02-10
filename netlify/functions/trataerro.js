@@ -14,13 +14,59 @@ IMPORTANTE
 Se a redação tiver aspas, colchetes, parênteses ou chaves, ou quebra de linhas você deverá eliminar antes de prosseguir. Se o idioma que o usuário escrever for qualquer outro que não seja alemão, a redação deve ser considerada sem erros, ou seja, seria como se o usuário tivesse acertado tudo.
 "palavra_errada" no campo "conjugacao" deve conter o auxiliar haben ou sein mas também o verbo que o acompanha, caso esteja no perfekt ou em outros tempos verbais em que se precisam destes auxiliares.
 
+═══════════════════════════════════════════════════════════════
+COMO CLASSIFICAR CADA ERRO - ANALISE E ENCAIXE NA CATEGORIA CORRETA:
+═══════════════════════════════════════════════════════════════
+
+Para CADA erro, analise sua natureza e determine em qual categoria ele melhor se encaixa:
+
+PASSO 1: É um erro de VERBO? → "conjugacao"
+   - Conjugação errada (ich gehe → ich geht)
+   - Tempo verbal errado (ich gehe gestern → ich ging gestern)
+   - Auxiliar errado (ich habe gegangen → ich bin gegangen)
+   - Forma do verbo errada (er will geht → er will gehen)
+
+PASSO 2: É um erro de ARTIGO/CASO? → "declinacao"
+   - Gênero do artigo errado (die Mann → der Mann)
+   - Caso errado após preposição (mit der Auto → mit dem Auto)
+   - Terminação de adjetivo errada (ein großer Frau → eine große Frau)
+   - Caso do pronome errado (ich warte auf du → auf dich)
+   - Acusativo/Dativo errado (Ich sehe der Mann → den Mann)
+
+PASSO 3: É um erro de PREPOSIÇÃO? → "preposicoes"
+   - Preposição errada (ich denke auf → ich denke an)
+   - Preposição faltando (ich warte dich → ich warte auf dich)
+   - Preposição extra desnecessária
+
+PASSO 4: É um erro de ORDEM DAS PALAVRAS? → "sintaxe"
+   - Verbo não está na segunda posição (Ich gestern bin gegangen → Ich bin gestern gegangen)
+   - Ordem errada em oração subordinada (weil ich bin müde → weil ich müde bin)
+   - Negação no lugar errado (nicht na posição errada)
+   - Estrutura da frase incorreta
+
+PASSO 5: SOMENTE se nenhum dos anteriores se aplicar → "vocabulario"
+   - Palavra completamente errada (usou "bekommen" como "become")
+   - Falso cognato de outro idioma
+   - Expressão idiomática errada
+   - Ortografia pura (não relacionada a gramática)
+
+═══════════════════════════════════════════════════════════════
+REGRAS CRÍTICAS EXPLÍCITAS:
+═══════════════════════════════════════════════════════════════
+- "vocabulario" é ÚLTIMO RECURSO - só use quando o erro não se encaixa em nenhuma das 4 categorias anteriores
+- Erros de artigo/caso são SEMPRE "declinacao", nunca vocabulário
+- Erros de forma verbal são SEMPRE "conjugacao", nunca vocabulário
+- Erros de preposição são SEMPRE "preposicoes", nunca vocabulário
+- Erros de ordem são SEMPRE "sintaxe", nunca vocabulário
+
 REGRAS DE ANÁLISE
 Para cada erro encontrado no texto, você deve:
 1. Identificar a palavra ou trecho exato do erro.
 2. Fornecer uma sugestão de correção.
-3. Consultar a TABELA DE REFERÊNCIA e encontrar o tópico mais específico que descreve o erro.
-4. Criar uma descrição curta e contextualizada do erro.
-5. Criar um prompt de busca claro para uma base de conhecimento.
+3. Seguir a ÁRVORE DE DECISÃO acima para classificar o erro na categoria correta.
+4. Consultar a TABELA DE REFERÊNCIA e encontrar o tópico mais específico que descreve o erro.
+5. Criar uma descrição curta e contextualizada do erro.
+6. Criar um prompt de busca claro para uma base de conhecimento.
 
 FORMATO DA RESPOSTA
 A sua resposta DEVE ser APENAS um objeto JSON válido, sem nenhum texto extra. A estrutura do JSON deve ser exatamente esta:
@@ -164,12 +210,21 @@ Tabela de Tópicos Gramaticais para Referência:
 67. Nullartikel
 68. „Viel" und „wenig"
 
-Para decidir em qual categoria macro ("declinacao", "conjugacao", etc.) colocar o erro, use o seguinte MAPA DE CATEGORIAS:
-- Se o 'topico_gramatical_numero' for um destes [2, 3, 4, 6, 31, 32, 33, 34, 43, 46, 47, 48, 51, 52, 67, 68], coloque o objeto do erro na lista "declinacao".
-- Se o 'topico_gramatical_numero' for um destes [7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 35, 36, 37, 38, 39, 40, 41, 42, 44, 64, 65], coloque na lista "conjugacao".
-- Se o 'topico_gramatical_numero' for um destes [10, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 45, 61, 63], coloque na lista "sintaxe".
-- Se o 'topico_gramatical_numero' for um destes [1, 49, 50, 53, 54, 55, 56, 57, 58, 59, 60, 62, 66], coloque na lista "vocabulario".
-- Se o 'topico_gramatical_numero' for [5], coloque na lista "preposicoes".`;
+═══════════════════════════════════════════════════════════════
+COMO USAR O MAPA DE TÓPICOS:
+═══════════════════════════════════════════════════════════════
+
+1. PRIMEIRO analise o erro e determine em qual categoria ele melhor se encaixa (Passos 1-5 acima)
+2. DEPOIS escolha o número do tópico específico dentro dessa categoria usando o mapa abaixo:
+
+MAPA DE TÓPICOS POR CATEGORIA:
+- "declinacao": [2, 3, 4, 6, 31, 32, 33, 34, 43, 46, 47, 48, 51, 52, 67, 68]
+- "conjugacao": [7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 35, 36, 37, 38, 39, 40, 41, 42, 44, 64, 65]
+- "sintaxe": [10, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 45, 61, 63]
+- "vocabulario": [1, 49, 50, 53, 54, 55, 56, 57, 58, 59, 60, 62, 66]
+- "preposicoes": [5]
+
+LEMBRETE: "vocabulario" é ÚLTIMO RECURSO - só use quando o erro não se encaixa em nenhuma das outras 4 categorias`;
 
 // Helper function to call DeepSeek API with timeout
 async function callDeepSeek(systemPrompt, userPrompt, temperature = 0.3) {
