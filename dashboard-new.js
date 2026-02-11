@@ -7828,7 +7828,9 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                     this.accumulator = 0;
                     this.accumulatorCount = 0;
 
-                    this.silenceThreshold = 0.002;
+                    // Threshold mais alto para evitar detectar ruído de fundo como fala
+                    // 0.006 é mais conservador que 0.002 - reduz falsos positivos
+                    this.silenceThreshold = 0.006;
                     this.gain = 2.0;
 
                     console.log('AudioProcessor: inputSampleRate=' + this.inputSampleRate +
