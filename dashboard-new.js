@@ -7242,10 +7242,14 @@ WICHTIG FÜR DEN GESPRÄCHSFLUSS:
                             // Incluir todo o input na conversa
                             turnCoverage: 'TURN_INCLUDES_ALL_INPUT'
                         },
-                        // Ativar transcrição de entrada para melhor compreensão
-                        inputAudioTranscription: {},
+                        // Ativar transcrição de entrada FORÇANDO ALEMÃO
+                        inputAudioTranscription: {
+                            languageCode: 'de-DE'
+                        },
                         // Ativar transcrição de saída para debug
-                        outputAudioTranscription: {}
+                        outputAudioTranscription: {
+                            languageCode: 'de-DE'
+                        }
                     }
                 };
 
