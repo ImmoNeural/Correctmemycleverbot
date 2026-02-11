@@ -4608,9 +4608,9 @@ async function handleCorrectionSubmit(e) {
         // Watchdog para detectar travamentos
         aiSpeakingWatchdog: null,
         lastAudioChunkTime: null,
-        AI_SPEAKING_TIMEOUT: 15000, // 15 segundos sem atividade = provável travamento
+        AI_SPEAKING_TIMEOUT: 8000, // 8 segundos sem atividade = provável travamento (reduzido de 15s)
         micBlockedWatchdog: null,
-        MIC_BLOCKED_TIMEOUT: 20000 // 20 segundos com microfone bloqueado = forçar reset
+        MIC_BLOCKED_TIMEOUT: 10000 // 10 segundos com microfone bloqueado = forçar reset (reduzido de 20s)
     };
 
     let conversacaoInitialized = false;
@@ -7554,6 +7554,10 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                     // NÃO enviar áudio enquanto a IA está falando ou reproduzindo
                     // Isso evita eco/feedback do alto-falante ser capturado pelo microfone
                     if (conversacaoState.isAISpeaking || conversacaoState.isPlayingAudio) {
+                        // Log quando som é detectado mas mic está bloqueado (debug de travamento)
+                        if (hasSound && rmsLevel > 0.01) {
+                            console.log(`⚠️ MIC BLOQUEADO enquanto você fala! isAISpeaking: ${conversacaoState.isAISpeaking}, isPlayingAudio: ${conversacaoState.isPlayingAudio}`);
+                        }
                         return; // Silenciar microfone enquanto IA fala
                     }
 
@@ -7937,10 +7941,27 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                 source.buffer = audioBuffer;
                 source.connect(conversacaoState.gainNode);
 
-                // Esperar o áudio terminar
+                // Esperar o áudio terminar COM TIMEOUT DE SEGURANÇA
+                // Calcula duração esperada: samples / sampleRate (em segundos) + margem
+                const expectedDuration = (samples.length / 24000) * 1000 + 2000; // +2 segundos de margem
                 await new Promise((resolve) => {
-                    source.onended = resolve;
+                    let resolved = false;
+                    source.onended = () => {
+                        if (!resolved) {
+                            resolved = true;
+                            resolve();
+                        }
+                    };
                     source.start();
+
+                    // Timeout de segurança caso onended não dispare
+                    setTimeout(() => {
+                        if (!resolved) {
+                            resolved = true;
+                            console.warn('⚠️ Playback timeout - forçando fim após', Math.round(expectedDuration / 1000), 'segundos');
+                            resolve();
+                        }
+                    }, expectedDuration);
                 });
 
             } catch (error) {
@@ -7965,7 +7986,11 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
 
             // Se turnComplete já foi recebido (isAISpeaking = false), iniciar watchdog do microfone
             if (!conversacaoState.isAISpeaking) {
-                console.log('👂 Playback terminou e turno completo - microfone pronto');
+                console.log('👂 ========================================');
+                console.log('👂 MICROFONE PRONTO - FALE AGORA!');
+                console.log('👂 isAISpeaking:', conversacaoState.isAISpeaking);
+                console.log('👂 isPlayingAudio:', conversacaoState.isPlayingAudio);
+                console.log('👂 ========================================');
                 startMicBlockedWatchdog();
             }
         }
