@@ -7216,8 +7216,9 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                             // Configurar detecção automática de atividade de voz
                             automaticActivityDetection: {
                                 disabled: false,
-                                // Sensibilidade média para detectar início de fala (evita capturar ruídos)
-                                startOfSpeechSensitivity: 'START_SENSITIVITY_MEDIUM',
+                                // Sensibilidade BAIXA para detectar início de fala (evita capturar ruídos)
+                                // Nota: API só aceita LOW ou HIGH (não existe MEDIUM)
+                                startOfSpeechSensitivity: 'START_SENSITIVITY_LOW',
                                 // Sensibilidade BAIXA para detectar fim de fala (espera pausas mais longas)
                                 // Isso evita interromper o usuário durante pausas naturais ao construir frases
                                 endOfSpeechSensitivity: 'END_SENSITIVITY_LOW',
