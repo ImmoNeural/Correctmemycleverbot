@@ -7569,24 +7569,18 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
 
             conversacaoState.workletNode.port.onmessage = (event) => {
                 if (conversacaoState.ws?.readyState === WebSocket.OPEN && conversacaoState.isConnected) {
-                    const { audioData, hasSound, rmsLevel } = event.data;
+                    const { audioData } = event.data;
 
-                    // Atualizar timestamp se detectou som
-                    if (hasSound) {
-                        conversacaoState.lastSoundTime = Date.now();
-                    }
+                    // Atualizar timestamp de atividade
+                    conversacaoState.lastSoundTime = Date.now();
 
                     // NÃO enviar áudio enquanto a IA está falando ou reproduzindo
                     // Isso evita eco/feedback do alto-falante ser capturado pelo microfone
                     if (conversacaoState.isAISpeaking || conversacaoState.isPlayingAudio) {
-                        // Log quando som é detectado mas mic está bloqueado (debug de travamento)
-                        if (hasSound && rmsLevel > 0.01) {
-                            console.log(`⚠️ MIC BLOQUEADO enquanto você fala! isAISpeaking: ${conversacaoState.isAISpeaking}, isPlayingAudio: ${conversacaoState.isPlayingAudio}`);
-                        }
                         return; // Silenciar microfone enquanto IA fala
                     }
 
-                    // Converter para base64 e enviar
+                    // Converter para base64 e enviar - VAD é feito pelo Gemini
                     const audioBase64 = arrayBufferToBase64(audioData);
                     totalBytesEnviados += audioData.byteLength;
 
@@ -7608,18 +7602,11 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                         console.log('🎤 PRIMEIRO CHUNK DE ÁUDIO ENVIADO!');
                         console.log('   - Tamanho do chunk:', audioData.byteLength, 'bytes');
                         console.log('   - Base64 length:', audioBase64.length);
-                        console.log('   - RMS Level:', rmsLevel?.toFixed(6) || 'N/A');
-                        console.log('   - Som detectado:', hasSound);
                     }
 
-                    // Log a cada 50 chunks (~3 segundos de áudio)
-                    if (audioChunksSent % 50 === 0) {
-                        console.log(`🎙️ Áudio enviado: ${audioChunksSent} chunks (${Math.round(totalBytesEnviados/1024)}KB), som: ${hasSound}, RMS: ${rmsLevel?.toFixed(4) || 'N/A'}, isAISpeaking: ${conversacaoState.isAISpeaking}`);
-                    }
-
-                    // Log quando som é detectado (para debug)
-                    if (hasSound && rmsLevel > 0.01) {
-                        console.log(`🔊 SOM DETECTADO! RMS: ${rmsLevel?.toFixed(4)}, isAISpeaking: ${conversacaoState.isAISpeaking}`);
+                    // Log a cada 100 chunks (~6 segundos de áudio)
+                    if (audioChunksSent % 100 === 0) {
+                        console.log(`🎙️ Áudio enviado: ${audioChunksSent} chunks (${Math.round(totalBytesEnviados/1024)}KB)`);
                     }
                 }
             };
@@ -7808,7 +7795,8 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         }
     }
 
-    // Criar processador de áudio inline com detecção de silêncio
+    // Criar processador de áudio inline - apenas downsampling, sem detecção local
+    // VAD é feito pelo Gemini no servidor (igual exemplo oficial)
     function createAudioWorkletProcessor() {
         const processorCode = `
             class AudioProcessor extends AudioWorkletProcessor {
@@ -7828,11 +7816,6 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                     this.accumulator = 0;
                     this.accumulatorCount = 0;
 
-                    // Threshold mais alto para evitar detectar ruído de fundo como fala
-                    // 0.006 é mais conservador que 0.002 - reduz falsos positivos
-                    this.silenceThreshold = 0.006;
-                    this.gain = 2.0;
-
                     console.log('AudioProcessor: inputSampleRate=' + this.inputSampleRate +
                                 ', targetSampleRate=' + this.targetSampleRate +
                                 ', downsampleRatio=' + this.downsampleRatio);
@@ -7843,27 +7826,17 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                     if (input.length > 0) {
                         const channelData = input[0];
 
-                        // Calcular RMS (volume) do chunk atual COM GANHO APLICADO
-                        let sumSquares = 0;
-                        for (let i = 0; i < channelData.length; i++) {
-                            const amplified = channelData[i] * this.gain;
-                            sumSquares += amplified * amplified;
-                        }
-                        const rms = Math.sqrt(sumSquares / channelData.length);
-
                         // Fazer downsampling de inputSampleRate para 16kHz
                         for (let i = 0; i < channelData.length; i++) {
                             // Acumular amostras para média (downsampling com filtro anti-aliasing simples)
-                            const amplified = channelData[i] * this.gain;
-                            this.accumulator += amplified;
+                            this.accumulator += channelData[i];
                             this.accumulatorCount++;
 
                             // Quando acumulamos amostras suficientes, produzir uma amostra de saída
                             if (this.accumulatorCount >= this.downsampleRatio) {
                                 // Média das amostras acumuladas
                                 const avgSample = this.accumulator / this.accumulatorCount;
-                                // Soft clipping para evitar distorção
-                                this.outputBuffer[this.outputBufferIndex++] = Math.tanh(avgSample);
+                                this.outputBuffer[this.outputBufferIndex++] = avgSample;
 
                                 // Reset acumulador
                                 this.accumulator = 0;
@@ -7877,12 +7850,9 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                                         pcmData[j] = Math.max(-32768, Math.min(32767, this.outputBuffer[j] * 32767));
                                     }
 
-                                    // Enviar dados de áudio junto com indicador de som detectado
-                                    const hasSound = rms > this.silenceThreshold;
+                                    // Enviar apenas dados de áudio - VAD é feito pelo Gemini
                                     this.port.postMessage({
-                                        audioData: pcmData.buffer,
-                                        hasSound: hasSound,
-                                        rmsLevel: rms
+                                        audioData: pcmData.buffer
                                     });
                                     this.outputBufferIndex = 0;
                                 }
