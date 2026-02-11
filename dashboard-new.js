@@ -7160,14 +7160,16 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                             // Configurar detecção automática de atividade de voz
                             automaticActivityDetection: {
                                 disabled: false,
-                                // Alta sensibilidade para detectar início de fala (captura voz mais fraca)
-                                startOfSpeechSensitivity: 'START_SENSITIVITY_HIGH',
-                                // Alta sensibilidade para detectar fim de fala (responde mais rápido ao silêncio)
-                                endOfSpeechSensitivity: 'END_SENSITIVITY_HIGH',
+                                // Sensibilidade média para detectar início de fala (evita capturar ruídos)
+                                startOfSpeechSensitivity: 'START_SENSITIVITY_MEDIUM',
+                                // Sensibilidade BAIXA para detectar fim de fala (espera pausas mais longas)
+                                // Isso evita interromper o usuário durante pausas naturais ao construir frases
+                                endOfSpeechSensitivity: 'END_SENSITIVITY_LOW',
                                 // Padding antes do início da fala (ms)
-                                prefixPaddingMs: 100,
-                                // Duração do silêncio para considerar fim de fala (ms) - reduzido para resposta mais rápida
-                                silenceDurationMs: 500
+                                prefixPaddingMs: 200,
+                                // Duração do silêncio para considerar fim de fala (ms)
+                                // 1500ms = 1.5 segundos - permite pausas naturais de pensamento
+                                silenceDurationMs: 1500
                             },
                             // Incluir todo o input na conversa
                             turnCoverage: 'TURN_INCLUDES_ALL_INPUT'
@@ -7729,8 +7731,8 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                     this.bufferSize = 4096;
                     this.buffer = new Float32Array(this.bufferSize);
                     this.bufferIndex = 0;
-                    this.silenceThreshold = 0.0005; // Limiar MUITO baixo para detectar som
-                    this.gain = 2.5; // GANHO para amplificar o microfone (2.5x = +8dB)
+                    this.silenceThreshold = 0.0008; // Limiar ajustado para evitar ruídos mínimos
+                    this.gain = 2.0; // GANHO reduzido (2.0x = +6dB) para evitar voz rouca/distorção
                 }
 
                 process(inputs, outputs, parameters) {
@@ -7803,19 +7805,20 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             highPassFilter.frequency.value = 80; // Remove frequências abaixo de 80Hz
             highPassFilter.Q.value = 0.7;
 
-            // Filtro passa-baixa suave - preservar clareza da voz
+            // Filtro passa-baixa suave - preservar clareza e brilho da voz
             conversacaoState.lowPassFilter = conversacaoState.playbackContext.createBiquadFilter();
             conversacaoState.lowPassFilter.type = 'lowpass';
-            conversacaoState.lowPassFilter.frequency.value = 11000; // Preservar harmônicos da voz
-            conversacaoState.lowPassFilter.Q.value = 0.7; // Transição suave
+            conversacaoState.lowPassFilter.frequency.value = 12000; // Frequência mais alta preserva clareza
+            conversacaoState.lowPassFilter.Q.value = 0.5; // Q mais baixo = transição mais suave
 
-            // Compressor muito suave - apenas para evitar clipping, não comprimir demais
+            // Compressor MUITO suave - apenas para evitar clipping extremo
+            // Evita comprimir demais para não causar voz rouca/abafada após uso prolongado
             conversacaoState.compressor = conversacaoState.playbackContext.createDynamicsCompressor();
-            conversacaoState.compressor.threshold.value = -18; // Threshold mais alto = menos compressão
-            conversacaoState.compressor.knee.value = 30; // Knee suave
-            conversacaoState.compressor.ratio.value = 2; // Ratio baixo = compressão suave
-            conversacaoState.compressor.attack.value = 0.003; // Attack rápido
-            conversacaoState.compressor.release.value = 0.25; // Release rápido para voz natural
+            conversacaoState.compressor.threshold.value = -12; // Threshold alto - compressão só em picos extremos
+            conversacaoState.compressor.knee.value = 40; // Knee muito suave para transição gradual
+            conversacaoState.compressor.ratio.value = 1.5; // Ratio muito baixo = compressão mínima
+            conversacaoState.compressor.attack.value = 0.01; // Attack mais lento preserva transientes
+            conversacaoState.compressor.release.value = 0.4; // Release mais lento para naturalidade
 
             // Conectar cadeia de áudio: gain -> highpass -> lowpass -> compressor -> output
             conversacaoState.gainNode.connect(highPassFilter);
@@ -8920,17 +8923,28 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
 
     // Normaliza categorias em inglês para português (para compatibilidade)
     function normalizeCategory(categoria) {
-        if (!categoria) return 'vocabulario';
-        const cat = categoria.toLowerCase().trim();
+        if (!categoria) {
+            console.warn('⚠️ normalizeCategory: categoria undefined/null');
+            return 'vocabulario';
+        }
+        // Remove espaços, pontuação, e converte para minúsculas
+        const cat = String(categoria).toLowerCase().trim().replace(/[.,;:!?]/g, '');
         const mapping = {
-            // Inglês → Português
+            // Inglês → Português (várias variações)
             'declension': 'declinacao',
             'declination': 'declinacao',
+            'declinations': 'declinacao',
             'conjugation': 'conjugacao',
+            'conjugations': 'conjugacao',
             'prepositions': 'preposicoes',
             'preposition': 'preposicoes',
             'syntax': 'sintaxe',
+            'syntactic': 'sintaxe',
+            'word order': 'sintaxe',
+            'word-order': 'sintaxe',
             'vocabulary': 'vocabulario',
+            'lexical': 'vocabulario',
+            'word choice': 'vocabulario',
             // Português já normalizado
             'declinacao': 'declinacao',
             'declinação': 'declinacao',
@@ -8938,11 +8952,17 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
             'conjugação': 'conjugacao',
             'preposicoes': 'preposicoes',
             'preposições': 'preposicoes',
+            'preposição': 'preposicoes',
             'sintaxe': 'sintaxe',
             'vocabulario': 'vocabulario',
             'vocabulário': 'vocabulario'
         };
-        return mapping[cat] || 'vocabulario';
+        const result = mapping[cat];
+        if (!result) {
+            console.warn(`⚠️ normalizeCategory: categoria não mapeada: "${cat}" (original: "${categoria}")`);
+            return 'vocabulario';
+        }
+        return result;
     }
 
     // Contadores de erros por categoria
@@ -8960,10 +8980,18 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
         const noErrorsMsg = document.getElementById('conv-no-errors-msg');
         if (!pieChart) return;
 
+        // DEBUG: Log para verificar estado dos contadores
+        console.log('📊 updatePieChart - errorCounts:', JSON.stringify(errorCounts));
+
         // Atualizar contadores na legenda
         Object.keys(errorCounts).forEach(cat => {
             const countEl = document.getElementById(`conv-count-${cat}`);
-            if (countEl) countEl.textContent = errorCounts[cat];
+            if (countEl) {
+                countEl.textContent = errorCounts[cat];
+                console.log(`📊 Atualizando conv-count-${cat}: ${errorCounts[cat]}`);
+            } else {
+                console.warn(`📊 Elemento conv-count-${cat} não encontrado!`);
+            }
         });
 
         const total = Object.values(errorCounts).reduce((a, b) => a + b, 0);
@@ -9198,12 +9226,22 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
 
         // Renderizar TODOS os erros acumulados
         accumulatedErrors.forEach(corr => {
+            // DEBUG: Log para verificar valor da categoria recebida
+            console.log('🔍 DEBUG categoria:', {
+                original: corr.categoria,
+                tipo: typeof corr.categoria,
+                keys: Object.keys(corr)
+            });
+
             // Normaliza categoria para português (suporta EN e PT)
             const categoria = normalizeCategory(corr.categoria);
+            console.log('🔍 DEBUG normalizada:', categoria, '→ errorCounts antes:', errorCounts[categoria]);
+
             const color = CORRECTION_COLORS[categoria] || CORRECTION_COLORS.vocabulario;
 
             // Incrementar contador por categoria (já normalizada)
             errorCounts[categoria]++;
+            console.log('🔍 DEBUG errorCounts depois:', errorCounts[categoria]);
 
             // Criar card de correção com contexto
             const corrDiv = document.createElement('div');
