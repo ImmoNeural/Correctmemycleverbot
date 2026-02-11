@@ -7816,9 +7816,13 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                     this.accumulator = 0;
                     this.accumulatorCount = 0;
 
+                    // Ganho para garantir que áudio seja audível ao Gemini VAD
+                    this.gain = 1.5;
+
                     console.log('AudioProcessor: inputSampleRate=' + this.inputSampleRate +
                                 ', targetSampleRate=' + this.targetSampleRate +
-                                ', downsampleRatio=' + this.downsampleRatio);
+                                ', downsampleRatio=' + this.downsampleRatio +
+                                ', gain=' + this.gain);
                 }
 
                 process(inputs, outputs, parameters) {
@@ -7828,15 +7832,16 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
 
                         // Fazer downsampling de inputSampleRate para 16kHz
                         for (let i = 0; i < channelData.length; i++) {
-                            // Acumular amostras para média (downsampling com filtro anti-aliasing simples)
-                            this.accumulator += channelData[i];
+                            // Acumular amostras com ganho aplicado
+                            this.accumulator += channelData[i] * this.gain;
                             this.accumulatorCount++;
 
                             // Quando acumulamos amostras suficientes, produzir uma amostra de saída
                             if (this.accumulatorCount >= this.downsampleRatio) {
                                 // Média das amostras acumuladas
                                 const avgSample = this.accumulator / this.accumulatorCount;
-                                this.outputBuffer[this.outputBufferIndex++] = avgSample;
+                                // Soft clipping para evitar distorção
+                                this.outputBuffer[this.outputBufferIndex++] = Math.tanh(avgSample);
 
                                 // Reset acumulador
                                 this.accumulator = 0;
