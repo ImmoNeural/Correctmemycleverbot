@@ -7574,11 +7574,8 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                     // Atualizar timestamp de atividade
                     conversacaoState.lastSoundTime = Date.now();
 
-                    // NÃO enviar áudio enquanto a IA está falando ou reproduzindo
-                    // Isso evita eco/feedback do alto-falante ser capturado pelo microfone
-                    if (conversacaoState.isAISpeaking || conversacaoState.isPlayingAudio) {
-                        return; // Silenciar microfone enquanto IA fala
-                    }
+                    // IMPORTANTE: Enviar SEMPRE - deixar o Gemini VAD decidir o que é fala
+                    // O Gemini tem cancelamento de eco e VAD melhor que qualquer lógica local
 
                     // Converter para base64 e enviar - VAD é feito pelo Gemini
                     const audioBase64 = arrayBufferToBase64(audioData);
@@ -7817,7 +7814,8 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                     this.accumulatorCount = 0;
 
                     // Ganho para garantir que áudio seja audível ao Gemini VAD
-                    this.gain = 1.5;
+                    // 2.0 funcionava bem em commits anteriores (7defb95)
+                    this.gain = 2.0;
 
                     console.log('AudioProcessor: inputSampleRate=' + this.inputSampleRate +
                                 ', targetSampleRate=' + this.targetSampleRate +
@@ -8243,10 +8241,8 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             }
         };
 
-        // IMPORTANTE: Bloquear microfone ANTES de enviar o trigger
-        // Isso evita que ruídos ambiente interrompam a IA antes dela começar a falar
-        conversacaoState.isAISpeaking = true;
-        console.log('🔇 Microfone bloqueado - aguardando persona falar...');
+        // Não bloquear microfone - deixar Gemini VAD cuidar de tudo
+        // O Gemini tem activityHandling: 'START_OF_ACTIVITY_INTERRUPTS' que ignora ruídos
 
         console.log('🎙️ Enviando trigger para persona falar primeiro...');
         conversacaoState.ws.send(JSON.stringify(textMessage));
@@ -8280,9 +8276,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             }
         };
 
-        // IMPORTANTE: Bloquear microfone ANTES de enviar o trigger
-        conversacaoState.isAISpeaking = true;
-        console.log('🔇 Microfone bloqueado - aguardando IA retomar...');
+        // Não bloquear microfone - deixar Gemini VAD cuidar de tudo
 
         console.log('🔄 Enviando trigger para continuar conversa após reconexão...');
         conversacaoState.ws.send(JSON.stringify(textMessage));
@@ -8893,9 +8887,7 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
                 }
             };
 
-            // IMPORTANTE: Bloquear microfone ANTES de enviar o trigger
-            conversacaoState.isAISpeaking = true;
-            console.log('🔇 Microfone bloqueado - aguardando IA responder sobre tema...');
+            // Não bloquear microfone - deixar Gemini VAD cuidar de tudo
 
             conversacaoState.ws.send(JSON.stringify(textMessage));
             addMessageToHistory('user', `Tema: ${topic}`);
