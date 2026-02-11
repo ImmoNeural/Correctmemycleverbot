@@ -7540,16 +7540,25 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
     // Iniciar captura de áudio do microfone com detecção de silêncio
     async function startAudioCapture() {
         try {
-            // Criar AudioContext para captura
-            conversacaoState.audioContext = new (window.AudioContext || window.webkitAudioContext)({
-                sampleRate: 16000
-            });
+            // Criar AudioContext para captura - usar sample rate nativo do dispositivo
+            // NÃO forçar 16kHz porque muitos navegadores ignoram e usam a taxa nativa mesmo assim
+            conversacaoState.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Obter o sample rate REAL do AudioContext (pode ser 44100, 48000, etc)
+            const realSampleRate = conversacaoState.audioContext.sampleRate;
+            console.log('🎤 AudioContext sampleRate REAL:', realSampleRate);
 
             // Criar worklet para processar áudio
             await conversacaoState.audioContext.audioWorklet.addModule(createAudioWorkletProcessor());
 
             const source = conversacaoState.audioContext.createMediaStreamSource(conversacaoState.stream);
-            conversacaoState.workletNode = new AudioWorkletNode(conversacaoState.audioContext, 'audio-processor');
+
+            // Passar o sample rate real para o worklet fazer downsampling correto para 16kHz
+            conversacaoState.workletNode = new AudioWorkletNode(conversacaoState.audioContext, 'audio-processor', {
+                processorOptions: {
+                    inputSampleRate: realSampleRate
+                }
+            });
 
             // Inicializar timestamp do último som
             conversacaoState.lastSoundTime = Date.now();
@@ -7803,13 +7812,28 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
     function createAudioWorkletProcessor() {
         const processorCode = `
             class AudioProcessor extends AudioWorkletProcessor {
-                constructor() {
+                constructor(options) {
                     super();
-                    this.bufferSize = 4096;
-                    this.buffer = new Float32Array(this.bufferSize);
-                    this.bufferIndex = 0;
-                    this.silenceThreshold = 0.002; // Limiar aumentado (de 0.0008) para filtrar ruídos ambiente
-                    this.gain = 2.0; // GANHO reduzido (2.0x = +6dB) para evitar voz rouca/distorção
+                    // Obter sample rate de entrada passado via options
+                    this.inputSampleRate = options.processorOptions?.inputSampleRate || sampleRate;
+                    this.targetSampleRate = 16000;
+                    this.downsampleRatio = Math.round(this.inputSampleRate / this.targetSampleRate);
+
+                    // Buffer de saída de 4096 amostras a 16kHz
+                    this.outputBufferSize = 4096;
+                    this.outputBuffer = new Float32Array(this.outputBufferSize);
+                    this.outputBufferIndex = 0;
+
+                    // Buffer de acumulação para downsampling
+                    this.accumulator = 0;
+                    this.accumulatorCount = 0;
+
+                    this.silenceThreshold = 0.002;
+                    this.gain = 2.0;
+
+                    console.log('AudioProcessor: inputSampleRate=' + this.inputSampleRate +
+                                ', targetSampleRate=' + this.targetSampleRate +
+                                ', downsampleRatio=' + this.downsampleRatio);
                 }
 
                 process(inputs, outputs, parameters) {
@@ -7825,27 +7849,41 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                         }
                         const rms = Math.sqrt(sumSquares / channelData.length);
 
+                        // Fazer downsampling de inputSampleRate para 16kHz
                         for (let i = 0; i < channelData.length; i++) {
-                            // Aplicar ganho e armazenar no buffer
+                            // Acumular amostras para média (downsampling com filtro anti-aliasing simples)
                             const amplified = channelData[i] * this.gain;
-                            // Soft clipping para evitar distorção quando o ganho é alto
-                            this.buffer[this.bufferIndex++] = Math.tanh(amplified);
+                            this.accumulator += amplified;
+                            this.accumulatorCount++;
 
-                            if (this.bufferIndex >= this.bufferSize) {
-                                // Converter para PCM 16-bit
-                                const pcmData = new Int16Array(this.bufferSize);
-                                for (let j = 0; j < this.bufferSize; j++) {
-                                    pcmData[j] = Math.max(-32768, Math.min(32767, this.buffer[j] * 32767));
+                            // Quando acumulamos amostras suficientes, produzir uma amostra de saída
+                            if (this.accumulatorCount >= this.downsampleRatio) {
+                                // Média das amostras acumuladas
+                                const avgSample = this.accumulator / this.accumulatorCount;
+                                // Soft clipping para evitar distorção
+                                this.outputBuffer[this.outputBufferIndex++] = Math.tanh(avgSample);
+
+                                // Reset acumulador
+                                this.accumulator = 0;
+                                this.accumulatorCount = 0;
+
+                                // Quando buffer de saída estiver cheio, enviar
+                                if (this.outputBufferIndex >= this.outputBufferSize) {
+                                    // Converter para PCM 16-bit
+                                    const pcmData = new Int16Array(this.outputBufferSize);
+                                    for (let j = 0; j < this.outputBufferSize; j++) {
+                                        pcmData[j] = Math.max(-32768, Math.min(32767, this.outputBuffer[j] * 32767));
+                                    }
+
+                                    // Enviar dados de áudio junto com indicador de som detectado
+                                    const hasSound = rms > this.silenceThreshold;
+                                    this.port.postMessage({
+                                        audioData: pcmData.buffer,
+                                        hasSound: hasSound,
+                                        rmsLevel: rms
+                                    });
+                                    this.outputBufferIndex = 0;
                                 }
-
-                                // Enviar dados de áudio junto com indicador de som detectado
-                                const hasSound = rms > this.silenceThreshold;
-                                this.port.postMessage({
-                                    audioData: pcmData.buffer,
-                                    hasSound: hasSound,
-                                    rmsLevel: rms // Enviar nível de RMS para debug
-                                });
-                                this.bufferIndex = 0;
                             }
                         }
                     }
