@@ -131,7 +131,39 @@ const translations = {
             conjShort: 'Conj',
             prepShort: 'Prep',
             syntShort: 'Sint',
-            vocShort: 'Voc'
+            vocShort: 'Voc',
+            // Status messages
+            waiting: 'Aguarde...',
+            yourTurnToSpeak: 'Sua vez de falar...',
+            reconnectingSoon: 'Reconectando em breve...',
+            reconnecting: 'Reconectando...',
+            micFreedSpeakNow: 'Microfone liberado - fale agora!',
+            disconnectedByInactivity: 'Desconectado por inatividade',
+            inactivityDetected: 'Inatividade detectada...',
+            reconnectingAttempt: 'Reconectando',
+            listeningToPersona: 'Ouvindo a persona...',
+            conversationResumed: 'Conversa retomada...',
+            awaitingResponse: 'Aguardando resposta...',
+            // Ambient sound
+            playing: '🔊 Tocando...',
+            fileNotFound: '❌ Arquivo não encontrado',
+            // Error messages
+            mustBeLoggedIn: 'Você precisa estar logado para usar a conversa.',
+            insufficientCredits: 'Créditos insuficientes',
+            needAtLeast5Credits: 'Você precisa de pelo menos 5 créditos.',
+            userNotAuthenticated: 'Usuário não autenticado. Faça login novamente.',
+            serviceUnavailable: 'Serviço temporariamente indisponível. Tente novamente mais tarde.',
+            credentialsError: 'Erro ao obter credenciais',
+            apiKeyNotReceived: 'API key não recebida do servidor.',
+            connectionTimeout: 'Timeout na conexão. Verifique sua internet e tente novamente.',
+            connectionLostReconnecting: 'Conexão perdida. Tentando reconectar...',
+            sessionEndedByServer: 'Sessão encerrada pelo servidor.',
+            invalidApiKey: 'API key inválida ou expirada.',
+            connectionEnded: 'Conexão encerrada.',
+            micPermissionDenied: 'Permissão de microfone negada.',
+            connectionError: 'Erro ao conectar',
+            connectionLostClickMic: 'Conexão perdida. Clique no microfone para reconectar.',
+            couldNotConnect: 'Não foi possível conectar.'
         },
 
         // Listas de Palavras
@@ -506,7 +538,39 @@ const translations = {
             conjShort: 'Conj',
             prepShort: 'Prep',
             syntShort: 'Synt',
-            vocShort: 'Voc'
+            vocShort: 'Voc',
+            // Status messages
+            waiting: 'Please wait...',
+            yourTurnToSpeak: 'Your turn to speak...',
+            reconnectingSoon: 'Reconnecting soon...',
+            reconnecting: 'Reconnecting...',
+            micFreedSpeakNow: 'Microphone freed - speak now!',
+            disconnectedByInactivity: 'Disconnected due to inactivity',
+            inactivityDetected: 'Inactivity detected...',
+            reconnectingAttempt: 'Reconnecting',
+            listeningToPersona: 'Listening to the persona...',
+            conversationResumed: 'Conversation resumed...',
+            awaitingResponse: 'Awaiting response...',
+            // Ambient sound
+            playing: '🔊 Playing...',
+            fileNotFound: '❌ File not found',
+            // Error messages
+            mustBeLoggedIn: 'You need to be logged in to use conversation.',
+            insufficientCredits: 'Insufficient credits',
+            needAtLeast5Credits: 'You need at least 5 credits.',
+            userNotAuthenticated: 'User not authenticated. Please log in again.',
+            serviceUnavailable: 'Service temporarily unavailable. Try again later.',
+            credentialsError: 'Error obtaining credentials',
+            apiKeyNotReceived: 'API key not received from server.',
+            connectionTimeout: 'Connection timeout. Check your internet and try again.',
+            connectionLostReconnecting: 'Connection lost. Trying to reconnect...',
+            sessionEndedByServer: 'Session ended by server.',
+            invalidApiKey: 'Invalid or expired API key.',
+            connectionEnded: 'Connection ended.',
+            micPermissionDenied: 'Microphone permission denied.',
+            connectionError: 'Connection error',
+            connectionLostClickMic: 'Connection lost. Click the microphone to reconnect.',
+            couldNotConnect: 'Could not connect.'
         },
 
         // Listas de Palavras

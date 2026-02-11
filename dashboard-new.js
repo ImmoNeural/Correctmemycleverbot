@@ -6979,7 +6979,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             stopAmbientSound();
             iconOff?.classList.remove('hidden');
             iconOn?.classList.add('hidden');
-            if (textEl) textEl.textContent = '🍽️ Som Ambiente';
+            if (textEl) textEl.textContent = '🍽️ ' + window.t('conversacao.ambientSound');
             btn?.classList.remove('bg-cyan-600/30', 'border', 'border-cyan-500/50');
             btn?.classList.add('bg-slate-700');
         } else {
@@ -6987,7 +6987,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             startAmbientSound();
             iconOff?.classList.add('hidden');
             iconOn?.classList.remove('hidden');
-            if (textEl) textEl.textContent = '🔊 Tocando...';
+            if (textEl) textEl.textContent = window.t('conversacao.playing');
             btn?.classList.remove('bg-slate-700');
             btn?.classList.add('bg-cyan-600/30', 'border', 'border-cyan-500/50');
         }
@@ -7011,9 +7011,9 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             console.error('Erro ao tocar som ambiente:', err);
             // Tentar mostrar mensagem de erro
             const textEl = document.getElementById('conv-ambient-text');
-            if (textEl) textEl.textContent = '❌ Arquivo não encontrado';
+            if (textEl) textEl.textContent = window.t('conversacao.fileNotFound');
             setTimeout(() => {
-                if (textEl) textEl.textContent = '🍽️ Som Ambiente';
+                if (textEl) textEl.textContent = '🍽️ ' + window.t('conversacao.ambientSound');
             }, 2000);
         });
     }
@@ -7048,13 +7048,13 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         if (enabled) {
             iconOff?.classList.add('hidden');
             iconOn?.classList.remove('hidden');
-            if (textEl) textEl.textContent = '🔊 Tocando...';
+            if (textEl) textEl.textContent = window.t('conversacao.playing');
             btn?.classList.remove('bg-slate-700');
             btn?.classList.add('bg-cyan-600/30', 'border', 'border-cyan-500/50');
         } else {
             iconOff?.classList.remove('hidden');
             iconOn?.classList.add('hidden');
-            if (textEl) textEl.textContent = '🍽️ Som Ambiente';
+            if (textEl) textEl.textContent = '🍽️ ' + window.t('conversacao.ambientSound');
             btn?.classList.remove('bg-cyan-600/30', 'border', 'border-cyan-500/50');
             btn?.classList.add('bg-slate-700');
         }
@@ -7106,7 +7106,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
 
         try {
             conversacaoState.isConnecting = true;
-            updateStatus('Conectando...', 'connecting');
+            updateStatus(window.t('conversacao.connecting'), 'connecting');
             updateConversacaoUI('connecting');
 
             // Só limpar correções se NÃO for reconexão (preservar erros na reconexão)
@@ -7121,7 +7121,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                 console.log('Obtendo API key para userId:', currentUser?.id);
 
                 if (!currentUser?.id) {
-                    throw new Error('Você precisa estar logado para usar a conversa.');
+                    throw new Error(window.t('conversacao.mustBeLoggedIn'));
                 }
 
                 const keyResponse = await fetch('/.netlify/functions/get-gemini-key', {
@@ -7135,17 +7135,17 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                 const keyData = await keyResponse.json();
                 if (!keyResponse.ok) {
                     if (keyResponse.status === 402) {
-                        throw new Error(`Créditos insuficientes (${keyData.credits || 0}). Você precisa de pelo menos 5 créditos.`);
+                        throw new Error(`${window.t('conversacao.insufficientCredits')} (${keyData.credits || 0}). ${window.t('conversacao.needAtLeast5Credits')}`);
                     } else if (keyResponse.status === 401) {
-                        throw new Error('Usuário não autenticado. Faça login novamente.');
+                        throw new Error(window.t('conversacao.userNotAuthenticated'));
                     } else if (keyResponse.status === 500 && keyData.error === 'API key not configured') {
-                        throw new Error('Serviço temporariamente indisponível. Tente novamente mais tarde.');
+                        throw new Error(window.t('conversacao.serviceUnavailable'));
                     }
-                    throw new Error(keyData.message || keyData.error || 'Erro ao obter credenciais');
+                    throw new Error(keyData.message || keyData.error || window.t('conversacao.credentialsError'));
                 }
 
                 if (!keyData.apiKey) {
-                    throw new Error('API key não recebida do servidor.');
+                    throw new Error(window.t('conversacao.apiKeyNotReceived'));
                 }
 
                 conversacaoState.apiKey = keyData.apiKey;
@@ -7181,7 +7181,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                 if (conversacaoState.ws && conversacaoState.ws.readyState !== WebSocket.OPEN) {
                     console.error('Timeout de conexão WebSocket');
                     conversacaoState.ws.close();
-                    showConversacaoError('Timeout na conexão. Verifique sua internet e tente novamente.');
+                    showConversacaoError(window.t('conversacao.connectionTimeout'));
                     cleanupConversation();
                 }
             }, 15000);
@@ -7281,13 +7281,13 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                 // Códigos de erro específicos do WebSocket
                 let errorMsg = '';
                 if (event.code === 1006) {
-                    errorMsg = 'Conexão perdida. Tentando reconectar...';
+                    errorMsg = window.t('conversacao.connectionLostReconnecting');
                 } else if (event.code === 1008 || event.code === 1003) {
-                    errorMsg = 'Sessão encerrada pelo servidor.';
+                    errorMsg = window.t('conversacao.sessionEndedByServer');
                 } else if (event.code === 4001) {
-                    errorMsg = 'API key inválida ou expirada.';
+                    errorMsg = window.t('conversacao.invalidApiKey');
                 } else if (event.reason) {
-                    errorMsg = `Conexão encerrada: ${event.reason}`;
+                    errorMsg = `${window.t('conversacao.connectionEnded')}: ${event.reason}`;
                 }
 
                 if (shouldTryReconnect) {
@@ -7297,7 +7297,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                     if (errorMsg && !conversacaoState.isConnected) {
                         showConversacaoError(errorMsg);
                     } else if (conversacaoState.isConnected) {
-                        showConversacaoError('Conexão encerrada.');
+                        showConversacaoError(window.t('conversacao.connectionEnded'));
                     }
                     cleanupConversation();
                 }
@@ -7306,9 +7306,9 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         } catch (error) {
             console.error('Erro ao conectar:', error);
             if (error.name === 'NotAllowedError') {
-                showConversacaoError('Permissão de microfone negada.');
+                showConversacaoError(window.t('conversacao.micPermissionDenied'));
             } else {
-                showConversacaoError('Erro ao conectar: ' + error.message);
+                showConversacaoError(window.t('conversacao.connectionError') + ': ' + error.message);
             }
             cleanupConversation();
         }
@@ -7335,7 +7335,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                 conversacaoState.isConnecting = false;
                 conversacaoState.reconnectAttempts = 0; // Reset contador de reconexão
                 conversacaoState.connectionStartTime = Date.now(); // Registrar início da conexão
-                updateStatus('Aguarde...', 'connecting');
+                updateStatus(window.t('conversacao.waiting'), 'connecting');
                 updateConversacaoUI('recording');
                 startAudioCapture();
 
@@ -7418,7 +7418,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                 if (message.serverContent.turnComplete) {
                     console.log('✅ Turno do servidor completo - IA terminou de falar');
                     console.log('👂 AGORA É SUA VEZ DE FALAR - O sistema está ouvindo...');
-                    updateStatus('Sua vez de falar...', 'listening');
+                    updateStatus(window.t('conversacao.yourTurnToSpeak'), 'listening');
 
                     // Parar watchdog e resetar flags de fala
                     stopAISpeakingWatchdog();
@@ -7499,7 +7499,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             if (message.goAway) {
                 const timeLeft = message.goAway.timeLeft;
                 console.log(`⚠️ Servidor vai desconectar em ${timeLeft}`);
-                updateStatus(`Reconectando em breve...`, 'warning');
+                updateStatus(window.t('conversacao.reconnectingSoon'), 'warning');
             }
 
             // Erro
@@ -7520,7 +7520,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                 // Reconectar após pequeno delay
                 setTimeout(async () => {
                     console.log('🔄 Reconectando após encerramento...');
-                    updateStatus('Reconectando...', 'connecting');
+                    updateStatus(window.t('conversacao.reconnecting'), 'connecting');
                     await connectConversation();
                 }, 1000);
             }
@@ -7724,7 +7724,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
 
                 // Tentar recuperar forçando reset das flags
                 forceResetSpeakingState();
-                updateStatus('Microfone liberado - fale agora!', 'listening');
+                updateStatus(window.t('conversacao.micFreedSpeakNow'), 'listening');
             }
         }, conversacaoState.MIC_BLOCKED_TIMEOUT);
     }
@@ -7757,7 +7757,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
 
         // Atualizar UI
         if (conversacaoState.isConnected) {
-            updateStatus('Sua vez de falar...', 'listening');
+            updateStatus(window.t('conversacao.yourTurnToSpeak'), 'listening');
             updateConversacaoUI('recording');
         }
 
@@ -7781,12 +7781,12 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
 
             if (timeSinceLastSound >= conversacaoState.SILENCE_TIMEOUT) {
                 console.log('Silêncio detectado por 2 minutos - desconectando...');
-                updateStatus('Desconectado por inatividade', 'idle');
+                updateStatus(window.t('conversacao.disconnectedByInactivity'), 'idle');
                 disconnectConversation();
             } else if (timeSinceLastSound >= conversacaoState.SILENCE_TIMEOUT - 30000) {
                 // Avisar o usuário apenas nos últimos 30 segundos
                 const remaining = Math.ceil((conversacaoState.SILENCE_TIMEOUT - timeSinceLastSound) / 1000);
-                updateStatus(`Inatividade detectada... (${remaining}s)`, 'warning');
+                updateStatus(`${window.t('conversacao.inactivityDetected')} (${remaining}s)`, 'warning');
             }
         }, 5000); // Verificar a cada 5 segundos (não precisa ser tão frequente)
     }
@@ -8101,7 +8101,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         }
 
         cleanupConversation();
-        updateStatus('Desconectado', 'idle');
+        updateStatus(window.t('conversacao.disconnected'), 'idle');
         updateConversacaoUI('idle');
         stopTimer();
         stopErrorAnalysisTimer(); // Para o timer de análise de erros
@@ -8163,9 +8163,9 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
 
         if (conversacaoState.reconnectAttempts > conversacaoState.maxReconnectAttempts) {
             console.log('Máximo de tentativas de reconexão atingido');
-            showConversacaoError('Conexão perdida. Clique no microfone para reconectar.');
+            showConversacaoError(window.t('conversacao.connectionLostClickMic'));
             cleanupConversation();
-            updateStatus('Desconectado', 'idle');
+            updateStatus(window.t('conversacao.disconnected'), 'idle');
             updateConversacaoUI('idle');
             conversacaoState.reconnectAttempts = 0;
             return;
@@ -8175,7 +8175,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         const delay = Math.pow(2, conversacaoState.reconnectAttempts) * 1000;
         console.log(`Tentativa de reconexão ${conversacaoState.reconnectAttempts}/${conversacaoState.maxReconnectAttempts} em ${delay/1000}s...`);
 
-        updateStatus(`Reconectando (${conversacaoState.reconnectAttempts}/${conversacaoState.maxReconnectAttempts})...`, 'connecting');
+        updateStatus(`${window.t('conversacao.reconnectingAttempt')} (${conversacaoState.reconnectAttempts}/${conversacaoState.maxReconnectAttempts})...`, 'connecting');
 
         // Preservar dados importantes antes de limpar
         const savedApiKey = conversacaoState.apiKey;
@@ -8239,7 +8239,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         // Atualizar status após enviar
         setTimeout(() => {
             if (conversacaoState.isConnected) {
-                updateStatus('Ouvindo a persona...', 'listening');
+                updateStatus(window.t('conversacao.listeningToPersona'), 'listening');
             }
         }, 500);
     }
@@ -8275,7 +8275,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         // Atualizar status
         setTimeout(() => {
             if (conversacaoState.isConnected) {
-                updateStatus('Conversa retomada...', 'listening');
+                updateStatus(window.t('conversacao.conversationResumed'), 'listening');
             }
         }, 500);
     }
@@ -8323,7 +8323,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             }
 
             if (!conversacaoState.isConnected) {
-                showConversacaoError('Não foi possível conectar.');
+                showConversacaoError(window.t('conversacao.couldNotConnect'));
                 return;
             }
         }
@@ -8884,7 +8884,7 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
 
             conversacaoState.ws.send(JSON.stringify(textMessage));
             addMessageToHistory('user', `Tema: ${topic}`);
-            updateStatus('Aguardando resposta...', 'speaking');
+            updateStatus(window.t('conversacao.awaitingResponse'), 'speaking');
         }
     }
 
