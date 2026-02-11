@@ -4608,9 +4608,9 @@ async function handleCorrectionSubmit(e) {
         // Watchdog para detectar travamentos
         aiSpeakingWatchdog: null,
         lastAudioChunkTime: null,
-        AI_SPEAKING_TIMEOUT: 8000, // 8 segundos sem atividade = provável travamento (reduzido de 15s)
+        AI_SPEAKING_TIMEOUT: 5000, // 5 segundos sem atividade = provável travamento
         micBlockedWatchdog: null,
-        MIC_BLOCKED_TIMEOUT: 10000 // 10 segundos com microfone bloqueado = forçar reset (reduzido de 20s)
+        MIC_BLOCKED_TIMEOUT: 5000 // 5 segundos com microfone bloqueado = forçar reset
     };
 
     let conversacaoInitialized = false;
@@ -7424,6 +7424,22 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                     stopAISpeakingWatchdog();
                     conversacaoState.isAISpeaking = false;
                     conversacaoState.lastAudioChunkTime = null;
+
+                    // GARANTIA: Se não houver áudio na fila ou playback já terminou, liberar mic imediatamente
+                    if (conversacaoState.audioQueue.length === 0 && !conversacaoState.isPlayingAudio) {
+                        console.log('👂 ========================================');
+                        console.log('👂 MICROFONE LIBERADO IMEDIATAMENTE (sem áudio pendente)');
+                        console.log('👂 ========================================');
+                    }
+
+                    // Timeout de segurança: garantir que mic seja liberado após 3 segundos
+                    setTimeout(() => {
+                        if (conversacaoState.isPlayingAudio && conversacaoState.isConnected) {
+                            console.warn('⚠️ SEGURANÇA: Forçando liberação do microfone após turnComplete');
+                            conversacaoState.isPlayingAudio = false;
+                            updateConversacaoUI('recording');
+                        }
+                    }, 3000);
 
                     // Iniciar watchdog do microfone bloqueado
                     startMicBlockedWatchdog();
