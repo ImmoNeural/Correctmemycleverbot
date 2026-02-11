@@ -7216,17 +7216,15 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                             // Configurar detecção automática de atividade de voz
                             automaticActivityDetection: {
                                 disabled: false,
-                                // Sensibilidade BAIXA para detectar início de fala (evita capturar ruídos)
-                                // Nota: API só aceita LOW ou HIGH (não existe MEDIUM)
-                                startOfSpeechSensitivity: 'START_SENSITIVITY_LOW',
-                                // Sensibilidade BAIXA para detectar fim de fala (espera pausas mais longas)
-                                // Isso evita interromper o usuário durante pausas naturais ao construir frases
-                                endOfSpeechSensitivity: 'END_SENSITIVITY_LOW',
+                                // Sensibilidade ALTA para detectar início de fala (detecta fala mais facilmente)
+                                startOfSpeechSensitivity: 'START_SENSITIVITY_HIGH',
+                                // Sensibilidade ALTA para detectar fim de fala (responde mais rápido)
+                                endOfSpeechSensitivity: 'END_SENSITIVITY_HIGH',
                                 // Padding antes do início da fala (ms)
-                                prefixPaddingMs: 200,
+                                prefixPaddingMs: 100,
                                 // Duração do silêncio para considerar fim de fala (ms)
-                                // 1500ms = 1.5 segundos - permite pausas naturais de pensamento
-                                silenceDurationMs: 1500
+                                // 800ms = mais responsivo
+                                silenceDurationMs: 800
                             },
                             // Incluir todo o input na conversa
                             turnCoverage: 'TURN_INCLUDES_ALL_INPUT'
