@@ -6802,10 +6802,26 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                 creditsPerMinSpan.innerHTML = `<strong class="text-cyan-400">10</strong> ${isEnglish ? 'credits/min' : 'créditos/min'}`;
             }
 
-            // Update disconnected status text
+            // Update status text (Ready to chat / Disconnected)
             const statusText = document.getElementById('conv-status-text');
-            if (statusText && (statusText.textContent === 'Desconectado' || statusText.textContent === 'Disconnected')) {
-                statusText.textContent = isEnglish ? 'Disconnected' : 'Desconectado';
+            if (statusText) {
+                if (statusText.textContent === 'Desconectado' || statusText.textContent === 'Disconnected') {
+                    statusText.textContent = isEnglish ? 'Disconnected' : 'Desconectado';
+                } else if (statusText.textContent === 'Pronto para conversar' || statusText.textContent === 'Ready to chat') {
+                    statusText.textContent = isEnglish ? 'Ready to chat' : 'Pronto para conversar';
+                } else if (statusText.textContent === 'Conectando...' || statusText.textContent === 'Connecting...') {
+                    statusText.textContent = isEnglish ? 'Connecting...' : 'Conectando...';
+                } else if (statusText.textContent === 'Conectado' || statusText.textContent === 'Connected') {
+                    statusText.textContent = isEnglish ? 'Connected' : 'Conectado';
+                }
+            }
+
+            // Update credits used text
+            const creditsUsed = document.getElementById('conv-credits-used');
+            if (creditsUsed) {
+                const match = creditsUsed.textContent.match(/(\d+)/);
+                const credits = match ? match[1] : '0';
+                creditsUsed.textContent = `${credits} ${isEnglish ? 'credits' : 'créditos'}`;
             }
 
             // Update Ambient Sound button text
@@ -6844,6 +6860,46 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         // Listen for language changes
         window.addEventListener('languageChanged', () => {
             applyConversationTranslations();
+            // Update persona texts if one is selected
+            if (selectedPersona) {
+                const lang = typeof getCurrentLanguage === 'function' ? getCurrentLanguage() : 'pt-BR';
+                const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+
+                const role = isEnglish && selectedPersona.roleEN ? selectedPersona.roleEN : selectedPersona.role;
+                const shortBio = isEnglish && selectedPersona.shortBioEN ? selectedPersona.shortBioEN : selectedPersona.shortBio;
+                const fullBio = isEnglish && selectedPersona.fullBioEN ? selectedPersona.fullBioEN : selectedPersona.fullBio;
+                const tags = isEnglish && selectedPersona.tagsEN ? selectedPersona.tagsEN : selectedPersona.tags;
+
+                document.getElementById('persona-role').textContent = role;
+                document.getElementById('persona-bio').textContent = shortBio;
+                document.getElementById('modal-persona-role').textContent = role;
+                document.getElementById('modal-persona-fullbio').innerHTML = fullBio;
+
+                // Update tags
+                const tagsContainer = document.getElementById('persona-tags');
+                if (tagsContainer) {
+                    tagsContainer.innerHTML = tags.map(tag =>
+                        `<span class="px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded-full">${tag}</span>`
+                    ).join('');
+                }
+
+                // Update buttons
+                const showBioBtn = document.getElementById('show-full-bio-btn');
+                if (showBioBtn) {
+                    showBioBtn.innerHTML = `
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        ${isEnglish ? 'View full story' : 'Ver história completa'}
+                    `;
+                }
+                const changePersonaBtn = document.getElementById('change-persona-btn');
+                if (changePersonaBtn) {
+                    changePersonaBtn.textContent = isEnglish ? '← Choose another person' : '← Escolher outra pessoa';
+                }
+            }
+            // Also re-render personas grid
+            renderPersonasGrid();
         });
 
         // Botões de cenário (com data-scenario)
