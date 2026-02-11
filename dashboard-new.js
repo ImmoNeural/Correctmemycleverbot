@@ -7792,7 +7792,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                     this.bufferSize = 4096;
                     this.buffer = new Float32Array(this.bufferSize);
                     this.bufferIndex = 0;
-                    this.silenceThreshold = 0.0008; // Limiar ajustado para evitar ruídos mínimos
+                    this.silenceThreshold = 0.002; // Limiar aumentado (de 0.0008) para filtrar ruídos ambiente
                     this.gain = 2.0; // GANHO reduzido (2.0x = +6dB) para evitar voz rouca/distorção
                 }
 
@@ -8212,6 +8212,11 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             }
         };
 
+        // IMPORTANTE: Bloquear microfone ANTES de enviar o trigger
+        // Isso evita que ruídos ambiente interrompam a IA antes dela começar a falar
+        conversacaoState.isAISpeaking = true;
+        console.log('🔇 Microfone bloqueado - aguardando persona falar...');
+
         console.log('🎙️ Enviando trigger para persona falar primeiro...');
         conversacaoState.ws.send(JSON.stringify(textMessage));
 
@@ -8243,6 +8248,10 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                 turnComplete: true
             }
         };
+
+        // IMPORTANTE: Bloquear microfone ANTES de enviar o trigger
+        conversacaoState.isAISpeaking = true;
+        console.log('🔇 Microfone bloqueado - aguardando IA retomar...');
 
         console.log('🔄 Enviando trigger para continuar conversa após reconexão...');
         conversacaoState.ws.send(JSON.stringify(textMessage));
@@ -8852,6 +8861,10 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
                     turnComplete: true
                 }
             };
+
+            // IMPORTANTE: Bloquear microfone ANTES de enviar o trigger
+            conversacaoState.isAISpeaking = true;
+            console.log('🔇 Microfone bloqueado - aguardando IA responder sobre tema...');
 
             conversacaoState.ws.send(JSON.stringify(textMessage));
             addMessageToHistory('user', `Tema: ${topic}`);
