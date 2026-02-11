@@ -7207,12 +7207,25 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                             }
                         },
                         systemInstruction: {
-                            parts: [{ text: selectedPersona ? selectedPersona.systemInstruction : 'Du bist ein freundlicher Deutschlehrer. Sprich nur Deutsch.' }]
+                            parts: [{ text: (selectedPersona ? selectedPersona.systemInstruction : 'Du bist ein freundlicher Deutschlehrer. Sprich nur Deutsch.') + `
+
+WICHTIGE ANWEISUNGEN FÜR DIE SPRACHERKENNUNG:
+- Der Schüler ist ein Brasilianer, der Deutsch lernt. Er spricht mit starkem Akzent und macht viele Fehler.
+- INTERPRETIERE ALLES WAS DU HÖRST ALS DEUTSCH, auch wenn es komisch klingt oder wie eine andere Sprache aussieht.
+- Der Schüler sagt vielleicht "Sozial" aber es klingt wie "Sotsiau" - versuche zu verstehen was er meint.
+- Wenn du etwas nicht verstehst, frage freundlich nach: "Entschuldigung, kannst du das bitte wiederholen?"
+- NIEMALS die Sprache auf Japanisch, Chinesisch oder andere Sprachen wechseln - der Schüler spricht IMMER Deutsch (mit Akzent).
+- Sei geduldig und ermutigend. Korrigiere Fehler sanft.
+
+WICHTIG FÜR DEN GESPRÄCHSFLUSS:
+- UNTERBRECHE DEN SCHÜLER NIEMALS! Warte immer bis er fertig gesprochen hat.
+- Lass dem Schüler Zeit zum Nachdenken und Formulieren.
+- Wenn du etwas nicht verstanden hast, warte trotzdem bis er fertig ist und frage dann nach.` }]
                         },
                         // Configuração de VAD (Voice Activity Detection) para melhor detecção de fala
                         realtimeInputConfig: {
-                            // Interromper a IA quando o usuário começa a falar
-                            activityHandling: 'START_OF_ACTIVITY_INTERRUPTS',
+                            // NÃO interromper a IA quando o usuário começa a falar - deixa terminar
+                            activityHandling: 'NO_INTERRUPTION',
                             // Configurar detecção automática de atividade de voz
                             automaticActivityDetection: {
                                 disabled: false,
