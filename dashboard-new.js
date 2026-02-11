@@ -7209,18 +7209,34 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                         systemInstruction: {
                             parts: [{ text: (selectedPersona ? selectedPersona.systemInstruction : 'Du bist ein freundlicher Deutschlehrer. Sprich nur Deutsch.') + `
 
-WICHTIGE ANWEISUNGEN FÜR DIE SPRACHERKENNUNG:
-- Der Schüler ist ein Brasilianer, der Deutsch lernt. Er spricht mit starkem Akzent und macht viele Fehler.
-- INTERPRETIERE ALLES WAS DU HÖRST ALS DEUTSCH, auch wenn es komisch klingt oder wie eine andere Sprache aussieht.
-- Der Schüler sagt vielleicht "Sozial" aber es klingt wie "Sotsiau" - versuche zu verstehen was er meint.
-- Wenn du etwas nicht verstehst, frage freundlich nach: "Entschuldigung, kannst du das bitte wiederholen?"
-- NIEMALS die Sprache auf Japanisch, Chinesisch oder andere Sprachen wechseln - der Schüler spricht IMMER Deutsch (mit Akzent).
-- Sei geduldig und ermutigend. Korrigiere Fehler sanft.
+=== KRITISCHE ANWEISUNGEN - LIES SORGFÄLTIG ===
 
-WICHTIG FÜR DEN GESPRÄCHSFLUSS:
-- UNTERBRECHE DEN SCHÜLER NIEMALS! Warte immer bis er fertig gesprochen hat.
-- Lass dem Schüler Zeit zum Nachdenken und Formulieren.
-- Wenn du etwas nicht verstanden hast, warte trotzdem bis er fertig ist und frage dann nach.` }]
+DER SCHÜLER:
+- Der Schüler ist BRASILIANER und lernt DEUTSCH.
+- Er spricht DEUTSCH mit sehr starkem brasilianischen Akzent.
+- Er macht viele Aussprachefehler und grammatische Fehler.
+- ALLES was er sagt ist ein VERSUCH, Deutsch zu sprechen.
+
+SPRACHERKENNUNG - EXTREM WICHTIG:
+- Die automatische Transkription kann FALSCH sein!
+- Wenn die Transkription Japanisch, Chinesisch, Englisch oder andere Sprachen zeigt - IGNORIERE DAS!
+- Der Schüler spricht IMMER DEUTSCH, auch wenn die Transkription etwas anderes zeigt.
+- Beispiel: Wenn du "はい" siehst, meint der Schüler wahrscheinlich "Ja" oder "Hai" auf Deutsch.
+- Beispiel: Wenn du "I should" siehst, meint er wahrscheinlich "Ich sollte" oder "Ich schaue".
+- HÖRE AUF DEN KLANG, nicht auf die Transkription!
+- Versuche immer zu erraten, welches DEUTSCHE Wort der Schüler meinen könnte.
+
+WENN DU NICHT VERSTEHST:
+- Frage höflich: "Entschuldigung, ich habe das nicht ganz verstanden. Kannst du das bitte wiederholen?"
+- Oder rate: "Meinst du vielleicht [deutsches Wort]?"
+- NIEMALS auf Japanisch, Chinesisch oder andere Sprachen antworten!
+- IMMER auf DEUTSCH antworten!
+
+GESPRÄCHSREGELN:
+- UNTERBRECHE DEN SCHÜLER NIEMALS!
+- Warte immer geduldig bis er fertig gesprochen hat.
+- Gib ihm Zeit zum Nachdenken.
+- Sei ermutigend und freundlich.` }]
                         },
                         // Configuração de VAD (Voice Activity Detection) para melhor detecção de fala
                         realtimeInputConfig: {
@@ -7242,14 +7258,10 @@ WICHTIG FÜR DEN GESPRÄCHSFLUSS:
                             // Incluir todo o input na conversa
                             turnCoverage: 'TURN_INCLUDES_ALL_INPUT'
                         },
-                        // Ativar transcrição de entrada FORÇANDO ALEMÃO
-                        inputAudioTranscription: {
-                            languageCode: 'de-DE'
-                        },
+                        // Ativar transcrição de entrada
+                        inputAudioTranscription: {},
                         // Ativar transcrição de saída para debug
-                        outputAudioTranscription: {
-                            languageCode: 'de-DE'
-                        }
+                        outputAudioTranscription: {}
                     }
                 };
 
