@@ -7827,6 +7827,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         const muteBtn = document.getElementById('conv-mute-btn');
         const continuousMode = document.getElementById('conv-continuous-mode');
         const ambientBtn = document.getElementById('conv-ambient-btn');
+        const calibrationSetupArea = document.getElementById('calibration-setup-area');
         const calibrationWarning = document.getElementById('calibration-warning');
         const calibrateBtn = document.getElementById('conv-calibrate-mic-btn');
         const calibrateText = document.getElementById('conv-calibrate-text');
@@ -7855,23 +7856,18 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             ambientBtn.classList.add('opacity-50', 'cursor-not-allowed');
         }
 
-        // Mostrar aviso
+        // Mostrar área de calibração destacada
+        if (calibrationSetupArea) {
+            calibrationSetupArea.classList.remove('hidden');
+        }
         if (calibrationWarning) {
             calibrationWarning.classList.remove('hidden');
         }
 
-        // Destacar botão de calibração (estilo chamativo)
+        // Destacar botão de calibração (estilo chamativo - grande e pulsante)
         if (calibrateBtn) {
-            calibrateBtn.classList.remove(
-                'bg-slate-700', 'hover:bg-slate-600',
-                'px-3', 'py-2', 'text-slate-300'
-            );
-            calibrateBtn.classList.add(
-                'bg-gradient-to-r', 'from-amber-500', 'to-orange-500',
-                'hover:from-amber-400', 'hover:to-orange-400',
-                'shadow-lg', 'shadow-amber-500/30', 'animate-pulse',
-                'px-4', 'py-3', 'font-bold', 'text-white'
-            );
+            calibrateBtn.classList.remove('hidden');
+            calibrateBtn.classList.add('animate-pulse');
         }
 
         const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
@@ -7888,6 +7884,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         const muteBtn = document.getElementById('conv-mute-btn');
         const continuousMode = document.getElementById('conv-continuous-mode');
         const ambientBtn = document.getElementById('conv-ambient-btn');
+        const calibrationSetupArea = document.getElementById('calibration-setup-area');
         const calibrationWarning = document.getElementById('calibration-warning');
         const calibrateBtn = document.getElementById('conv-calibrate-mic-btn');
         const calibrateText = document.getElementById('conv-calibrate-text');
@@ -7913,28 +7910,18 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             ambientBtn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
 
-        // Esconder aviso
+        // Esconder área de calibração destacada (já está calibrado)
+        if (calibrationSetupArea) {
+            calibrationSetupArea.classList.add('hidden');
+        }
         if (calibrationWarning) {
             calibrationWarning.classList.add('hidden');
         }
 
-        // Mudar estilo do botão de calibração para sutil
+        // Esconder botão de calibração grande (já foi calibrado)
         if (calibrateBtn) {
-            calibrateBtn.classList.remove(
-                'bg-gradient-to-r', 'from-amber-500', 'to-orange-500',
-                'hover:from-amber-400', 'hover:to-orange-400',
-                'shadow-lg', 'shadow-amber-500/30', 'animate-pulse',
-                'px-4', 'py-3', 'font-bold', 'text-white'
-            );
-            calibrateBtn.classList.add(
-                'bg-slate-700', 'hover:bg-slate-600',
-                'px-3', 'py-2', 'text-slate-300'
-            );
-        }
-        if (calibrateText) {
-            const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
-            const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
-            calibrateText.textContent = isEnglish ? '🎤 Setup Audio' : '🎤 Configurar Áudio';
+            calibrateBtn.classList.add('hidden');
+            calibrateBtn.classList.remove('animate-pulse');
         }
     }
 
@@ -8020,6 +8007,21 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
 
     // Toggle entre conectar/desconectar da conversa
     async function toggleConversation() {
+        // OBRIGATÓRIO: Verificar se o áudio foi configurado antes de permitir conversa
+        const isCalibrated = localStorage.getItem('micCalibrated') === 'true';
+        if (!isCalibrated) {
+            // Mostrar aviso e abrir calibração automaticamente
+            const calibrationWarning = document.getElementById('calibration-warning');
+            if (calibrationWarning) {
+                calibrationWarning.classList.remove('hidden');
+                calibrationWarning.classList.add('animate-pulse');
+                setTimeout(() => calibrationWarning.classList.remove('animate-pulse'), 2000);
+            }
+            // Abrir modal de calibração automaticamente
+            openMicCalibration();
+            return; // Impedir conversa sem calibração
+        }
+
         if (conversacaoState.isConnected || conversacaoState.isConnecting) {
             disconnectConversation();
         } else {
@@ -8808,10 +8810,11 @@ GESPRÄCHSREGELN:
                     this.gain = options.processorOptions?.micGain || 2.0;
 
                     // Filtro passa-baixa para eliminar ruídos de alta frequência
-                    // Frequência de corte ~4kHz (adequado para voz humana)
+                    // Frequência de corte ~8kHz (preserva clareza da voz humana)
+                    // A voz tem frequências importantes até ~8kHz para clareza e inteligibilidade
                     // Coeficiente alpha para filtro IIR single-pole: alpha = dt / (RC + dt)
-                    // Para fc=4000Hz e fs=inputSampleRate: alpha = 2*pi*fc / (fs + 2*pi*fc)
-                    const fc = 4000; // Frequência de corte em Hz
+                    // Para fc=8000Hz e fs=inputSampleRate: alpha = 2*pi*fc / (fs + 2*pi*fc)
+                    const fc = 8000; // Frequência de corte em Hz
                     this.lpfAlpha = (2 * Math.PI * fc / this.inputSampleRate) /
                                     (1 + 2 * Math.PI * fc / this.inputSampleRate);
                     this.lpfPrevSample = 0; // Estado anterior do filtro

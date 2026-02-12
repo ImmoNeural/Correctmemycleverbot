@@ -3049,6 +3049,21 @@
                                     </div>
                                 </div>
 
+                                <!-- CONFIGURAR ÁUDIO PRIMEIRO - Botão Destacado (ANTES do microfone) -->
+                                <div id="calibration-setup-area" class="mb-4">
+                                    <!-- Aviso para calibrar primeiro -->
+                                    <div id="calibration-warning" class="w-full mb-3 px-4 py-3 bg-amber-500/20 border-2 border-amber-500 rounded-lg text-center">
+                                        <p class="text-amber-300 text-sm font-bold" id="calibration-warning-text">⚠️ Configure o áudio antes de iniciar a conversa!</p>
+                                    </div>
+                                    <!-- Botão Calibrar Microfone - GRANDE E DESTACADO -->
+                                    <button id="conv-calibrate-mic-btn" class="w-full px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 rounded-xl transition-all flex items-center justify-center gap-3 text-lg font-bold text-white shadow-xl shadow-amber-500/40 animate-pulse border-2 border-amber-400" title="Calibrar sensibilidade do microfone">
+                                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                                        </svg>
+                                        <span id="conv-calibrate-text">🎤 CONFIGURAR ÁUDIO PRIMEIRO!</span>
+                                    </button>
+                                </div>
+
                                 <!-- Botão do Microfone -->
                                 <div class="flex justify-center mb-6">
                                     <button id="conv-mic-btn" class="relative w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500 to-teal-600 hover:from-cyan-400 hover:to-teal-500 transition-all duration-300 shadow-lg hover:shadow-cyan-500/30 hover:scale-105 flex items-center justify-center">
@@ -3118,17 +3133,6 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
                                     </svg>
                                     <span id="conv-ambient-text">🍽️ Som Ambiente</span>
-                                </button>
-                                <!-- Aviso para calibrar primeiro -->
-                                <div id="calibration-warning" class="w-full mt-2 px-3 py-2 bg-amber-500/20 border border-amber-500/50 rounded-lg text-center">
-                                    <p class="text-amber-400 text-xs font-medium" id="calibration-warning-text">⚠️ Configure o áudio antes de iniciar!</p>
-                                </div>
-                                <!-- Botão Calibrar Microfone - DESTACADO -->
-                                <button id="conv-calibrate-mic-btn" class="w-full mt-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 rounded-lg transition-all flex items-center justify-center gap-2 text-sm font-bold text-white shadow-lg shadow-amber-500/30 animate-pulse" title="Calibrar sensibilidade do microfone">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
-                                    </svg>
-                                    <span id="conv-calibrate-text">🎤 CONFIGURAR ÁUDIO PRIMEIRO!</span>
                                 </button>
                             </div>
                         </div>
