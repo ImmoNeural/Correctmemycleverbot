@@ -8507,33 +8507,32 @@ GESPRÄCHSREGELN:
 
                 // Fim do turno do servidor
                 if (message.serverContent.turnComplete) {
-                    console.log('✅ Turno do servidor completo - IA terminou de falar');
-                    console.log('👂 AGORA É SUA VEZ DE FALAR - O sistema está ouvindo...');
-                    updateStatus(window.t('conversacao.yourTurnToSpeak'), 'listening');
+                    console.log('✅ Turno do servidor completo - IA terminou de gerar resposta');
 
                     // Parar watchdog e resetar flags de fala
                     stopAISpeakingWatchdog();
                     conversacaoState.isAISpeaking = false;
                     conversacaoState.lastAudioChunkTime = null;
 
-                    // GARANTIA: Se não houver áudio na fila ou playback já terminou, liberar mic imediatamente
-                    if (conversacaoState.audioQueue.length === 0 && !conversacaoState.isPlayingAudio) {
+                    // IMPORTANTE: Só liberar microfone quando o áudio terminar de tocar
+                    // Se ainda há áudio pendente, esperar o playAudioQueue terminar
+                    const hasAudioPending = conversacaoState.audioQueue.length > 0 || conversacaoState.isPlayingAudio;
+
+                    if (!hasAudioPending) {
+                        // Sem áudio pendente - microfone liberado imediatamente
+                        console.log('👂 AGORA É SUA VEZ DE FALAR - O sistema está ouvindo...');
                         console.log('👂 ========================================');
                         console.log('👂 MICROFONE LIBERADO IMEDIATAMENTE (sem áudio pendente)');
                         console.log('👂 ========================================');
+                        updateStatus(window.t('conversacao.yourTurnToSpeak'), 'listening');
+                        // Iniciar watchdog somente quando não há áudio pendente
+                        startMicBlockedWatchdog();
+                    } else {
+                        // Há áudio tocando - o playAudioQueue vai liberar o microfone quando terminar
+                        console.log('👂 Aguardando áudio terminar antes de liberar microfone...');
+                        console.log(`   - audioQueue: ${conversacaoState.audioQueue.length} chunks`);
+                        console.log(`   - isPlayingAudio: ${conversacaoState.isPlayingAudio}`);
                     }
-
-                    // Timeout de segurança: garantir que mic seja liberado após 3 segundos
-                    setTimeout(() => {
-                        if (conversacaoState.isPlayingAudio && conversacaoState.isConnected) {
-                            console.warn('⚠️ SEGURANÇA: Forçando liberação do microfone após turnComplete');
-                            conversacaoState.isPlayingAudio = false;
-                            updateConversacaoUI('recording');
-                        }
-                    }, 3000);
-
-                    // Iniciar watchdog do microfone bloqueado
-                    startMicBlockedWatchdog();
 
                     conversacaoState.turnCount = (conversacaoState.turnCount || 0) + 1;
                     console.log(`📊 Turno #${conversacaoState.turnCount} completo`);
@@ -9150,13 +9149,16 @@ GESPRÄCHSREGELN:
         if (conversacaoState.isConnected) {
             updateConversacaoUI('recording');
 
-            // Se turnComplete já foi recebido (isAISpeaking = false), iniciar watchdog do microfone
+            // Se turnComplete já foi recebido (isAISpeaking = false), liberar microfone
             if (!conversacaoState.isAISpeaking) {
                 console.log('👂 ========================================');
                 console.log('👂 MICROFONE PRONTO - FALE AGORA!');
                 console.log('👂 isAISpeaking:', conversacaoState.isAISpeaking);
                 console.log('👂 isPlayingAudio:', conversacaoState.isPlayingAudio);
                 console.log('👂 ========================================');
+                // Atualizar status para o usuário saber que pode falar
+                updateStatus(window.t('conversacao.yourTurnToSpeak'), 'listening');
+                // Iniciar watchdog do microfone bloqueado
                 startMicBlockedWatchdog();
             }
         }
@@ -9271,6 +9273,17 @@ GESPRÄCHSREGELN:
             conversacaoState.currentAudioSource = null;
         }
 
+        // IMPORTANTE: Suspender o contexto de playback ANTES de fechar
+        // Isso garante que qualquer áudio em andamento seja interrompido imediatamente
+        if (conversacaoState.playbackContext && conversacaoState.playbackContext.state === 'running') {
+            try {
+                conversacaoState.playbackContext.suspend();
+                console.log('🔇 Contexto de playback suspenso');
+            } catch (e) {
+                // Ignorar erro
+            }
+        }
+
         conversacaoState.isConnected = false;
         conversacaoState.isConnecting = false;
         conversacaoState.isRecording = false;
@@ -9346,6 +9359,11 @@ GESPRÄCHSREGELN:
         const savedAccumulatedErrors = [...accumulatedErrors];
 
         cleanupConversation();
+
+        // Aguardar um pequeno delay para garantir que o áudio seja totalmente parado
+        // Isso evita sobreposição de vozes durante a reconexão
+        await new Promise(resolve => setTimeout(resolve, 300));
+        console.log('🔇 Áudio completamente parado - iniciando reconexão');
 
         // Restaurar dados preservados
         conversacaoState.apiKey = savedApiKey;
