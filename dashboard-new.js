@@ -4573,6 +4573,7 @@ async function handleCorrectionSubmit(e) {
         playbackContext: null,
         audioQueue: [],
         isPlayingAudio: false,
+        currentAudioSource: null, // Referência ao BufferSourceNode atual para poder parar
         gainNode: null,
         lowPassFilter: null,
         compressor: null,
@@ -8131,6 +8132,19 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
     async function connectConversation() {
         if (conversacaoState.isConnecting || conversacaoState.isConnected) return;
 
+        // IMPORTANTE: Parar qualquer áudio anterior antes de conectar (evita vozes sobrepostas)
+        if (conversacaoState.currentAudioSource) {
+            try {
+                conversacaoState.currentAudioSource.stop();
+                console.log('🔇 Áudio anterior parado antes de nova conexão');
+            } catch (e) {
+                // Ignorar erro se já parou
+            }
+            conversacaoState.currentAudioSource = null;
+        }
+        conversacaoState.audioQueue = [];
+        conversacaoState.isPlayingAudio = false;
+
         // Detectar se é reconexão (já tinha tempo acumulado)
         const isReconnecting = conversacaoState.totalSeconds > 0 || conversacaoState.reconnectAttempts > 0;
 
@@ -9088,6 +9102,9 @@ GESPRÄCHSREGELN:
                 source.buffer = audioBuffer;
                 source.connect(conversacaoState.gainNode);
 
+                // Guardar referência para poder parar na reconexão
+                conversacaoState.currentAudioSource = source;
+
                 // Esperar o áudio terminar COM TIMEOUT DE SEGURANÇA
                 // Calcula duração esperada: samples / sampleRate (em segundos) + margem
                 const expectedDuration = (samples.length / 24000) * 1000 + 2000; // +2 segundos de margem
@@ -9096,6 +9113,7 @@ GESPRÄCHSREGELN:
                     source.onended = () => {
                         if (!resolved) {
                             resolved = true;
+                            conversacaoState.currentAudioSource = null;
                             resolve();
                         }
                     };
@@ -9105,6 +9123,7 @@ GESPRÄCHSREGELN:
                     setTimeout(() => {
                         if (!resolved) {
                             resolved = true;
+                            conversacaoState.currentAudioSource = null;
                             console.warn('⚠️ Playback timeout - forçando fim após', Math.round(expectedDuration / 1000), 'segundos');
                             resolve();
                         }
@@ -9240,6 +9259,18 @@ GESPRÄCHSREGELN:
 
     // Limpar recursos
     function cleanupConversation() {
+        // IMPORTANTE: Parar áudio atual PRIMEIRO antes de qualquer limpeza
+        // Isso evita vozes sobrepostas durante reconexão
+        if (conversacaoState.currentAudioSource) {
+            try {
+                conversacaoState.currentAudioSource.stop();
+                console.log('🔇 Áudio atual parado explicitamente');
+            } catch (e) {
+                // Ignorar erro se já parou
+            }
+            conversacaoState.currentAudioSource = null;
+        }
+
         conversacaoState.isConnected = false;
         conversacaoState.isConnecting = false;
         conversacaoState.isRecording = false;
