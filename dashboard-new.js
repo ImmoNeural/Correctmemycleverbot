@@ -9004,6 +9004,7 @@ GESPRÄCHSREGELN:
             conversacaoState.playbackContext = new (window.AudioContext || window.webkitAudioContext)({
                 sampleRate: 24000 // Gemini retorna áudio a 24kHz
             });
+            console.log('🔊 Contexto de playback criado - estado:', conversacaoState.playbackContext.state);
 
             // Aplicar dispositivo de saída selecionado (se suportado)
             const selectedOutput = localStorage.getItem('selectedAudioOutput');
@@ -9015,6 +9016,22 @@ GESPRÄCHSREGELN:
                     console.warn('⚠️ Não foi possível configurar saída de áudio:', err.message);
                 }
             }
+        }
+
+        // IMPORTANTE: Garantir que o contexto de áudio esteja ativo
+        // Navegadores podem suspender o AudioContext devido a políticas de autoplay
+        if (conversacaoState.playbackContext.state === 'suspended') {
+            console.log('🔊 Contexto de playback suspenso - tentando resumir...');
+            try {
+                await conversacaoState.playbackContext.resume();
+                console.log('🔊 Contexto de playback resumido com sucesso - estado:', conversacaoState.playbackContext.state);
+            } catch (err) {
+                console.error('❌ Erro ao resumir contexto de playback:', err);
+            }
+        }
+
+        // Criar nós de processamento se não existirem
+        if (!conversacaoState.gainNode) {
 
             // Criar nós de processamento para qualidade de voz natural e clara
             conversacaoState.gainNode = conversacaoState.playbackContext.createGain();
