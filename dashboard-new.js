@@ -7005,16 +7005,28 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             });
         }
 
-        // Botão testar microfone
-        const testBtn = document.getElementById('mic-test-btn');
-        if (testBtn) {
-            testBtn.addEventListener('click', toggleMicTest);
+        // Botão gravar voz
+        const recordBtn = document.getElementById('mic-record-btn');
+        if (recordBtn) {
+            recordBtn.addEventListener('click', toggleRecording);
         }
 
-        // Botão salvar calibração
-        const saveBtn = document.getElementById('mic-save-btn');
-        if (saveBtn) {
-            saveBtn.addEventListener('click', saveMicCalibration);
+        // Botão ouvir gravação
+        const playBtn = document.getElementById('mic-play-btn');
+        if (playBtn) {
+            playBtn.addEventListener('click', playRecording);
+        }
+
+        // Botão confirmar calibração
+        const confirmBtn = document.getElementById('mic-confirm-btn');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', confirmCalibration);
+        }
+
+        // Botão rejeitar e gravar novamente
+        const rejectBtn = document.getElementById('mic-reject-btn');
+        if (rejectBtn) {
+            rejectBtn.addEventListener('click', rejectCalibration);
         }
 
         // Fechar modal clicando fora
@@ -7115,17 +7127,30 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         audioContext: null,
         analyser: null,
         animationFrame: null,
-        isTesting: false,
-        selectedMicrophone: localStorage.getItem('selectedMicrophone') || ''
+        isMonitoring: false,
+        isRecording: false,
+        isPlaying: false,
+        mediaRecorder: null,
+        recordedChunks: [],
+        recordedBlob: null,
+        playbackContext: null,
+        sourceNode: null,
+        currentStep: 1 // 1 = ajustar ganho, 2 = gravar, 3 = ouvir e confirmar
     };
 
-    // Função para listar microfones disponíveis
+    // Função obsoleta - mantida vazia para evitar erros
     async function populateMicrophoneList() {
-        const select = document.getElementById('mic-device-select');
-        if (!select) return;
+        // Removido - agora usamos dispositivo padrão do sistema
+        return;
+    }
+
+    // Função obsoleta - mantida vazia para evitar erros
+    async function populateAudioOutputList() {
+        // Removido - agora usamos dispositivo padrão do sistema
+        return;
 
         try {
-            // Primeiro, solicitar permissão temporária para obter os labels dos dispositivos
+            // Código obsoleto mantido comentado para referência
             const tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             tempStream.getTracks().forEach(track => track.stop());
 
@@ -7251,6 +7276,12 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         const modal = document.getElementById('mic-calibration-modal');
         if (modal) {
             modal.classList.remove('hidden');
+
+            // Resetar estado
+            micCalibrationState.currentStep = 1;
+            micCalibrationState.recordedBlob = null;
+            micCalibrationState.recordedChunks = [];
+
             // Carregar ganho salvo
             const savedGain = localStorage.getItem('micGain') || '2.0';
             const slider = document.getElementById('mic-gain-slider');
@@ -7258,25 +7289,16 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             if (slider) slider.value = savedGain;
             if (valueDisplay) valueDisplay.textContent = parseFloat(savedGain).toFixed(1) + 'x';
 
-            // Carregar lista de microfones e saídas de áudio
-            populateMicrophoneList();
-            populateAudioOutputList();
+            // Resetar UI
+            updateCalibrationStepUI(1);
+            resetCalibrationButtons();
+
+            // Iniciar monitoramento do microfone (para mostrar nível)
+            startMicMonitoring();
 
             // Traduzir textos se necessário
             const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
             const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
-
-            // Traduzir label do select de microfone
-            const micSelectLabel = document.getElementById('mic-select-label');
-            if (micSelectLabel) {
-                micSelectLabel.textContent = isEnglish ? 'Select Microphone:' : 'Selecionar Microfone:';
-            }
-
-            // Traduzir label do select de saída de áudio
-            const audioOutputLabel = document.getElementById('audio-output-select-label');
-            if (audioOutputLabel) {
-                audioOutputLabel.textContent = isEnglish ? 'Audio Output:' : 'Saída de Áudio:';
-            }
 
             if (isEnglish) {
                 const title = document.getElementById('mic-calibration-title');
@@ -7287,22 +7309,86 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                 const zoneGood = document.getElementById('mic-zone-good');
                 const zoneHigh = document.getElementById('mic-zone-high');
                 const tip = document.getElementById('mic-calibration-tip');
-                const testBtnText = document.getElementById('mic-test-btn-text');
-                const saveBtnText = document.getElementById('mic-save-btn-text');
-                const calibrateText = document.getElementById('conv-calibrate-text');
+                const recordBtnText = document.getElementById('mic-record-btn-text');
+                const playBtnText = document.getElementById('mic-play-btn-text');
+                const confirmBtnText = document.getElementById('mic-confirm-btn-text');
+                const rejectBtnText = document.getElementById('mic-reject-btn-text');
+                const confirmQuestion = document.getElementById('confirm-question');
+                const step1 = document.getElementById('step-1-indicator');
+                const step2 = document.getElementById('step-2-indicator');
+                const step3 = document.getElementById('step-3-indicator');
 
-                if (title) title.textContent = 'Calibrate Audio';
-                if (desc) desc.textContent = 'Speak normally to adjust microphone sensitivity. The bar should stay in the green zone when you speak.';
+                if (title) title.textContent = 'Audio Setup';
+                if (desc) desc.textContent = 'Adjust the gain, record your voice, then listen to verify the sound quality.';
                 if (levelLabel) levelLabel.textContent = 'Microphone Level:';
                 if (gainLabel) gainLabel.querySelector('span').textContent = 'Microphone Gain:';
                 if (zoneLow) zoneLow.textContent = 'Low';
                 if (zoneGood) zoneGood.textContent = 'Good';
                 if (zoneHigh) zoneHigh.textContent = 'High';
                 if (tip) tip.innerHTML = '<strong class="text-cyan-400">Tip:</strong> If the level stays low when you speak, increase the gain. If it\'s constantly in the red/yellow, decrease it.';
-                if (testBtnText) testBtnText.textContent = 'Test';
-                if (saveBtnText) saveBtnText.textContent = 'Save';
-                if (calibrateText) calibrateText.textContent = '🎤 Calibrate Audio';
+                if (recordBtnText) recordBtnText.textContent = 'Record Voice';
+                if (playBtnText) playBtnText.textContent = 'Listen';
+                if (confirmBtnText) confirmBtnText.textContent = 'Confirm';
+                if (rejectBtnText) rejectBtnText.textContent = 'Record Again';
+                if (confirmQuestion) confirmQuestion.textContent = 'Does the sound quality look good?';
+                if (step1) step1.textContent = '1. Adjust gain';
+                if (step2) step2.textContent = '2. Record voice';
+                if (step3) step3.textContent = '3. Listen & confirm';
             }
+        }
+    }
+
+    // Atualizar indicador de etapa visual
+    function updateCalibrationStepUI(step) {
+        const step1 = document.getElementById('step-1-indicator');
+        const step2 = document.getElementById('step-2-indicator');
+        const step3 = document.getElementById('step-3-indicator');
+
+        // Reset all
+        [step1, step2, step3].forEach(el => {
+            if (el) {
+                el.classList.remove('text-cyan-400', 'font-semibold', 'text-green-400');
+                el.classList.add('text-slate-500');
+            }
+        });
+
+        // Mark completed steps in green
+        if (step >= 2 && step1) {
+            step1.classList.remove('text-slate-500');
+            step1.classList.add('text-green-400');
+        }
+        if (step >= 3 && step2) {
+            step2.classList.remove('text-slate-500');
+            step2.classList.add('text-green-400');
+        }
+
+        // Highlight current step
+        const currentStepEl = step === 1 ? step1 : step === 2 ? step2 : step3;
+        if (currentStepEl) {
+            currentStepEl.classList.remove('text-slate-500', 'text-green-400');
+            currentStepEl.classList.add('text-cyan-400', 'font-semibold');
+        }
+    }
+
+    // Resetar botões para estado inicial
+    function resetCalibrationButtons() {
+        const playBtn = document.getElementById('mic-play-btn');
+        const confirmSection = document.getElementById('confirm-section');
+        const recordBtnText = document.getElementById('mic-record-btn-text');
+
+        if (playBtn) {
+            playBtn.disabled = true;
+            playBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            playBtn.classList.remove('hover:bg-slate-600');
+        }
+        if (confirmSection) {
+            confirmSection.classList.add('hidden');
+        }
+
+        const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+        const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+        if (recordBtnText) {
+            recordBtnText.textContent = isEnglish ? 'Record Voice' : 'Gravar Voz';
         }
     }
 
@@ -7311,50 +7397,29 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         if (modal) {
             modal.classList.add('hidden');
         }
-        stopMicTest();
+        stopMicMonitoring();
+        stopPlayback();
     }
 
-    async function toggleMicTest() {
-        if (micCalibrationState.isTesting) {
-            stopMicTest();
-        } else {
-            await startMicTest();
-        }
-    }
+    // ========== NOVAS FUNÇÕES DE MONITORAMENTO/GRAVAÇÃO ==========
 
-    async function startMicTest() {
+    // Iniciar monitoramento do microfone (mostra nível em tempo real)
+    async function startMicMonitoring() {
         try {
-            // Configurar constraints com microfone selecionado
-            const selectedMic = micCalibrationState.selectedMicrophone || localStorage.getItem('selectedMicrophone');
+            // Usar dispositivo padrão do sistema
             const audioConstraints = {
                 echoCancellation: true,
                 noiseSuppression: true,
                 autoGainControl: false // Desabilitar AGC para calibração precisa
             };
 
-            // Se um microfone específico foi selecionado, usar deviceId
-            // Usar 'ideal' ao invés de 'exact' para maior compatibilidade com dispositivos Windows
-            if (selectedMic) {
-                audioConstraints.deviceId = { ideal: selectedMic };
-            }
-
-            // Solicitar acesso ao microfone com fallback
-            try {
-                micCalibrationState.stream = await navigator.mediaDevices.getUserMedia({
-                    audio: audioConstraints
-                });
-            } catch (constraintError) {
-                // Se falhar com o deviceId específico, tentar sem ele
-                console.warn('⚠️ Não foi possível usar o microfone selecionado, tentando padrão:', constraintError.message);
-                delete audioConstraints.deviceId;
-                micCalibrationState.stream = await navigator.mediaDevices.getUserMedia({
-                    audio: audioConstraints
-                });
-            }
+            micCalibrationState.stream = await navigator.mediaDevices.getUserMedia({
+                audio: audioConstraints
+            });
 
             // Log do microfone sendo usado
             const audioTrack = micCalibrationState.stream.getAudioTracks()[0];
-            console.log('🎤 Microfone em uso para teste:', audioTrack.label || 'Padrão');
+            console.log('🎤 Microfone padrão em uso:', audioTrack.label || 'Sistema');
 
             // Criar contexto de áudio e analyser
             micCalibrationState.audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -7365,30 +7430,27 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             const source = micCalibrationState.audioContext.createMediaStreamSource(micCalibrationState.stream);
             source.connect(micCalibrationState.analyser);
 
-            micCalibrationState.isTesting = true;
-
-            // Atualizar UI do botão
-            const testBtn = document.getElementById('mic-test-btn');
-            const testBtnText = document.getElementById('mic-test-btn-text');
-            if (testBtn) {
-                testBtn.classList.remove('bg-slate-700', 'hover:bg-slate-600');
-                testBtn.classList.add('bg-red-600', 'hover:bg-red-500');
-            }
-            const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
-            const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
-            if (testBtnText) testBtnText.textContent = isEnglish ? 'Stop' : 'Parar';
+            micCalibrationState.isMonitoring = true;
 
             // Iniciar animação do medidor
             updateMicLevel();
 
-            console.log('🎤 Teste de microfone iniciado');
+            console.log('🎤 Monitoramento de microfone iniciado');
         } catch (err) {
             console.error('Erro ao acessar microfone:', err);
-            alert('Não foi possível acessar o microfone. Verifique as permissões.');
+            const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+            const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+            alert(isEnglish ? 'Could not access microphone. Check permissions.' : 'Não foi possível acessar o microfone. Verifique as permissões.');
         }
     }
 
-    function stopMicTest() {
+    // Parar monitoramento do microfone
+    function stopMicMonitoring() {
+        // Parar gravação se estiver ativa
+        if (micCalibrationState.isRecording) {
+            stopRecording();
+        }
+
         // Parar stream
         if (micCalibrationState.stream) {
             micCalibrationState.stream.getTracks().forEach(track => track.stop());
@@ -7407,29 +7469,279 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             micCalibrationState.animationFrame = null;
         }
 
-        micCalibrationState.isTesting = false;
+        micCalibrationState.isMonitoring = false;
         micCalibrationState.analyser = null;
-
-        // Atualizar UI do botão
-        const testBtn = document.getElementById('mic-test-btn');
-        const testBtnText = document.getElementById('mic-test-btn-text');
-        if (testBtn) {
-            testBtn.classList.remove('bg-red-600', 'hover:bg-red-500');
-            testBtn.classList.add('bg-slate-700', 'hover:bg-slate-600');
-        }
-        const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
-        const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
-        if (testBtnText) testBtnText.textContent = isEnglish ? 'Test' : 'Testar';
 
         // Resetar barra de nível
         const levelBar = document.getElementById('mic-level-bar');
         if (levelBar) levelBar.style.width = '0%';
 
-        console.log('🎤 Teste de microfone parado');
+        console.log('🎤 Monitoramento de microfone parado');
+    }
+
+    // Toggle gravação
+    async function toggleRecording() {
+        if (micCalibrationState.isRecording) {
+            stopRecording();
+        } else {
+            await startRecording();
+        }
+    }
+
+    // Iniciar gravação
+    async function startRecording() {
+        // Se o stream não existir, iniciar monitoramento primeiro
+        if (!micCalibrationState.stream) {
+            await startMicMonitoring();
+        }
+
+        if (!micCalibrationState.stream) {
+            console.error('Não há stream de áudio disponível');
+            return;
+        }
+
+        try {
+            // Limpar gravação anterior
+            micCalibrationState.recordedChunks = [];
+            micCalibrationState.recordedBlob = null;
+
+            // Esconder seção de confirmação
+            const confirmSection = document.getElementById('confirm-section');
+            if (confirmSection) confirmSection.classList.add('hidden');
+
+            // Criar MediaRecorder
+            micCalibrationState.mediaRecorder = new MediaRecorder(micCalibrationState.stream, {
+                mimeType: 'audio/webm;codecs=opus'
+            });
+
+            micCalibrationState.mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    micCalibrationState.recordedChunks.push(event.data);
+                }
+            };
+
+            micCalibrationState.mediaRecorder.onstop = () => {
+                // Criar blob da gravação
+                micCalibrationState.recordedBlob = new Blob(micCalibrationState.recordedChunks, {
+                    type: 'audio/webm'
+                });
+                console.log('🎤 Gravação concluída:', micCalibrationState.recordedBlob.size, 'bytes');
+
+                // Habilitar botão de ouvir
+                const playBtn = document.getElementById('mic-play-btn');
+                if (playBtn) {
+                    playBtn.disabled = false;
+                    playBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    playBtn.classList.add('hover:bg-slate-600');
+                }
+
+                // Atualizar para etapa 3
+                micCalibrationState.currentStep = 3;
+                updateCalibrationStepUI(3);
+            };
+
+            // Iniciar gravação
+            micCalibrationState.mediaRecorder.start();
+            micCalibrationState.isRecording = true;
+
+            // Atualizar UI do botão
+            const recordBtn = document.getElementById('mic-record-btn');
+            const recordBtnText = document.getElementById('mic-record-btn-text');
+            if (recordBtn) {
+                recordBtn.classList.remove('from-red-600', 'to-red-500', 'hover:from-red-500', 'hover:to-red-400');
+                recordBtn.classList.add('from-amber-600', 'to-amber-500', 'hover:from-amber-500', 'hover:to-amber-400', 'animate-pulse');
+            }
+            const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+            const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+            if (recordBtnText) recordBtnText.textContent = isEnglish ? 'Stop Recording' : 'Parar Gravação';
+
+            // Atualizar para etapa 2
+            micCalibrationState.currentStep = 2;
+            updateCalibrationStepUI(2);
+
+            console.log('🎤 Gravação iniciada');
+        } catch (err) {
+            console.error('Erro ao iniciar gravação:', err);
+        }
+    }
+
+    // Parar gravação
+    function stopRecording() {
+        if (micCalibrationState.mediaRecorder && micCalibrationState.mediaRecorder.state !== 'inactive') {
+            micCalibrationState.mediaRecorder.stop();
+        }
+        micCalibrationState.isRecording = false;
+
+        // Atualizar UI do botão
+        const recordBtn = document.getElementById('mic-record-btn');
+        const recordBtnText = document.getElementById('mic-record-btn-text');
+        if (recordBtn) {
+            recordBtn.classList.remove('from-amber-600', 'to-amber-500', 'hover:from-amber-500', 'hover:to-amber-400', 'animate-pulse');
+            recordBtn.classList.add('from-red-600', 'to-red-500', 'hover:from-red-500', 'hover:to-red-400');
+        }
+        const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+        const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+        if (recordBtnText) recordBtnText.textContent = isEnglish ? 'Record Voice' : 'Gravar Voz';
+
+        console.log('🎤 Gravação parada');
+    }
+
+    // Reproduzir gravação com o mesmo filtro da conversa
+    async function playRecording() {
+        if (!micCalibrationState.recordedBlob) {
+            console.error('Nenhuma gravação disponível');
+            return;
+        }
+
+        if (micCalibrationState.isPlaying) {
+            stopPlayback();
+            return;
+        }
+
+        try {
+            // Criar contexto de áudio para reprodução
+            micCalibrationState.playbackContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Decodificar o áudio
+            const arrayBuffer = await micCalibrationState.recordedBlob.arrayBuffer();
+            const audioBuffer = await micCalibrationState.playbackContext.decodeAudioData(arrayBuffer);
+
+            // Obter ganho do slider
+            const gainSlider = document.getElementById('mic-gain-slider');
+            const gainValue = gainSlider ? parseFloat(gainSlider.value) : 2.0;
+
+            // Criar nó de ganho
+            const gainNode = micCalibrationState.playbackContext.createGain();
+            gainNode.gain.value = gainValue;
+
+            // Criar filtro passa-baixa (MESMO da conversa)
+            const lowPassFilter = micCalibrationState.playbackContext.createBiquadFilter();
+            lowPassFilter.type = 'lowpass';
+            lowPassFilter.frequency.value = 12000; // Mesma frequência da conversa
+            lowPassFilter.Q.value = 0.5; // Mesmo Q da conversa
+
+            // Criar source node
+            micCalibrationState.sourceNode = micCalibrationState.playbackContext.createBufferSource();
+            micCalibrationState.sourceNode.buffer = audioBuffer;
+
+            // Conectar cadeia: source -> gain -> lowpass -> output
+            micCalibrationState.sourceNode.connect(gainNode);
+            gainNode.connect(lowPassFilter);
+            lowPassFilter.connect(micCalibrationState.playbackContext.destination);
+
+            // Atualizar UI
+            const playBtn = document.getElementById('mic-play-btn');
+            const playBtnText = document.getElementById('mic-play-btn-text');
+            if (playBtn) {
+                playBtn.classList.remove('bg-slate-700');
+                playBtn.classList.add('bg-cyan-600');
+            }
+            const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+            const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+            if (playBtnText) playBtnText.textContent = isEnglish ? 'Stop' : 'Parar';
+
+            micCalibrationState.isPlaying = true;
+
+            // Quando terminar, atualizar UI
+            micCalibrationState.sourceNode.onended = () => {
+                micCalibrationState.isPlaying = false;
+                if (playBtn) {
+                    playBtn.classList.remove('bg-cyan-600');
+                    playBtn.classList.add('bg-slate-700');
+                }
+                if (playBtnText) playBtnText.textContent = isEnglish ? 'Listen' : 'Ouvir';
+
+                // Mostrar seção de confirmação
+                const confirmSection = document.getElementById('confirm-section');
+                if (confirmSection) confirmSection.classList.remove('hidden');
+            };
+
+            // Iniciar reprodução
+            micCalibrationState.sourceNode.start();
+            console.log('🔊 Reproduzindo gravação com ganho:', gainValue, 'e filtro passa-baixo: 12000Hz');
+
+        } catch (err) {
+            console.error('Erro ao reproduzir gravação:', err);
+        }
+    }
+
+    // Parar reprodução
+    function stopPlayback() {
+        if (micCalibrationState.sourceNode) {
+            try {
+                micCalibrationState.sourceNode.stop();
+            } catch (e) {
+                // Pode já ter parado
+            }
+            micCalibrationState.sourceNode = null;
+        }
+        if (micCalibrationState.playbackContext) {
+            micCalibrationState.playbackContext.close();
+            micCalibrationState.playbackContext = null;
+        }
+        micCalibrationState.isPlaying = false;
+
+        const playBtn = document.getElementById('mic-play-btn');
+        const playBtnText = document.getElementById('mic-play-btn-text');
+        const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+        const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+        if (playBtn) {
+            playBtn.classList.remove('bg-cyan-600');
+            playBtn.classList.add('bg-slate-700');
+        }
+        if (playBtnText) playBtnText.textContent = isEnglish ? 'Listen' : 'Ouvir';
+    }
+
+    // Confirmar calibração (som está bom)
+    function confirmCalibration() {
+        const gainSlider = document.getElementById('mic-gain-slider');
+        if (gainSlider) {
+            const gain = parseFloat(gainSlider.value);
+            localStorage.setItem('micGain', gain.toString());
+            localStorage.setItem('micCalibrated', 'true');
+            console.log('🎤 Calibração confirmada! Ganho salvo:', gain);
+        }
+
+        // Habilitar controles da conversa
+        enableConversationControls();
+
+        // Fechar modal
+        closeMicCalibration();
+    }
+
+    // Rejeitar e gravar novamente
+    function rejectCalibration() {
+        // Resetar estado
+        micCalibrationState.recordedBlob = null;
+        micCalibrationState.recordedChunks = [];
+        micCalibrationState.currentStep = 1;
+
+        // Resetar UI
+        resetCalibrationButtons();
+        updateCalibrationStepUI(1);
+
+        // Esconder seção de confirmação
+        const confirmSection = document.getElementById('confirm-section');
+        if (confirmSection) confirmSection.classList.add('hidden');
+
+        console.log('🎤 Gravação rejeitada, pronto para nova gravação');
+    }
+
+    // Função legada mantida para compatibilidade
+    async function toggleMicTest() {
+        await toggleRecording();
+    }
+
+    async function startMicTest() {
+        await startMicMonitoring();
+    }
+
+    function stopMicTest() {
+        stopMicMonitoring();
     }
 
     function updateMicLevel() {
-        if (!micCalibrationState.isTesting || !micCalibrationState.analyser) return;
+        if (!micCalibrationState.isMonitoring || !micCalibrationState.analyser) return;
 
         const dataArray = new Uint8Array(micCalibrationState.analyser.frequencyBinCount);
         micCalibrationState.analyser.getByteFrequencyData(dataArray);
@@ -7516,6 +7828,8 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         const continuousMode = document.getElementById('conv-continuous-mode');
         const ambientBtn = document.getElementById('conv-ambient-btn');
         const calibrationWarning = document.getElementById('calibration-warning');
+        const calibrateBtn = document.getElementById('conv-calibrate-mic-btn');
+        const calibrateText = document.getElementById('conv-calibrate-text');
 
         // Desabilitar botão do microfone
         if (micBtn) {
@@ -7544,6 +7858,26 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         // Mostrar aviso
         if (calibrationWarning) {
             calibrationWarning.classList.remove('hidden');
+        }
+
+        // Destacar botão de calibração (estilo chamativo)
+        if (calibrateBtn) {
+            calibrateBtn.classList.remove(
+                'bg-slate-700', 'hover:bg-slate-600',
+                'px-3', 'py-2', 'text-slate-300'
+            );
+            calibrateBtn.classList.add(
+                'bg-gradient-to-r', 'from-amber-500', 'to-orange-500',
+                'hover:from-amber-400', 'hover:to-orange-400',
+                'shadow-lg', 'shadow-amber-500/30', 'animate-pulse',
+                'px-4', 'py-3', 'font-bold', 'text-white'
+            );
+        }
+
+        const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+        const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+        if (calibrateText) {
+            calibrateText.textContent = isEnglish ? '🎤 SETUP AUDIO FIRST!' : '🎤 CONFIGURAR ÁUDIO PRIMEIRO!';
         }
     }
 
@@ -7590,7 +7924,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                 'bg-gradient-to-r', 'from-amber-500', 'to-orange-500',
                 'hover:from-amber-400', 'hover:to-orange-400',
                 'shadow-lg', 'shadow-amber-500/30', 'animate-pulse',
-                'px-4', 'py-3', 'font-bold'
+                'px-4', 'py-3', 'font-bold', 'text-white'
             );
             calibrateBtn.classList.add(
                 'bg-slate-700', 'hover:bg-slate-600',
@@ -7600,7 +7934,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         if (calibrateText) {
             const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
             const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
-            calibrateText.textContent = isEnglish ? '🎤 Calibrate Microphone' : '🎤 Calibrar Microfone';
+            calibrateText.textContent = isEnglish ? '🎤 Setup Audio' : '🎤 Configurar Áudio';
         }
     }
 

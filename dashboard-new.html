@@ -3121,14 +3121,14 @@
                                 </button>
                                 <!-- Aviso para calibrar primeiro -->
                                 <div id="calibration-warning" class="w-full mt-2 px-3 py-2 bg-amber-500/20 border border-amber-500/50 rounded-lg text-center">
-                                    <p class="text-amber-400 text-xs font-medium" id="calibration-warning-text">⚠️ Calibre o microfone antes de iniciar!</p>
+                                    <p class="text-amber-400 text-xs font-medium" id="calibration-warning-text">⚠️ Configure o áudio antes de iniciar!</p>
                                 </div>
                                 <!-- Botão Calibrar Microfone - DESTACADO -->
                                 <button id="conv-calibrate-mic-btn" class="w-full mt-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 rounded-lg transition-all flex items-center justify-center gap-2 text-sm font-bold text-white shadow-lg shadow-amber-500/30 animate-pulse" title="Calibrar sensibilidade do microfone">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
                                     </svg>
-                                    <span id="conv-calibrate-text">🎤 CALIBRAR MICROFONE PRIMEIRO!</span>
+                                    <span id="conv-calibrate-text">🎤 CONFIGURAR ÁUDIO PRIMEIRO!</span>
                                 </button>
                             </div>
                         </div>
@@ -3300,7 +3300,7 @@
                                 <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
                                 </svg>
-                                <span id="mic-calibration-title">Calibrar Microfone</span>
+                                <span id="mic-calibration-title">Configurar Áudio</span>
                             </h3>
                             <button id="close-mic-calibration" class="p-2 hover:bg-slate-700 rounded-lg transition-colors">
                                 <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3309,22 +3309,17 @@
                             </button>
                         </div>
 
-                        <p id="mic-calibration-desc" class="text-slate-400 text-sm mb-6">Fale normalmente para ajustar a sensibilidade do microfone. A barra deve ficar na zona verde quando você fala.</p>
+                        <p id="mic-calibration-desc" class="text-slate-400 text-sm mb-6">Ajuste o ganho, grave sua voz e depois ouça para verificar se o som está adequado.</p>
 
-                        <!-- Seleção de Microfone -->
-                        <div class="mb-4">
-                            <label class="text-sm text-slate-300 mb-2 block" id="mic-select-label">Selecionar Microfone:</label>
-                            <select id="mic-device-select" class="w-full px-3 py-2 bg-slate-700 rounded-lg border border-slate-600 text-sm text-white focus:border-cyan-500 focus:outline-none">
-                                <option value="">Carregando microfones...</option>
-                            </select>
-                        </div>
-
-                        <!-- Seleção de Saída de Áudio -->
-                        <div class="mb-6">
-                            <label class="text-sm text-slate-300 mb-2 block" id="audio-output-select-label">Saída de Áudio:</label>
-                            <select id="audio-output-select" class="w-full px-3 py-2 bg-slate-700 rounded-lg border border-slate-600 text-sm text-white focus:border-cyan-500 focus:outline-none">
-                                <option value="">Carregando dispositivos...</option>
-                            </select>
+                        <!-- Indicador de etapa -->
+                        <div id="calibration-step-indicator" class="mb-4 p-3 bg-slate-900/50 rounded-lg">
+                            <p class="text-sm text-center">
+                                <span id="step-1-indicator" class="text-cyan-400 font-semibold">1. Ajustar ganho</span>
+                                <span class="text-slate-600 mx-2">→</span>
+                                <span id="step-2-indicator" class="text-slate-500">2. Gravar voz</span>
+                                <span class="text-slate-600 mx-2">→</span>
+                                <span id="step-3-indicator" class="text-slate-500">3. Ouvir e confirmar</span>
+                            </p>
                         </div>
 
                         <!-- Barra de nível do microfone -->
@@ -3369,21 +3364,42 @@
                             </p>
                         </div>
 
-                        <!-- Botões -->
+                        <!-- Botões de gravação -->
                         <div class="flex gap-3">
-                            <button id="mic-test-btn" class="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors text-sm font-medium text-white flex items-center justify-center gap-2">
+                            <!-- Botão Gravar -->
+                            <button id="mic-record-btn" class="flex-1 px-4 py-2 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 rounded-lg transition-colors text-sm font-medium text-white flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                                </svg>
+                                <span id="mic-record-btn-text">Gravar Voz</span>
+                            </button>
+                            <!-- Botão Ouvir (inicialmente desabilitado) -->
+                            <button id="mic-play-btn" class="flex-1 px-4 py-2 bg-slate-700 rounded-lg transition-colors text-sm font-medium text-white flex items-center justify-center gap-2 opacity-50 cursor-not-allowed" disabled>
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                <span id="mic-test-btn-text">Testar</span>
+                                <span id="mic-play-btn-text">Ouvir</span>
                             </button>
-                            <button id="mic-save-btn" class="flex-1 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-lg transition-colors text-sm font-medium text-white flex items-center justify-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                                <span id="mic-save-btn-text">Salvar</span>
-                            </button>
+                        </div>
+
+                        <!-- Botão Confirmar (aparece após ouvir) -->
+                        <div id="confirm-section" class="mt-4 hidden">
+                            <p id="confirm-question" class="text-center text-slate-300 text-sm mb-3">O som está adequado?</p>
+                            <div class="flex gap-3">
+                                <button id="mic-reject-btn" class="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors text-sm font-medium text-white flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                    <span id="mic-reject-btn-text">Gravar Novamente</span>
+                                </button>
+                                <button id="mic-confirm-btn" class="flex-1 px-4 py-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 rounded-lg transition-colors text-sm font-medium text-white flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <span id="mic-confirm-btn-text">Confirmar</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
