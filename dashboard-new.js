@@ -5973,6 +5973,9 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         // Renderiza o grid de personas
         renderPersonasGrid();
 
+        // Verificar status de calibração do microfone
+        checkCalibrationStatus();
+
         // Botão do microfone - agora conecta/desconecta
         const micBtn = document.getElementById('conv-mic-btn');
         if (micBtn) {
@@ -7287,6 +7290,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         if (gainSlider) {
             const gain = parseFloat(gainSlider.value);
             localStorage.setItem('micGain', gain.toString());
+            localStorage.setItem('micCalibrated', 'true'); // Marcar que foi calibrado
             console.log('🎤 Ganho do microfone salvo:', gain);
 
             // Feedback visual
@@ -7306,10 +7310,119 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                     saveBtnText.textContent = originalText;
                 }, 1500);
             }
+
+            // Habilitar controles após calibração
+            enableConversationControls();
         }
 
         // Fechar modal e parar teste
         closeMicCalibration();
+    }
+
+    // Verificar e aplicar estado de calibração
+    function checkCalibrationStatus() {
+        const isCalibrated = localStorage.getItem('micCalibrated') === 'true';
+        if (isCalibrated) {
+            enableConversationControls();
+        } else {
+            disableConversationControls();
+        }
+    }
+
+    // Desabilitar controles até calibrar
+    function disableConversationControls() {
+        const micBtn = document.getElementById('conv-mic-btn');
+        const voiceSelect = document.getElementById('conv-voice-select');
+        const muteBtn = document.getElementById('conv-mute-btn');
+        const continuousMode = document.getElementById('conv-continuous-mode');
+        const ambientBtn = document.getElementById('conv-ambient-btn');
+        const calibrationWarning = document.getElementById('calibration-warning');
+
+        // Desabilitar botão do microfone
+        if (micBtn) {
+            micBtn.disabled = true;
+            micBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            micBtn.classList.remove('hover:from-cyan-400', 'hover:to-teal-500', 'hover:scale-105');
+        }
+
+        // Desabilitar outros controles
+        if (voiceSelect) {
+            voiceSelect.disabled = true;
+            voiceSelect.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+        if (muteBtn) {
+            muteBtn.disabled = true;
+        }
+        if (continuousMode) {
+            continuousMode.disabled = true;
+            continuousMode.parentElement?.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+        if (ambientBtn) {
+            ambientBtn.disabled = true;
+            ambientBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+
+        // Mostrar aviso
+        if (calibrationWarning) {
+            calibrationWarning.classList.remove('hidden');
+        }
+    }
+
+    // Habilitar controles após calibração
+    function enableConversationControls() {
+        const micBtn = document.getElementById('conv-mic-btn');
+        const voiceSelect = document.getElementById('conv-voice-select');
+        const muteBtn = document.getElementById('conv-mute-btn');
+        const continuousMode = document.getElementById('conv-continuous-mode');
+        const ambientBtn = document.getElementById('conv-ambient-btn');
+        const calibrationWarning = document.getElementById('calibration-warning');
+        const calibrateBtn = document.getElementById('conv-calibrate-mic-btn');
+        const calibrateText = document.getElementById('conv-calibrate-text');
+
+        // Habilitar botão do microfone
+        if (micBtn) {
+            micBtn.disabled = false;
+            micBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            micBtn.classList.add('hover:from-cyan-400', 'hover:to-teal-500', 'hover:scale-105');
+        }
+
+        // Habilitar outros controles
+        if (voiceSelect) {
+            voiceSelect.disabled = false;
+            voiceSelect.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+        if (continuousMode) {
+            continuousMode.disabled = false;
+            continuousMode.parentElement?.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+        if (ambientBtn) {
+            ambientBtn.disabled = false;
+            ambientBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        // Esconder aviso
+        if (calibrationWarning) {
+            calibrationWarning.classList.add('hidden');
+        }
+
+        // Mudar estilo do botão de calibração para sutil
+        if (calibrateBtn) {
+            calibrateBtn.classList.remove(
+                'bg-gradient-to-r', 'from-amber-500', 'to-orange-500',
+                'hover:from-amber-400', 'hover:to-orange-400',
+                'shadow-lg', 'shadow-amber-500/30', 'animate-pulse',
+                'px-4', 'py-3', 'font-bold'
+            );
+            calibrateBtn.classList.add(
+                'bg-slate-700', 'hover:bg-slate-600',
+                'px-3', 'py-2', 'text-slate-300'
+            );
+        }
+        if (calibrateText) {
+            const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+            const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+            calibrateText.textContent = isEnglish ? '🎤 Calibrate Microphone' : '🎤 Calibrar Microfone';
+        }
     }
 
     // Função para obter o ganho salvo (usada pelo AudioProcessor)
@@ -8054,7 +8167,23 @@ GESPRÄCHSREGELN:
 
     // Forçar reset de todas as flags de fala
     function forceResetSpeakingState() {
-        console.log('🔄 FORÇA RESET: Liberando microfone...');
+        console.log('🔄 FORÇA RESET: Verificando estado...');
+
+        // Se ainda há áudio na fila para reproduzir, NÃO limpar!
+        // Isso evita cortar a fala da IA no meio
+        if (conversacaoState.audioQueue.length > 0) {
+            console.log('   - Há', conversacaoState.audioQueue.length, 'chunks de áudio pendentes - MANTENDO para reprodução');
+            console.log('   - Aguardando playback terminar antes de liberar microfone');
+
+            // Apenas garantir que o playback está rodando
+            if (!conversacaoState.isPlayingAudio) {
+                console.log('   - Reiniciando playback dos chunks pendentes');
+                playAudioQueue();
+            }
+            return; // Não fazer reset enquanto há áudio para tocar
+        }
+
+        console.log('🔄 FORÇA RESET: Liberando microfone (sem áudio pendente)...');
 
         // Parar todos os watchdogs
         stopAISpeakingWatchdog();
@@ -8064,12 +8193,6 @@ GESPRÄCHSREGELN:
         conversacaoState.isAISpeaking = false;
         conversacaoState.isPlayingAudio = false;
         conversacaoState.lastAudioChunkTime = null;
-
-        // Limpar fila de áudio pendente (pode estar corrompida)
-        if (conversacaoState.audioQueue.length > 0) {
-            console.log('   - Limpando', conversacaoState.audioQueue.length, 'chunks de áudio pendentes');
-            conversacaoState.audioQueue = [];
-        }
 
         // Atualizar UI
         if (conversacaoState.isConnected) {
@@ -8115,7 +8238,7 @@ GESPRÄCHSREGELN:
         }
     }
 
-    // Criar processador de áudio inline - apenas downsampling, sem detecção local
+    // Criar processador de áudio inline - com filtro passa-baixa e downsampling
     // VAD é feito pelo Gemini no servidor (igual exemplo oficial)
     function createAudioWorkletProcessor() {
         const processorCode = `
@@ -8140,10 +8263,20 @@ GESPRÄCHSREGELN:
                     // Usa valor calibrado pelo usuário ou 2.0 como padrão
                     this.gain = options.processorOptions?.micGain || 2.0;
 
+                    // Filtro passa-baixa para eliminar ruídos de alta frequência
+                    // Frequência de corte ~4kHz (adequado para voz humana)
+                    // Coeficiente alpha para filtro IIR single-pole: alpha = dt / (RC + dt)
+                    // Para fc=4000Hz e fs=inputSampleRate: alpha = 2*pi*fc / (fs + 2*pi*fc)
+                    const fc = 4000; // Frequência de corte em Hz
+                    this.lpfAlpha = (2 * Math.PI * fc / this.inputSampleRate) /
+                                    (1 + 2 * Math.PI * fc / this.inputSampleRate);
+                    this.lpfPrevSample = 0; // Estado anterior do filtro
+
                     console.log('AudioProcessor: inputSampleRate=' + this.inputSampleRate +
                                 ', targetSampleRate=' + this.targetSampleRate +
                                 ', downsampleRatio=' + this.downsampleRatio +
-                                ', gain=' + this.gain);
+                                ', gain=' + this.gain +
+                                ', lpfAlpha=' + this.lpfAlpha.toFixed(4));
                 }
 
                 process(inputs, outputs, parameters) {
@@ -8153,8 +8286,14 @@ GESPRÄCHSREGELN:
 
                         // Fazer downsampling de inputSampleRate para 16kHz
                         for (let i = 0; i < channelData.length; i++) {
-                            // Acumular amostras com ganho aplicado
-                            this.accumulator += channelData[i] * this.gain;
+                            // Aplicar filtro passa-baixa IIR (single-pole)
+                            // y[n] = alpha * x[n] + (1 - alpha) * y[n-1]
+                            const filteredSample = this.lpfAlpha * channelData[i] +
+                                                   (1 - this.lpfAlpha) * this.lpfPrevSample;
+                            this.lpfPrevSample = filteredSample;
+
+                            // Acumular amostras filtradas com ganho aplicado
+                            this.accumulator += filteredSample * this.gain;
                             this.accumulatorCount++;
 
                             // Quando acumulamos amostras suficientes, produzir uma amostra de saída

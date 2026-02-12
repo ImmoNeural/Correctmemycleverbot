@@ -3119,12 +3119,16 @@
                                     </svg>
                                     <span id="conv-ambient-text">🍽️ Som Ambiente</span>
                                 </button>
-                                <!-- Botão Calibrar Microfone -->
-                                <button id="conv-calibrate-mic-btn" class="w-full mt-2 px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm text-slate-300" title="Calibrar sensibilidade do microfone">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <!-- Aviso para calibrar primeiro -->
+                                <div id="calibration-warning" class="w-full mt-2 px-3 py-2 bg-amber-500/20 border border-amber-500/50 rounded-lg text-center">
+                                    <p class="text-amber-400 text-xs font-medium" id="calibration-warning-text">⚠️ Calibre o microfone antes de iniciar!</p>
+                                </div>
+                                <!-- Botão Calibrar Microfone - DESTACADO -->
+                                <button id="conv-calibrate-mic-btn" class="w-full mt-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 rounded-lg transition-all flex items-center justify-center gap-2 text-sm font-bold text-white shadow-lg shadow-amber-500/30 animate-pulse" title="Calibrar sensibilidade do microfone">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
                                     </svg>
-                                    <span id="conv-calibrate-text">🎤 Calibrar Microfone</span>
+                                    <span id="conv-calibrate-text">🎤 CALIBRAR MICROFONE PRIMEIRO!</span>
                                 </button>
                             </div>
                         </div>
@@ -3334,11 +3338,11 @@
                                 <span>Ganho do Microfone:</span>
                                 <span id="mic-gain-value" class="text-cyan-400 font-mono">2.0x</span>
                             </label>
-                            <input type="range" id="mic-gain-slider" min="0.5" max="5" step="0.1" value="2.0" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+                            <input type="range" id="mic-gain-slider" min="0.5" max="10" step="0.1" value="2.0" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500">
                             <div class="flex justify-between text-xs text-slate-500 mt-1">
                                 <span>0.5x</span>
-                                <span>2.0x</span>
-                                <span>5.0x</span>
+                                <span>5x</span>
+                                <span>10x</span>
                             </div>
                         </div>
 
