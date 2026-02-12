@@ -7910,18 +7910,24 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             ambientBtn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
 
-        // Esconder área de calibração destacada (já está calibrado)
+        // Manter área de calibração visível, mas esconder aviso
         if (calibrationSetupArea) {
-            calibrationSetupArea.classList.add('hidden');
+            calibrationSetupArea.classList.remove('hidden');
         }
         if (calibrationWarning) {
             calibrationWarning.classList.add('hidden');
         }
 
-        // Esconder botão de calibração grande (já foi calibrado)
+        // Botão de calibração ainda visível, mas com estilo mais discreto (já está calibrado)
         if (calibrateBtn) {
-            calibrateBtn.classList.add('hidden');
-            calibrateBtn.classList.remove('animate-pulse');
+            calibrateBtn.classList.remove('hidden', 'animate-pulse', 'px-6', 'py-4', 'text-lg', 'shadow-xl', 'shadow-amber-500/40', 'border-2', 'border-amber-400', 'rounded-xl', 'gap-3');
+            calibrateBtn.classList.add('px-4', 'py-2', 'text-sm', 'shadow-md', 'rounded-lg', 'gap-2');
+        }
+
+        const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+        const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+        if (calibrateText) {
+            calibrateText.textContent = isEnglish ? '🎤 Reconfigure Audio' : '🎤 Reconfigurar Áudio';
         }
     }
 
