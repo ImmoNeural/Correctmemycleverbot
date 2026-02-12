@@ -8316,8 +8316,8 @@ GESPRÄCHSREGELN:
                                 // Padding antes do início da fala (ms)
                                 prefixPaddingMs: 100,
                                 // Duração do silêncio para considerar fim de fala (ms)
-                                // 800ms = mais responsivo
-                                silenceDurationMs: 800
+                                // 500ms = resposta mais rápida (era 800ms causando acúmulo de frases)
+                                silenceDurationMs: 500
                             },
                             // Incluir todo o input na conversa
                             turnCoverage: 'TURN_INCLUDES_ALL_INPUT'
@@ -8564,7 +8564,9 @@ GESPRÄCHSREGELN:
                 // Transcrição do que o usuário falou (entrada)
                 if (message.serverContent.inputTranscription) {
                     const fragment = message.serverContent.inputTranscription.text || '';
-                    console.log('🎤 VOCÊ DISSE:', fragment);
+                    const now = new Date();
+                    const timestamp = `${now.getMinutes()}:${now.getSeconds().toString().padStart(2,'0')}.${now.getMilliseconds().toString().padStart(3,'0')}`;
+                    console.log(`🎤 [${timestamp}] VOCÊ DISSE:`, fragment);
 
                     // Usuário está falando - parar watchdog do microfone bloqueado
                     stopMicBlockedWatchdog();
@@ -8586,7 +8588,9 @@ GESPRÄCHSREGELN:
                 // Transcrição do que a IA falou (saída)
                 if (message.serverContent.outputTranscription) {
                     const transcript = message.serverContent.outputTranscription.text;
-                    console.log('🤖 IA DISSE:', transcript);
+                    const now = new Date();
+                    const timestamp = `${now.getMinutes()}:${now.getSeconds().toString().padStart(2,'0')}.${now.getMilliseconds().toString().padStart(3,'0')}`;
+                    console.log(`🤖 [${timestamp}] IA DISSE:`, transcript);
                     // Quando a IA fala, flush o transcript do usuário acumulado
                     flushUserTranscript();
                 }
@@ -8925,10 +8929,17 @@ GESPRÄCHSREGELN:
                     this.targetSampleRate = 16000;
                     this.downsampleRatio = Math.round(this.inputSampleRate / this.targetSampleRate);
 
-                    // Buffer de saída de 4096 amostras a 16kHz
-                    this.outputBufferSize = 4096;
+                    // Buffer de saída MENOR para reduzir latência
+                    // 1024 amostras a 16kHz = 64ms (era 4096 = 256ms de delay!)
+                    // Para conversação em tempo real, latência baixa é crítica
+                    this.outputBufferSize = 1024;
                     this.outputBuffer = new Float32Array(this.outputBufferSize);
                     this.outputBufferIndex = 0;
+
+                    // Contador de frames para flush periódico de buffer parcial
+                    this.frameCount = 0;
+                    // Flush a cada ~100ms mesmo se buffer não estiver cheio (previne delay no fim da fala)
+                    this.flushIntervalFrames = 8; // ~100ms (128 samples/frame * 8 = 1024 samples = 64ms + margem)
 
                     // Buffer de acumulação para downsampling
                     this.accumulator = 0;
@@ -8991,13 +9002,35 @@ GESPRÄCHSREGELN:
                                         pcmData[j] = Math.max(-32768, Math.min(32767, this.outputBuffer[j] * 32767));
                                     }
 
-                                    // Enviar apenas dados de áudio - VAD é feito pelo Gemini
+                                    // Enviar dados de áudio
                                     this.port.postMessage({
                                         audioData: pcmData.buffer
                                     });
                                     this.outputBufferIndex = 0;
                                 }
                             }
+                        }
+
+                        // Incrementar contador de frames
+                        this.frameCount++;
+
+                        // FLUSH PERIÓDICO: Enviar buffer parcial para reduzir latência
+                        // Isso garante que mesmo se o usuário parar de falar no meio do buffer,
+                        // o áudio será enviado rapidamente (previne delay no fim da fala)
+                        if (this.frameCount >= this.flushIntervalFrames && this.outputBufferIndex > 0) {
+                            // Converter apenas as amostras que temos
+                            const pcmData = new Int16Array(this.outputBufferIndex);
+                            for (let j = 0; j < this.outputBufferIndex; j++) {
+                                pcmData[j] = Math.max(-32768, Math.min(32767, this.outputBuffer[j] * 32767));
+                            }
+
+                            // Enviar buffer parcial
+                            this.port.postMessage({
+                                audioData: pcmData.buffer
+                            });
+
+                            this.outputBufferIndex = 0;
+                            this.frameCount = 0;
                         }
                     }
                     return true;
