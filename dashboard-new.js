@@ -6976,6 +6976,54 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             ambientBtn.addEventListener('click', toggleAmbientSound);
         }
 
+        // Botão de calibrar microfone
+        const calibrateBtn = document.getElementById('conv-calibrate-mic-btn');
+        if (calibrateBtn) {
+            calibrateBtn.addEventListener('click', openMicCalibration);
+        }
+
+        // Fechar modal de calibração
+        const closeCalibrationBtn = document.getElementById('close-mic-calibration');
+        if (closeCalibrationBtn) {
+            closeCalibrationBtn.addEventListener('click', closeMicCalibration);
+        }
+
+        // Slider de ganho
+        const gainSlider = document.getElementById('mic-gain-slider');
+        if (gainSlider) {
+            // Carregar valor salvo
+            const savedGain = localStorage.getItem('micGain');
+            if (savedGain) {
+                gainSlider.value = savedGain;
+                document.getElementById('mic-gain-value').textContent = parseFloat(savedGain).toFixed(1) + 'x';
+            }
+            gainSlider.addEventListener('input', (e) => {
+                document.getElementById('mic-gain-value').textContent = parseFloat(e.target.value).toFixed(1) + 'x';
+            });
+        }
+
+        // Botão testar microfone
+        const testBtn = document.getElementById('mic-test-btn');
+        if (testBtn) {
+            testBtn.addEventListener('click', toggleMicTest);
+        }
+
+        // Botão salvar calibração
+        const saveBtn = document.getElementById('mic-save-btn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', saveMicCalibration);
+        }
+
+        // Fechar modal clicando fora
+        const calibrationModal = document.getElementById('mic-calibration-modal');
+        if (calibrationModal) {
+            calibrationModal.addEventListener('click', (e) => {
+                if (e.target === calibrationModal) {
+                    closeMicCalibration();
+                }
+            });
+        }
+
         // Iniciar com estado inicial do layout (expandido)
         const layout = document.getElementById('conv-layout');
         if (layout) {
@@ -7046,6 +7094,233 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         conversacaoState.ambientEnabled = false;
         console.log('🔇 Som ambiente parado');
     }
+
+    // ========== CALIBRAÇÃO DE MICROFONE ==========
+    let micCalibrationState = {
+        stream: null,
+        audioContext: null,
+        analyser: null,
+        animationFrame: null,
+        isTesting: false
+    };
+
+    function openMicCalibration() {
+        const modal = document.getElementById('mic-calibration-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            // Carregar ganho salvo
+            const savedGain = localStorage.getItem('micGain') || '2.0';
+            const slider = document.getElementById('mic-gain-slider');
+            const valueDisplay = document.getElementById('mic-gain-value');
+            if (slider) slider.value = savedGain;
+            if (valueDisplay) valueDisplay.textContent = parseFloat(savedGain).toFixed(1) + 'x';
+
+            // Traduzir textos se necessário
+            const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+            const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+
+            if (isEnglish) {
+                const title = document.getElementById('mic-calibration-title');
+                const desc = document.getElementById('mic-calibration-desc');
+                const levelLabel = document.getElementById('mic-level-label');
+                const gainLabel = document.getElementById('mic-gain-label');
+                const zoneLow = document.getElementById('mic-zone-low');
+                const zoneGood = document.getElementById('mic-zone-good');
+                const zoneHigh = document.getElementById('mic-zone-high');
+                const tip = document.getElementById('mic-calibration-tip');
+                const testBtnText = document.getElementById('mic-test-btn-text');
+                const saveBtnText = document.getElementById('mic-save-btn-text');
+                const calibrateText = document.getElementById('conv-calibrate-text');
+
+                if (title) title.textContent = 'Calibrate Microphone';
+                if (desc) desc.textContent = 'Speak normally to adjust microphone sensitivity. The bar should stay in the green zone when you speak.';
+                if (levelLabel) levelLabel.textContent = 'Microphone Level:';
+                if (gainLabel) gainLabel.querySelector('span').textContent = 'Microphone Gain:';
+                if (zoneLow) zoneLow.textContent = 'Low';
+                if (zoneGood) zoneGood.textContent = 'Good';
+                if (zoneHigh) zoneHigh.textContent = 'High';
+                if (tip) tip.innerHTML = '<strong class="text-cyan-400">Tip:</strong> If the level stays low when you speak, increase the gain. If it\'s constantly in the red/yellow, decrease it.';
+                if (testBtnText) testBtnText.textContent = 'Test';
+                if (saveBtnText) saveBtnText.textContent = 'Save';
+                if (calibrateText) calibrateText.textContent = '🎤 Calibrate Microphone';
+            }
+        }
+    }
+
+    function closeMicCalibration() {
+        const modal = document.getElementById('mic-calibration-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+        stopMicTest();
+    }
+
+    async function toggleMicTest() {
+        if (micCalibrationState.isTesting) {
+            stopMicTest();
+        } else {
+            await startMicTest();
+        }
+    }
+
+    async function startMicTest() {
+        try {
+            // Solicitar acesso ao microfone
+            micCalibrationState.stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: false // Desabilitar AGC para calibração precisa
+                }
+            });
+
+            // Criar contexto de áudio e analyser
+            micCalibrationState.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            micCalibrationState.analyser = micCalibrationState.audioContext.createAnalyser();
+            micCalibrationState.analyser.fftSize = 256;
+            micCalibrationState.analyser.smoothingTimeConstant = 0.3;
+
+            const source = micCalibrationState.audioContext.createMediaStreamSource(micCalibrationState.stream);
+            source.connect(micCalibrationState.analyser);
+
+            micCalibrationState.isTesting = true;
+
+            // Atualizar UI do botão
+            const testBtn = document.getElementById('mic-test-btn');
+            const testBtnText = document.getElementById('mic-test-btn-text');
+            if (testBtn) {
+                testBtn.classList.remove('bg-slate-700', 'hover:bg-slate-600');
+                testBtn.classList.add('bg-red-600', 'hover:bg-red-500');
+            }
+            const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+            const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+            if (testBtnText) testBtnText.textContent = isEnglish ? 'Stop' : 'Parar';
+
+            // Iniciar animação do medidor
+            updateMicLevel();
+
+            console.log('🎤 Teste de microfone iniciado');
+        } catch (err) {
+            console.error('Erro ao acessar microfone:', err);
+            alert('Não foi possível acessar o microfone. Verifique as permissões.');
+        }
+    }
+
+    function stopMicTest() {
+        // Parar stream
+        if (micCalibrationState.stream) {
+            micCalibrationState.stream.getTracks().forEach(track => track.stop());
+            micCalibrationState.stream = null;
+        }
+
+        // Fechar contexto de áudio
+        if (micCalibrationState.audioContext) {
+            micCalibrationState.audioContext.close();
+            micCalibrationState.audioContext = null;
+        }
+
+        // Cancelar animação
+        if (micCalibrationState.animationFrame) {
+            cancelAnimationFrame(micCalibrationState.animationFrame);
+            micCalibrationState.animationFrame = null;
+        }
+
+        micCalibrationState.isTesting = false;
+        micCalibrationState.analyser = null;
+
+        // Atualizar UI do botão
+        const testBtn = document.getElementById('mic-test-btn');
+        const testBtnText = document.getElementById('mic-test-btn-text');
+        if (testBtn) {
+            testBtn.classList.remove('bg-red-600', 'hover:bg-red-500');
+            testBtn.classList.add('bg-slate-700', 'hover:bg-slate-600');
+        }
+        const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+        const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+        if (testBtnText) testBtnText.textContent = isEnglish ? 'Test' : 'Testar';
+
+        // Resetar barra de nível
+        const levelBar = document.getElementById('mic-level-bar');
+        if (levelBar) levelBar.style.width = '0%';
+
+        console.log('🎤 Teste de microfone parado');
+    }
+
+    function updateMicLevel() {
+        if (!micCalibrationState.isTesting || !micCalibrationState.analyser) return;
+
+        const dataArray = new Uint8Array(micCalibrationState.analyser.frequencyBinCount);
+        micCalibrationState.analyser.getByteFrequencyData(dataArray);
+
+        // Calcular nível médio
+        const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+
+        // Aplicar ganho do slider para preview
+        const gainSlider = document.getElementById('mic-gain-slider');
+        const gain = gainSlider ? parseFloat(gainSlider.value) : 2.0;
+
+        // Normalizar para porcentagem (0-100) com ganho aplicado
+        let level = (average / 255) * 100 * (gain / 2.0);
+        level = Math.min(100, level); // Limitar a 100%
+
+        // Atualizar barra
+        const levelBar = document.getElementById('mic-level-bar');
+        if (levelBar) {
+            levelBar.style.width = level + '%';
+
+            // Mudar cor baseado no nível
+            if (level < 33) {
+                levelBar.className = 'absolute left-0 top-0 bottom-0 bg-gradient-to-r from-red-500 to-red-400 transition-all duration-75';
+            } else if (level < 66) {
+                levelBar.className = 'absolute left-0 top-0 bottom-0 bg-gradient-to-r from-green-500 to-teal-400 transition-all duration-75';
+            } else {
+                levelBar.className = 'absolute left-0 top-0 bottom-0 bg-gradient-to-r from-yellow-500 to-orange-400 transition-all duration-75';
+            }
+        }
+
+        // Continuar animação
+        micCalibrationState.animationFrame = requestAnimationFrame(updateMicLevel);
+    }
+
+    function saveMicCalibration() {
+        const gainSlider = document.getElementById('mic-gain-slider');
+        if (gainSlider) {
+            const gain = parseFloat(gainSlider.value);
+            localStorage.setItem('micGain', gain.toString());
+            console.log('🎤 Ganho do microfone salvo:', gain);
+
+            // Feedback visual
+            const saveBtn = document.getElementById('mic-save-btn');
+            const saveBtnText = document.getElementById('mic-save-btn-text');
+            if (saveBtn && saveBtnText) {
+                const originalText = saveBtnText.textContent;
+                saveBtn.classList.remove('bg-cyan-600', 'hover:bg-cyan-500');
+                saveBtn.classList.add('bg-green-600', 'hover:bg-green-500');
+                const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+                const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+                saveBtnText.textContent = isEnglish ? 'Saved!' : 'Salvo!';
+
+                setTimeout(() => {
+                    saveBtn.classList.remove('bg-green-600', 'hover:bg-green-500');
+                    saveBtn.classList.add('bg-cyan-600', 'hover:bg-cyan-500');
+                    saveBtnText.textContent = originalText;
+                }, 1500);
+            }
+        }
+
+        // Fechar modal e parar teste
+        closeMicCalibration();
+    }
+
+    // Função para obter o ganho salvo (usada pelo AudioProcessor)
+    function getSavedMicGain() {
+        const saved = localStorage.getItem('micGain');
+        return saved ? parseFloat(saved) : 2.0;
+    }
+
+    // Exportar função globalmente para uso no AudioProcessor
+    window.getSavedMicGain = getSavedMicGain;
+    // ========== FIM CALIBRAÇÃO DE MICROFONE ==========
 
     // Tocar efeito sonoro único (passos, pratos, etc.)
     function playSoundEffect(soundFile, volume = 0.5) {
@@ -7598,12 +7873,15 @@ GESPRÄCHSREGELN:
 
             const source = conversacaoState.audioContext.createMediaStreamSource(conversacaoState.stream);
 
-            // Passar o sample rate real para o worklet fazer downsampling correto para 16kHz
+            // Passar o sample rate real e o ganho calibrado para o worklet fazer downsampling correto para 16kHz
+            const savedMicGain = window.getSavedMicGain ? window.getSavedMicGain() : 2.0;
             conversacaoState.workletNode = new AudioWorkletNode(conversacaoState.audioContext, 'audio-processor', {
                 processorOptions: {
-                    inputSampleRate: realSampleRate
+                    inputSampleRate: realSampleRate,
+                    micGain: savedMicGain
                 }
             });
+            console.log('🎤 Usando ganho de microfone calibrado:', savedMicGain);
 
             // Inicializar timestamp do último som
             conversacaoState.lastSoundTime = Date.now();
@@ -7859,8 +8137,8 @@ GESPRÄCHSREGELN:
                     this.accumulatorCount = 0;
 
                     // Ganho para garantir que áudio seja audível ao Gemini VAD
-                    // 2.0 funcionava bem em commits anteriores (7defb95)
-                    this.gain = 2.0;
+                    // Usa valor calibrado pelo usuário ou 2.0 como padrão
+                    this.gain = options.processorOptions?.micGain || 2.0;
 
                     console.log('AudioProcessor: inputSampleRate=' + this.inputSampleRate +
                                 ', targetSampleRate=' + this.targetSampleRate +
