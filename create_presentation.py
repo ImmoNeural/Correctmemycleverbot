@@ -1183,7 +1183,7 @@ def main():
             "Ideal para aprender sinônimos",
             "Melhore seu vocabulário ativo"
         ],
-        image_name="parafrasear.png",
+        image_name="Parafrasear.png",
         accent_color=ORANGE
     )
 
