@@ -9067,6 +9067,8 @@ GESPRÄCHSREGELN:
 
         // Acumular TODOS os chunks primeiro para reprodução contínua sem tremor
         let allSamples = [];
+        const chunksToProcess = conversacaoState.audioQueue.length;
+        console.log(`🔊 Processando ${chunksToProcess} chunks de áudio...`);
 
         // Coletar todos os chunks disponíveis
         while (conversacaoState.audioQueue.length > 0) {
@@ -9089,13 +9091,19 @@ GESPRÄCHSREGELN:
                 }
 
                 // NÃO aplicar fade em cada chunk - isso causa tremor!
-                // Apenas acumular as amostras
-                allSamples.push(...float32Data);
+                // Apenas acumular as amostras usando concat para evitar stack overflow
+                for (let i = 0; i < float32Data.length; i++) {
+                    allSamples.push(float32Data[i]);
+                }
 
             } catch (error) {
                 console.error('Erro ao processar chunk de áudio:', error);
             }
         }
+
+        console.log(`🔊 Total de amostras: ${allSamples.length} (duração esperada: ${(allSamples.length / 24000).toFixed(2)}s)`);
+        console.log(`🔊 gainNode existe: ${!!conversacaoState.gainNode}, playbackContext estado: ${conversacaoState.playbackContext?.state}`);
+
 
         // Reproduzir todas as amostras acumuladas de uma vez
         if (allSamples.length > 0) {
@@ -9124,12 +9132,18 @@ GESPRÄCHSREGELN:
                 // Esperar o áudio terminar COM TIMEOUT DE SEGURANÇA
                 // Calcula duração esperada: samples / sampleRate (em segundos) + margem
                 const expectedDuration = (samples.length / 24000) * 1000 + 2000; // +2 segundos de margem
+                console.log(`🔊 Iniciando playback - duração: ${(samples.length / 24000).toFixed(2)}s, timeout: ${Math.round(expectedDuration / 1000)}s`);
+
                 await new Promise((resolve) => {
                     let resolved = false;
+                    const startTime = Date.now();
+
                     source.onended = () => {
                         if (!resolved) {
                             resolved = true;
                             conversacaoState.currentAudioSource = null;
+                            const actualDuration = (Date.now() - startTime) / 1000;
+                            console.log(`🔊 Playback terminou naturalmente após ${actualDuration.toFixed(2)}s`);
                             resolve();
                         }
                     };
