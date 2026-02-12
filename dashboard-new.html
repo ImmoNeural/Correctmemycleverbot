@@ -3315,6 +3315,14 @@
 
                         <p id="mic-calibration-desc" class="text-slate-400 text-sm mb-6">Ajuste o ganho, grave sua voz e depois ouça para verificar se o som está adequado.</p>
 
+                        <!-- Seleção de Microfone -->
+                        <div class="mb-6">
+                            <label class="text-sm text-slate-300 mb-2 block" id="mic-select-label">Microfone:</label>
+                            <select id="mic-device-select" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-500 transition-colors">
+                                <option value="">Carregando dispositivos...</option>
+                            </select>
+                        </div>
+
                         <!-- Indicador de etapa -->
                         <div id="calibration-step-indicator" class="mb-4 p-3 bg-slate-900/50 rounded-lg">
                             <p class="text-sm text-center">

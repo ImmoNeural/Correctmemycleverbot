@@ -7272,6 +7272,77 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         }
     }
 
+    // Popular lista de microfones disponíveis
+    async function populateMicrophoneList() {
+        const select = document.getElementById('mic-device-select');
+        if (!select) return;
+
+        const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+        const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+
+        try {
+            // Solicitar permissão primeiro para obter labels dos dispositivos
+            const tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            tempStream.getTracks().forEach(track => track.stop());
+
+            // Obter lista de dispositivos
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const audioInputs = devices.filter(device => device.kind === 'audioinput');
+
+            console.log('🎤 Microfones disponíveis:', audioInputs.map(d => ({ id: d.deviceId, label: d.label })));
+
+            // Limpar e popular select
+            select.innerHTML = '';
+
+            // Opção padrão do sistema
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = isEnglish ? '(System Default)' : '(Padrão do Sistema)';
+            select.appendChild(defaultOption);
+
+            // Adicionar cada microfone
+            audioInputs.forEach((device, index) => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                // Usar label ou nome genérico
+                let label = device.label || (isEnglish ? `Microphone ${index + 1}` : `Microfone ${index + 1}`);
+                // Limitar tamanho do label
+                if (label.length > 50) {
+                    label = label.substring(0, 47) + '...';
+                }
+                option.textContent = label;
+                select.appendChild(option);
+            });
+
+            // Restaurar seleção salva
+            const savedMic = localStorage.getItem('selectedMicrophone');
+            if (savedMic) {
+                // Verificar se o dispositivo salvo ainda existe
+                const exists = audioInputs.some(d => d.deviceId === savedMic);
+                if (exists) {
+                    select.value = savedMic;
+                }
+            }
+
+            // Adicionar evento de mudança para salvar seleção e reiniciar monitoramento
+            select.onchange = async function() {
+                const selectedValue = this.value;
+                localStorage.setItem('selectedMicrophone', selectedValue);
+                console.log('🎤 Microfone selecionado:', selectedValue || 'padrão do sistema');
+
+                // Reiniciar monitoramento com novo microfone
+                if (micCalibrationState.isMonitoring) {
+                    stopMicMonitoring();
+                    await startMicMonitoring();
+                }
+            };
+
+        } catch (err) {
+            console.error('Erro ao listar microfones:', err);
+            select.innerHTML = `<option value="">${isEnglish ? 'Error loading microphones' : 'Erro ao carregar microfones'}</option>`;
+        }
+    }
+
     function openMicCalibration() {
         const modal = document.getElementById('mic-calibration-modal');
         if (modal) {
@@ -7293,8 +7364,10 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             updateCalibrationStepUI(1);
             resetCalibrationButtons();
 
-            // Iniciar monitoramento do microfone (para mostrar nível)
-            startMicMonitoring();
+            // Popular lista de microfones e iniciar monitoramento
+            populateMicrophoneList().then(() => {
+                startMicMonitoring();
+            });
 
             // Traduzir textos se necessário
             const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
@@ -7303,6 +7376,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             if (isEnglish) {
                 const title = document.getElementById('mic-calibration-title');
                 const desc = document.getElementById('mic-calibration-desc');
+                const micSelectLabel = document.getElementById('mic-select-label');
                 const levelLabel = document.getElementById('mic-level-label');
                 const gainLabel = document.getElementById('mic-gain-label');
                 const zoneLow = document.getElementById('mic-zone-low');
@@ -7320,6 +7394,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
 
                 if (title) title.textContent = 'Audio Setup';
                 if (desc) desc.textContent = 'Adjust the gain, record your voice, then listen to verify the sound quality.';
+                if (micSelectLabel) micSelectLabel.textContent = 'Microphone:';
                 if (levelLabel) levelLabel.textContent = 'Microphone Level:';
                 if (gainLabel) gainLabel.querySelector('span').textContent = 'Microphone Gain:';
                 if (zoneLow) zoneLow.textContent = 'Low';
@@ -7406,20 +7481,37 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
     // Iniciar monitoramento do microfone (mostra nível em tempo real)
     async function startMicMonitoring() {
         try {
-            // Usar dispositivo padrão do sistema
+            // Buscar microfone selecionado ou salvo
+            const micSelect = document.getElementById('mic-device-select');
+            const selectedMic = micSelect?.value || localStorage.getItem('selectedMicrophone') || '';
+
             const audioConstraints = {
                 echoCancellation: true,
                 noiseSuppression: true,
                 autoGainControl: false // Desabilitar AGC para calibração precisa
             };
 
-            micCalibrationState.stream = await navigator.mediaDevices.getUserMedia({
-                audio: audioConstraints
-            });
+            // Se um microfone específico foi selecionado, usar deviceId
+            if (selectedMic) {
+                audioConstraints.deviceId = { exact: selectedMic };
+            }
+
+            try {
+                micCalibrationState.stream = await navigator.mediaDevices.getUserMedia({
+                    audio: audioConstraints
+                });
+            } catch (deviceError) {
+                // Se falhar com deviceId específico, tentar sem ele
+                console.warn('⚠️ Não foi possível usar o microfone selecionado, tentando padrão:', deviceError.message);
+                delete audioConstraints.deviceId;
+                micCalibrationState.stream = await navigator.mediaDevices.getUserMedia({
+                    audio: audioConstraints
+                });
+            }
 
             // Log do microfone sendo usado
             const audioTrack = micCalibrationState.stream.getAudioTracks()[0];
-            console.log('🎤 Microfone padrão em uso:', audioTrack.label || 'Sistema');
+            console.log('🎤 Microfone em uso:', audioTrack.label || 'Sistema');
 
             // Criar contexto de áudio e analyser
             micCalibrationState.audioContext = new (window.AudioContext || window.webkitAudioContext)();
