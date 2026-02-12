@@ -7063,7 +7063,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
     }
 
     // Iniciar som ambiente
-    function startAmbientSound() {
+    async function startAmbientSound() {
         if (conversacaoState.ambientAudio) {
             conversacaoState.ambientAudio.pause();
         }
@@ -7071,6 +7071,17 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         const audio = new Audio('/assets/audio/restaurant-ambient.mp3');
         audio.loop = true;
         audio.volume = 0.3; // Volume baixo para não atrapalhar a conversa
+
+        // Aplicar dispositivo de saída selecionado
+        const selectedOutput = localStorage.getItem('selectedAudioOutput');
+        if (selectedOutput && audio.setSinkId) {
+            try {
+                await audio.setSinkId(selectedOutput);
+                console.log('🔊 Som ambiente: saída configurada');
+            } catch (err) {
+                console.warn('⚠️ Som ambiente: não foi possível configurar saída:', err.message);
+            }
+        }
 
         audio.play().then(() => {
             conversacaoState.ambientAudio = audio;
@@ -7173,6 +7184,69 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         }
     }
 
+    // Função para listar dispositivos de saída de áudio
+    async function populateAudioOutputList() {
+        const select = document.getElementById('audio-output-select');
+        if (!select) return;
+
+        try {
+            // Verificar se o navegador suporta seleção de saída de áudio
+            if (!('setSinkId' in HTMLMediaElement.prototype)) {
+                const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+                const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+                select.innerHTML = `<option value="">${isEnglish ? 'Not supported in this browser' : 'Não suportado neste navegador'}</option>`;
+                select.disabled = true;
+                return;
+            }
+
+            // Obter lista de dispositivos
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
+
+            const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+            const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+
+            // Limpar opções anteriores
+            select.innerHTML = '';
+
+            // Adicionar opção padrão
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = isEnglish ? '🔊 Default (System)' : '🔊 Padrão (Sistema)';
+            select.appendChild(defaultOption);
+
+            // Adicionar cada dispositivo de saída encontrado
+            audioOutputs.forEach((device, index) => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                // Se não tiver label, usar um nome genérico
+                const label = device.label || (isEnglish ? `Speaker ${index + 1}` : `Alto-falante ${index + 1}`);
+                option.textContent = label;
+                select.appendChild(option);
+            });
+
+            // Selecionar o dispositivo salvo anteriormente
+            const savedOutput = localStorage.getItem('selectedAudioOutput');
+            if (savedOutput) {
+                select.value = savedOutput;
+            }
+
+            // Adicionar evento de mudança
+            select.addEventListener('change', function() {
+                const selectedValue = this.value;
+                localStorage.setItem('selectedAudioOutput', selectedValue);
+                console.log('🔊 Saída de áudio selecionada:', selectedValue || 'padrão');
+            });
+
+            console.log('🔊 Lista de saídas de áudio carregada:', audioOutputs.length, 'dispositivos');
+        } catch (err) {
+            console.error('Erro ao listar saídas de áudio:', err);
+            const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+            const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+            select.innerHTML = `<option value="">${isEnglish ? 'Error loading devices' : 'Erro ao carregar dispositivos'}</option>`;
+        }
+    }
+
     function openMicCalibration() {
         const modal = document.getElementById('mic-calibration-modal');
         if (modal) {
@@ -7184,8 +7258,9 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             if (slider) slider.value = savedGain;
             if (valueDisplay) valueDisplay.textContent = parseFloat(savedGain).toFixed(1) + 'x';
 
-            // Carregar lista de microfones
+            // Carregar lista de microfones e saídas de áudio
             populateMicrophoneList();
+            populateAudioOutputList();
 
             // Traduzir textos se necessário
             const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
@@ -7195,6 +7270,12 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             const micSelectLabel = document.getElementById('mic-select-label');
             if (micSelectLabel) {
                 micSelectLabel.textContent = isEnglish ? 'Select Microphone:' : 'Selecionar Microfone:';
+            }
+
+            // Traduzir label do select de saída de áudio
+            const audioOutputLabel = document.getElementById('audio-output-select-label');
+            if (audioOutputLabel) {
+                audioOutputLabel.textContent = isEnglish ? 'Audio Output:' : 'Saída de Áudio:';
             }
 
             if (isEnglish) {
@@ -7210,7 +7291,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                 const saveBtnText = document.getElementById('mic-save-btn-text');
                 const calibrateText = document.getElementById('conv-calibrate-text');
 
-                if (title) title.textContent = 'Calibrate Microphone';
+                if (title) title.textContent = 'Calibrate Audio';
                 if (desc) desc.textContent = 'Speak normally to adjust microphone sensitivity. The bar should stay in the green zone when you speak.';
                 if (levelLabel) levelLabel.textContent = 'Microphone Level:';
                 if (gainLabel) gainLabel.querySelector('span').textContent = 'Microphone Gain:';
@@ -7220,7 +7301,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                 if (tip) tip.innerHTML = '<strong class="text-cyan-400">Tip:</strong> If the level stays low when you speak, increase the gain. If it\'s constantly in the red/yellow, decrease it.';
                 if (testBtnText) testBtnText.textContent = 'Test';
                 if (saveBtnText) saveBtnText.textContent = 'Save';
-                if (calibrateText) calibrateText.textContent = '🎤 Calibrate Microphone';
+                if (calibrateText) calibrateText.textContent = '🎤 Calibrate Audio';
             }
         }
     }
@@ -7534,9 +7615,20 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
     // ========== FIM CALIBRAÇÃO DE MICROFONE ==========
 
     // Tocar efeito sonoro único (passos, pratos, etc.)
-    function playSoundEffect(soundFile, volume = 0.5) {
+    async function playSoundEffect(soundFile, volume = 0.5) {
         const audio = new Audio(`/assets/audio/${soundFile}`);
         audio.volume = volume;
+
+        // Aplicar dispositivo de saída selecionado
+        const selectedOutput = localStorage.getItem('selectedAudioOutput');
+        if (selectedOutput && audio.setSinkId) {
+            try {
+                await audio.setSinkId(selectedOutput);
+            } catch (err) {
+                // Silenciosamente ignora erro em efeitos sonoros
+            }
+        }
+
         audio.play().catch(err => {
             console.log('Som não disponível:', soundFile);
         });
@@ -8464,6 +8556,17 @@ GESPRÄCHSREGELN:
             conversacaoState.playbackContext = new (window.AudioContext || window.webkitAudioContext)({
                 sampleRate: 24000 // Gemini retorna áudio a 24kHz
             });
+
+            // Aplicar dispositivo de saída selecionado (se suportado)
+            const selectedOutput = localStorage.getItem('selectedAudioOutput');
+            if (selectedOutput && conversacaoState.playbackContext.setSinkId) {
+                try {
+                    await conversacaoState.playbackContext.setSinkId(selectedOutput);
+                    console.log('🔊 Saída de áudio configurada:', selectedOutput.substring(0, 20) + '...');
+                } catch (err) {
+                    console.warn('⚠️ Não foi possível configurar saída de áudio:', err.message);
+                }
+            }
 
             // Criar nós de processamento para qualidade de voz natural e clara
             conversacaoState.gainNode = conversacaoState.playbackContext.createGain();
