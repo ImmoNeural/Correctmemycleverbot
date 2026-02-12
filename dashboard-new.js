@@ -7252,14 +7252,24 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             };
 
             // Se um microfone específico foi selecionado, usar deviceId
+            // Usar 'ideal' ao invés de 'exact' para maior compatibilidade com dispositivos Windows
             if (selectedMic) {
-                audioConstraints.deviceId = { exact: selectedMic };
+                audioConstraints.deviceId = { ideal: selectedMic };
             }
 
-            // Solicitar acesso ao microfone
-            micCalibrationState.stream = await navigator.mediaDevices.getUserMedia({
-                audio: audioConstraints
-            });
+            // Solicitar acesso ao microfone com fallback
+            try {
+                micCalibrationState.stream = await navigator.mediaDevices.getUserMedia({
+                    audio: audioConstraints
+                });
+            } catch (constraintError) {
+                // Se falhar com o deviceId específico, tentar sem ele
+                console.warn('⚠️ Não foi possível usar o microfone selecionado, tentando padrão:', constraintError.message);
+                delete audioConstraints.deviceId;
+                micCalibrationState.stream = await navigator.mediaDevices.getUserMedia({
+                    audio: audioConstraints
+                });
+            }
 
             // Log do microfone sendo usado
             const audioTrack = micCalibrationState.stream.getAudioTracks()[0];
@@ -7656,14 +7666,24 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             };
 
             // Se um microfone específico foi selecionado, usar deviceId
+            // Usar 'ideal' ao invés de 'exact' para maior compatibilidade com dispositivos Windows
             if (selectedMic) {
-                audioConstraints.deviceId = { exact: selectedMic };
+                audioConstraints.deviceId = { ideal: selectedMic };
             }
 
-            // Solicitar permissão do microfone
-            conversacaoState.stream = await navigator.mediaDevices.getUserMedia({
-                audio: audioConstraints
-            });
+            // Solicitar permissão do microfone com fallback
+            try {
+                conversacaoState.stream = await navigator.mediaDevices.getUserMedia({
+                    audio: audioConstraints
+                });
+            } catch (constraintError) {
+                // Se falhar com o deviceId específico, tentar sem ele
+                console.warn('⚠️ Não foi possível usar o microfone selecionado, tentando padrão:', constraintError.message);
+                delete audioConstraints.deviceId;
+                conversacaoState.stream = await navigator.mediaDevices.getUserMedia({
+                    audio: audioConstraints
+                });
+            }
 
             // Log das configurações reais do microfone
             const audioTrack = conversacaoState.stream.getAudioTracks()[0];
