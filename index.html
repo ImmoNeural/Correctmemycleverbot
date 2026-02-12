@@ -423,7 +423,10 @@
             <!-- Hero Screenshot - Correcao de Redacao -->
             <div class="max-w-5xl mx-auto">
                 <div class="screenshot-container glow-purple floating">
-                    <img src="images/Foto Dashboard.png"
+                    <img id="img-dashboard"
+                         src="images/Foto Dashboard.png"
+                         data-img-pt="images/Foto Dashboard.png"
+                         data-img-en="images/Screenshot_Composition_english.png"
                          alt="Correcao de Redacao - CorrectMe"
                          class="w-full h-auto"
                          loading="eager"
@@ -558,7 +561,10 @@
                     </div>
                     <div class="order-1">
                         <div class="screenshot-container glow-purple">
-                            <img src="images/Foto resultados.png"
+                            <img id="img-resultados"
+                                 src="images/Foto resultados.png"
+                                 data-img-pt="images/Foto resultados.png"
+                                 data-img-en="images/Screenshot_results_english.png"
                                  alt="Dashboard de Progresso"
                                  class="w-full h-auto"
                                  loading="lazy"
@@ -650,7 +656,10 @@
                     </div>
                     <div class="order-1 lg:order-2">
                         <div class="screenshot-container glow-blue">
-                            <img src="images/screenshot_flashcards_game.png"
+                            <img id="img-flashcards"
+                                 src="images/screenshot_flashcards_game.png"
+                                 data-img-pt="images/screenshot_flashcards_game.png"
+                                 data-img-en="images/hangme.png"
                                  alt="Jogo de Flashcards"
                                  class="w-full h-auto"
                                  loading="lazy"
@@ -748,7 +757,10 @@
                     </div>
                     <div class="order-1 lg:order-2">
                         <div class="screenshot-container glow-pink">
-                            <img src="images/Parafrasear.png"
+                            <img id="img-parafrase"
+                                 src="images/Parafrasear.png"
+                                 data-img-pt="images/Parafrasear.png"
+                                 data-img-en="images/Parafrase.png"
                                  alt="Parafraseador Inteligente"
                                  class="w-full h-auto"
                                  loading="lazy"
@@ -1680,6 +1692,14 @@
 
             // Update HTML lang attribute
             document.documentElement.lang = lang === 'en' ? 'en' : 'pt-BR';
+
+            // Switch images based on language
+            document.querySelectorAll('[data-img-pt][data-img-en]').forEach(img => {
+                const imgSrc = lang === 'en' ? img.getAttribute('data-img-en') : img.getAttribute('data-img-pt');
+                if (imgSrc) {
+                    img.src = imgSrc;
+                }
+            });
         }
 
         // Initialize language switcher
