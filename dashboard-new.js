@@ -8416,6 +8416,18 @@ GESPRÄCHSREGELN:
 
             const message = JSON.parse(data);
 
+            // DEBUG: Log de todas as mensagens recebidas (exceto áudio que é muito verbose)
+            const msgKeys = Object.keys(message);
+            if (!message.serverContent?.modelTurn?.parts?.some(p => p.inlineData)) {
+                console.log('📨 WS Msg:', msgKeys.join(', '), message.serverContent ? JSON.stringify({
+                    turnComplete: message.serverContent.turnComplete,
+                    generationComplete: message.serverContent.generationComplete,
+                    interrupted: message.serverContent.interrupted,
+                    inputTranscription: message.serverContent.inputTranscription,
+                    outputTranscription: message.serverContent.outputTranscription?.text?.substring(0, 30)
+                }) : '');
+            }
+
             // Setup complete - pronto para conversar
             if (message.setupComplete) {
                 console.log('✅ Setup completo - iniciando captura de áudio');
