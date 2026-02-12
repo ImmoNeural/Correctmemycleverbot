@@ -101,7 +101,7 @@ def add_title_slide(prs):
     subtitle_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.0), Inches(6), Inches(0.8))
     tf = subtitle_box.text_frame
     p = tf.paragraphs[0]
-    p.text = "Aprendizagem de Alemao com IA"
+    p.text = "Aprendizagem de Alemão com IA"
     p.font.size = Pt(26)
     p.font.color.rgb = PURPLE
 
@@ -110,7 +110,7 @@ def add_title_slide(prs):
     tf = desc_box.text_frame
     tf.word_wrap = True
     p = tf.paragraphs[0]
-    p.text = "Plataforma completa de aprendizado de alemao com inteligencia artificial para brasileiros"
+    p.text = "Plataforma completa de aprendizado de alemão com inteligência artificial para brasileiros"
     p.font.size = Pt(16)
     p.font.color.rgb = GRAY
 
@@ -136,7 +136,7 @@ def add_title_slide(prs):
     card1_title = slide.shapes.add_textbox(Inches(7), Inches(1.0), Inches(2.4), Inches(0.4))
     tf = card1_title.text_frame
     p = tf.paragraphs[0]
-    p.text = "Correcao de Textos"
+    p.text = "Correção de Textos"
     p.font.size = Pt(14)
     p.font.bold = True
     p.font.color.rgb = PINK
@@ -162,7 +162,7 @@ def add_title_slide(prs):
     card2_title = slide.shapes.add_textbox(Inches(7), Inches(2.5), Inches(2.4), Inches(0.4))
     tf = card2_title.text_frame
     p = tf.paragraphs[0]
-    p.text = "Pratica de Conversacao"
+    p.text = "Prática de Conversação"
     p.font.size = Pt(14)
     p.font.bold = True
     p.font.color.rgb = PURPLE
@@ -217,7 +217,7 @@ def add_index_slide(prs):
     title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.3), Inches(9), Inches(0.8))
     tf = title_box.text_frame
     p = tf.paragraphs[0]
-    p.text = "Indice"
+    p.text = "Índice"
     p.font.size = Pt(40)
     p.font.bold = True
     p.font.color.rgb = WHITE
@@ -234,12 +234,12 @@ def add_index_slide(prs):
     # Items do indice
     index_items = [
         ("01", "Vantagens do CorrectMe", PINK),
-        ("02", "Sistema de Categorizacao de Erros", PURPLE),
+        ("02", "Sistema de Categorização de Erros", PURPLE),
         ("03", "Recursos da Plataforma", CYAN),
         ("04", "Como Funciona", GREEN),
-        ("05", "Analise de Custo", ORANGE),
+        ("05", "Análise de Custo", ORANGE),
         ("06", "Comparativo com Concorrentes", BLUE),
-        ("07", "Publico Alvo", PINK),
+        ("07", "Público Alvo", PINK),
     ]
 
     y_start = Inches(1.4)
@@ -296,21 +296,21 @@ def add_advantages_slide(prs):
     sub_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.85), Inches(9), Inches(0.4))
     tf = sub_box.text_frame
     p = tf.paragraphs[0]
-    p.text = "Por que o CorrectMe e a melhor escolha para aprender alemao"
+    p.text = "Por que o CorrectMe é a melhor escolha para aprender alemão"
     p.font.size = Pt(14)
     p.font.color.rgb = GRAY
     p.alignment = PP_ALIGN.CENTER
 
     # Cards de vantagens com descricao
     advantages = [
-        ("+60", "Topicos de Gramatica",
-         "Cobertura completa de todos os topicos gramaticais do alemao, do basico ao avancado", PINK),
+        ("+60", "Tópicos de Gramática",
+         "Cobertura completa de todos os tópicos gramaticais do alemão, do básico ao avançado", PINK),
         ("+50", "Temas de Conversa",
-         "Pratica com diferentes personagens e contextos do cotidiano alemao", PURPLE),
+         "Prática com diferentes personagens e contextos do cotidiano alemão", PURPLE),
         ("5", "Categorias de Erros",
-         "Classificacao inteligente que ajuda a focar nos seus pontos fracos", BLUE),
-        ("24/7", "Disponivel Sempre",
-         "Acesso ilimitado a plataforma, estude quando e onde quiser", GREEN),
+         "Classificação inteligente que ajuda a focar nos seus pontos fracos", BLUE),
+        ("24/7", "Disponível Sempre",
+         "Acesso ilimitado à plataforma, estude quando e onde quiser", GREEN),
     ]
 
     card_width = Inches(2.15)
@@ -385,7 +385,7 @@ def add_categories_slide(prs):
     title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.2), Inches(9), Inches(0.7))
     tf = title_box.text_frame
     p = tf.paragraphs[0]
-    p.text = "Entenda Exatamente Onde Voce Erra"
+    p.text = "Entenda Exatamente Onde Você Erra"
     p.font.size = Pt(34)
     p.font.bold = True
     p.font.color.rgb = WHITE
@@ -396,21 +396,21 @@ def add_categories_slide(prs):
     tf = subtitle_box.text_frame
     tf.word_wrap = True
     p = tf.paragraphs[0]
-    p.text = "Nosso sistema exclusivo de categorizacao identifica e classifica cada erro por cor, \npermitindo que voce foque exatamente nos pontos que precisa melhorar"
+    p.text = "Nosso sistema exclusivo de categorização identifica e classifica cada erro por cor, \npermitindo que você foque exatamente nos pontos que precisa melhorar"
     p.font.size = Pt(14)
     p.font.color.rgb = GRAY
     p.alignment = PP_ALIGN.CENTER
 
     categories = [
-        ("Declinacao", "Genus, Numerus, Kasus - Os 3 pilares da gramatica alema", PINK,
+        ("Declinação", "Genus, Numerus, Kasus - Os 3 pilares da gramática alemã", PINK,
          "Domine os casos e nunca mais erre der/die/das"),
-        ("Conjugacao", "Tempos verbais e formas conjugadas", PURPLE,
+        ("Conjugação", "Tempos verbais e formas conjugadas", PURPLE,
          "Aprenda a conjugar verbos corretamente em qualquer tempo"),
-        ("Preposicoes", "Uso correto com Akkusativ, Dativ e Genitiv", BLUE,
-         "Saiba qual preposicao usar e com qual caso"),
+        ("Preposições", "Uso correto com Akkusativ, Dativ e Genitiv", BLUE,
+         "Saiba qual preposição usar e com qual caso"),
         ("Sintaxe", "Estrutura e ordem das palavras nas frases", ORANGE,
-         "Construa frases com a ordem correta alemao"),
-        ("Vocabulario", "Escolha de palavras e expressoes", GREEN,
+         "Construa frases com a ordem correta do alemão"),
+        ("Vocabulário", "Escolha de palavras e expressões", GREEN,
          "Use as palavras certas para cada contexto"),
     ]
 
@@ -613,10 +613,10 @@ def add_how_it_works_slide(prs):
     # Steps atualizados (removido escolher nivel e exercicios personalizados)
     steps = [
         ("1", "Escreva seu texto",
-         "Cole ou digite sua redacao em alemao. Nosso editor inteligente aceita qualquer texto.", PINK),
-        ("2", "Receba a analise",
-         "Nossa IA identifica erros, categoriza por tipo e explica cada correcao em portugues.", PURPLE),
-        ("3", "Acompanhe sua evolucao",
+         "Cole ou digite sua redação em alemão. Nosso editor inteligente aceita qualquer texto.", PINK),
+        ("2", "Receba a análise",
+         "Nossa IA identifica erros, categoriza por tipo e explica cada correção em português.", PURPLE),
+        ("3", "Acompanhe sua evolução",
          "Visualize seu progresso no dashboard, pratique com flashcards e melhore continuamente.", GREEN),
     ]
 
@@ -702,7 +702,7 @@ def add_cost_analysis_slide(prs):
     title_box = slide.shapes.add_textbox(Inches(0.5), Inches(0.2), Inches(9), Inches(0.7))
     tf = title_box.text_frame
     p = tf.paragraphs[0]
-    p.text = "Analise de Custo"
+    p.text = "Análise de Custo"
     p.font.size = Pt(36)
     p.font.bold = True
     p.font.color.rgb = WHITE
@@ -711,7 +711,7 @@ def add_cost_analysis_slide(prs):
     subtitle = slide.shapes.add_textbox(Inches(0.5), Inches(0.85), Inches(9), Inches(0.4))
     tf = subtitle.text_frame
     p = tf.paragraphs[0]
-    p.text = "Investimento acessivel para um aprendizado de qualidade"
+    p.text = "Investimento acessível para um aprendizado de qualidade"
     p.font.size = Pt(14)
     p.font.color.rgb = GRAY
     p.alignment = PP_ALIGN.CENTER
@@ -720,16 +720,16 @@ def add_cost_analysis_slide(prs):
     credit_title = slide.shapes.add_textbox(Inches(0.5), Inches(1.4), Inches(4.5), Inches(0.4))
     tf = credit_title.text_frame
     p = tf.paragraphs[0]
-    p.text = "Sistema de Creditos"
+    p.text = "Sistema de Créditos"
     p.font.size = Pt(20)
     p.font.bold = True
     p.font.color.rgb = CYAN
 
     credit_items = [
-        ("100 creditos", "Gratis para novos usuarios"),
-        ("Correcao de texto", "~1 credito por correcao"),
-        ("Pratica de conversacao", "10 creditos/minuto"),
-        ("Parafrase de texto", "~1 credito por uso"),
+        ("100 créditos", "Grátis para novos usuários"),
+        ("Correção de texto", "~1 crédito por correção"),
+        ("Prática de conversação", "10 créditos/minuto"),
+        ("Paráfrase de texto", "~1 crédito por uso"),
         ("Flashcards e jogos", "Gratuito"),
     ]
 
@@ -773,8 +773,8 @@ def add_cost_analysis_slide(prs):
 
     comparisons = [
         ("Professor particular", "R$ 80-150/hora", RED),
-        ("Curso presencial", "R$ 300-800/mes", RED),
-        ("Apps premium", "R$ 50-100/mes", YELLOW),
+        ("Curso presencial", "R$ 300-800/mês", RED),
+        ("Apps premium", "R$ 50-100/mês", YELLOW),
         ("CorrectMe", "A partir de R$ 0", GREEN),
     ]
 
@@ -820,7 +820,7 @@ def add_cost_analysis_slide(prs):
     highlight_text = slide.shapes.add_textbox(Inches(0.5), Inches(4.7), Inches(9), Inches(0.4))
     tf = highlight_text.text_frame
     p = tf.paragraphs[0]
-    p.text = "Comece gratis com 100 creditos - Sem cartao de credito necessario!"
+    p.text = "Comece grátis com 100 créditos - Sem cartão de crédito necessário!"
     p.font.size = Pt(18)
     p.font.bold = True
     p.font.color.rgb = GREEN
@@ -850,13 +850,13 @@ def add_comparison_slide(prs):
     # Tabela de comparacao
     headers = ["Recurso", "CorrectMe", "LanguageTool", "Scribbr"]
     rows = [
-        ["Especializado em alemao", "100%", "Parcial", "Parcial"],
-        ["Feedback pedagogico", "Sim", "Nao", "Limitado"],
-        ["Categorizacao de erros", "Sim", "Nao", "Nao"],
-        ["Flashcards integrados", "Sim", "Nao", "Nao"],
-        ["Listas de vocabulario", "Sim", "Nao", "Nao"],
-        ["Chatbot para pratica", "Sim", "Nao", "Nao"],
-        ["Pratica de conversacao", "Sim", "Nao", "Nao"],
+        ["Especializado em alemão", "100%", "Parcial", "Parcial"],
+        ["Feedback pedagógico", "Sim", "Não", "Limitado"],
+        ["Categorização de erros", "Sim", "Não", "Não"],
+        ["Flashcards integrados", "Sim", "Não", "Não"],
+        ["Listas de vocabulário", "Sim", "Não", "Não"],
+        ["Chatbot para prática", "Sim", "Não", "Não"],
+        ["Prática de conversação", "Sim", "Não", "Não"],
     ]
 
     start_y = Inches(0.8)
@@ -911,7 +911,7 @@ def add_comparison_slide(prs):
             if col_idx == 1:  # CorrectMe column
                 p.font.color.rgb = GREEN
                 p.font.bold = True
-            elif cell == "Nao":
+            elif cell == "Não":
                 p.font.color.rgb = RED
             elif cell == "Parcial" or cell == "Limitado":
                 p.font.color.rgb = YELLOW
@@ -946,9 +946,9 @@ def add_target_audience_slide(prs):
 
     audiences = [
         ("Estudantes", "Preparando para provas Goethe, TestDaF, DSH", PINK),
-        ("Profissionais", "Que precisam escrever em alemao no trabalho", PURPLE),
-        ("Professores", "Que querem otimizar correcoes de alunos", BLUE),
-        ("Aprendizes", "De qualquer nivel, do iniciante ao avancado", GREEN),
+        ("Profissionais", "Que precisam escrever em alemão no trabalho", PURPLE),
+        ("Professores", "Que querem otimizar correções de alunos", BLUE),
+        ("Aprendizes", "De qualquer nível, do iniciante ao avançado", GREEN),
     ]
 
     card_width = Inches(4.2)
@@ -1025,7 +1025,7 @@ def add_cta_slide(prs):
     title_box = slide.shapes.add_textbox(Inches(0.5), Inches(2.1), Inches(9), Inches(1))
     tf = title_box.text_frame
     p = tf.paragraphs[0]
-    p.text = "Comece a dominar o alemao hoje!"
+    p.text = "Comece a dominar o alemão hoje!"
     p.font.size = Pt(40)
     p.font.bold = True
     p.font.color.rgb = WHITE
@@ -1035,7 +1035,7 @@ def add_cta_slide(prs):
     subtitle_box = slide.shapes.add_textbox(Inches(0.5), Inches(3.0), Inches(9), Inches(0.6))
     tf = subtitle_box.text_frame
     p = tf.paragraphs[0]
-    p.text = "Experimente gratis - 100 creditos para novos usuarios"
+    p.text = "Experimente grátis - 100 créditos para novos usuários"
     p.font.size = Pt(20)
     p.font.color.rgb = PURPLE
     p.alignment = PP_ALIGN.CENTER
@@ -1090,17 +1090,17 @@ def main():
     # Slide 4: Categorias de Erros (versao vendedora)
     add_categories_slide(prs)
 
-    # Slide 5: Feature - Correcao Inteligente (atualizado)
+    # Slide 5: Feature - Correção Inteligente (atualizado)
     add_feature_slide_v2(
         prs,
         title="Feedback detalhado para cada erro",
-        subtitle="Correcao Inteligente",
-        description="Nossa IA identifica erros de declinacao, conjugacao, sintaxe, preposicoes e vocabulario, destacando cada um com cores diferentes para facilitar o aprendizado.",
+        subtitle="Correção Inteligente",
+        description="Nossa IA identifica erros de declinação, conjugação, sintaxe, preposições e vocabulário, destacando cada um com cores diferentes para facilitar o aprendizado.",
         features=[
-            "Correcao gramatical e ortografica em tempo real",
-            "Feedback pedagogico que explica o 'porque' de cada erro",
+            "Correção gramatical e ortográfica em tempo real",
+            "Feedback pedagógico que explica o 'porquê' de cada erro",
             "IA treinada para erros comuns de brasileiros",
-            "Exportacao do texto corrigido"
+            "Exportação do texto corrigido"
         ],
         image_name="Foto Dashboard.png",
         accent_color=PINK
@@ -1109,46 +1109,46 @@ def main():
     # Slide 6: Feature - Dashboard/Progresso
     add_feature_slide_v2(
         prs,
-        title="Visualize sua evolucao em tempo real",
+        title="Visualize sua evolução em tempo real",
         subtitle="Acompanhe seu Progresso",
-        description="Dashboard completo com graficos e estatisticas detalhadas para acompanhar seu desenvolvimento no alemao.",
+        description="Dashboard completo com gráficos e estatísticas detalhadas para acompanhar seu desenvolvimento no alemão.",
         features=[
-            "Grafico de distribuicao de erros por categoria",
-            "Historico de erros por redacao",
-            "Estatisticas gerais de performance",
-            "Tracking de evolucao ao longo do tempo"
+            "Gráfico de distribuição de erros por categoria",
+            "Histórico de erros por redação",
+            "Estatísticas gerais de performance",
+            "Tracking de evolução ao longo do tempo"
         ],
         image_name="Foto resultados.png",
         accent_color=PURPLE
     )
 
-    # Slide 7: Feature - Pratica de Conversacao (NOVO - com screenshot anexo)
+    # Slide 7: Feature - Prática de Conversação (NOVO - com screenshot anexo)
     add_feature_slide_v2(
         prs,
-        title="Pratique alemao falado com IA",
-        subtitle="Pratica de Conversacao",
+        title="Pratique alemão falado com IA",
+        subtitle="Prática de Conversação",
         description="Converse em tempo real com personagens de IA em diferentes contextos profissionais e do dia a dia.",
         features=[
-            "10 personagens com diferentes profissoes",
-            "Reconhecimento de voz em alemao",
-            "Analise de erros apos a conversa",
-            "Pratica de escuta e pronuncia"
+            "10 personagens com diferentes profissões",
+            "Reconhecimento de voz em alemão",
+            "Análise de erros após a conversa",
+            "Prática de escuta e pronúncia"
         ],
         image_name="screenshot_practice_conversation.png",
         accent_color=CYAN
     )
 
-    # Slide 8: Feature - Vocabulario
+    # Slide 8: Feature - Vocabulário
     add_feature_slide_v2(
         prs,
-        title="Organize e pratique seu vocabulario",
-        subtitle="Listas de Vocabulario",
-        description="Crie listas personalizadas, importe palavras via CSV e classifique por nivel de dificuldade.",
+        title="Organize e pratique seu vocabulário",
+        subtitle="Listas de Vocabulário",
+        description="Crie listas personalizadas, importe palavras via CSV e classifique por nível de dificuldade.",
         features=[
-            "Multiplas listas organizadas por tema",
-            "Importacao de CSV",
-            "Classificacao por dificuldade (vermelho/amarelo/verde)",
-            "Traducao automatica para portugues"
+            "Múltiplas listas organizadas por tema",
+            "Importação de CSV",
+            "Classificação por dificuldade (vermelho/amarelo/verde)",
+            "Tradução automática para português"
         ],
         image_name="Lista de vocabulario.png",
         accent_color=GREEN
@@ -1159,28 +1159,28 @@ def main():
         prs,
         title="Pratique de forma interativa e divertida",
         subtitle="Jogos e Flashcards",
-        description="Teste seu conhecimento com flashcards interativos e jogos como o jogo da forca alemao.",
+        description="Teste seu conhecimento com flashcards interativos e jogos como o jogo da forca alemão.",
         features=[
-            "Flashcards automaticos a partir das redacoes",
+            "Flashcards automáticos a partir das redações",
             "Jogo da forca com dicas inteligentes",
-            "Filtro por nivel de dificuldade",
-            "Pratica de artigos (der/die/das)"
+            "Filtro por nível de dificuldade",
+            "Prática de artigos (der/die/das)"
         ],
         image_name="screenshot_flashcards_game.png",
         accent_color=BLUE
     )
 
-    # Slide 10: Feature - Parafrase (com screenshot anexo)
+    # Slide 10: Feature - Paráfrase (com screenshot anexo)
     add_feature_slide_v2(
         prs,
         title="Reescreva textos em diferentes estilos",
         subtitle="Parafraseador Inteligente",
-        description="Transforme seu texto alemao em diferentes estilos: formal, casual, com emojis, simplificado e mais.",
+        description="Transforme seu texto alemão em diferentes estilos: formal, casual, com emojis, simplificado e mais.",
         features=[
             "6 estilos diferentes de reescrita",
-            "Mantem o significado original",
-            "Ideal para aprender sinonimos",
-            "Melhore seu vocabulario ativo"
+            "Mantém o significado original",
+            "Ideal para aprender sinônimos",
+            "Melhore seu vocabulário ativo"
         ],
         image_name="screenshot_paraphrase_text.png",
         accent_color=ORANGE
