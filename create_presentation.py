@@ -470,8 +470,8 @@ def add_categories_slide(prs):
 
     add_page_number(slide, prs, page_number)
 
-def add_feature_slide_v2(prs, title, subtitle, description, features, image_name, accent_color):
-    """Template melhorado para slides de features"""
+def add_feature_slide_v2(prs, title, subtitle, description, features, image_name, accent_color, image_width=None):
+    """Template melhorado para slides de features. image_width em Inches (default 4.7)"""
     global page_number
     page_number += 1
 
@@ -539,11 +539,13 @@ def add_feature_slide_v2(prs, title, subtitle, description, features, image_name
 
     # Imagem com moldura arredondada (simulada)
     img_path = os.path.join(IMAGES_DIR, image_name)
+    img_w = Inches(image_width) if image_width else Inches(4.7)
+    img_x = Inches(5.0) + (Inches(4.7) - img_w) / 2  # Centraliza se menor
     if os.path.exists(img_path):
         try:
             # Adiciona a imagem
             pic = slide.shapes.add_picture(
-                img_path, Inches(5.0), Inches(0.5), width=Inches(4.7)
+                img_path, img_x, Inches(0.5), width=img_w
             )
         except Exception as e:
             print(f"Erro ao adicionar imagem {image_name}: {e}")
@@ -1200,7 +1202,8 @@ def main():
             "Apenas 2,5 créditos por frase"
         ],
         image_name="Screenshot_chatbot_correcaoconversa.png",
-        accent_color=PINK
+        accent_color=PINK,
+        image_width=2.35  # 50% do tamanho normal
     )
 
     # Slide 12: Feature - Chatbot Explicação de Gramática
@@ -1216,7 +1219,8 @@ def main():
             "5 créditos por tópico explicado"
         ],
         image_name="Screenshot_chatbot_explicacaogramatica.png",
-        accent_color=PURPLE
+        accent_color=PURPLE,
+        image_width=2.35  # 50% do tamanho normal
     )
 
     # Slide 13: Como funciona
