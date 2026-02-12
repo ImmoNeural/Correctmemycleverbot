@@ -1105,7 +1105,7 @@ def main():
             "IA treinada para erros comuns de brasileiros",
             "Exportação do texto corrigido"
         ],
-        image_name="Foto Dashboard.png",
+        image_name="Screenshot_Composition_english.png",
         accent_color=PINK
     )
 
@@ -1153,7 +1153,7 @@ def main():
             "Classificação por dificuldade (vermelho/amarelo/verde)",
             "Tradução automática para português"
         ],
-        image_name="Lista de vocabulario.png",
+        image_name="Words.png",
         accent_color=GREEN
     )
 
