@@ -971,7 +971,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (insertError) {
                     console.error("Erro ao criar perfil:", insertError);
                     // Usa perfil padrão se a inserção falhar
-                    profile = { credits: 200, avatar_url: null, total_essays: 0, error_declinacao: 0, error_conjugacao: 0, error_sintaxe: 0, error_preposicao: 0, error_vocabulario: 0 };
+                    profile = { credits: 100, avatar_url: null, total_essays: 0, error_declinacao: 0, error_conjugacao: 0, error_sintaxe: 0, error_preposicao: 0, error_vocabulario: 0 };
                 } else {
                     profile = newProfile;
                 }
