@@ -649,13 +649,208 @@
                         </ul>
                     </div>
                     <div class="order-1 lg:order-2">
-                        <div class="screenshot-container glow-blue" style="aspect-ratio: 1064/898; background: url('images/Jogos.png') center/cover no-repeat;">
-                            <img src="images/Jogos.png"
+                        <div class="screenshot-container glow-blue">
+                            <img src="images/screenshot_flashcards_game.png"
                                  alt="Jogo de Flashcards"
-                                 width="1064"
-                                 height="898"
-                                 style="width:100%;height:auto;display:block;"
-                                 onerror="this.style.display='none';">
+                                 class="w-full h-auto"
+                                 loading="lazy"
+                                 onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'bg-dark-700 rounded-lg p-12 text-center\'><p class=\'text-gray-400\'>Screenshot: Flashcards</p></div>';">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 5: Prática de Conversação -->
+                <div class="grid lg:grid-cols-2 gap-12 items-center mb-24">
+                    <div class="order-2">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-cyan-400 font-semibold" data-i18n="feature5.tag">Prática de Conversação</span>
+                        </div>
+                        <h3 class="text-3xl md:text-4xl font-bold mb-4" data-i18n="feature5.title">
+                            Pratique alemão falado com IA
+                        </h3>
+                        <p class="text-gray-400 text-lg mb-6" data-i18n="feature5.desc">
+                            Converse em tempo real com personagens de IA em diferentes contextos profissionais e do dia a dia. Melhore sua pronúncia e fluência.
+                        </p>
+                        <ul class="space-y-3 text-gray-300">
+                            <li class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span data-i18n="feature5.item1">10 personagens com diferentes profissões</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span data-i18n="feature5.item2">Reconhecimento de voz em alemão</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span data-i18n="feature5.item3">Análise de erros após a conversa</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="order-1">
+                        <div class="screenshot-container glow-purple">
+                            <img src="images/screenshot_practice_conversation.png"
+                                 alt="Prática de Conversação"
+                                 class="w-full h-auto"
+                                 loading="lazy"
+                                 onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'bg-dark-700 rounded-lg p-12 text-center\'><p class=\'text-gray-400\'>Screenshot: Prática de Conversação</p></div>';">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 6: Parafraseador -->
+                <div class="grid lg:grid-cols-2 gap-12 items-center mb-24">
+                    <div class="order-2 lg:order-1">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                            </div>
+                            <span class="text-orange-400 font-semibold" data-i18n="feature6.tag">Parafraseador Inteligente</span>
+                        </div>
+                        <h3 class="text-3xl md:text-4xl font-bold mb-4" data-i18n="feature6.title">
+                            Reescreva textos em diferentes estilos
+                        </h3>
+                        <p class="text-gray-400 text-lg mb-6" data-i18n="feature6.desc">
+                            Transforme seu texto alemão em diferentes estilos: formal, casual, com emojis, simplificado e mais. Apenas ~5 créditos por uso.
+                        </p>
+                        <ul class="space-y-3 text-gray-300">
+                            <li class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span data-i18n="feature6.item1">6 estilos diferentes de reescrita</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span data-i18n="feature6.item2">Mantém o significado original</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span data-i18n="feature6.item3">Ideal para aprender sinônimos</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="order-1 lg:order-2">
+                        <div class="screenshot-container glow-pink">
+                            <img src="images/parafrasear.png"
+                                 alt="Parafraseador Inteligente"
+                                 class="w-full h-auto"
+                                 loading="lazy"
+                                 onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'bg-dark-700 rounded-lg p-12 text-center\'><p class=\'text-gray-400\'>Screenshot: Parafraseador</p></div>';">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 7: Chatbot Correção de Conversação -->
+                <div class="grid lg:grid-cols-2 gap-12 items-center mb-24">
+                    <div class="order-2">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-pink-400 font-semibold" data-i18n="feature7.tag">Chatbot de Conversação</span>
+                        </div>
+                        <h3 class="text-3xl md:text-4xl font-bold mb-4" data-i18n="feature7.title">
+                            Pratique escrita com correção em tempo real
+                        </h3>
+                        <p class="text-gray-400 text-lg mb-6" data-i18n="feature7.desc">
+                            Converse por escrito com o chatbot e receba correções instantâneas de cada frase que você escreve. Apenas 2,5 créditos por frase.
+                        </p>
+                        <ul class="space-y-3 text-gray-300">
+                            <li class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span data-i18n="feature7.item1">Correção imediata de cada frase</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span data-i18n="feature7.item2">Feedback detalhado sobre erros</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span data-i18n="feature7.item3">Prática de escrita contextualizada</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="order-1">
+                        <div class="screenshot-container glow-purple">
+                            <img src="images/Screenshot_chatbot_correcaoconversa.png"
+                                 alt="Chatbot de Conversação"
+                                 class="w-full h-auto"
+                                 loading="lazy"
+                                 onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'bg-dark-700 rounded-lg p-12 text-center\'><p class=\'text-gray-400\'>Screenshot: Chatbot de Conversação</p></div>';">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 8: Chatbot Explicação de Gramática -->
+                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    <div class="order-2 lg:order-1">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-purple-400 font-semibold" data-i18n="feature8.tag">Chatbot de Gramática</span>
+                        </div>
+                        <h3 class="text-3xl md:text-4xl font-bold mb-4" data-i18n="feature8.title">
+                            Tire suas dúvidas de gramática
+                        </h3>
+                        <p class="text-gray-400 text-lg mb-6" data-i18n="feature8.desc">
+                            Pergunte qualquer dúvida sobre gramática alemã e receba explicações detalhadas e exemplos práticos. 5 créditos por tópico explicado.
+                        </p>
+                        <ul class="space-y-3 text-gray-300">
+                            <li class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span data-i18n="feature8.item1">Explicações em português</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span data-i18n="feature8.item2">Exemplos práticos de uso</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span data-i18n="feature8.item3">Mais de 60 tópicos gramaticais</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="order-1 lg:order-2">
+                        <div class="screenshot-container glow-blue">
+                            <img src="images/Screenshot_chatbot_explicacaogramatica.png"
+                                 alt="Chatbot de Gramática"
+                                 class="w-full h-auto"
+                                 loading="lazy"
+                                 onerror="this.onerror=null;this.parentElement.innerHTML='<div class=\'bg-dark-700 rounded-lg p-12 text-center\'><p class=\'text-gray-400\'>Screenshot: Chatbot de Gramática</p></div>';">
                         </div>
                     </div>
                 </div>
@@ -1242,6 +1437,38 @@
                 'feature4.yellow': 'Yellow - Medium level',
                 'feature4.green': 'Green - Easy words',
 
+                // Feature 5 - Conversation Practice
+                'feature5.tag': 'Conversation Practice',
+                'feature5.title': 'Practice spoken German with AI',
+                'feature5.desc': 'Chat in real time with AI characters in different professional and everyday contexts. Improve your pronunciation and fluency.',
+                'feature5.item1': '10 characters with different professions',
+                'feature5.item2': 'German voice recognition',
+                'feature5.item3': 'Error analysis after conversation',
+
+                // Feature 6 - Paraphraser
+                'feature6.tag': 'Smart Paraphraser',
+                'feature6.title': 'Rewrite texts in different styles',
+                'feature6.desc': 'Transform your German text into different styles: formal, casual, with emojis, simplified and more. Only ~5 credits per use.',
+                'feature6.item1': '6 different rewriting styles',
+                'feature6.item2': 'Keeps original meaning',
+                'feature6.item3': 'Great for learning synonyms',
+
+                // Feature 7 - Conversation Chatbot
+                'feature7.tag': 'Conversation Chatbot',
+                'feature7.title': 'Practice writing with real-time correction',
+                'feature7.desc': 'Chat in writing with the chatbot and receive instant corrections for each sentence you write. Only 2.5 credits per sentence.',
+                'feature7.item1': 'Immediate correction of each sentence',
+                'feature7.item2': 'Detailed feedback on errors',
+                'feature7.item3': 'Contextualized writing practice',
+
+                // Feature 8 - Grammar Chatbot
+                'feature8.tag': 'Grammar Chatbot',
+                'feature8.title': 'Get your grammar questions answered',
+                'feature8.desc': 'Ask any question about German grammar and receive detailed explanations and practical examples. 5 credits per topic explained.',
+                'feature8.item1': 'Explanations in Portuguese',
+                'feature8.item2': 'Practical usage examples',
+                'feature8.item3': 'Over 60 grammar topics',
+
                 // How It Works
                 'howItWorks.title1': 'How it',
                 'howItWorks.title2': 'works',
@@ -1346,6 +1573,39 @@
                 'feature4.red': 'Vermelho - Palavras difíceis',
                 'feature4.yellow': 'Amarelo - Nível médio',
                 'feature4.green': 'Verde - Palavras fáceis',
+
+                // Feature 5 - Prática de Conversação
+                'feature5.tag': 'Prática de Conversação',
+                'feature5.title': 'Pratique alemão falado com IA',
+                'feature5.desc': 'Converse em tempo real com personagens de IA em diferentes contextos profissionais e do dia a dia. Melhore sua pronúncia e fluência.',
+                'feature5.item1': '10 personagens com diferentes profissões',
+                'feature5.item2': 'Reconhecimento de voz em alemão',
+                'feature5.item3': 'Análise de erros após a conversa',
+
+                // Feature 6 - Parafraseador
+                'feature6.tag': 'Parafraseador Inteligente',
+                'feature6.title': 'Reescreva textos em diferentes estilos',
+                'feature6.desc': 'Transforme seu texto alemão em diferentes estilos: formal, casual, com emojis, simplificado e mais. Apenas ~5 créditos por uso.',
+                'feature6.item1': '6 estilos diferentes de reescrita',
+                'feature6.item2': 'Mantém o significado original',
+                'feature6.item3': 'Ideal para aprender sinônimos',
+
+                // Feature 7 - Chatbot de Conversação
+                'feature7.tag': 'Chatbot de Conversação',
+                'feature7.title': 'Pratique escrita com correção em tempo real',
+                'feature7.desc': 'Converse por escrito com o chatbot e receba correções instantâneas de cada frase que você escreve. Apenas 2,5 créditos por frase.',
+                'feature7.item1': 'Correção imediata de cada frase',
+                'feature7.item2': 'Feedback detalhado sobre erros',
+                'feature7.item3': 'Prática de escrita contextualizada',
+
+                // Feature 8 - Chatbot de Gramática
+                'feature8.tag': 'Chatbot de Gramática',
+                'feature8.title': 'Tire suas dúvidas de gramática',
+                'feature8.desc': 'Pergunte qualquer dúvida sobre gramática alemã e receba explicações detalhadas e exemplos práticos. 5 créditos por tópico explicado.',
+                'feature8.item1': 'Explicações em português',
+                'feature8.item2': 'Exemplos práticos de uso',
+                'feature8.item3': 'Mais de 60 tópicos gramaticais',
+
                 'howItWorks.title1': 'Como',
                 'howItWorks.title2': 'funciona',
                 'howItWorks.subtitle': 'Em 3 passos simples',

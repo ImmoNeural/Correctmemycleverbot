@@ -236,10 +236,10 @@ def add_index_slide(prs):
         ("01", "Vantagens do CorrectMe", PINK),
         ("02", "Sistema de Categorização de Erros", PURPLE),
         ("03", "Recursos da Plataforma", CYAN),
-        ("04", "Como Funciona", GREEN),
-        ("05", "Análise de Custo", ORANGE),
-        ("06", "Comparativo com Concorrentes", BLUE),
-        ("07", "Público Alvo", PINK),
+        ("04", "Chatbot e Ferramentas IA", GREEN),
+        ("05", "Como Funciona", ORANGE),
+        ("06", "Análise de Custo", BLUE),
+        ("07", "Comparativo e Público Alvo", PINK),
     ]
 
     y_start = Inches(1.4)
@@ -727,15 +727,16 @@ def add_cost_analysis_slide(prs):
 
     credit_items = [
         ("100 créditos", "Grátis para novos usuários"),
-        ("Correção de texto", "~1 crédito por correção"),
-        ("Prática de conversação", "10 créditos/minuto"),
-        ("Paráfrase de texto", "~1 crédito por uso"),
+        ("Correção de texto", "~20 créditos por correção"),
+        ("Paráfrase de texto", "~5 créditos por uso"),
+        ("Chatbot conversação", "2,5 créditos por frase"),
+        ("Chatbot gramática", "5 créditos por tópico"),
         ("Flashcards e jogos", "Gratuito"),
     ]
 
     y_start = Inches(1.9)
     for i, (item, desc) in enumerate(credit_items):
-        y = y_start + i * Inches(0.55)
+        y = y_start + i * Inches(0.45)
 
         # Bullet
         bullet = slide.shapes.add_shape(
@@ -1182,23 +1183,55 @@ def main():
             "Ideal para aprender sinônimos",
             "Melhore seu vocabulário ativo"
         ],
-        image_name="screenshot_paraphrase_text.png",
+        image_name="parafrasear.png",
         accent_color=ORANGE
     )
 
-    # Slide 11: Como funciona
+    # Slide 11: Feature - Chatbot Correção de Conversação
+    add_feature_slide_v2(
+        prs,
+        title="Pratique escrita com correção em tempo real",
+        subtitle="Chatbot de Conversação",
+        description="Converse por escrito com o chatbot e receba correções instantâneas de cada frase que você escreve.",
+        features=[
+            "Correção imediata de cada frase",
+            "Feedback detalhado sobre erros",
+            "Prática de escrita contextualizada",
+            "Apenas 2,5 créditos por frase"
+        ],
+        image_name="Screenshot_chatbot_correcaoconversa.png",
+        accent_color=PINK
+    )
+
+    # Slide 12: Feature - Chatbot Explicação de Gramática
+    add_feature_slide_v2(
+        prs,
+        title="Tire suas dúvidas de gramática",
+        subtitle="Chatbot de Gramática",
+        description="Pergunte qualquer dúvida sobre gramática alemã e receba explicações detalhadas e exemplos práticos.",
+        features=[
+            "Explicações em português",
+            "Exemplos práticos de uso",
+            "Mais de 60 tópicos gramaticais",
+            "5 créditos por tópico explicado"
+        ],
+        image_name="Screenshot_chatbot_explicacaogramatica.png",
+        accent_color=PURPLE
+    )
+
+    # Slide 13: Como funciona
     add_how_it_works_slide(prs)
 
-    # Slide 12: Analise de Custo (NOVO)
+    # Slide 14: Analise de Custo
     add_cost_analysis_slide(prs)
 
-    # Slide 13: Comparacao
+    # Slide 15: Comparacao
     add_comparison_slide(prs)
 
-    # Slide 14: Publico Alvo
+    # Slide 16: Publico Alvo
     add_target_audience_slide(prs)
 
-    # Slide 15: CTA
+    # Slide 17: CTA
     add_cta_slide(prs)
 
     # Salvar
