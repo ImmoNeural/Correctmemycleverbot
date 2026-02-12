@@ -1366,20 +1366,38 @@ async function handleCorrectionSubmit(e) {
             body: JSON.stringify({ email: dataToSend.email, redacao: dataToSend.redacao })
         }).catch(err => console.warn('Flashcard error (não crítico):', err));
 
+        // Verificar idioma atual
+        const currentLang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+        const isEnglish = currentLang === 'en' || currentLang === 'en-US' || currentLang === 'en-GB';
+
+        // Textos traduzidos
+        const i18nTexts = {
+            colorLegend: isEnglish ? 'Color Legend:' : 'Legenda de Cores:',
+            textAnalysis: isEnglish ? 'Analysis of your text:' : 'Análise do seu texto:',
+            analyzingErrors: isEnglish ? 'Analyzing grammatical errors...' : 'Analisando erros gramaticais...',
+            errorDetails: isEnglish ? 'Error Details:' : 'Detalhes dos Erros:',
+            wrongWord: isEnglish ? 'Wrong Word:' : 'Palavra Errada:',
+            correction: isEnglish ? 'Correction:' : 'Correção:',
+            errorFound: isEnglish ? 'error(s) found' : 'erro(s) encontrado(s)',
+            analyzing: isEnglish ? 'Analyzing...' : 'Analisando...',
+            analysisComplete: isEnglish ? 'Analysis complete!' : 'Análise completa!',
+            noErrors: isEnglish ? 'Essay without errors! Congratulations!' : 'Redação sem erros! Parabéns!'
+        };
+
         // Definição das categorias (precisa estar acessível antes)
         const categorias = {
-            declinacao: { corHex: '#f472b6', nome: 'Declinação' },
-            conjugacao: { corHex: '#c084fc', nome: 'Conjugação' },
-            preposicoes: { corHex: '#60a5fa', nome: 'Preposições' },
-            sintaxe: { corHex: '#fb923c', nome: 'Sintaxe' },
-            vocabulario: { corHex: '#4ade80', nome: 'Vocabulário' }
+            declinacao: { corHex: '#f472b6', nome: isEnglish ? 'Declension' : 'Declinação' },
+            conjugacao: { corHex: '#c084fc', nome: isEnglish ? 'Conjugation' : 'Conjugação' },
+            preposicoes: { corHex: '#60a5fa', nome: isEnglish ? 'Prepositions' : 'Preposições' },
+            sintaxe: { corHex: '#fb923c', nome: isEnglish ? 'Syntax' : 'Sintaxe' },
+            vocabulario: { corHex: '#4ade80', nome: isEnglish ? 'Vocabulary' : 'Vocabulário' }
         };
 
         // IMEDIATAMENTE: Mostra legenda + texto do usuário
         if (formMessageEl) {
             formMessageEl.innerHTML = `
                 <div style="padding: 16px; background-color: #1e293b; border-radius: 8px; margin-bottom: 20px;">
-                    <h3 style="font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 12px;">Legenda de Cores:</h3>
+                    <h3 style="font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 12px;">${i18nTexts.colorLegend}</h3>
                     <div style="display: flex; flex-wrap: wrap; gap: 10px;">
                         ${Object.values(categorias).map(c => `
                             <span style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background-color: #334155; border-radius: 6px;">
@@ -1390,20 +1408,20 @@ async function handleCorrectionSubmit(e) {
                 </div>
 
                 <div style="padding: 16px; background-color: #1e293b; border-radius: 8px; margin-bottom: 20px;">
-                    <h3 style="font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 10px;">Análise do seu texto:</h3>
+                    <h3 style="font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 10px;">${i18nTexts.textAnalysis}</h3>
                     <div id="texto-corrigido-container" style="padding: 12px; background-color: #0f172a; border-radius: 6px; font-size: 15px; line-height: 1.7; color: #e2e8f0;">${escapeHtml(text)}</div>
                 </div>
 
                 <div id="status-analise" style="padding: 16px; background-color: #1e293b; border-radius: 8px; margin-bottom: 20px;">
                     <div class="text-yellow-400" style="display: flex; align-items: center; gap: 10px;">
                         <span class="loading-spinner" style="width: 20px; height: 20px; border: 2px solid #fbbf24; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span>
-                        <span>Analisando erros gramaticais...</span>
+                        <span>${i18nTexts.analyzingErrors}</span>
                     </div>
                 </div>
 
                 <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
 
-                <h3 style="font-size: 18px; font-weight: 600; color: #cbd5e1; margin-bottom: 16px;">Detalhes dos Erros:</h3>
+                <h3 style="font-size: 18px; font-weight: 600; color: #cbd5e1; margin-bottom: 16px;">${i18nTexts.errorDetails}</h3>
                 <div id="detalhes-erros-container"></div>
             `;
             formMessageEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1549,13 +1567,13 @@ async function handleCorrectionSubmit(e) {
 
                 ${palavraErradaEscaped ? `
                     <p style="margin: 0 0 8px 0; font-size: 14px;">
-                        <span style="color: #94a3b8;">Palavra Errada:</span>
+                        <span style="color: #94a3b8;">${i18nTexts.wrongWord}</span>
                         <span style="color: #fca5a5; font-weight: 600;">${palavraErradaEscaped}</span>
                     </p>` : ''}
 
                 ${sugestaoCorrecao ? `
                     <p style="margin: 0 0 8px 0; font-size: 14px;">
-                        <span style="color: #94a3b8;">Correção:</span>
+                        <span style="color: #94a3b8;">${i18nTexts.correction}</span>
                         <span style="color: #86efac; font-weight: 600;">${sugestaoCorrecao}</span>
                     </p>` : ''}
 
@@ -1577,7 +1595,7 @@ async function handleCorrectionSubmit(e) {
                 statusAnalise.innerHTML = `
                     <div class="text-yellow-400" style="display: flex; align-items: center; gap: 10px;">
                         <span class="loading-spinner" style="width: 20px; height: 20px; border: 2px solid #fbbf24; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span>
-                        <span>Analisando... ${totalErrosExibidos} erro(s) encontrado(s)</span>
+                        <span>${i18nTexts.analyzing} ${totalErrosExibidos} ${i18nTexts.errorFound}</span>
                     </div>
                 `;
             }
@@ -1666,11 +1684,11 @@ async function handleCorrectionSubmit(e) {
         // Atualiza status final
         if (statusAnalise) {
             if (totalErrosExibidos === 0) {
-                statusAnalise.innerHTML = `<div class="text-green-400"><p>Redação sem erros! Parabéns!</p></div>`;
+                statusAnalise.innerHTML = `<div class="text-green-400"><p>${i18nTexts.noErrors}</p></div>`;
             } else {
                 statusAnalise.innerHTML = `
                     <div class="text-green-400" style="display: flex; align-items: center; gap: 10px;">
-                        <span>✓ Análise completa! ${totalErrosExibidos} erro(s) encontrado(s).</span>
+                        <span>✓ ${i18nTexts.analysisComplete} ${totalErrosExibidos} ${i18nTexts.errorFound}.</span>
                     </div>
                 `;
             }
