@@ -8656,14 +8656,20 @@ GESPRÄCHSREGELN:
             const source = conversacaoState.audioContext.createMediaStreamSource(conversacaoState.stream);
 
             // Passar o sample rate real e o ganho calibrado para o worklet fazer downsampling correto para 16kHz
-            const savedMicGain = window.getSavedMicGain ? window.getSavedMicGain() : 2.0;
+            // IMPORTANTE: Limitar o ganho máximo a 4x para evitar distorção que confunde o reconhecimento de voz
+            const rawMicGain = window.getSavedMicGain ? window.getSavedMicGain() : 2.0;
+            const MAX_MIC_GAIN = 4.0; // Ganho acima de 4x causa distorção severa
+            const savedMicGain = Math.min(rawMicGain, MAX_MIC_GAIN);
+            if (rawMicGain > MAX_MIC_GAIN) {
+                console.warn(`⚠️ Ganho calibrado (${rawMicGain}) excede máximo permitido. Usando ${MAX_MIC_GAIN}x para evitar distorção.`);
+            }
             conversacaoState.workletNode = new AudioWorkletNode(conversacaoState.audioContext, 'audio-processor', {
                 processorOptions: {
                     inputSampleRate: realSampleRate,
                     micGain: savedMicGain
                 }
             });
-            console.log('🎤 Usando ganho de microfone calibrado:', savedMicGain);
+            console.log('🎤 Usando ganho de microfone:', savedMicGain, rawMicGain > MAX_MIC_GAIN ? '(limitado de ' + rawMicGain + ')' : '(calibrado)');
 
             // Inicializar timestamp do último som
             conversacaoState.lastSoundTime = Date.now();
