@@ -8322,10 +8322,15 @@ GESPRÄCHSREGELN:
                             // Incluir todo o input na conversa
                             turnCoverage: 'TURN_INCLUDES_ALL_INPUT'
                         },
-                        // Ativar transcrição de entrada
-                        inputAudioTranscription: {},
-                        // Ativar transcrição de saída para debug
-                        outputAudioTranscription: {}
+                        // Ativar transcrição de entrada - IMPORTANTE: especificar idioma ALEMÃO
+                        // para evitar transcrição errada em árabe/japonês/etc.
+                        inputAudioTranscription: {
+                            languageCode: 'de-DE'  // Alemão (Deutschland)
+                        },
+                        // Ativar transcrição de saída para debug - também em alemão
+                        outputAudioTranscription: {
+                            languageCode: 'de-DE'
+                        }
                     }
                 };
 
@@ -10438,6 +10443,14 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
                 .replace(/\s+/g, ' ')
                 .trim();
 
+            // FILTRO: Ignora transcrições que claramente não são alemãs
+            // Detecta caracteres japoneses, chineses, árabes, coreanos, etc.
+            const nonGermanPattern = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\u0600-\u06FF\uAC00-\uD7AF\u0590-\u05FF]/;
+            if (nonGermanPattern.test(cleaned)) {
+                console.log('⚠️ Transcrição ignorada (caracteres não-alemães detectados):', cleaned);
+                return; // Não armazena transcrições em outros idiomas
+            }
+
             if (cleaned.length > 5) {
                 storeTranscript(cleaned, 'user');
             }
@@ -10493,12 +10506,15 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
         showAnalysisStatus(window.t('conversacao.analyzing'));
 
         try {
-            // Get current language for error explanations
+            // Get current UI language for error explanations (pt-BR or en)
             const currentLang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+            // Target language is always German for now (could be extended for other languages)
+            const targetLang = 'de';  // Idioma sendo estudado: alemão
             const requestBody = {
                 transcripts: userTranscripts,
                 fullAnalysis: true,
-                language: currentLang
+                language: currentLang,      // Idioma das explicações (pt-BR ou en)
+                targetLanguage: targetLang  // Idioma sendo estudado (de = alemão)
             };
             console.log('📤 Enviando para DeepSeek:', JSON.stringify(requestBody, null, 2));
 

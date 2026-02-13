@@ -5,16 +5,22 @@ const DEEPSEEK_API_KEY = 'sk-e080234eab8b442fb65fe8955d8947de';
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 
 // Get analysis prompt based on language
-function getAnalysisPrompt(language) {
+// language = UI language for explanations (pt-BR, en)
+// targetLanguage = language being studied (de = German)
+function getAnalysisPrompt(language, targetLanguage = 'de') {
     const isEnglish = language === 'en' || language === 'en-US' || language === 'en-GB';
 
     if (isEnglish) {
         return `You are a GERMAN language expert specialized in error classification.
 
-IMPORTANT:
-- Analyze ONLY German text
-- IGNORE text in other languages
-- If no German text, return []
+CRITICAL INSTRUCTIONS:
+- The student is learning GERMAN and speaking with a FOREIGN ACCENT (often Brazilian)
+- Analyze ONLY what appears to be attempts at GERMAN speech
+- The transcription may be WRONG - it may show Arabic, Japanese, or other characters incorrectly
+- If you see text in Arabic, Japanese, Chinese, or other non-German scripts, IGNORE IT COMPLETELY
+- If the transcription shows random characters or non-German text, return []
+- Focus ONLY on recognizable German words or phrases
+- If no recognizable German text, return []
 
 ═══════════════════════════════════════════════════════════════════════════════
                     PRECISE ERROR CATEGORY DEFINITIONS
@@ -110,10 +116,14 @@ RULES:
     // Default to Portuguese
     return `Você é um professor de ALEMÃO especialista em classificação de erros gramaticais.
 
-IMPORTANTE:
-- Analise APENAS texto em alemão
-- IGNORE texto em outros idiomas
-- Se não houver alemão, retorne []
+INSTRUÇÕES CRÍTICAS:
+- O aluno está aprendendo ALEMÃO e fala com SOTAQUE ESTRANGEIRO (frequentemente brasileiro)
+- Analise APENAS o que parece ser tentativas de falar ALEMÃO
+- A transcrição pode estar ERRADA - pode mostrar caracteres em árabe, japonês ou outros idiomas incorretamente
+- Se você vir texto em árabe, japonês, chinês ou outros scripts não-alemães, IGNORE COMPLETAMENTE
+- Se a transcrição mostrar caracteres aleatórios ou texto não-alemão, retorne []
+- Foque APENAS em palavras ou frases reconhecíveis em alemão
+- Se não houver texto alemão reconhecível, retorne []
 
 ═══════════════════════════════════════════════════════════════════════════════
                     DEFINIÇÕES PRECISAS DAS CATEGORIAS DE ERRO
@@ -207,11 +217,11 @@ REGRAS:
 }
 
 // Timeout reduzido para funcionar no Netlify
-async function callDeepSeek(userContent, language = 'pt-BR') {
+async function callDeepSeek(userContent, language = 'pt-BR', targetLanguage = 'de') {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 segundos
 
-    const prompt = getAnalysisPrompt(language);
+    const prompt = getAnalysisPrompt(language, targetLanguage);
 
     try {
         const response = await fetch(DEEPSEEK_API_URL, {
@@ -285,11 +295,11 @@ exports.handler = async (event) => {
 
     try {
         const body = JSON.parse(event.body);
-        const { transcripts, fullAnalysis, language } = body;
+        const { transcripts, fullAnalysis, language, targetLanguage } = body;
 
         if (fullAnalysis && Array.isArray(transcripts)) {
             const formatted = formatTranscripts(transcripts);
-            console.log('Analisando:', formatted, 'Language:', language);
+            console.log('Analisando:', formatted, 'Language:', language, 'TargetLanguage:', targetLanguage || 'de');
 
             if (!formatted || formatted.length < 10) {
                 return {
@@ -300,7 +310,7 @@ exports.handler = async (event) => {
             }
 
             const userContent = `Frases do aluno:\n${formatted}`;
-            const rawResponse = await callDeepSeek(userContent, language);
+            const rawResponse = await callDeepSeek(userContent, language, targetLanguage);
             console.log('Resposta:', rawResponse.substring(0, 200));
 
             const corrections = parseCorrections(rawResponse);
