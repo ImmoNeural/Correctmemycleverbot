@@ -8703,7 +8703,22 @@ GESPRÄCHSREGELN:
 
             conversacaoState.workletNode.port.onmessage = (event) => {
                 if (conversacaoState.ws?.readyState === WebSocket.OPEN && conversacaoState.isConnected) {
+                    // Verificar se é sinal de fim de fala do VAD local
+                    if (event.data.speechEnded) {
+                        // Enviar audioStreamEnd para sinalizar ao Gemini que o usuário parou de falar
+                        // Isso faz o Gemini processar o áudio acumulado e gerar resposta
+                        console.log('📤 VAD local detectou fim de fala - enviando audioStreamEnd');
+                        const endMessage = {
+                            realtimeInput: {
+                                audioStreamEnd: {}
+                            }
+                        };
+                        conversacaoState.ws.send(JSON.stringify(endMessage));
+                        return;
+                    }
+
                     const { audioData } = event.data;
+                    if (!audioData) return;
 
                     // Atualizar timestamp de atividade
                     conversacaoState.lastSoundTime = Date.now();
@@ -9145,6 +9160,9 @@ GESPRÄCHSREGELN:
                             if (this.hangoverCounter === 0) {
                                 console.log('🎤 VAD: Fim de fala detectado (hangover expirado)');
                                 this.isSpeaking = false;
+                                // Sinalizar ao código principal que a fala terminou
+                                // para enviar audioStreamEnd ao Gemini
+                                this.port.postMessage({ speechEnded: true });
                             }
                         } else {
                             // Silêncio real - adicionar ao ring buffer de pré-fala
