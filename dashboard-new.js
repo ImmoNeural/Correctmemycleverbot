@@ -8322,15 +8322,10 @@ GESPRÄCHSREGELN:
                             // Incluir todo o input na conversa
                             turnCoverage: 'TURN_INCLUDES_ALL_INPUT'
                         },
-                        // Ativar transcrição de entrada - IMPORTANTE: especificar idioma ALEMÃO
-                        // para evitar transcrição errada em árabe/japonês/etc.
-                        inputAudioTranscription: {
-                            languageCode: 'de-DE'  // Alemão (Deutschland)
-                        },
-                        // Ativar transcrição de saída para debug - também em alemão
-                        outputAudioTranscription: {
-                            languageCode: 'de-DE'
-                        }
+                        // Ativar transcrição de entrada - idioma é inferido automaticamente do áudio
+                        inputAudioTranscription: {},
+                        // Ativar transcrição de saída para debug
+                        outputAudioTranscription: {}
                     }
                 };
 
