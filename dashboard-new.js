@@ -8311,10 +8311,10 @@ GESPRÄCHSREGELN:
                             automaticActivityDetection: {
                                 disabled: false,
                                 // Sensibilidade ALTA para detectar início de fala (não perder palavras)
-                                startOfSpeechSensitivity: 'START_SENSITIVITY_HIGH',
+                                startOfSpeechSensitivity: 'START_OF_SPEECH_SENSITIVITY_HIGH',
                                 // Sensibilidade MÉDIA para fim de fala (dar tempo para pausas naturais)
                                 // MEDIUM evita cortar a fala do usuário prematuramente
-                                endOfSpeechSensitivity: 'END_SENSITIVITY_MEDIUM',
+                                endOfSpeechSensitivity: 'END_OF_SPEECH_SENSITIVITY_MEDIUM',
                                 // Padding antes do início da fala (ms) - aumentado para capturar contexto
                                 prefixPaddingMs: 200,
                                 // Duração do silêncio para considerar fim de fala (ms)
