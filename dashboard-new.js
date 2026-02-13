@@ -5988,9 +5988,19 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
 
         if (!container) return;
 
+        // Resetar contadores por categoria (serão recalculados)
+        errorCounts = {
+            declinacao: 0,
+            conjugacao: 0,
+            preposicoes: 0,
+            sintaxe: 0,
+            vocabulario: 0
+        };
+
         if (accumulatedErrors.length === 0) {
             container.innerHTML = '<p class="text-slate-500 text-center py-8 col-span-full">Erros aparecerão aqui em tempo real durante a conversa.</p>';
             countContainer?.classList.add('hidden');
+            updatePieChart(); // Atualizar gráfico mesmo sem erros
             return;
         }
 
@@ -6018,25 +6028,66 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
             return map[c] || 'vocabulario';
         };
 
+        // Contar erros por categoria antes de renderizar
+        accumulatedErrors.forEach(err => {
+            const normalizedCat = normalizeCat(err.categoria);
+            errorCounts[normalizedCat]++;
+        });
+
+        // Função para escapar HTML
+        const escapeHtmlLocal = (str) => {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        };
+
         container.innerHTML = accumulatedErrors.map(err => {
             const normalizedCat = normalizeCat(err.categoria);
             const color = normalizedCategoryColors[normalizedCat] || '#94a3b8';
             const displayCat = getCategoryDisplayName(normalizedCat);
+
+            // Destacar o erro no contexto (se disponível)
+            let contextHtml = '';
+            if (err.contexto) {
+                const contextoEscaped = escapeHtmlLocal(err.contexto);
+                const erroEscaped = escapeHtmlLocal(err.erro || '');
+                // Tenta destacar o erro no contexto
+                if (erroEscaped && contextoEscaped.toLowerCase().includes(erroEscaped.toLowerCase())) {
+                    const regex = new RegExp(`(${erroEscaped.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                    contextHtml = contextoEscaped.replace(regex, `<mark style="background: ${color}; color: #000; padding: 1px 4px; border-radius: 3px;">$1</mark>`);
+                } else {
+                    contextHtml = contextoEscaped;
+                }
+            }
+
             return `
                 <div class="bg-slate-900/50 rounded-lg p-4 border-l-4" style="border-color: ${color}">
+                    ${err.contexto ? `
+                    <div style="margin-bottom: 10px; padding: 8px; background: #0f172a; border-radius: 6px; font-style: italic; color: #e2e8f0; font-size: 12px; line-height: 1.4;">
+                        "${contextHtml}"
+                    </div>` : ''}
                     <div class="flex items-center gap-2 mb-2">
                         <span class="w-3 h-3 rounded-full" style="background: ${color}"></span>
                         <span class="text-xs text-slate-400 uppercase">${displayCat}</span>
                     </div>
-                    <p class="text-red-400 text-sm line-through mb-1">${err.erro}</p>
-                    <p class="text-green-400 text-sm font-medium mb-2">${err.correcao}</p>
-                    <p class="text-slate-400 text-xs">${err.explicacao}</p>
+                    <p class="text-red-400 text-sm line-through mb-1">${escapeHtmlLocal(err.erro)}</p>
+                    <p class="text-green-400 text-sm font-medium mb-2">${escapeHtmlLocal(err.correcao)}</p>
+                    <p class="text-slate-400 text-xs">${escapeHtmlLocal(err.explicacao)}</p>
                 </div>
             `;
         }).join('');
 
         if (totalSpan) totalSpan.textContent = accumulatedErrors.length;
         countContainer?.classList.remove('hidden');
+
+        // Atualizar o gráfico de pizza com os contadores recalculados
+        updatePieChart();
+
+        console.log(`📊 displayAccumulatedErrors - errorCounts atualizados:`, JSON.stringify(errorCounts));
     }
 
     function initializeConversacao() {
