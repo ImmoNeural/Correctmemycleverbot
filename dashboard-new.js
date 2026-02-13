@@ -5830,10 +5830,12 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         document.getElementById('conv-active-area').classList.add('hidden');
     }
 
-    // Timer para análise de erros a cada 5 minutos
+    // Sistema de análise de erros em tempo real
     let errorAnalysisInterval = null;
     let accumulatedErrors = [];
     let lastAnalyzedTranscriptIndex = 0; // Rastreia até onde já foi analisado
+    let pendingAnalysisCount = 0; // Contador de análises pendentes no DeepSeek
+    let analysisQueue = []; // Fila de frases para analisar
 
     function startErrorAnalysisTimer() {
         // Limpa timer anterior se existir
@@ -5910,6 +5912,61 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         }
     }
 
+    // NOVA: Análise em tempo real - dispara análise imediatamente após cada frase do usuário
+    async function analyzeUserPhraseRealtime(text) {
+        if (!text || text.trim().length < 5) return;
+
+        // Incrementa contador de análises pendentes
+        pendingAnalysisCount++;
+        console.log(`🔄 Análise em tempo real iniciada. Pendentes: ${pendingAnalysisCount}`);
+
+        try {
+            const currentLang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+            const targetLang = 'de';
+
+            const response = await fetch('/.netlify/functions/conversacao-correcoes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    transcripts: [{ text: text.trim(), speaker: 'user', timestamp: Date.now() }],
+                    fullAnalysis: true,
+                    language: currentLang,
+                    targetLanguage: targetLang
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+
+                if (data.corrections && data.corrections.length > 0) {
+                    console.log(`✅ Tempo real: ${data.corrections.length} erro(s) encontrado(s) em: "${text.substring(0, 50)}..."`);
+
+                    // Adiciona novos erros aos acumulados (evitando duplicatas)
+                    data.corrections.forEach(err => {
+                        const exists = accumulatedErrors.some(e =>
+                            e.erro === err.erro && e.correcao === err.correcao
+                        );
+                        if (!exists) {
+                            accumulatedErrors.push(err);
+                            console.log(`➕ Erro adicionado: "${err.erro}" → "${err.correcao}"`);
+                        }
+                    });
+
+                    // Atualiza a UI imediatamente
+                    displayAccumulatedErrors();
+                } else {
+                    console.log(`✅ Tempo real: nenhum erro em: "${text.substring(0, 50)}..."`);
+                }
+            }
+        } catch (error) {
+            console.error('Erro na análise em tempo real:', error);
+        } finally {
+            // Decrementa contador de análises pendentes
+            pendingAnalysisCount--;
+            console.log(`🔄 Análise em tempo real concluída. Pendentes: ${pendingAnalysisCount}`);
+        }
+    }
+
     // Função auxiliar para obter o nome da categoria traduzido (usada em displayAccumulatedErrors)
     function getCategoryDisplayName(categoria) {
         const categoryMap = {
@@ -5932,7 +5989,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
         if (!container) return;
 
         if (accumulatedErrors.length === 0) {
-            container.innerHTML = '<p class="text-slate-500 text-center py-8 col-span-full">Erros aparecerão aqui durante a conversa (análise a cada 5 minutos).</p>';
+            container.innerHTML = '<p class="text-slate-500 text-center py-8 col-span-full">Erros aparecerão aqui em tempo real durante a conversa.</p>';
             countContainer?.classList.add('hidden');
             return;
         }
@@ -8331,14 +8388,15 @@ WENN DU NICHT VERSTEHST:
 
 GESPRÄCHSREGELN - ABSOLUT KRITISCH:
 - UNTERBRECHE DEN SCHÜLER NIEMALS! NIEMALS! NIEMALS!
-- WARTE bis der Schüler KOMPLETT fertig ist zu sprechen!
-- Der Schüler macht Pausen zum Nachdenken - DAS IST NORMAL!
-- Wenn er eine Pause macht, warte mindestens 2-3 Sekunden bevor du antwortest.
-- Erst wenn er EINDEUTIG fertig ist (kompletter Satz, natürliche Endpause), darfst du antworten.
-- HÖRE aktiv zu und lass ihn AUSREDEN!
-- Der Schüler braucht Zeit um Wörter zu finden - gib ihm diese Zeit.
-- Sei ermutigend und freundlich.
-- KURZE ANTWORTEN! Nicht mehr als 2-3 Sätze auf einmal!` }]
+- WARTE IMMER mindestens 3 SEKUNDEN STILLE bevor du antwortest!
+- Der Schüler spricht LANGSAM und macht LANGE PAUSEN - DAS IST VÖLLIG NORMAL!
+- Der Schüler denkt nach und sucht nach Wörtern - GIB IHM DIESE ZEIT!
+- Wenn der Schüler "ähm", "äh", "hm" sagt, WARTE - er sucht das nächste Wort!
+- Erst wenn der Schüler KOMPLETT STILL ist für 3+ Sekunden, darfst du antworten.
+- ZÄHLE innerlich bis 3 bevor du sprichst!
+- Wenn du zu früh sprichst und er noch nicht fertig war, ENTSCHULDIGE dich und lass ihn weitersprechen.
+- KURZE ANTWORTEN! Maximal 2-3 kurze Sätze auf einmal!
+- Sei geduldig, ermutigend und freundlich.` }]
                         },
                         // Configuração de VAD (Voice Activity Detection) para melhor detecção de fala
                         // NOTA: VAD local já filtra silêncio - Gemini recebe áudio mais limpo
@@ -8357,8 +8415,8 @@ GESPRÄCHSREGELN - ABSOLUT KRITISCH:
                                 // Padding antes do início da fala (ms) - aumentado para capturar contexto
                                 prefixPaddingMs: 200,
                                 // Duração do silêncio para considerar fim de fala (ms)
-                                // 1500ms = tempo generoso para pausas naturais e pensar
-                                silenceDurationMs: 1500
+                                // 2500ms = tempo muito generoso para pausas longas de alunos pensando
+                                silenceDurationMs: 2500
                             },
                             // Incluir todo o input na conversa
                             turnCoverage: 'TURN_INCLUDES_ALL_INPUT'
@@ -8491,7 +8549,8 @@ GESPRÄCHSREGELN - ABSOLUT KRITISCH:
                     conversacaoState.personaHasSpoken = true; // Assume que já falou antes
                 }
 
-                startErrorAnalysisTimer(); // Inicia análise de erros a cada 5 min
+                // Análise de erros agora é em tempo real (após cada frase do usuário)
+                // startErrorAnalysisTimer(); // Timer de 5 min desativado
                 startSessionRefreshTimer(); // Reconexão proativa antes do limite de 10min
                 // Keep-alive desativado - o streaming de áudio já mantém a conexão
                 // startKeepAlive();
@@ -9474,7 +9533,7 @@ GESPRÄCHSREGELN - ABSOLUT KRITISCH:
     }
 
     // Desconectar da conversa
-    function disconnectConversation() {
+    async function disconnectConversation() {
         console.log('Desconectando...');
 
         // Guardar duração antes de limpar (totalSeconds is preserved across reconnections)
@@ -9489,16 +9548,27 @@ GESPRÄCHSREGELN - ABSOLUT KRITISCH:
         console.log(`⏱️ Duração total da conversa: ${conversationDuration} segundos (${(conversationDuration/60).toFixed(2)} minutos)`);
         console.log(`💰 Créditos esperados: ${expectedCredits} (10 créditos/minuto)`);
 
-        if (conversacaoState.ws) {
-            conversacaoState.ws.close();
+        // VERIFICAR ANÁLISES PENDENTES: Aguardar conclusão antes de desconectar
+        if (pendingAnalysisCount > 0) {
+            console.log(`⏳ Aguardando ${pendingAnalysisCount} análise(s) pendente(s) do DeepSeek...`);
+            updateStatus(window.t('conversacao.waitingAnalysis') || 'Aguardando análise...', 'connecting');
+
+            // Aguardar até 10 segundos para análises pendentes
+            const maxWait = 10000; // 10 segundos
+            const startWait = Date.now();
+            while (pendingAnalysisCount > 0 && (Date.now() - startWait) < maxWait) {
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+
+            if (pendingAnalysisCount > 0) {
+                console.log(`⚠️ Timeout: ainda há ${pendingAnalysisCount} análise(s) pendente(s), prosseguindo...`);
+            } else {
+                console.log('✅ Todas as análises pendentes concluídas!');
+            }
         }
 
-        // Dispara análise de erros ao desconectar (se houver transcripts)
-        if (conversacaoState.transcripts && conversacaoState.transcripts.length > 0) {
-            console.log('📊 Disparando análise de correções...');
-            triggerAnalysis();
-        } else {
-            console.log('⚠️ Nenhum transcript para analisar!');
+        if (conversacaoState.ws) {
+            conversacaoState.ws.close();
         }
 
         // Deduzir créditos baseado no tempo de conversa
@@ -10719,12 +10789,10 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
 
         console.log(`📝 FRASE COMPLETA ARMAZENADA (${speaker}):`, text);
 
-        // Inicia timer de 5 minutos se ainda não foi iniciado
-        if (!conversacaoState.analysisTimer && !conversacaoState.analysisTriggered) {
-            conversacaoState.analysisTimer = setTimeout(() => {
-                console.log('⏰ Timer de 5 minutos atingido - iniciando análise');
-                triggerAnalysis();
-            }, 5 * 60 * 1000); // 5 minutos
+        // ANÁLISE EM TEMPO REAL: Se for fala do usuário, analisa imediatamente
+        if (speaker === 'user') {
+            console.log('🔍 Disparando análise em tempo real para:', text.substring(0, 50) + '...');
+            analyzeUserPhraseRealtime(text);
         }
     }
 
@@ -10981,7 +11049,7 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
         // Mostrar mensagem de "sem erros" com texto traduzido
         const noErrorsMsg = document.getElementById('conv-no-errors-msg');
         if (noErrorsMsg) {
-            noErrorsMsg.textContent = window.t ? window.t('conversacao.errorsWillAppear') : 'Erros aparecerão aqui após a conversa.';
+            noErrorsMsg.textContent = window.t ? window.t('conversacao.errorsWillAppear') : 'Erros aparecerão aqui em tempo real durante a conversa.';
             noErrorsMsg.classList.remove('hidden');
         }
 
@@ -11002,6 +11070,8 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
         // Limpar erros acumulados (apenas quando for nova sessão, não reconexão)
         accumulatedErrors = [];
         lastAnalyzedTranscriptIndex = 0; // Resetar índice de análise
+        pendingAnalysisCount = 0; // Resetar contador de análises pendentes
+        analysisQueue = []; // Limpar fila de análises
 
         // Resetar contadores de erro por categoria
         errorCounts = {
