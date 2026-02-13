@@ -8710,7 +8710,7 @@ GESPRÄCHSREGELN:
                         console.log('📤 VAD local detectou fim de fala - enviando audioStreamEnd');
                         const endMessage = {
                             realtimeInput: {
-                                audioStreamEnd: {}
+                                audioStreamEnd: true
                             }
                         };
                         conversacaoState.ws.send(JSON.stringify(endMessage));
