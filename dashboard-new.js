@@ -8413,8 +8413,8 @@ GESPRÄCHSREGELN - ABSOLUT KRITISCH:
                                 // Padding antes do início da fala (ms) - aumentado para capturar contexto
                                 prefixPaddingMs: 200,
                                 // Duração do silêncio para considerar fim de fala (ms)
-                                // 2500ms = tempo muito generoso para pausas longas de alunos pensando
-                                silenceDurationMs: 2500
+                                // 1200ms = resposta rápida (~2s total de delay)
+                                silenceDurationMs: 1200
                             },
                             // Incluir todo o input na conversa
                             turnCoverage: 'TURN_INCLUDES_ALL_INPUT'
@@ -9086,10 +9086,9 @@ GESPRÄCHSREGELN - ABSOLUT KRITISCH:
                     this.isSpeaking = false;
 
                     // Hangover: continuar enviando por X frames após silêncio detectado
-                    // Evita cortar o fim das palavras e dá tempo para o aluno pensar
-                    // IMPORTANTE: Aumentado de 15 (200ms) para 150 (2000ms) para alunos que fazem pausas longas
-                    // O Gemini tem silenceDurationMs: 2500, então hangover deve ser próximo disso
-                    this.hangoverFrames = 150; // ~2000ms de hangover (era 15 = 200ms)
+                    // Evita cortar o fim das palavras
+                    // 60 frames (~800ms) coordenado com silenceDurationMs: 1200 para resposta rápida (~2s)
+                    this.hangoverFrames = 60; // ~800ms de hangover
                     this.hangoverCounter = 0;
 
                     // Ring buffer para pré-fala (não cortar início das palavras)
