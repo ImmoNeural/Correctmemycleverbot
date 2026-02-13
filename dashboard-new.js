@@ -4724,7 +4724,7 @@ GESPRÄCHSFÜHRUNG - SEI NEUGIERIG UND AKTIV:
 
 ZEITLIMIT - 45 MINUTEN:
 - Diese Unterhaltung dauert maximal 45 Minuten
-- Erwähne die Zeit gelegentlich: "Wir haben noch etwa 30 Minuten..." oder "Die Zeit vergeht schnell!"
+- Erwähne die 45-Minuten-Grenze NUR EINMAL am Anfang des Gesprächs, NIEMALS danach wiederholen!
 - Nach 45 Minuten MUSST du das Gespräch höflich beenden: "So, unsere 45 Minuten sind leider schon vorbei! Es war sehr schön, mit dir zu sprechen. Ich hoffe, du hast heute etwas Neues gelernt. Bis zum nächsten Mal - tschüss!"
 
 WENN DER SCHÜLER STILL IST (nach 2-3 Sekunden):
@@ -4825,7 +4825,7 @@ GESPRÄCHSFÜHRUNG - SEI NEUGIERIG UND AKTIV:
 
 ZEITLIMIT - 45 MINUTEN:
 - Diese Unterhaltung dauert maximal 45 Minuten
-- Erwähne die Zeit gelegentlich: "Wir haben noch etwa 30 Minuten..." oder "Die Zeit vergeht schnell!"
+- Erwähne die 45-Minuten-Grenze NUR EINMAL am Anfang des Gesprächs, NIEMALS danach wiederholen!
 - Nach 45 Minuten MUSST du das Gespräch höflich beenden: "So, unsere 45 Minuten sind leider schon vorbei! Es war sehr schön, mit dir zu sprechen. Ich hoffe, du hast heute etwas Neues gelernt. Bis zum nächsten Mal - tschüss!"
 
 WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
@@ -4918,7 +4918,7 @@ GESPRÄCHSFÜHRUNG - SEI NEUGIERIG UND AKTIV:
 
 ZEITLIMIT - 45 MINUTEN:
 - Diese Unterhaltung dauert maximal 45 Minuten
-- Erwähne die Zeit gelegentlich: "Wir haben noch etwa 30 Minuten..." oder "Die Zeit vergeht schnell!"
+- Erwähne die 45-Minuten-Grenze NUR EINMAL am Anfang des Gesprächs, NIEMALS danach wiederholen!
 - Nach 45 Minuten MUSST du das Gespräch höflich beenden: "So, unsere 45 Minuten sind leider schon vorbei! Es war sehr schön, mit dir zu sprechen. Ich hoffe, du hast heute etwas Neues gelernt. Bis zum nächsten Mal - tschüss!"
 
 WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
@@ -5011,7 +5011,7 @@ GESPRÄCHSFÜHRUNG - SEI NEUGIERIG UND AKTIV:
 
 ZEITLIMIT - 45 MINUTEN:
 - Diese Unterhaltung dauert maximal 45 Minuten
-- Erwähne die Zeit gelegentlich: "Wir haben noch etwa 30 Minuten..." oder "Die Zeit vergeht schnell!"
+- Erwähne die 45-Minuten-Grenze NUR EINMAL am Anfang des Gesprächs, NIEMALS danach wiederholen!
 - Nach 45 Minuten MUSST du das Gespräch höflich beenden: "So, unsere 45 Minuten sind leider schon vorbei! Es war sehr schön, mit dir zu sprechen. Ich hoffe, du hast heute etwas Neues gelernt. Bis zum nächsten Mal - tschüss!"
 
 WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
@@ -5104,7 +5104,7 @@ GESPRÄCHSFÜHRUNG - SEI NEUGIERIG UND AKTIV:
 
 ZEITLIMIT - 45 MINUTEN:
 - Diese Unterhaltung dauert maximal 45 Minuten
-- Erwähne die Zeit gelegentlich: "Wir haben noch etwa 30 Minuten..." oder "Die Zeit vergeht schnell!"
+- Erwähne die 45-Minuten-Grenze NUR EINMAL am Anfang des Gesprächs, NIEMALS danach wiederholen!
 - Nach 45 Minuten MUSST du das Gespräch höflich beenden: "So, unsere 45 Minuten sind leider schon vorbei! Es war sehr schön, mit dir zu sprechen. Ich hoffe, du hast heute etwas Neues gelernt. Bis zum nächsten Mal - tschüss!"
 
 WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
@@ -5204,7 +5204,7 @@ GESPRÄCHSFÜHRUNG - SEI NEUGIERIG UND AKTIV:
 
 ZEITLIMIT - 45 MINUTEN:
 - Diese Unterhaltung dauert maximal 45 Minuten
-- Erwähne die Zeit gelegentlich: "Wir haben noch etwa 30 Minuten..." oder "Die Zeit vergeht schnell!"
+- Erwähne die 45-Minuten-Grenze NUR EINMAL am Anfang des Gesprächs, NIEMALS danach wiederholen!
 - Nach 45 Minuten MUSST du das Gespräch höflich beenden: "So, unsere 45 Minuten sind leider schon vorbei! Es war sehr schön, mit dir zu sprechen. Ich hoffe, du hast heute etwas Neues gelernt. Bis zum nächsten Mal - tschüss!"
 
 WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
@@ -5296,7 +5296,7 @@ GESPRÄCHSFÜHRUNG - SEI NEUGIERIG UND AKTIV:
 
 ZEITLIMIT - 45 MINUTEN:
 - Diese Unterhaltung dauert maximal 45 Minuten
-- Erwähne die Zeit gelegentlich: "Wir haben noch etwa 30 Minuten..." oder "Die Zeit vergeht schnell!"
+- Erwähne die 45-Minuten-Grenze NUR EINMAL am Anfang des Gesprächs, NIEMALS danach wiederholen!
 - Nach 45 Minuten MUSST du das Gespräch höflich beenden: "So, unsere 45 Minuten sind leider schon vorbei! Es war sehr schön, mit dir zu sprechen. Ich hoffe, du hast heute etwas Neues gelernt. Bis zum nächsten Mal - tschüss!"
 
 WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
@@ -5388,7 +5388,7 @@ GESPRÄCHSFÜHRUNG - SEI NEUGIERIG UND AKTIV:
 
 ZEITLIMIT - 45 MINUTEN:
 - Diese Unterhaltung dauert maximal 45 Minuten
-- Erwähne die Zeit gelegentlich: "Wir haben noch etwa 30 Minuten..." oder "Die Zeit vergeht schnell!"
+- Erwähne die 45-Minuten-Grenze NUR EINMAL am Anfang des Gesprächs, NIEMALS danach wiederholen!
 - Nach 45 Minuten MUSST du das Gespräch höflich beenden: "So, unsere 45 Minuten sind leider schon vorbei! Es war sehr schön, mit dir zu sprechen. Ich hoffe, du hast heute etwas Neues gelernt. Bis zum nächsten Mal - tschüss!"
 
 WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
@@ -5597,7 +5597,7 @@ GESPRÄCHSFÜHRUNG - SEI NEUGIERIG UND AKTIV:
 
 ZEITLIMIT - 45 MINUTEN:
 - Diese Unterhaltung dauert maximal 45 Minuten
-- Erwähne die Zeit gelegentlich: "Wir haben noch etwa 30 Minuten..." oder "Die Zeit vergeht schnell!"
+- Erwähne die 45-Minuten-Grenze NUR EINMAL am Anfang des Gesprächs, NIEMALS danach wiederholen!
 - Nach 45 Minuten MUSST du das Gespräch höflich beenden: "So, unsere 45 Minuten sind leider schon vorbei! Es war sehr schön, mit dir zu sprechen. Ich hoffe, du hast heute etwas Neues gelernt. Bis zum nächsten Mal - tschüss!"
 
 WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
@@ -5691,7 +5691,7 @@ GESPRÄCHSFÜHRUNG - SEI NEUGIERIG UND AKTIV:
 
 ZEITLIMIT - 45 MINUTEN:
 - Diese Unterhaltung dauert maximal 45 Minuten
-- Erwähne die Zeit gelegentlich: "Wir haben noch etwa 30 Minuten..." oder "Die Zeit vergeht schnell!"
+- Erwähne die 45-Minuten-Grenze NUR EINMAL am Anfang des Gesprächs, NIEMALS danach wiederholen!
 - Nach 45 Minuten MUSST du das Gespräch höflich beenden: "So, unsere 45 Minuten sind leider schon vorbei! Es war sehr schön, mit dir zu sprechen. Ich hoffe, du hast heute etwas Neues gelernt. Bis zum nächsten Mal - tschüss!"
 
 WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
@@ -5858,7 +5858,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
 
     // Análise periódica que acumula erros
     async function triggerPeriodicAnalysis() {
-        const userTranscripts = conversacaoState.transcripts.filter(t => t.role === 'user' && t.text);
+        const userTranscripts = conversacaoState.transcripts.filter(t => t.speaker === 'user' && t.text);
         if (userTranscripts.length === 0) return;
 
         try {
