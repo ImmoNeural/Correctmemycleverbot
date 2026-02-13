@@ -5833,6 +5833,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
     // Timer para análise de erros a cada 5 minutos
     let errorAnalysisInterval = null;
     let accumulatedErrors = [];
+    let lastAnalyzedTranscriptIndex = 0; // Rastreia até onde já foi analisado
 
     function startErrorAnalysisTimer() {
         // Limpa timer anterior se existir
@@ -5858,8 +5859,17 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
 
     // Análise periódica que acumula erros
     async function triggerPeriodicAnalysis() {
-        const userTranscripts = conversacaoState.transcripts.filter(t => t.speaker === 'user' && t.text);
-        if (userTranscripts.length === 0) return;
+        const allUserTranscripts = conversacaoState.transcripts.filter(t => t.speaker === 'user' && t.text);
+        if (allUserTranscripts.length === 0) return;
+
+        // Pega apenas transcripts novos (ainda não analisados)
+        const newTranscripts = allUserTranscripts.slice(lastAnalyzedTranscriptIndex);
+        if (newTranscripts.length === 0) {
+            console.log('📭 Nenhum novo transcript para analisar');
+            return;
+        }
+
+        console.log(`🔍 Análise periódica: ${newTranscripts.length} novos transcripts (total: ${allUserTranscripts.length})`);
 
         try {
             const currentLang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
@@ -5867,7 +5877,7 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    transcripts: userTranscripts,
+                    transcripts: newTranscripts,
                     fullAnalysis: true,
                     language: currentLang
                 })
@@ -5875,7 +5885,11 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
 
             if (response.ok) {
                 const data = await response.json();
+                // Atualiza o índice para não analisar os mesmos transcripts novamente
+                lastAnalyzedTranscriptIndex = allUserTranscripts.length;
+
                 if (data.corrections && data.corrections.length > 0) {
+                    console.log(`✅ Encontrados ${data.corrections.length} erros nos novos transcripts`);
                     // Adiciona novos erros aos acumulados (evitando duplicatas)
                     data.corrections.forEach(err => {
                         const exists = accumulatedErrors.some(e =>
@@ -5883,9 +5897,12 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                         );
                         if (!exists) {
                             accumulatedErrors.push(err);
+                            console.log(`➕ Novo erro adicionado: "${err.erro}" → "${err.correcao}"`);
                         }
                     });
                     displayAccumulatedErrors();
+                } else {
+                    console.log('✅ Nenhum erro nos novos transcripts');
                 }
             }
         } catch (error) {
@@ -8312,11 +8329,16 @@ WENN DU NICHT VERSTEHST:
 - NIEMALS auf Japanisch, Chinesisch oder andere Sprachen antworten!
 - IMMER auf DEUTSCH antworten!
 
-GESPRÄCHSREGELN:
-- UNTERBRECHE DEN SCHÜLER NIEMALS!
-- Warte immer geduldig bis er fertig gesprochen hat.
-- Gib ihm Zeit zum Nachdenken.
-- Sei ermutigend und freundlich.` }]
+GESPRÄCHSREGELN - ABSOLUT KRITISCH:
+- UNTERBRECHE DEN SCHÜLER NIEMALS! NIEMALS! NIEMALS!
+- WARTE bis der Schüler KOMPLETT fertig ist zu sprechen!
+- Der Schüler macht Pausen zum Nachdenken - DAS IST NORMAL!
+- Wenn er eine Pause macht, warte mindestens 2-3 Sekunden bevor du antwortest.
+- Erst wenn er EINDEUTIG fertig ist (kompletter Satz, natürliche Endpause), darfst du antworten.
+- HÖRE aktiv zu und lass ihn AUSREDEN!
+- Der Schüler braucht Zeit um Wörter zu finden - gib ihm diese Zeit.
+- Sei ermutigend und freundlich.
+- KURZE ANTWORTEN! Nicht mehr als 2-3 Sätze auf einmal!` }]
                         },
                         // Configuração de VAD (Voice Activity Detection) para melhor detecção de fala
                         // NOTA: VAD local já filtra silêncio - Gemini recebe áudio mais limpo
@@ -8335,8 +8357,8 @@ GESPRÄCHSREGELN:
                                 // Padding antes do início da fala (ms) - aumentado para capturar contexto
                                 prefixPaddingMs: 200,
                                 // Duração do silêncio para considerar fim de fala (ms)
-                                // 800ms = mais tempo para pausas naturais na conversação
-                                silenceDurationMs: 800
+                                // 1500ms = tempo generoso para pausas naturais e pensar
+                                silenceDurationMs: 1500
                             },
                             // Incluir todo o input na conversa
                             turnCoverage: 'TURN_INCLUDES_ALL_INPUT'
@@ -8612,6 +8634,10 @@ GESPRÄCHSREGELN:
                     console.log(`🤖 [${timestamp}] IA DISSE:`, transcript);
                     // Quando a IA fala, flush o transcript do usuário acumulado
                     flushUserTranscript();
+                    // Processa transcrição da IA para extrair correções
+                    if (transcript && transcript.length > 10) {
+                        processAITranscript(transcript);
+                    }
                 }
 
                 // Generation complete - a IA terminou de gerar resposta
@@ -10598,6 +10624,88 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
         }
     }
 
+    // Função para extrair correções da fala da IA (persona)
+    function extractCorrectionsFromAI(text) {
+        if (!text || text.length < 10) return [];
+
+        const corrections = [];
+
+        // Padrões de correção em alemão e português que a persona pode usar
+        const patterns = [
+            // "Nicht X, sondern Y" ou "Nicht X, Y"
+            /nicht\s+["']?([^"',]+)["']?\s*,?\s*(?:sondern|)?\s*["']?([^"'.!]+)["']?/gi,
+            // "X ist falsch, richtig ist Y" ou "X falsch, richtig Y"
+            /["']?([^"',]+)["']?\s+(?:ist\s+)?falsch[,.]?\s*(?:richtig\s+ist\s*)?["']?([^"'.!]+)["']?/gi,
+            // "Es heißt X, nicht Y" ou "Man sagt X"
+            /(?:es heißt|man sagt)\s+["']?([^"',]+)["']?\s*,?\s*nicht\s+["']?([^"'.!]+)["']?/gi,
+            // "Besser wäre X" ou "Richtig wäre X"
+            /(?:besser|richtig|korrekt)\s+(?:wäre|ist)\s+["']?([^"'.!]+)["']?/gi,
+            // Português: "O correto é X" ou "deveria ser X"
+            /(?:o\s+correto\s+é|deveria\s+ser|seria\s+melhor)\s+["']?([^"'.!]+)["']?/gi,
+            // "Du hast X gesagt, aber Y" ou "Sie sagten X, aber Y"
+            /(?:du\s+hast|sie\s+haben?)\s+["']?([^"',]+)["']?\s+gesagt,?\s*aber\s+["']?([^"'.!]+)["']?/gi
+        ];
+
+        for (const pattern of patterns) {
+            let match;
+            while ((match = pattern.exec(text)) !== null) {
+                if (match[1] && match[2]) {
+                    const erro = match[1].trim();
+                    const correcao = match[2].trim();
+                    // Evitar falsos positivos muito curtos
+                    if (erro.length > 2 && correcao.length > 2 && erro !== correcao) {
+                        corrections.push({
+                            categoria: 'vocabulario', // Padrão, será refinado pela análise
+                            contexto: text.substring(0, 100) + '...',
+                            erro: erro,
+                            correcao: correcao,
+                            explicacao: 'Correção feita pela persona durante a conversa'
+                        });
+                    }
+                } else if (match[1]) {
+                    // Padrões que só capturam a correção
+                    const correcao = match[1].trim();
+                    if (correcao.length > 3) {
+                        // Não podemos deduzir o erro, mas marcamos como dica
+                        console.log(`💡 Dica da persona: "${correcao}"`);
+                    }
+                }
+            }
+        }
+
+        return corrections;
+    }
+
+    // Função para processar transcrição da IA e extrair correções
+    function processAITranscript(text) {
+        if (!text || text.length < 10) return;
+
+        // Armazena também a fala da IA (para contexto)
+        conversacaoState.transcripts.push({
+            timestamp: Date.now(),
+            speaker: 'ai',
+            text: text.trim()
+        });
+
+        // Extrai correções e adiciona aos erros acumulados
+        const corrections = extractCorrectionsFromAI(text);
+        if (corrections.length > 0) {
+            console.log(`🔍 Extraídas ${corrections.length} correção(ões) da fala da IA`);
+            corrections.forEach(corr => {
+                const exists = accumulatedErrors.some(e =>
+                    e.erro === corr.erro && e.correcao === corr.correcao
+                );
+                if (!exists) {
+                    accumulatedErrors.push(corr);
+                    console.log(`➕ Correção da persona: "${corr.erro}" → "${corr.correcao}"`);
+                }
+            });
+            if (corrections.length > 0) {
+                displayAccumulatedErrors();
+            }
+        }
+    }
+
     // Função para armazenar transcrição completa
     function storeTranscript(text, speaker) {
         if (!text || text.trim().length < 5) return;
@@ -10893,6 +11001,7 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
 
         // Limpar erros acumulados (apenas quando for nova sessão, não reconexão)
         accumulatedErrors = [];
+        lastAnalyzedTranscriptIndex = 0; // Resetar índice de análise
 
         // Resetar contadores de erro por categoria
         errorCounts = {
