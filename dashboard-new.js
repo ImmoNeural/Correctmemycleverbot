@@ -8205,10 +8205,10 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                 noiseSuppression: true
             };
 
-            // Se um microfone específico foi selecionado, usar deviceId
-            // Usar 'ideal' ao invés de 'exact' para maior compatibilidade com dispositivos Windows
+            // Se um microfone específico foi selecionado, usar deviceId com 'exact' primeiro
+            // para garantir consistência com a calibração (que também usa 'exact')
             if (selectedMic) {
-                audioConstraints.deviceId = { ideal: selectedMic };
+                audioConstraints.deviceId = { exact: selectedMic };
             }
 
             // Solicitar permissão do microfone com fallback
@@ -8217,12 +8217,28 @@ WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
                     audio: audioConstraints
                 });
             } catch (constraintError) {
-                // Se falhar com o deviceId específico, tentar sem ele
-                console.warn('⚠️ Não foi possível usar o microfone selecionado, tentando padrão:', constraintError.message);
-                delete audioConstraints.deviceId;
-                conversacaoState.stream = await navigator.mediaDevices.getUserMedia({
-                    audio: audioConstraints
-                });
+                // Se falhar com 'exact', tentar com 'ideal' para maior compatibilidade
+                console.warn('⚠️ Não foi possível usar o microfone selecionado com exact, tentando ideal:', constraintError.message);
+                if (selectedMic) {
+                    audioConstraints.deviceId = { ideal: selectedMic };
+                    try {
+                        conversacaoState.stream = await navigator.mediaDevices.getUserMedia({
+                            audio: audioConstraints
+                        });
+                    } catch (idealError) {
+                        // Se falhar também com ideal, usar microfone padrão
+                        console.warn('⚠️ Não foi possível usar o microfone selecionado, tentando padrão:', idealError.message);
+                        delete audioConstraints.deviceId;
+                        conversacaoState.stream = await navigator.mediaDevices.getUserMedia({
+                            audio: audioConstraints
+                        });
+                    }
+                } else {
+                    delete audioConstraints.deviceId;
+                    conversacaoState.stream = await navigator.mediaDevices.getUserMedia({
+                        audio: audioConstraints
+                    });
+                }
             }
 
             // Log das configurações reais do microfone
@@ -8311,10 +8327,11 @@ GESPRÄCHSREGELN:
                             automaticActivityDetection: {
                                 disabled: false,
                                 // Sensibilidade ALTA para detectar início de fala (não perder palavras)
-                                startOfSpeechSensitivity: 'START_OF_SPEECH_SENSITIVITY_HIGH',
-                                // Sensibilidade MÉDIA para fim de fala (dar tempo para pausas naturais)
-                                // MEDIUM evita cortar a fala do usuário prematuramente
-                                endOfSpeechSensitivity: 'END_OF_SPEECH_SENSITIVITY_MEDIUM',
+                                // IMPORTANTE: A API usa START_SENSITIVITY_*, não START_OF_SPEECH_SENSITIVITY_*
+                                startOfSpeechSensitivity: 'START_SENSITIVITY_HIGH',
+                                // Sensibilidade BAIXA para fim de fala (dar tempo para pausas naturais)
+                                // LOW evita cortar a fala do usuário prematuramente
+                                endOfSpeechSensitivity: 'END_SENSITIVITY_LOW',
                                 // Padding antes do início da fala (ms) - aumentado para capturar contexto
                                 prefixPaddingMs: 200,
                                 // Duração do silêncio para considerar fim de fala (ms)
