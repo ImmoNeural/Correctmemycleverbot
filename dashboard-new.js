@@ -8303,21 +8303,23 @@ GESPRÄCHSREGELN:
 - Sei ermutigend und freundlich.` }]
                         },
                         // Configuração de VAD (Voice Activity Detection) para melhor detecção de fala
+                        // NOTA: VAD local já filtra silêncio - Gemini recebe áudio mais limpo
                         realtimeInputConfig: {
                             // NÃO interromper a IA quando o usuário começa a falar - deixa terminar
                             activityHandling: 'NO_INTERRUPTION',
                             // Configurar detecção automática de atividade de voz
                             automaticActivityDetection: {
                                 disabled: false,
-                                // Sensibilidade ALTA para detectar início de fala (detecta fala mais facilmente)
+                                // Sensibilidade ALTA para detectar início de fala (não perder palavras)
                                 startOfSpeechSensitivity: 'START_SENSITIVITY_HIGH',
-                                // Sensibilidade ALTA para detectar fim de fala (responde mais rápido)
-                                endOfSpeechSensitivity: 'END_SENSITIVITY_HIGH',
-                                // Padding antes do início da fala (ms)
-                                prefixPaddingMs: 100,
+                                // Sensibilidade MÉDIA para fim de fala (dar tempo para pausas naturais)
+                                // MEDIUM evita cortar a fala do usuário prematuramente
+                                endOfSpeechSensitivity: 'END_SENSITIVITY_MEDIUM',
+                                // Padding antes do início da fala (ms) - aumentado para capturar contexto
+                                prefixPaddingMs: 200,
                                 // Duração do silêncio para considerar fim de fala (ms)
-                                // 500ms = resposta mais rápida (era 800ms causando acúmulo de frases)
-                                silenceDurationMs: 500
+                                // 800ms = mais tempo para pausas naturais na conversação
+                                silenceDurationMs: 800
                             },
                             // Incluir todo o input na conversa
                             turnCoverage: 'TURN_INCLUDES_ALL_INPUT'
@@ -8917,8 +8919,8 @@ GESPRÄCHSREGELN:
         }
     }
 
-    // Criar processador de áudio inline - com filtro passa-baixa e downsampling
-    // VAD é feito pelo Gemini no servidor (igual exemplo oficial)
+    // Criar processador de áudio inline - com filtro passa-baixa, downsampling e VAD local
+    // VAD local filtra silêncio ANTES de enviar ao Gemini para reduzir tráfego desnecessário
     function createAudioWorkletProcessor() {
         const processorCode = `
             class AudioProcessor extends AudioWorkletProcessor {
@@ -8959,11 +8961,59 @@ GESPRÄCHSREGELN:
                                     (1 + 2 * Math.PI * fc / this.inputSampleRate);
                     this.lpfPrevSample = 0; // Estado anterior do filtro
 
+                    // ========== VAD LOCAL (Voice Activity Detection) ==========
+                    // Threshold de energia RMS para considerar como fala
+                    // Valor baixo = mais sensível (detecta fala suave)
+                    // Valor alto = menos sensível (ignora ruídos)
+                    this.vadThreshold = options.processorOptions?.vadThreshold || 0.008;
+
+                    // Estado do VAD
+                    this.isSpeaking = false;
+
+                    // Hangover: continuar enviando por X frames após silêncio detectado
+                    // Evita cortar o fim das palavras
+                    this.hangoverFrames = 15; // ~200ms de hangover
+                    this.hangoverCounter = 0;
+
+                    // Ring buffer para pré-fala (não cortar início das palavras)
+                    // Armazena os últimos N buffers de áudio
+                    this.preSpeechBufferSize = 3; // ~200ms de pré-fala
+                    this.preSpeechBuffer = [];
+
+                    // Energia RMS suavizada (evita decisões bruscas)
+                    this.smoothedRMS = 0;
+                    this.rmsSmoothing = 0.3; // 0 = sem suavização, 1 = máxima suavização
+
+                    // Contadores de diagnóstico
+                    this.chunksSent = 0;
+                    this.chunksSkipped = 0;
+                    this.lastDiagnosticTime = Date.now();
+
                     console.log('AudioProcessor: inputSampleRate=' + this.inputSampleRate +
                                 ', targetSampleRate=' + this.targetSampleRate +
                                 ', downsampleRatio=' + this.downsampleRatio +
                                 ', gain=' + this.gain +
-                                ', lpfAlpha=' + this.lpfAlpha.toFixed(4));
+                                ', lpfAlpha=' + this.lpfAlpha.toFixed(4) +
+                                ', vadThreshold=' + this.vadThreshold);
+                }
+
+                // Calcular energia RMS do buffer
+                calculateRMS(buffer, length) {
+                    let sumSquares = 0;
+                    for (let i = 0; i < length; i++) {
+                        sumSquares += buffer[i] * buffer[i];
+                    }
+                    return Math.sqrt(sumSquares / length);
+                }
+
+                // Enviar buffer de áudio
+                sendAudioBuffer(buffer, length) {
+                    const pcmData = new Int16Array(length);
+                    for (let j = 0; j < length; j++) {
+                        pcmData[j] = Math.max(-32768, Math.min(32767, buffer[j] * 32767));
+                    }
+                    this.port.postMessage({ audioData: pcmData.buffer });
+                    this.chunksSent++;
                 }
 
                 process(inputs, outputs, parameters) {
@@ -8994,19 +9044,9 @@ GESPRÄCHSREGELN:
                                 this.accumulator = 0;
                                 this.accumulatorCount = 0;
 
-                                // Quando buffer de saída estiver cheio, enviar
+                                // Quando buffer de saída estiver cheio, processar com VAD
                                 if (this.outputBufferIndex >= this.outputBufferSize) {
-                                    // Converter para PCM 16-bit
-                                    const pcmData = new Int16Array(this.outputBufferSize);
-                                    for (let j = 0; j < this.outputBufferSize; j++) {
-                                        pcmData[j] = Math.max(-32768, Math.min(32767, this.outputBuffer[j] * 32767));
-                                    }
-
-                                    // Enviar dados de áudio
-                                    this.port.postMessage({
-                                        audioData: pcmData.buffer
-                                    });
-                                    this.outputBufferIndex = 0;
+                                    this.processBufferWithVAD();
                                 }
                             }
                         }
@@ -9014,26 +9054,97 @@ GESPRÄCHSREGELN:
                         // Incrementar contador de frames
                         this.frameCount++;
 
-                        // FLUSH PERIÓDICO: Enviar buffer parcial para reduzir latência
-                        // Isso garante que mesmo se o usuário parar de falar no meio do buffer,
-                        // o áudio será enviado rapidamente (previne delay no fim da fala)
+                        // FLUSH PERIÓDICO: Processar buffer parcial com VAD
                         if (this.frameCount >= this.flushIntervalFrames && this.outputBufferIndex > 0) {
-                            // Converter apenas as amostras que temos
-                            const pcmData = new Int16Array(this.outputBufferIndex);
-                            for (let j = 0; j < this.outputBufferIndex; j++) {
-                                pcmData[j] = Math.max(-32768, Math.min(32767, this.outputBuffer[j] * 32767));
-                            }
-
-                            // Enviar buffer parcial
-                            this.port.postMessage({
-                                audioData: pcmData.buffer
-                            });
-
-                            this.outputBufferIndex = 0;
+                            this.processBufferWithVAD();
                             this.frameCount = 0;
+                        }
+
+                        // Log de diagnóstico a cada 5 segundos
+                        const now = Date.now();
+                        if (now - this.lastDiagnosticTime >= 5000) {
+                            const total = this.chunksSent + this.chunksSkipped;
+                            const skipRate = total > 0 ? ((this.chunksSkipped / total) * 100).toFixed(1) : 0;
+                            console.log('🎤 VAD: enviados=' + this.chunksSent +
+                                       ', ignorados=' + this.chunksSkipped +
+                                       ' (' + skipRate + '% silêncio), speaking=' + this.isSpeaking +
+                                       ', RMS=' + this.smoothedRMS.toFixed(4));
+                            this.chunksSent = 0;
+                            this.chunksSkipped = 0;
+                            this.lastDiagnosticTime = now;
                         }
                     }
                     return true;
+                }
+
+                // Processar buffer com VAD antes de decidir se envia
+                processBufferWithVAD() {
+                    const bufferLength = this.outputBufferIndex;
+                    if (bufferLength === 0) return;
+
+                    // Calcular energia RMS do buffer atual
+                    const currentRMS = this.calculateRMS(this.outputBuffer, bufferLength);
+
+                    // Suavizar RMS para evitar decisões bruscas
+                    this.smoothedRMS = this.rmsSmoothing * this.smoothedRMS +
+                                       (1 - this.rmsSmoothing) * currentRMS;
+
+                    // Criar cópia do buffer para o ring buffer de pré-fala
+                    const bufferCopy = new Float32Array(bufferLength);
+                    for (let i = 0; i < bufferLength; i++) {
+                        bufferCopy[i] = this.outputBuffer[i];
+                    }
+
+                    // Decidir se é fala ou silêncio
+                    const isVoiceDetected = this.smoothedRMS >= this.vadThreshold;
+
+                    if (isVoiceDetected) {
+                        // Fala detectada!
+
+                        // Se estava em silêncio, enviar buffers de pré-fala primeiro
+                        if (!this.isSpeaking && this.preSpeechBuffer.length > 0) {
+                            console.log('🎤 VAD: Início de fala detectado! Enviando ' +
+                                       this.preSpeechBuffer.length + ' buffers de pré-fala');
+                            for (const preBuffer of this.preSpeechBuffer) {
+                                this.sendAudioBuffer(preBuffer, preBuffer.length);
+                            }
+                            this.preSpeechBuffer = [];
+                        }
+
+                        this.isSpeaking = true;
+                        this.hangoverCounter = this.hangoverFrames;
+
+                        // Enviar buffer atual
+                        this.sendAudioBuffer(this.outputBuffer, bufferLength);
+
+                    } else {
+                        // Silêncio detectado
+
+                        if (this.hangoverCounter > 0) {
+                            // Ainda no período de hangover - continuar enviando
+                            this.hangoverCounter--;
+                            this.sendAudioBuffer(this.outputBuffer, bufferLength);
+
+                            if (this.hangoverCounter === 0) {
+                                console.log('🎤 VAD: Fim de fala detectado (hangover expirado)');
+                                this.isSpeaking = false;
+                            }
+                        } else {
+                            // Silêncio real - adicionar ao ring buffer de pré-fala
+                            this.preSpeechBuffer.push(bufferCopy);
+
+                            // Manter apenas os últimos N buffers
+                            while (this.preSpeechBuffer.length > this.preSpeechBufferSize) {
+                                this.preSpeechBuffer.shift();
+                            }
+
+                            this.chunksSkipped++;
+                            this.isSpeaking = false;
+                        }
+                    }
+
+                    // Reset buffer de saída
+                    this.outputBufferIndex = 0;
                 }
             }
 
