@@ -2991,7 +2991,7 @@
 
                 <!-- SEÇÃO 2: Área de Conversa (aparece após selecionar persona) -->
                 <div id="conv-active-area" class="hidden">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
 
                         <!-- Coluna Esquerda: Info da Persona -->
                         <div class="lg:col-span-1">
@@ -3033,9 +3033,9 @@
                             </div>
                         </div>
 
-                        <!-- Coluna Central/Direita: Controles de Conversa -->
+                        <!-- Coluna Central: Controles de Conversa -->
                         <div class="lg:col-span-2">
-                            <div class="bg-slate-800/80 rounded-xl border border-slate-700 p-6">
+                            <div class="bg-slate-800/80 rounded-xl border border-slate-700 p-4">
 
                                 <!-- Status e Timer -->
                                 <div class="flex items-center justify-between mb-6">
@@ -3047,6 +3047,21 @@
                                         <span id="conv-timer" class="text-xl font-mono text-slate-300">00:00</span>
                                         <span id="conv-credits-used" class="block text-xs text-slate-500">0 créditos</span>
                                     </div>
+                                </div>
+
+                                <!-- CONFIGURAR ÁUDIO PRIMEIRO - Botão Destacado (ANTES do microfone) -->
+                                <div id="calibration-setup-area" class="mb-4">
+                                    <!-- Aviso para calibrar primeiro -->
+                                    <div id="calibration-warning" class="w-full mb-3 px-4 py-3 bg-amber-500/20 border-2 border-amber-500 rounded-lg text-center">
+                                        <p class="text-amber-300 text-sm font-bold" id="calibration-warning-text">⚠️ Configure o áudio antes de iniciar a conversa!</p>
+                                    </div>
+                                    <!-- Botão Calibrar Microfone - GRANDE E DESTACADO -->
+                                    <button id="conv-calibrate-mic-btn" class="w-full px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 rounded-xl transition-all flex items-center justify-center gap-3 text-lg font-bold text-white shadow-xl shadow-amber-500/40 animate-pulse border-2 border-amber-400" title="Calibrar sensibilidade do microfone">
+                                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                                        </svg>
+                                        <span id="conv-calibrate-text">🎤 CONFIGURAR ÁUDIO PRIMEIRO!</span>
+                                    </button>
                                 </div>
 
                                 <!-- Botão do Microfone -->
@@ -3120,23 +3135,22 @@
                                     <span id="conv-ambient-text">🍽️ Som Ambiente</span>
                                 </button>
                             </div>
+                        </div>
 
-                            <!-- Divisor -->
-                            <div class="border-t border-slate-700 my-4"></div>
-
-                            <!-- Análise de Erros - Gráfico de Pizza -->
-                            <div>
+                        <!-- Coluna Direita: Gráfico de Análise de Erros -->
+                        <div class="lg:col-span-1">
+                            <div class="bg-slate-800/80 rounded-xl border border-slate-700 p-4 h-full">
                                 <h4 class="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
                                     <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
-                                    Análise de Erros
+                                    <span data-i18n="conversacao.errorAnalysis">Análise de Erros</span>
                                 </h4>
 
                                 <!-- Gráfico de Pizza com Legenda -->
                                 <div id="conv-pie-chart-container" class="flex flex-col items-center">
                                     <!-- Gráfico SVG -->
-                                    <div class="relative w-32 h-32 mb-3">
+                                    <div class="relative w-28 h-28 mb-3">
                                         <svg id="conv-pie-chart" viewBox="0 0 100 100" class="w-full h-full transform -rotate-90">
                                             <!-- Círculo de fundo quando não há erros -->
                                             <circle cx="50" cy="50" r="40" fill="none" stroke="#334155" stroke-width="20" class="pie-chart-bg"/>
@@ -3144,108 +3158,42 @@
                                         </svg>
                                         <!-- Contador central -->
                                         <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                            <span id="conv-total-errors" class="text-2xl font-bold text-white">0</span>
-                                            <span class="text-xs text-slate-400">erros</span>
+                                            <span id="conv-total-errors" class="text-xl font-bold text-white">0</span>
+                                            <span class="text-xs text-slate-400" data-i18n="conversacao.errorsWord">erros</span>
                                         </div>
                                     </div>
 
                                     <!-- Legenda abaixo do gráfico -->
-                                    <div id="conv-pie-legend" class="grid grid-cols-2 gap-x-3 gap-y-1 text-xs w-full">
+                                    <div id="conv-pie-legend" class="grid grid-cols-1 gap-y-1 text-xs w-full">
                                         <div class="flex items-center gap-1.5 text-slate-400">
                                             <span class="w-2 h-2 rounded-sm flex-shrink-0" style="background: #f472b6;"></span>
-                                            <span>Dec</span>
+                                            <span data-i18n="conversacao.decShort">Dec</span>
                                             <span id="conv-count-declinacao" class="ml-auto text-slate-300">0</span>
                                         </div>
                                         <div class="flex items-center gap-1.5 text-slate-400">
                                             <span class="w-2 h-2 rounded-sm flex-shrink-0" style="background: #c084fc;"></span>
-                                            <span>Conj</span>
+                                            <span data-i18n="conversacao.conjShort">Conj</span>
                                             <span id="conv-count-conjugacao" class="ml-auto text-slate-300">0</span>
                                         </div>
                                         <div class="flex items-center gap-1.5 text-slate-400">
                                             <span class="w-2 h-2 rounded-sm flex-shrink-0" style="background: #60a5fa;"></span>
-                                            <span>Prep</span>
+                                            <span data-i18n="conversacao.prepShort">Prep</span>
                                             <span id="conv-count-preposicoes" class="ml-auto text-slate-300">0</span>
                                         </div>
                                         <div class="flex items-center gap-1.5 text-slate-400">
                                             <span class="w-2 h-2 rounded-sm flex-shrink-0" style="background: #fb923c;"></span>
-                                            <span>Sint</span>
+                                            <span data-i18n="conversacao.syntShort">Sint</span>
                                             <span id="conv-count-sintaxe" class="ml-auto text-slate-300">0</span>
                                         </div>
-                                        <div class="flex items-center gap-1.5 text-slate-400 col-span-2 justify-center">
+                                        <div class="flex items-center gap-1.5 text-slate-400">
                                             <span class="w-2 h-2 rounded-sm flex-shrink-0" style="background: #4ade80;"></span>
-                                            <span>Voc</span>
+                                            <span data-i18n="conversacao.vocShort">Voc</span>
                                             <span id="conv-count-vocabulario" class="ml-auto text-slate-300">0</span>
                                         </div>
                                     </div>
 
                                     <!-- Mensagem quando não há erros -->
-                                    <p id="conv-no-errors-msg" class="text-slate-500 text-center text-xs mt-2">Erros aparecerão aqui após a conversa.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- COLUNA CENTRAL: Roteiro/Cenário -->
-                    <div id="conv-center-panel" class="flex-1 min-w-0 transition-all duration-300">
-                        <!-- Estado inicial: Nenhum cenário selecionado - com fundo que une com a esquerda -->
-                        <div id="conv-no-scenario" class="h-full flex flex-col items-center justify-center text-center py-16 bg-slate-800/30 rounded-xl border border-slate-700/50">
-                            <div class="w-24 h-24 mb-6 rounded-full bg-slate-800/50 flex items-center justify-center">
-                                <svg class="w-12 h-12 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                                </svg>
-                            </div>
-                            <h3 class="text-xl font-semibold text-slate-400 mb-2">Selecione um Tema</h3>
-                            <p class="text-slate-500 max-w-md">Escolha um tema à direita para ver o roteiro da conversa e começar a praticar.</p>
-                        </div>
-
-                        <!-- Cenário selecionado -->
-                        <div id="conv-scenario-display" class="hidden">
-                            <div class="bg-slate-800/50 rounded-xl border border-slate-700 p-6">
-                                <!-- Cabeçalho do cenário -->
-                                <div class="flex items-start justify-between mb-6">
-                                    <div>
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <span id="scenario-level-badge" class="text-xs font-bold px-2 py-1 bg-green-500/20 text-green-400 rounded">A2</span>
-                                            <h2 id="scenario-title" class="text-2xl font-bold text-white">Almoço com Colegas</h2>
-                                        </div>
-                                        <p id="scenario-subtitle" class="text-slate-400">Pratique pedir comida em um restaurante tradicional alemão</p>
-                                    </div>
-                                    <button id="close-scenario-btn" class="p-2 hover:bg-slate-700 rounded-lg transition-colors" title="Fechar">
-                                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                        </svg>
-                                    </button>
-                                </div>
-
-                                <!-- Contexto -->
-                                <div class="mb-6">
-                                    <h3 class="text-sm font-semibold text-cyan-400 uppercase tracking-wide mb-2">📍 Contexto</h3>
-                                    <p id="scenario-context" class="text-slate-300 leading-relaxed">
-                                        Você está em Berlim visitando a sede da sua empresa. Três colegas alemães (Anna, Markus e Sofia) convidam você para almoçar em um típico "Gasthaus" (restaurante tradicional).
-                                    </p>
-                                </div>
-
-                                <!-- Objetivo -->
-                                <div class="mb-6">
-                                    <h3 class="text-sm font-semibold text-cyan-400 uppercase tracking-wide mb-2">🎯 Seu Objetivo</h3>
-                                    <p id="scenario-objective" class="text-slate-300 leading-relaxed">
-                                        Pedir comida, fazer perguntas simples sobre o cardápio e conversar de forma básica sobre preferências alimentares.
-                                    </p>
-                                </div>
-
-                                <!-- Vocabulário -->
-                                <div class="mb-6">
-                                    <h3 class="text-sm font-semibold text-cyan-400 uppercase tracking-wide mb-3">📚 Vocabulário Útil</h3>
-                                    <div id="scenario-vocabulary" class="grid grid-cols-2 gap-2">
-                                        <!-- Preenchido via JS -->
-                                    </div>
-                                </div>
-
-                                <!-- Dica -->
-                                <div class="mt-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-                                    <p class="text-amber-200 text-sm text-center">
-                                        💡 Clique no microfone para iniciar. A pessoa vai responder somente na área de especialidade dela.
-                                    </p>
+                                    <p id="conv-no-errors-msg" class="text-slate-500 text-center text-xs mt-2" data-i18n="conversacao.errorsWillAppear">Erros aparecerão aqui após a conversa.</p>
                                 </div>
                             </div>
                         </div>
@@ -3260,32 +3208,32 @@
                                 <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                Análise de Erros
-                                <span id="conv-analysis-timer" class="text-xs text-slate-500 font-normal">(atualiza a cada 5 min)</span>
+                                <span data-i18n="conversacao.errorAnalysis">Análise de Erros</span>
+                                <span id="conv-analysis-timer" class="text-xs text-slate-500 font-normal" data-i18n="conversacao.updatesEvery5Min">(atualiza a cada 5 min)</span>
                             </h4>
                             <!-- Legenda -->
                             <div class="flex flex-wrap gap-2 text-xs">
-                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-900/50 rounded" title="Declinação">
-                                    <span class="w-2 h-2 rounded" style="background: #f472b6;"></span>Declinação
+                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-900/50 rounded" data-i18n-title="conversacao.declension">
+                                    <span class="w-2 h-2 rounded" style="background: #f472b6;"></span><span data-i18n="conversacao.declension">Declinação</span>
                                 </span>
-                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-900/50 rounded" title="Conjugação">
-                                    <span class="w-2 h-2 rounded" style="background: #c084fc;"></span>Conjugação
+                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-900/50 rounded" data-i18n-title="conversacao.conjugation">
+                                    <span class="w-2 h-2 rounded" style="background: #c084fc;"></span><span data-i18n="conversacao.conjugation">Conjugação</span>
                                 </span>
-                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-900/50 rounded" title="Preposições">
-                                    <span class="w-2 h-2 rounded" style="background: #60a5fa;"></span>Preposições
+                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-900/50 rounded" data-i18n-title="conversacao.prepositions">
+                                    <span class="w-2 h-2 rounded" style="background: #60a5fa;"></span><span data-i18n="conversacao.prepositions">Preposições</span>
                                 </span>
-                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-900/50 rounded" title="Sintaxe">
-                                    <span class="w-2 h-2 rounded" style="background: #fb923c;"></span>Sintaxe
+                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-900/50 rounded" data-i18n-title="conversacao.syntax">
+                                    <span class="w-2 h-2 rounded" style="background: #fb923c;"></span><span data-i18n="conversacao.syntax">Sintaxe</span>
                                 </span>
-                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-900/50 rounded" title="Vocabulário">
-                                    <span class="w-2 h-2 rounded" style="background: #4ade80;"></span>Vocabulário
+                                <span class="flex items-center gap-1 px-2 py-1 bg-slate-900/50 rounded" data-i18n-title="conversacao.vocabulary">
+                                    <span class="w-2 h-2 rounded" style="background: #4ade80;"></span><span data-i18n="conversacao.vocabulary">Vocabulário</span>
                                 </span>
                             </div>
                         </div>
 
                         <!-- Grid de Correções -->
                         <div id="conv-corrections" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <p class="text-slate-500 text-center py-8 col-span-full">
+                            <p class="text-slate-500 text-center py-8 col-span-full" data-i18n="conversacao.errorsWillAppearDuring">
                                 Erros aparecerão aqui durante a conversa (análise a cada 5 minutos).
                             </p>
                         </div>
@@ -3293,9 +3241,9 @@
                         <!-- Contador Total -->
                         <div id="conv-error-count" class="mt-4 pt-4 border-t border-slate-700 flex items-center justify-between hidden">
                             <span class="text-slate-400 text-sm">
-                                Total: <strong id="conv-total-errors" class="text-cyan-400">0</strong> erro(s) encontrado(s)
+                                <span data-i18n="conversacao.total">Total</span>: <strong id="conv-total-errors-bottom" class="text-cyan-400">0</strong> <span data-i18n="conversacao.errorsFoundCount">erro(s) encontrado(s)</span>
                             </span>
-                            <button id="conv-clear-errors" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-xs text-slate-400 transition-colors">
+                            <button id="conv-clear-errors" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-xs text-slate-400 transition-colors" data-i18n="conversacao.clearErrors">
                                 Limpar erros
                             </button>
                         </div>
@@ -3342,6 +3290,128 @@
                         <!-- Grid de Correções sem scroll -->
                         <div id="conv-corrections" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
                             <!-- Correções serão adicionadas via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal: Calibrar Microfone -->
+            <div id="mic-calibration-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+                <div class="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md overflow-hidden shadow-2xl">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                                <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                                </svg>
+                                <span id="mic-calibration-title">Configurar Áudio</span>
+                            </h3>
+                            <button id="close-mic-calibration" class="p-2 hover:bg-slate-700 rounded-lg transition-colors">
+                                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <p id="mic-calibration-desc" class="text-slate-400 text-sm mb-6">Ajuste o ganho, grave sua voz e depois ouça para verificar se o som está adequado.</p>
+
+                        <!-- Seleção de Microfone -->
+                        <div class="mb-6">
+                            <label class="text-sm text-slate-300 mb-2 block" id="mic-select-label">Microfone:</label>
+                            <select id="mic-device-select" class="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-500 transition-colors">
+                                <option value="">Carregando dispositivos...</option>
+                            </select>
+                        </div>
+
+                        <!-- Indicador de etapa -->
+                        <div id="calibration-step-indicator" class="mb-4 p-3 bg-slate-900/50 rounded-lg">
+                            <p class="text-sm text-center">
+                                <span id="step-1-indicator" class="text-cyan-400 font-semibold">1. Ajustar ganho</span>
+                                <span class="text-slate-600 mx-2">→</span>
+                                <span id="step-2-indicator" class="text-slate-500">2. Gravar voz</span>
+                                <span class="text-slate-600 mx-2">→</span>
+                                <span id="step-3-indicator" class="text-slate-500">3. Ouvir e confirmar</span>
+                            </p>
+                        </div>
+
+                        <!-- Barra de nível do microfone -->
+                        <div class="mb-6">
+                            <label class="text-sm text-slate-300 mb-2 block" id="mic-level-label">Nível do Microfone:</label>
+                            <div class="relative h-8 bg-slate-900 rounded-lg overflow-hidden border border-slate-600">
+                                <!-- Zonas de referência -->
+                                <div class="absolute inset-0 flex">
+                                    <div class="w-1/3 bg-red-900/30 border-r border-slate-700"></div>
+                                    <div class="w-1/3 bg-green-900/30 border-r border-slate-700"></div>
+                                    <div class="w-1/3 bg-yellow-900/30"></div>
+                                </div>
+                                <!-- Barra de nível -->
+                                <div id="mic-level-bar" class="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-cyan-500 to-teal-400 transition-all duration-75" style="width: 0%"></div>
+                                <!-- Labels das zonas -->
+                                <div class="absolute inset-0 flex items-center text-xs font-medium pointer-events-none">
+                                    <span class="w-1/3 text-center text-red-400/70" id="mic-zone-low">Baixo</span>
+                                    <span class="w-1/3 text-center text-green-400/70" id="mic-zone-good">Bom</span>
+                                    <span class="w-1/3 text-center text-yellow-400/70" id="mic-zone-high">Alto</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Controle de ganho -->
+                        <div class="mb-6">
+                            <label class="text-sm text-slate-300 mb-2 flex items-center justify-between" id="mic-gain-label">
+                                <span>Ganho do Microfone:</span>
+                                <span id="mic-gain-value" class="text-cyan-400 font-mono">2.0x</span>
+                            </label>
+                            <input type="range" id="mic-gain-slider" min="0.5" max="10" step="0.1" value="2.0" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+                            <div class="flex justify-between text-xs text-slate-500 mt-1">
+                                <span>0.5x</span>
+                                <span>5x</span>
+                                <span>10x</span>
+                            </div>
+                        </div>
+
+                        <!-- Dica -->
+                        <div class="bg-slate-900/50 rounded-lg p-3 mb-6">
+                            <p class="text-xs text-slate-400" id="mic-calibration-tip">
+                                <strong class="text-cyan-400">Dica:</strong> Se o nível fica muito baixo quando você fala, aumente o ganho. Se fica constantemente no vermelho/amarelo, diminua.
+                            </p>
+                        </div>
+
+                        <!-- Botões de gravação -->
+                        <div class="flex gap-3">
+                            <!-- Botão Gravar -->
+                            <button id="mic-record-btn" class="flex-1 px-4 py-2 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 rounded-lg transition-colors text-sm font-medium text-white flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                                </svg>
+                                <span id="mic-record-btn-text">Gravar Voz</span>
+                            </button>
+                            <!-- Botão Ouvir (inicialmente desabilitado) -->
+                            <button id="mic-play-btn" class="flex-1 px-4 py-2 bg-slate-700 rounded-lg transition-colors text-sm font-medium text-white flex items-center justify-center gap-2 opacity-50 cursor-not-allowed" disabled>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span id="mic-play-btn-text">Ouvir</span>
+                            </button>
+                        </div>
+
+                        <!-- Botão Confirmar (aparece após ouvir) -->
+                        <div id="confirm-section" class="mt-4 hidden">
+                            <p id="confirm-question" class="text-center text-slate-300 text-sm mb-3">O som está adequado?</p>
+                            <div class="flex gap-3">
+                                <button id="mic-reject-btn" class="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors text-sm font-medium text-white flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                    <span id="mic-reject-btn-text">Gravar Novamente</span>
+                                </button>
+                                <button id="mic-confirm-btn" class="flex-1 px-4 py-2 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 rounded-lg transition-colors text-sm font-medium text-white flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <span id="mic-confirm-btn-text">Confirmar</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

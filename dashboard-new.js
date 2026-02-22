@@ -971,7 +971,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (insertError) {
                     console.error("Erro ao criar perfil:", insertError);
                     // Usa perfil padrão se a inserção falhar
-                    profile = { credits: 200, avatar_url: null, total_essays: 0, error_declinacao: 0, error_conjugacao: 0, error_sintaxe: 0, error_preposicao: 0, error_vocabulario: 0 };
+                    profile = { credits: 100, avatar_url: null, total_essays: 0, error_declinacao: 0, error_conjugacao: 0, error_sintaxe: 0, error_preposicao: 0, error_vocabulario: 0 };
                 } else {
                     profile = newProfile;
                 }
@@ -1366,20 +1366,38 @@ async function handleCorrectionSubmit(e) {
             body: JSON.stringify({ email: dataToSend.email, redacao: dataToSend.redacao })
         }).catch(err => console.warn('Flashcard error (não crítico):', err));
 
+        // Verificar idioma atual
+        const currentLang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+        const isEnglish = currentLang === 'en' || currentLang === 'en-US' || currentLang === 'en-GB';
+
+        // Textos traduzidos
+        const i18nTexts = {
+            colorLegend: isEnglish ? 'Color Legend:' : 'Legenda de Cores:',
+            textAnalysis: isEnglish ? 'Analysis of your text:' : 'Análise do seu texto:',
+            analyzingErrors: isEnglish ? 'Analyzing grammatical errors...' : 'Analisando erros gramaticais...',
+            errorDetails: isEnglish ? 'Error Details:' : 'Detalhes dos Erros:',
+            wrongWord: isEnglish ? 'Wrong Word:' : 'Palavra Errada:',
+            correction: isEnglish ? 'Correction:' : 'Correção:',
+            errorFound: isEnglish ? 'error(s) found' : 'erro(s) encontrado(s)',
+            analyzing: isEnglish ? 'Analyzing...' : 'Analisando...',
+            analysisComplete: isEnglish ? 'Analysis complete!' : 'Análise completa!',
+            noErrors: isEnglish ? 'Essay without errors! Congratulations!' : 'Redação sem erros! Parabéns!'
+        };
+
         // Definição das categorias (precisa estar acessível antes)
         const categorias = {
-            declinacao: { corHex: '#f472b6', nome: 'Declinação' },
-            conjugacao: { corHex: '#c084fc', nome: 'Conjugação' },
-            preposicoes: { corHex: '#60a5fa', nome: 'Preposições' },
-            sintaxe: { corHex: '#fb923c', nome: 'Sintaxe' },
-            vocabulario: { corHex: '#4ade80', nome: 'Vocabulário' }
+            declinacao: { corHex: '#f472b6', nome: isEnglish ? 'Declension' : 'Declinação' },
+            conjugacao: { corHex: '#c084fc', nome: isEnglish ? 'Conjugation' : 'Conjugação' },
+            preposicoes: { corHex: '#60a5fa', nome: isEnglish ? 'Prepositions' : 'Preposições' },
+            sintaxe: { corHex: '#fb923c', nome: isEnglish ? 'Syntax' : 'Sintaxe' },
+            vocabulario: { corHex: '#4ade80', nome: isEnglish ? 'Vocabulary' : 'Vocabulário' }
         };
 
         // IMEDIATAMENTE: Mostra legenda + texto do usuário
         if (formMessageEl) {
             formMessageEl.innerHTML = `
                 <div style="padding: 16px; background-color: #1e293b; border-radius: 8px; margin-bottom: 20px;">
-                    <h3 style="font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 12px;">Legenda de Cores:</h3>
+                    <h3 style="font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 12px;">${i18nTexts.colorLegend}</h3>
                     <div style="display: flex; flex-wrap: wrap; gap: 10px;">
                         ${Object.values(categorias).map(c => `
                             <span style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background-color: #334155; border-radius: 6px;">
@@ -1390,20 +1408,20 @@ async function handleCorrectionSubmit(e) {
                 </div>
 
                 <div style="padding: 16px; background-color: #1e293b; border-radius: 8px; margin-bottom: 20px;">
-                    <h3 style="font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 10px;">Análise do seu texto:</h3>
+                    <h3 style="font-size: 16px; font-weight: 600; color: #cbd5e1; margin-bottom: 10px;">${i18nTexts.textAnalysis}</h3>
                     <div id="texto-corrigido-container" style="padding: 12px; background-color: #0f172a; border-radius: 6px; font-size: 15px; line-height: 1.7; color: #e2e8f0;">${escapeHtml(text)}</div>
                 </div>
 
                 <div id="status-analise" style="padding: 16px; background-color: #1e293b; border-radius: 8px; margin-bottom: 20px;">
                     <div class="text-yellow-400" style="display: flex; align-items: center; gap: 10px;">
                         <span class="loading-spinner" style="width: 20px; height: 20px; border: 2px solid #fbbf24; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span>
-                        <span>Analisando erros gramaticais...</span>
+                        <span>${i18nTexts.analyzingErrors}</span>
                     </div>
                 </div>
 
                 <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
 
-                <h3 style="font-size: 18px; font-weight: 600; color: #cbd5e1; margin-bottom: 16px;">Detalhes dos Erros:</h3>
+                <h3 style="font-size: 18px; font-weight: 600; color: #cbd5e1; margin-bottom: 16px;">${i18nTexts.errorDetails}</h3>
                 <div id="detalhes-erros-container"></div>
             `;
             formMessageEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1549,13 +1567,13 @@ async function handleCorrectionSubmit(e) {
 
                 ${palavraErradaEscaped ? `
                     <p style="margin: 0 0 8px 0; font-size: 14px;">
-                        <span style="color: #94a3b8;">Palavra Errada:</span>
+                        <span style="color: #94a3b8;">${i18nTexts.wrongWord}</span>
                         <span style="color: #fca5a5; font-weight: 600;">${palavraErradaEscaped}</span>
                     </p>` : ''}
 
                 ${sugestaoCorrecao ? `
                     <p style="margin: 0 0 8px 0; font-size: 14px;">
-                        <span style="color: #94a3b8;">Correção:</span>
+                        <span style="color: #94a3b8;">${i18nTexts.correction}</span>
                         <span style="color: #86efac; font-weight: 600;">${sugestaoCorrecao}</span>
                     </p>` : ''}
 
@@ -1577,7 +1595,7 @@ async function handleCorrectionSubmit(e) {
                 statusAnalise.innerHTML = `
                     <div class="text-yellow-400" style="display: flex; align-items: center; gap: 10px;">
                         <span class="loading-spinner" style="width: 20px; height: 20px; border: 2px solid #fbbf24; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span>
-                        <span>Analisando... ${totalErrosExibidos} erro(s) encontrado(s)</span>
+                        <span>${i18nTexts.analyzing} ${totalErrosExibidos} ${i18nTexts.errorFound}</span>
                     </div>
                 `;
             }
@@ -1666,11 +1684,11 @@ async function handleCorrectionSubmit(e) {
         // Atualiza status final
         if (statusAnalise) {
             if (totalErrosExibidos === 0) {
-                statusAnalise.innerHTML = `<div class="text-green-400"><p>Redação sem erros! Parabéns!</p></div>`;
+                statusAnalise.innerHTML = `<div class="text-green-400"><p>${i18nTexts.noErrors}</p></div>`;
             } else {
                 statusAnalise.innerHTML = `
                     <div class="text-green-400" style="display: flex; align-items: center; gap: 10px;">
-                        <span>✓ Análise completa! ${totalErrosExibidos} erro(s) encontrado(s).</span>
+                        <span>✓ ${i18nTexts.analysisComplete} ${totalErrosExibidos} ${i18nTexts.errorFound}.</span>
                     </div>
                 `;
             }
@@ -4555,6 +4573,7 @@ async function handleCorrectionSubmit(e) {
         playbackContext: null,
         audioQueue: [],
         isPlayingAudio: false,
+        currentAudioSource: null, // Referência ao BufferSourceNode atual para poder parar
         gainNode: null,
         lowPassFilter: null,
         compressor: null,
@@ -4568,6 +4587,7 @@ async function handleCorrectionSubmit(e) {
         creditsUsed: 0,
         isAISpeaking: false,
         turnCount: 0,
+        personaHasSpoken: false, // Flag para saber se a persona já falou pela primeira vez
 
         // Silence detection
         lastSoundTime: null,
@@ -4602,7 +4622,14 @@ async function handleCorrectionSubmit(e) {
 
         // Acumulador de transcrição do usuário (junta fragmentos em frases)
         currentUserTranscript: '',
-        transcriptFlushTimer: null
+        transcriptFlushTimer: null,
+
+        // Watchdog para detectar travamentos
+        aiSpeakingWatchdog: null,
+        lastAudioChunkTime: null,
+        AI_SPEAKING_TIMEOUT: 5000, // 5 segundos sem atividade = provável travamento
+        micBlockedWatchdog: null,
+        MIC_BLOCKED_TIMEOUT: 5000 // 5 segundos com microfone bloqueado = forçar reset
     };
 
     let conversacaoInitialized = false;
@@ -4669,9 +4696,9 @@ DEINE EXPERTISE:
 WICHTIG - EXPERTISE-GRENZEN:
 - Wenn jemand über Medizin, Recht, Kochen, Finanzen/Investitionen oder andere Bereiche fragt, in denen du KEINE Expertin bist, sagst du höflich: "Hmm, das ist nicht mein Fachgebiet. Ich bin Softwareentwicklerin - darüber weiß ich leider nicht viel. Aber hast du Fragen zur Technologie?"
 
-ABSOLUT KRITISCH - DU DARFST NIEMALS STILL SEIN!
-================================================
-- MAXIMAL 2-3 SEKUNDEN PAUSE! Danach MUSST du sprechen!
+SEI GEDULDIG MIT DEM SCHÜLER!
+==============================
+- Gib dem Schüler Zeit zum Nachdenken! Er braucht Zeit, um Wörter zu finden.
 - Wenn der Schüler still ist, stelle sofort eine neue Frage oder mache einen Kommentar
 - Du bist wie ein Radiosprecher - es darf NIE Stille geben!
 - Halte das Gespräch IMMER am Laufen, fokussiert auf das Lernziel
@@ -4697,22 +4724,26 @@ GESPRÄCHSFÜHRUNG - SEI NEUGIERIG UND AKTIV:
 
 ZEITLIMIT - 45 MINUTEN:
 - Diese Unterhaltung dauert maximal 45 Minuten
-- Erwähne die Zeit gelegentlich: "Wir haben noch etwa 30 Minuten..." oder "Die Zeit vergeht schnell!"
+- Erwähne die 45-Minuten-Grenze NUR EINMAL am Anfang des Gesprächs, NIEMALS danach wiederholen!
 - Nach 45 Minuten MUSST du das Gespräch höflich beenden: "So, unsere 45 Minuten sind leider schon vorbei! Es war sehr schön, mit dir zu sprechen. Ich hoffe, du hast heute etwas Neues gelernt. Bis zum nächsten Mal - tschüss!"
 
-WENN DER SCHÜLER STILL IST (nach 2-3 Sekunden):
+WENN DER SCHÜLER LANGE STILL IST (nach 5+ Sekunden):
 - Stelle sofort eine Frage: "Was denkst du darüber?"
 - Oder gib eine Hilfestellung: "Versuch mal zu sagen..."
 - Oder mache einen Kommentar: "Das ist interessant, weil..."
-- NIEMALS WARTEN! IMMER SPRECHEN!
+- Wenn der Schüler LANGE schweigt (5+ Sekunden), hilf ihm sanft weiter.
 
 BEISPIELE:
 Benutzer: "Ich reise gern nach Brasilien"
 DU: "Oh, Brasilien! Das klingt wunderbar! Was gefällt dir dort am besten? Der Strand, das Essen, die Menschen?"
 
-WICHTIG - BENUTZERSPRACHE:
-- Der Benutzer spricht IMMER Deutsch (auch wenn mit Akzent)
-- Interpretiere alle Eingaben als Deutsch
+WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
+- Der Benutzer ist ein DEUTSCHLERNER mit BRASILIANISCHEM AKZENT
+- Er spricht IMMER Deutsch, auch wenn die Aussprache nicht perfekt ist
+- INTERPRETIERE ALLES als Deutsch - niemals als Portugiesisch oder andere Sprache!
+- Wenn du etwas nicht verstehst, frage freundlich nach: "Kannst du das bitte wiederholen?"
+- Sei SEHR TOLERANT bei Aussprachefehlern - versuche zu verstehen was gemeint ist
+- Beispiel: "isch" statt "ich", "tschau" statt "schau" = normale Akzentfehler
 - Sprich nur Deutsch in deinen Antworten`
         },
 
@@ -4794,12 +4825,16 @@ GESPRÄCHSFÜHRUNG - SEI NEUGIERIG UND AKTIV:
 
 ZEITLIMIT - 45 MINUTEN:
 - Diese Unterhaltung dauert maximal 45 Minuten
-- Erwähne die Zeit gelegentlich: "Wir haben noch etwa 30 Minuten..." oder "Die Zeit vergeht schnell!"
+- Erwähne die 45-Minuten-Grenze NUR EINMAL am Anfang des Gesprächs, NIEMALS danach wiederholen!
 - Nach 45 Minuten MUSST du das Gespräch höflich beenden: "So, unsere 45 Minuten sind leider schon vorbei! Es war sehr schön, mit dir zu sprechen. Ich hoffe, du hast heute etwas Neues gelernt. Bis zum nächsten Mal - tschüss!"
 
-WICHTIG - BENUTZERSPRACHE:
-- Der Benutzer spricht IMMER Deutsch
-- Sprich nur Deutsch`
+WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
+- Der Benutzer ist ein DEUTSCHLERNER mit AUSLÄNDISCHEM AKZENT (oft brasilianisch)
+- Er spricht IMMER Deutsch, auch wenn die Aussprache nicht perfekt ist
+- INTERPRETIERE ALLES als Deutsch - niemals als andere Sprache!
+- Wenn du etwas nicht verstehst, frage freundlich nach: "Kannst du das bitte wiederholen?"
+- Sei TOLERANT bei Aussprachefehlern - versuche zu verstehen was gemeint ist
+- Sprich nur Deutsch in deinen Antworten`
         },
 
         // ===== MEDICINA =====
@@ -4883,12 +4918,16 @@ GESPRÄCHSFÜHRUNG - SEI NEUGIERIG UND AKTIV:
 
 ZEITLIMIT - 45 MINUTEN:
 - Diese Unterhaltung dauert maximal 45 Minuten
-- Erwähne die Zeit gelegentlich: "Wir haben noch etwa 30 Minuten..." oder "Die Zeit vergeht schnell!"
+- Erwähne die 45-Minuten-Grenze NUR EINMAL am Anfang des Gesprächs, NIEMALS danach wiederholen!
 - Nach 45 Minuten MUSST du das Gespräch höflich beenden: "So, unsere 45 Minuten sind leider schon vorbei! Es war sehr schön, mit dir zu sprechen. Ich hoffe, du hast heute etwas Neues gelernt. Bis zum nächsten Mal - tschüss!"
 
-WICHTIG - BENUTZERSPRACHE:
-- Der Benutzer spricht IMMER Deutsch
-- Sprich nur Deutsch`
+WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
+- Der Benutzer ist ein DEUTSCHLERNER mit AUSLÄNDISCHEM AKZENT (oft brasilianisch)
+- Er spricht IMMER Deutsch, auch wenn die Aussprache nicht perfekt ist
+- INTERPRETIERE ALLES als Deutsch - niemals als andere Sprache!
+- Wenn du etwas nicht verstehst, frage freundlich nach: "Kannst du das bitte wiederholen?"
+- Sei TOLERANT bei Aussprachefehlern - versuche zu verstehen was gemeint ist
+- Sprich nur Deutsch in deinen Antworten`
         },
 
         // ===== GASTRONOMIA =====
@@ -4972,12 +5011,16 @@ GESPRÄCHSFÜHRUNG - SEI NEUGIERIG UND AKTIV:
 
 ZEITLIMIT - 45 MINUTEN:
 - Diese Unterhaltung dauert maximal 45 Minuten
-- Erwähne die Zeit gelegentlich: "Wir haben noch etwa 30 Minuten..." oder "Die Zeit vergeht schnell!"
+- Erwähne die 45-Minuten-Grenze NUR EINMAL am Anfang des Gesprächs, NIEMALS danach wiederholen!
 - Nach 45 Minuten MUSST du das Gespräch höflich beenden: "So, unsere 45 Minuten sind leider schon vorbei! Es war sehr schön, mit dir zu sprechen. Ich hoffe, du hast heute etwas Neues gelernt. Bis zum nächsten Mal - tschüss!"
 
-WICHTIG - BENUTZERSPRACHE:
-- Der Benutzer spricht IMMER Deutsch
-- Sprich nur Deutsch`
+WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
+- Der Benutzer ist ein DEUTSCHLERNER mit AUSLÄNDISCHEM AKZENT (oft brasilianisch)
+- Er spricht IMMER Deutsch, auch wenn die Aussprache nicht perfekt ist
+- INTERPRETIERE ALLES als Deutsch - niemals als andere Sprache!
+- Wenn du etwas nicht verstehst, frage freundlich nach: "Kannst du das bitte wiederholen?"
+- Sei TOLERANT bei Aussprachefehlern - versuche zu verstehen was gemeint ist
+- Sprich nur Deutsch in deinen Antworten`
         },
 
         // ===== NEGÓCIOS =====
@@ -5061,12 +5104,16 @@ GESPRÄCHSFÜHRUNG - SEI NEUGIERIG UND AKTIV:
 
 ZEITLIMIT - 45 MINUTEN:
 - Diese Unterhaltung dauert maximal 45 Minuten
-- Erwähne die Zeit gelegentlich: "Wir haben noch etwa 30 Minuten..." oder "Die Zeit vergeht schnell!"
+- Erwähne die 45-Minuten-Grenze NUR EINMAL am Anfang des Gesprächs, NIEMALS danach wiederholen!
 - Nach 45 Minuten MUSST du das Gespräch höflich beenden: "So, unsere 45 Minuten sind leider schon vorbei! Es war sehr schön, mit dir zu sprechen. Ich hoffe, du hast heute etwas Neues gelernt. Bis zum nächsten Mal - tschüss!"
 
-WICHTIG - BENUTZERSPRACHE:
-- Der Benutzer spricht IMMER Deutsch
-- Sprich nur Deutsch`
+WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
+- Der Benutzer ist ein DEUTSCHLERNER mit AUSLÄNDISCHEM AKZENT (oft brasilianisch)
+- Er spricht IMMER Deutsch, auch wenn die Aussprache nicht perfekt ist
+- INTERPRETIERE ALLES als Deutsch - niemals als andere Sprache!
+- Wenn du etwas nicht verstehst, frage freundlich nach: "Kannst du das bitte wiederholen?"
+- Sei TOLERANT bei Aussprachefehlern - versuche zu verstehen was gemeint ist
+- Sprich nur Deutsch in deinen Antworten`
         },
 
         // ===== EDUCAÇÃO/IDIOMAS =====
@@ -5157,12 +5204,16 @@ GESPRÄCHSFÜHRUNG - SEI NEUGIERIG UND AKTIV:
 
 ZEITLIMIT - 45 MINUTEN:
 - Diese Unterhaltung dauert maximal 45 Minuten
-- Erwähne die Zeit gelegentlich: "Wir haben noch etwa 30 Minuten..." oder "Die Zeit vergeht schnell!"
+- Erwähne die 45-Minuten-Grenze NUR EINMAL am Anfang des Gesprächs, NIEMALS danach wiederholen!
 - Nach 45 Minuten MUSST du das Gespräch höflich beenden: "So, unsere 45 Minuten sind leider schon vorbei! Es war sehr schön, mit dir zu sprechen. Ich hoffe, du hast heute etwas Neues gelernt. Bis zum nächsten Mal - tschüss!"
 
-WICHTIG - BENUTZERSPRACHE:
-- Der Benutzer spricht IMMER Deutsch (Lerner!)
-- Sprich nur Deutsch`
+WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
+- Der Benutzer ist ein DEUTSCHLERNER mit AUSLÄNDISCHEM AKZENT (oft brasilianisch)
+- Er spricht IMMER Deutsch, auch wenn die Aussprache nicht perfekt ist
+- INTERPRETIERE ALLES als Deutsch - niemals als andere Sprache!
+- Wenn du etwas nicht verstehst, frage freundlich nach: "Kannst du das bitte wiederholen?"
+- Sei TOLERANT bei Aussprachefehlern - versuche zu verstehen was gemeint ist
+- Sprich nur Deutsch in deinen Antworten`
         },
 
         // ===== FINANÇAS =====
@@ -5245,12 +5296,16 @@ GESPRÄCHSFÜHRUNG - SEI NEUGIERIG UND AKTIV:
 
 ZEITLIMIT - 45 MINUTEN:
 - Diese Unterhaltung dauert maximal 45 Minuten
-- Erwähne die Zeit gelegentlich: "Wir haben noch etwa 30 Minuten..." oder "Die Zeit vergeht schnell!"
+- Erwähne die 45-Minuten-Grenze NUR EINMAL am Anfang des Gesprächs, NIEMALS danach wiederholen!
 - Nach 45 Minuten MUSST du das Gespräch höflich beenden: "So, unsere 45 Minuten sind leider schon vorbei! Es war sehr schön, mit dir zu sprechen. Ich hoffe, du hast heute etwas Neues gelernt. Bis zum nächsten Mal - tschüss!"
 
-WICHTIG - BENUTZERSPRACHE:
-- Der Benutzer spricht IMMER Deutsch
-- Sprich nur Deutsch`
+WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
+- Der Benutzer ist ein DEUTSCHLERNER mit AUSLÄNDISCHEM AKZENT (oft brasilianisch)
+- Er spricht IMMER Deutsch, auch wenn die Aussprache nicht perfekt ist
+- INTERPRETIERE ALLES als Deutsch - niemals als andere Sprache!
+- Wenn du etwas nicht verstehst, frage freundlich nach: "Kannst du das bitte wiederholen?"
+- Sei TOLERANT bei Aussprachefehlern - versuche zu verstehen was gemeint ist
+- Sprich nur Deutsch in deinen Antworten`
         },
 
         // ===== ENGENHARIA/INDÚSTRIA =====
@@ -5333,12 +5388,16 @@ GESPRÄCHSFÜHRUNG - SEI NEUGIERIG UND AKTIV:
 
 ZEITLIMIT - 45 MINUTEN:
 - Diese Unterhaltung dauert maximal 45 Minuten
-- Erwähne die Zeit gelegentlich: "Wir haben noch etwa 30 Minuten..." oder "Die Zeit vergeht schnell!"
+- Erwähne die 45-Minuten-Grenze NUR EINMAL am Anfang des Gesprächs, NIEMALS danach wiederholen!
 - Nach 45 Minuten MUSST du das Gespräch höflich beenden: "So, unsere 45 Minuten sind leider schon vorbei! Es war sehr schön, mit dir zu sprechen. Ich hoffe, du hast heute etwas Neues gelernt. Bis zum nächsten Mal - tschüss!"
 
-WICHTIG - BENUTZERSPRACHE:
-- Der Benutzer spricht IMMER Deutsch
-- Sprich nur Deutsch`
+WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
+- Der Benutzer ist ein DEUTSCHLERNER mit AUSLÄNDISCHEM AKZENT (oft brasilianisch)
+- Er spricht IMMER Deutsch, auch wenn die Aussprache nicht perfekt ist
+- INTERPRETIERE ALLES als Deutsch - niemals als andere Sprache!
+- Wenn du etwas nicht verstehst, frage freundlich nach: "Kannst du das bitte wiederholen?"
+- Sei TOLERANT bei Aussprachefehlern - versuche zu verstehen was gemeint ist
+- Sprich nur Deutsch in deinen Antworten`
         },
 
         // ===== O DEUS DA PROGRAMAÇÃO =====
@@ -5538,13 +5597,17 @@ GESPRÄCHSFÜHRUNG - SEI NEUGIERIG UND AKTIV:
 
 ZEITLIMIT - 45 MINUTEN:
 - Diese Unterhaltung dauert maximal 45 Minuten
-- Erwähne die Zeit gelegentlich: "Wir haben noch etwa 30 Minuten..." oder "Die Zeit vergeht schnell!"
+- Erwähne die 45-Minuten-Grenze NUR EINMAL am Anfang des Gesprächs, NIEMALS danach wiederholen!
 - Nach 45 Minuten MUSST du das Gespräch höflich beenden: "So, unsere 45 Minuten sind leider schon vorbei! Es war sehr schön, mit dir zu sprechen. Ich hoffe, du hast heute etwas Neues gelernt. Bis zum nächsten Mal - tschüss!"
 
-WICHTIG - BENUTZERSPRACHE:
-- Der Benutzer spricht IMMER Deutsch (Lerner!)
-- Sprich nur Deutsch in deinen Antworten
-- Technische Begriffe: deutsch mit englischer Erklärung in Klammern wenn nötig`
+WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
+- Der Benutzer ist ein DEUTSCHLERNER mit AUSLÄNDISCHEM AKZENT (oft brasilianisch)
+- Er spricht IMMER Deutsch, auch wenn die Aussprache nicht perfekt ist
+- INTERPRETIERE ALLES als Deutsch - niemals als andere Sprache!
+- Wenn du etwas nicht verstehst, frage freundlich nach: "Kannst du das bitte wiederholen?"
+- Sei TOLERANT bei Aussprachefehlern - versuche zu verstehen was gemeint ist
+- Technische Begriffe: deutsch mit englischer Erklärung in Klammern wenn nötig
+- Sprich nur Deutsch in deinen Antworten`
         },
 
         // ===== ARTES/CULTURA =====
@@ -5628,12 +5691,16 @@ GESPRÄCHSFÜHRUNG - SEI NEUGIERIG UND AKTIV:
 
 ZEITLIMIT - 45 MINUTEN:
 - Diese Unterhaltung dauert maximal 45 Minuten
-- Erwähne die Zeit gelegentlich: "Wir haben noch etwa 30 Minuten..." oder "Die Zeit vergeht schnell!"
+- Erwähne die 45-Minuten-Grenze NUR EINMAL am Anfang des Gesprächs, NIEMALS danach wiederholen!
 - Nach 45 Minuten MUSST du das Gespräch höflich beenden: "So, unsere 45 Minuten sind leider schon vorbei! Es war sehr schön, mit dir zu sprechen. Ich hoffe, du hast heute etwas Neues gelernt. Bis zum nächsten Mal - tschüss!"
 
-WICHTIG - BENUTZERSPRACHE:
-- Der Benutzer spricht IMMER Deutsch
-- Sprich nur Deutsch`
+WICHTIG - BENUTZERSPRACHE UND VERSTEHEN:
+- Der Benutzer ist ein DEUTSCHLERNER mit AUSLÄNDISCHEM AKZENT (oft brasilianisch)
+- Er spricht IMMER Deutsch, auch wenn die Aussprache nicht perfekt ist
+- INTERPRETIERE ALLES als Deutsch - niemals als andere Sprache!
+- Wenn du etwas nicht verstehst, frage freundlich nach: "Kannst du das bitte wiederholen?"
+- Sei TOLERANT bei Aussprachefehlern - versuche zu verstehen was gemeint ist
+- Sprich nur Deutsch in deinen Antworten`
         }
     };
 
@@ -5763,9 +5830,12 @@ WICHTIG - BENUTZERSPRACHE:
         document.getElementById('conv-active-area').classList.add('hidden');
     }
 
-    // Timer para análise de erros a cada 5 minutos
+    // Sistema de análise de erros em tempo real
     let errorAnalysisInterval = null;
     let accumulatedErrors = [];
+    let lastAnalyzedTranscriptIndex = 0; // Rastreia até onde já foi analisado
+    let pendingAnalysisCount = 0; // Contador de análises pendentes no DeepSeek
+    let analysisQueue = []; // Fila de frases para analisar
 
     function startErrorAnalysisTimer() {
         // Limpa timer anterior se existir
@@ -5791,8 +5861,17 @@ WICHTIG - BENUTZERSPRACHE:
 
     // Análise periódica que acumula erros
     async function triggerPeriodicAnalysis() {
-        const userTranscripts = conversacaoState.transcripts.filter(t => t.role === 'user' && t.text);
-        if (userTranscripts.length === 0) return;
+        const allUserTranscripts = conversacaoState.transcripts.filter(t => t.speaker === 'user' && t.text);
+        if (allUserTranscripts.length === 0) return;
+
+        // Pega apenas transcripts novos (ainda não analisados)
+        const newTranscripts = allUserTranscripts.slice(lastAnalyzedTranscriptIndex);
+        if (newTranscripts.length === 0) {
+            console.log('📭 Nenhum novo transcript para analisar');
+            return;
+        }
+
+        console.log(`🔍 Análise periódica: ${newTranscripts.length} novos transcripts (total: ${allUserTranscripts.length})`);
 
         try {
             const currentLang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
@@ -5800,7 +5879,7 @@ WICHTIG - BENUTZERSPRACHE:
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    transcripts: userTranscripts,
+                    transcripts: newTranscripts,
                     fullAnalysis: true,
                     language: currentLang
                 })
@@ -5808,7 +5887,11 @@ WICHTIG - BENUTZERSPRACHE:
 
             if (response.ok) {
                 const data = await response.json();
+                // Atualiza o índice para não analisar os mesmos transcripts novamente
+                lastAnalyzedTranscriptIndex = allUserTranscripts.length;
+
                 if (data.corrections && data.corrections.length > 0) {
+                    console.log(`✅ Encontrados ${data.corrections.length} erros nos novos transcripts`);
                     // Adiciona novos erros aos acumulados (evitando duplicatas)
                     data.corrections.forEach(err => {
                         const exists = accumulatedErrors.some(e =>
@@ -5816,14 +5899,85 @@ WICHTIG - BENUTZERSPRACHE:
                         );
                         if (!exists) {
                             accumulatedErrors.push(err);
+                            console.log(`➕ Novo erro adicionado: "${err.erro}" → "${err.correcao}"`);
                         }
                     });
                     displayAccumulatedErrors();
+                } else {
+                    console.log('✅ Nenhum erro nos novos transcripts');
                 }
             }
         } catch (error) {
             console.error('Erro na análise periódica:', error);
         }
+    }
+
+    // NOVA: Análise em tempo real - dispara análise imediatamente após cada frase do usuário
+    async function analyzeUserPhraseRealtime(text) {
+        if (!text || text.trim().length < 5) return;
+
+        // Incrementa contador de análises pendentes
+        pendingAnalysisCount++;
+        console.log(`🔄 Análise em tempo real iniciada. Pendentes: ${pendingAnalysisCount}`);
+
+        try {
+            const currentLang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+            const targetLang = 'de';
+
+            const response = await fetch('/.netlify/functions/conversacao-correcoes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    transcripts: [{ text: text.trim(), speaker: 'user', timestamp: Date.now() }],
+                    fullAnalysis: true,
+                    language: currentLang,
+                    targetLanguage: targetLang
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+
+                if (data.corrections && data.corrections.length > 0) {
+                    console.log(`✅ Tempo real: ${data.corrections.length} erro(s) encontrado(s) em: "${text.substring(0, 50)}..."`);
+
+                    // Adiciona novos erros aos acumulados (evitando duplicatas)
+                    data.corrections.forEach(err => {
+                        const exists = accumulatedErrors.some(e =>
+                            e.erro === err.erro && e.correcao === err.correcao
+                        );
+                        if (!exists) {
+                            accumulatedErrors.push(err);
+                            console.log(`➕ Erro adicionado: "${err.erro}" → "${err.correcao}"`);
+                        }
+                    });
+
+                    // Atualiza a UI imediatamente
+                    displayAccumulatedErrors();
+                } else {
+                    console.log(`✅ Tempo real: nenhum erro em: "${text.substring(0, 50)}..."`);
+                }
+            }
+        } catch (error) {
+            console.error('Erro na análise em tempo real:', error);
+        } finally {
+            // Decrementa contador de análises pendentes
+            pendingAnalysisCount--;
+            console.log(`🔄 Análise em tempo real concluída. Pendentes: ${pendingAnalysisCount}`);
+        }
+    }
+
+    // Função auxiliar para obter o nome da categoria traduzido (usada em displayAccumulatedErrors)
+    function getCategoryDisplayName(categoria) {
+        const categoryMap = {
+            'declinacao': 'conversacao.declension',
+            'conjugacao': 'conversacao.conjugation',
+            'preposicoes': 'conversacao.prepositions',
+            'sintaxe': 'conversacao.syntax',
+            'vocabulario': 'conversacao.vocabulary'
+        };
+        const key = categoryMap[categoria] || 'conversacao.vocabulary';
+        return window.t ? window.t(key) : categoria;
     }
 
     // Exibe erros acumulados
@@ -5834,42 +5988,106 @@ WICHTIG - BENUTZERSPRACHE:
 
         if (!container) return;
 
+        // Resetar contadores por categoria (serão recalculados)
+        errorCounts = {
+            declinacao: 0,
+            conjugacao: 0,
+            preposicoes: 0,
+            sintaxe: 0,
+            vocabulario: 0
+        };
+
         if (accumulatedErrors.length === 0) {
-            container.innerHTML = '<p class="text-slate-500 text-center py-8 col-span-full">Erros aparecerão aqui durante a conversa (análise a cada 5 minutos).</p>';
+            container.innerHTML = '<p class="text-slate-500 text-center py-8 col-span-full">Erros aparecerão aqui em tempo real durante a conversa.</p>';
             countContainer?.classList.add('hidden');
+            updatePieChart(); // Atualizar gráfico mesmo sem erros
             return;
         }
 
-        const categoryColors = {
+        // Mapeamento de categorias normalizadas para cores
+        const normalizedCategoryColors = {
             'declinacao': '#f472b6',
             'conjugacao': '#c084fc',
             'preposicoes': '#60a5fa',
             'sintaxe': '#fb923c',
-            'vocabulario': '#4ade80',
-            'declination': '#f472b6',
-            'conjugation': '#c084fc',
-            'prepositions': '#60a5fa',
-            'syntax': '#fb923c',
-            'vocabulary': '#4ade80'
+            'vocabulario': '#4ade80'
+        };
+
+        // Função local para normalizar categorias (EN→PT)
+        const normalizeCat = (cat) => {
+            if (!cat) return 'vocabulario';
+            const c = cat.toLowerCase().trim();
+            const map = {
+                'declension': 'declinacao', 'declination': 'declinacao',
+                'conjugation': 'conjugacao', 'prepositions': 'preposicoes',
+                'preposition': 'preposicoes', 'syntax': 'sintaxe',
+                'vocabulary': 'vocabulario', 'declinacao': 'declinacao',
+                'conjugacao': 'conjugacao', 'preposicoes': 'preposicoes',
+                'sintaxe': 'sintaxe', 'vocabulario': 'vocabulario'
+            };
+            return map[c] || 'vocabulario';
+        };
+
+        // Contar erros por categoria antes de renderizar
+        accumulatedErrors.forEach(err => {
+            const normalizedCat = normalizeCat(err.categoria);
+            errorCounts[normalizedCat]++;
+        });
+
+        // Função para escapar HTML
+        const escapeHtmlLocal = (str) => {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         };
 
         container.innerHTML = accumulatedErrors.map(err => {
-            const color = categoryColors[err.categoria?.toLowerCase()] || '#94a3b8';
+            const normalizedCat = normalizeCat(err.categoria);
+            const color = normalizedCategoryColors[normalizedCat] || '#94a3b8';
+            const displayCat = getCategoryDisplayName(normalizedCat);
+
+            // Destacar o erro no contexto (se disponível)
+            let contextHtml = '';
+            if (err.contexto) {
+                const contextoEscaped = escapeHtmlLocal(err.contexto);
+                const erroEscaped = escapeHtmlLocal(err.erro || '');
+                // Tenta destacar o erro no contexto
+                if (erroEscaped && contextoEscaped.toLowerCase().includes(erroEscaped.toLowerCase())) {
+                    const regex = new RegExp(`(${erroEscaped.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                    contextHtml = contextoEscaped.replace(regex, `<mark style="background: ${color}; color: #000; padding: 1px 4px; border-radius: 3px;">$1</mark>`);
+                } else {
+                    contextHtml = contextoEscaped;
+                }
+            }
+
             return `
                 <div class="bg-slate-900/50 rounded-lg p-4 border-l-4" style="border-color: ${color}">
+                    ${err.contexto ? `
+                    <div style="margin-bottom: 10px; padding: 8px; background: #0f172a; border-radius: 6px; font-style: italic; color: #e2e8f0; font-size: 12px; line-height: 1.4;">
+                        "${contextHtml}"
+                    </div>` : ''}
                     <div class="flex items-center gap-2 mb-2">
                         <span class="w-3 h-3 rounded-full" style="background: ${color}"></span>
-                        <span class="text-xs text-slate-400 uppercase">${err.categoria || 'Erro'}</span>
+                        <span class="text-xs text-slate-400 uppercase">${displayCat}</span>
                     </div>
-                    <p class="text-red-400 text-sm line-through mb-1">${err.erro}</p>
-                    <p class="text-green-400 text-sm font-medium mb-2">${err.correcao}</p>
-                    <p class="text-slate-400 text-xs">${err.explicacao}</p>
+                    <p class="text-red-400 text-sm line-through mb-1">${escapeHtmlLocal(err.erro)}</p>
+                    <p class="text-green-400 text-sm font-medium mb-2">${escapeHtmlLocal(err.correcao)}</p>
+                    <p class="text-slate-400 text-xs">${escapeHtmlLocal(err.explicacao)}</p>
                 </div>
             `;
         }).join('');
 
         if (totalSpan) totalSpan.textContent = accumulatedErrors.length;
         countContainer?.classList.remove('hidden');
+
+        // Atualizar o gráfico de pizza com os contadores recalculados
+        updatePieChart();
+
+        console.log(`📊 displayAccumulatedErrors - errorCounts atualizados:`, JSON.stringify(errorCounts));
     }
 
     function initializeConversacao() {
@@ -5880,6 +6098,9 @@ WICHTIG - BENUTZERSPRACHE:
 
         // Renderiza o grid de personas
         renderPersonasGrid();
+
+        // Verificar status de calibração do microfone
+        checkCalibrationStatus();
 
         // Botão do microfone - agora conecta/desconecta
         const micBtn = document.getElementById('conv-mic-btn');
@@ -6728,10 +6949,26 @@ WICHTIG - BENUTZERSPRACHE:
                 creditsPerMinSpan.innerHTML = `<strong class="text-cyan-400">10</strong> ${isEnglish ? 'credits/min' : 'créditos/min'}`;
             }
 
-            // Update disconnected status text
+            // Update status text (Ready to chat / Disconnected)
             const statusText = document.getElementById('conv-status-text');
-            if (statusText && (statusText.textContent === 'Desconectado' || statusText.textContent === 'Disconnected')) {
-                statusText.textContent = isEnglish ? 'Disconnected' : 'Desconectado';
+            if (statusText) {
+                if (statusText.textContent === 'Desconectado' || statusText.textContent === 'Disconnected') {
+                    statusText.textContent = isEnglish ? 'Disconnected' : 'Desconectado';
+                } else if (statusText.textContent === 'Pronto para conversar' || statusText.textContent === 'Ready to chat') {
+                    statusText.textContent = isEnglish ? 'Ready to chat' : 'Pronto para conversar';
+                } else if (statusText.textContent === 'Conectando...' || statusText.textContent === 'Connecting...') {
+                    statusText.textContent = isEnglish ? 'Connecting...' : 'Conectando...';
+                } else if (statusText.textContent === 'Conectado' || statusText.textContent === 'Connected') {
+                    statusText.textContent = isEnglish ? 'Connected' : 'Conectado';
+                }
+            }
+
+            // Update credits used text
+            const creditsUsed = document.getElementById('conv-credits-used');
+            if (creditsUsed) {
+                const match = creditsUsed.textContent.match(/(\d+)/);
+                const credits = match ? match[1] : '0';
+                creditsUsed.textContent = `${credits} ${isEnglish ? 'credits' : 'créditos'}`;
             }
 
             // Update Ambient Sound button text
@@ -6770,6 +7007,46 @@ WICHTIG - BENUTZERSPRACHE:
         // Listen for language changes
         window.addEventListener('languageChanged', () => {
             applyConversationTranslations();
+            // Update persona texts if one is selected
+            if (selectedPersona) {
+                const lang = typeof getCurrentLanguage === 'function' ? getCurrentLanguage() : 'pt-BR';
+                const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+
+                const role = isEnglish && selectedPersona.roleEN ? selectedPersona.roleEN : selectedPersona.role;
+                const shortBio = isEnglish && selectedPersona.shortBioEN ? selectedPersona.shortBioEN : selectedPersona.shortBio;
+                const fullBio = isEnglish && selectedPersona.fullBioEN ? selectedPersona.fullBioEN : selectedPersona.fullBio;
+                const tags = isEnglish && selectedPersona.tagsEN ? selectedPersona.tagsEN : selectedPersona.tags;
+
+                document.getElementById('persona-role').textContent = role;
+                document.getElementById('persona-bio').textContent = shortBio;
+                document.getElementById('modal-persona-role').textContent = role;
+                document.getElementById('modal-persona-fullbio').innerHTML = fullBio;
+
+                // Update tags
+                const tagsContainer = document.getElementById('persona-tags');
+                if (tagsContainer) {
+                    tagsContainer.innerHTML = tags.map(tag =>
+                        `<span class="px-2 py-1 bg-cyan-500/20 text-cyan-400 text-xs rounded-full">${tag}</span>`
+                    ).join('');
+                }
+
+                // Update buttons
+                const showBioBtn = document.getElementById('show-full-bio-btn');
+                if (showBioBtn) {
+                    showBioBtn.innerHTML = `
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        ${isEnglish ? 'View full story' : 'Ver história completa'}
+                    `;
+                }
+                const changePersonaBtn = document.getElementById('change-persona-btn');
+                if (changePersonaBtn) {
+                    changePersonaBtn.textContent = isEnglish ? '← Choose another person' : '← Escolher outra pessoa';
+                }
+            }
+            // Also re-render personas grid
+            renderPersonasGrid();
         });
 
         // Botões de cenário (com data-scenario)
@@ -6828,6 +7105,66 @@ WICHTIG - BENUTZERSPRACHE:
             ambientBtn.addEventListener('click', toggleAmbientSound);
         }
 
+        // Botão de calibrar microfone
+        const calibrateBtn = document.getElementById('conv-calibrate-mic-btn');
+        if (calibrateBtn) {
+            calibrateBtn.addEventListener('click', openMicCalibration);
+        }
+
+        // Fechar modal de calibração
+        const closeCalibrationBtn = document.getElementById('close-mic-calibration');
+        if (closeCalibrationBtn) {
+            closeCalibrationBtn.addEventListener('click', closeMicCalibration);
+        }
+
+        // Slider de ganho
+        const gainSlider = document.getElementById('mic-gain-slider');
+        if (gainSlider) {
+            // Carregar valor salvo
+            const savedGain = localStorage.getItem('micGain');
+            if (savedGain) {
+                gainSlider.value = savedGain;
+                document.getElementById('mic-gain-value').textContent = parseFloat(savedGain).toFixed(1) + 'x';
+            }
+            gainSlider.addEventListener('input', (e) => {
+                document.getElementById('mic-gain-value').textContent = parseFloat(e.target.value).toFixed(1) + 'x';
+            });
+        }
+
+        // Botão gravar voz
+        const recordBtn = document.getElementById('mic-record-btn');
+        if (recordBtn) {
+            recordBtn.addEventListener('click', toggleRecording);
+        }
+
+        // Botão ouvir gravação
+        const playBtn = document.getElementById('mic-play-btn');
+        if (playBtn) {
+            playBtn.addEventListener('click', playRecording);
+        }
+
+        // Botão confirmar calibração
+        const confirmBtn = document.getElementById('mic-confirm-btn');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', confirmCalibration);
+        }
+
+        // Botão rejeitar e gravar novamente
+        const rejectBtn = document.getElementById('mic-reject-btn');
+        if (rejectBtn) {
+            rejectBtn.addEventListener('click', rejectCalibration);
+        }
+
+        // Fechar modal clicando fora
+        const calibrationModal = document.getElementById('mic-calibration-modal');
+        if (calibrationModal) {
+            calibrationModal.addEventListener('click', (e) => {
+                if (e.target === calibrationModal) {
+                    closeMicCalibration();
+                }
+            });
+        }
+
         // Iniciar com estado inicial do layout (expandido)
         const layout = document.getElementById('conv-layout');
         if (layout) {
@@ -6849,7 +7186,7 @@ WICHTIG - BENUTZERSPRACHE:
             stopAmbientSound();
             iconOff?.classList.remove('hidden');
             iconOn?.classList.add('hidden');
-            if (textEl) textEl.textContent = '🍽️ Som Ambiente';
+            if (textEl) textEl.textContent = '🍽️ ' + window.t('conversacao.ambientSound');
             btn?.classList.remove('bg-cyan-600/30', 'border', 'border-cyan-500/50');
             btn?.classList.add('bg-slate-700');
         } else {
@@ -6857,14 +7194,14 @@ WICHTIG - BENUTZERSPRACHE:
             startAmbientSound();
             iconOff?.classList.add('hidden');
             iconOn?.classList.remove('hidden');
-            if (textEl) textEl.textContent = '🔊 Tocando...';
+            if (textEl) textEl.textContent = window.t('conversacao.playing');
             btn?.classList.remove('bg-slate-700');
             btn?.classList.add('bg-cyan-600/30', 'border', 'border-cyan-500/50');
         }
     }
 
     // Iniciar som ambiente
-    function startAmbientSound() {
+    async function startAmbientSound() {
         if (conversacaoState.ambientAudio) {
             conversacaoState.ambientAudio.pause();
         }
@@ -6872,6 +7209,17 @@ WICHTIG - BENUTZERSPRACHE:
         const audio = new Audio('/assets/audio/restaurant-ambient.mp3');
         audio.loop = true;
         audio.volume = 0.3; // Volume baixo para não atrapalhar a conversa
+
+        // Aplicar dispositivo de saída selecionado
+        const selectedOutput = localStorage.getItem('selectedAudioOutput');
+        if (selectedOutput && audio.setSinkId) {
+            try {
+                await audio.setSinkId(selectedOutput);
+                console.log('🔊 Som ambiente: saída configurada');
+            } catch (err) {
+                console.warn('⚠️ Som ambiente: não foi possível configurar saída:', err.message);
+            }
+        }
 
         audio.play().then(() => {
             conversacaoState.ambientAudio = audio;
@@ -6881,9 +7229,9 @@ WICHTIG - BENUTZERSPRACHE:
             console.error('Erro ao tocar som ambiente:', err);
             // Tentar mostrar mensagem de erro
             const textEl = document.getElementById('conv-ambient-text');
-            if (textEl) textEl.textContent = '❌ Arquivo não encontrado';
+            if (textEl) textEl.textContent = window.t('conversacao.fileNotFound');
             setTimeout(() => {
-                if (textEl) textEl.textContent = '🍽️ Som Ambiente';
+                if (textEl) textEl.textContent = '🍽️ ' + window.t('conversacao.ambientSound');
             }, 2000);
         });
     }
@@ -6899,10 +7247,933 @@ WICHTIG - BENUTZERSPRACHE:
         console.log('🔇 Som ambiente parado');
     }
 
+    // ========== CALIBRAÇÃO DE MICROFONE ==========
+    let micCalibrationState = {
+        stream: null,
+        audioContext: null,
+        analyser: null,
+        animationFrame: null,
+        isMonitoring: false,
+        isRecording: false,
+        isPlaying: false,
+        mediaRecorder: null,
+        recordedChunks: [],
+        recordedBlob: null,
+        playbackContext: null,
+        sourceNode: null,
+        currentStep: 1 // 1 = ajustar ganho, 2 = gravar, 3 = ouvir e confirmar
+    };
+
+    // Função obsoleta - mantida vazia para evitar erros
+    async function populateMicrophoneList() {
+        // Removido - agora usamos dispositivo padrão do sistema
+        return;
+    }
+
+    // Função obsoleta - mantida vazia para evitar erros
+    async function populateAudioOutputList() {
+        // Removido - agora usamos dispositivo padrão do sistema
+        return;
+
+        try {
+            // Código obsoleto mantido comentado para referência
+            const tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            tempStream.getTracks().forEach(track => track.stop());
+
+            // Agora obter a lista de dispositivos
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const audioInputs = devices.filter(device => device.kind === 'audioinput');
+
+            const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+            const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+
+            // Limpar opções anteriores
+            select.innerHTML = '';
+
+            // Adicionar opção padrão
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = isEnglish ? '🎤 Default (System)' : '🎤 Padrão (Sistema)';
+            select.appendChild(defaultOption);
+
+            // Adicionar cada microfone encontrado
+            audioInputs.forEach((device, index) => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                // Se não tiver label, usar um nome genérico
+                const label = device.label || (isEnglish ? `Microphone ${index + 1}` : `Microfone ${index + 1}`);
+                option.textContent = label;
+                select.appendChild(option);
+            });
+
+            // Selecionar o microfone salvo anteriormente
+            const savedMic = localStorage.getItem('selectedMicrophone');
+            if (savedMic) {
+                select.value = savedMic;
+            }
+
+            // Adicionar evento de mudança
+            select.addEventListener('change', function() {
+                const selectedValue = this.value;
+                micCalibrationState.selectedMicrophone = selectedValue;
+                localStorage.setItem('selectedMicrophone', selectedValue);
+                console.log('🎤 Microfone selecionado:', selectedValue || 'padrão');
+
+                // Se estiver testando, reiniciar com o novo microfone
+                if (micCalibrationState.isTesting) {
+                    stopMicTest();
+                    startMicTest();
+                }
+            });
+
+            console.log('🎤 Lista de microfones carregada:', audioInputs.length, 'dispositivos');
+        } catch (err) {
+            console.error('Erro ao listar microfones:', err);
+            const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+            const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+            select.innerHTML = `<option value="">${isEnglish ? 'Allow microphone access' : 'Permita acesso ao microfone'}</option>`;
+        }
+    }
+
+    // Função para listar dispositivos de saída de áudio
+    async function populateAudioOutputList() {
+        const select = document.getElementById('audio-output-select');
+        if (!select) return;
+
+        try {
+            // Verificar se o navegador suporta seleção de saída de áudio
+            if (!('setSinkId' in HTMLMediaElement.prototype)) {
+                const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+                const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+                select.innerHTML = `<option value="">${isEnglish ? 'Not supported in this browser' : 'Não suportado neste navegador'}</option>`;
+                select.disabled = true;
+                return;
+            }
+
+            // Obter lista de dispositivos
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
+
+            const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+            const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+
+            // Limpar opções anteriores
+            select.innerHTML = '';
+
+            // Adicionar opção padrão
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = isEnglish ? '🔊 Default (System)' : '🔊 Padrão (Sistema)';
+            select.appendChild(defaultOption);
+
+            // Adicionar cada dispositivo de saída encontrado
+            audioOutputs.forEach((device, index) => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                // Se não tiver label, usar um nome genérico
+                const label = device.label || (isEnglish ? `Speaker ${index + 1}` : `Alto-falante ${index + 1}`);
+                option.textContent = label;
+                select.appendChild(option);
+            });
+
+            // Selecionar o dispositivo salvo anteriormente
+            const savedOutput = localStorage.getItem('selectedAudioOutput');
+            if (savedOutput) {
+                select.value = savedOutput;
+            }
+
+            // Adicionar evento de mudança
+            select.addEventListener('change', function() {
+                const selectedValue = this.value;
+                localStorage.setItem('selectedAudioOutput', selectedValue);
+                console.log('🔊 Saída de áudio selecionada:', selectedValue || 'padrão');
+            });
+
+            console.log('🔊 Lista de saídas de áudio carregada:', audioOutputs.length, 'dispositivos');
+        } catch (err) {
+            console.error('Erro ao listar saídas de áudio:', err);
+            const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+            const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+            select.innerHTML = `<option value="">${isEnglish ? 'Error loading devices' : 'Erro ao carregar dispositivos'}</option>`;
+        }
+    }
+
+    // Popular lista de microfones disponíveis
+    async function populateMicrophoneList() {
+        const select = document.getElementById('mic-device-select');
+        if (!select) return;
+
+        const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+        const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+
+        try {
+            // Solicitar permissão primeiro para obter labels dos dispositivos
+            const tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            tempStream.getTracks().forEach(track => track.stop());
+
+            // Obter lista de dispositivos
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const audioInputs = devices.filter(device => device.kind === 'audioinput');
+
+            console.log('🎤 Microfones disponíveis:', audioInputs.map(d => ({ id: d.deviceId, label: d.label })));
+
+            // Limpar e popular select
+            select.innerHTML = '';
+
+            // Opção padrão do sistema
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = isEnglish ? '(System Default)' : '(Padrão do Sistema)';
+            select.appendChild(defaultOption);
+
+            // Adicionar cada microfone
+            audioInputs.forEach((device, index) => {
+                const option = document.createElement('option');
+                option.value = device.deviceId;
+                // Usar label ou nome genérico
+                let label = device.label || (isEnglish ? `Microphone ${index + 1}` : `Microfone ${index + 1}`);
+                // Limitar tamanho do label
+                if (label.length > 50) {
+                    label = label.substring(0, 47) + '...';
+                }
+                option.textContent = label;
+                select.appendChild(option);
+            });
+
+            // Restaurar seleção salva
+            const savedMic = localStorage.getItem('selectedMicrophone');
+            if (savedMic) {
+                // Verificar se o dispositivo salvo ainda existe
+                const exists = audioInputs.some(d => d.deviceId === savedMic);
+                if (exists) {
+                    select.value = savedMic;
+                }
+            }
+
+            // Adicionar evento de mudança para salvar seleção e reiniciar monitoramento
+            select.onchange = async function() {
+                const selectedValue = this.value;
+                localStorage.setItem('selectedMicrophone', selectedValue);
+                console.log('🎤 Microfone selecionado:', selectedValue || 'padrão do sistema');
+
+                // Reiniciar monitoramento com novo microfone
+                if (micCalibrationState.isMonitoring) {
+                    stopMicMonitoring();
+                    await startMicMonitoring();
+                }
+            };
+
+        } catch (err) {
+            console.error('Erro ao listar microfones:', err);
+            select.innerHTML = `<option value="">${isEnglish ? 'Error loading microphones' : 'Erro ao carregar microfones'}</option>`;
+        }
+    }
+
+    function openMicCalibration() {
+        const modal = document.getElementById('mic-calibration-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+
+            // Resetar estado
+            micCalibrationState.currentStep = 1;
+            micCalibrationState.recordedBlob = null;
+            micCalibrationState.recordedChunks = [];
+
+            // Carregar ganho salvo
+            const savedGain = localStorage.getItem('micGain') || '2.0';
+            const slider = document.getElementById('mic-gain-slider');
+            const valueDisplay = document.getElementById('mic-gain-value');
+            if (slider) slider.value = savedGain;
+            if (valueDisplay) valueDisplay.textContent = parseFloat(savedGain).toFixed(1) + 'x';
+
+            // Resetar UI
+            updateCalibrationStepUI(1);
+            resetCalibrationButtons();
+
+            // Popular lista de microfones e iniciar monitoramento
+            populateMicrophoneList().then(() => {
+                startMicMonitoring();
+            });
+
+            // Traduzir textos se necessário
+            const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+            const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+
+            if (isEnglish) {
+                const title = document.getElementById('mic-calibration-title');
+                const desc = document.getElementById('mic-calibration-desc');
+                const micSelectLabel = document.getElementById('mic-select-label');
+                const levelLabel = document.getElementById('mic-level-label');
+                const gainLabel = document.getElementById('mic-gain-label');
+                const zoneLow = document.getElementById('mic-zone-low');
+                const zoneGood = document.getElementById('mic-zone-good');
+                const zoneHigh = document.getElementById('mic-zone-high');
+                const tip = document.getElementById('mic-calibration-tip');
+                const recordBtnText = document.getElementById('mic-record-btn-text');
+                const playBtnText = document.getElementById('mic-play-btn-text');
+                const confirmBtnText = document.getElementById('mic-confirm-btn-text');
+                const rejectBtnText = document.getElementById('mic-reject-btn-text');
+                const confirmQuestion = document.getElementById('confirm-question');
+                const step1 = document.getElementById('step-1-indicator');
+                const step2 = document.getElementById('step-2-indicator');
+                const step3 = document.getElementById('step-3-indicator');
+
+                if (title) title.textContent = 'Audio Setup';
+                if (desc) desc.textContent = 'Adjust the gain, record your voice, then listen to verify the sound quality.';
+                if (micSelectLabel) micSelectLabel.textContent = 'Microphone:';
+                if (levelLabel) levelLabel.textContent = 'Microphone Level:';
+                if (gainLabel) gainLabel.querySelector('span').textContent = 'Microphone Gain:';
+                if (zoneLow) zoneLow.textContent = 'Low';
+                if (zoneGood) zoneGood.textContent = 'Good';
+                if (zoneHigh) zoneHigh.textContent = 'High';
+                if (tip) tip.innerHTML = '<strong class="text-cyan-400">Tip:</strong> If the level stays low when you speak, increase the gain. If it\'s constantly in the red/yellow, decrease it.';
+                if (recordBtnText) recordBtnText.textContent = 'Record Voice';
+                if (playBtnText) playBtnText.textContent = 'Listen';
+                if (confirmBtnText) confirmBtnText.textContent = 'Confirm';
+                if (rejectBtnText) rejectBtnText.textContent = 'Record Again';
+                if (confirmQuestion) confirmQuestion.textContent = 'Does the sound quality look good?';
+                if (step1) step1.textContent = '1. Adjust gain';
+                if (step2) step2.textContent = '2. Record voice';
+                if (step3) step3.textContent = '3. Listen & confirm';
+            }
+        }
+    }
+
+    // Atualizar indicador de etapa visual
+    function updateCalibrationStepUI(step) {
+        const step1 = document.getElementById('step-1-indicator');
+        const step2 = document.getElementById('step-2-indicator');
+        const step3 = document.getElementById('step-3-indicator');
+
+        // Reset all
+        [step1, step2, step3].forEach(el => {
+            if (el) {
+                el.classList.remove('text-cyan-400', 'font-semibold', 'text-green-400');
+                el.classList.add('text-slate-500');
+            }
+        });
+
+        // Mark completed steps in green
+        if (step >= 2 && step1) {
+            step1.classList.remove('text-slate-500');
+            step1.classList.add('text-green-400');
+        }
+        if (step >= 3 && step2) {
+            step2.classList.remove('text-slate-500');
+            step2.classList.add('text-green-400');
+        }
+
+        // Highlight current step
+        const currentStepEl = step === 1 ? step1 : step === 2 ? step2 : step3;
+        if (currentStepEl) {
+            currentStepEl.classList.remove('text-slate-500', 'text-green-400');
+            currentStepEl.classList.add('text-cyan-400', 'font-semibold');
+        }
+    }
+
+    // Resetar botões para estado inicial
+    function resetCalibrationButtons() {
+        const playBtn = document.getElementById('mic-play-btn');
+        const confirmSection = document.getElementById('confirm-section');
+        const recordBtnText = document.getElementById('mic-record-btn-text');
+
+        if (playBtn) {
+            playBtn.disabled = true;
+            playBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            playBtn.classList.remove('hover:bg-slate-600');
+        }
+        if (confirmSection) {
+            confirmSection.classList.add('hidden');
+        }
+
+        const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+        const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+        if (recordBtnText) {
+            recordBtnText.textContent = isEnglish ? 'Record Voice' : 'Gravar Voz';
+        }
+    }
+
+    function closeMicCalibration() {
+        const modal = document.getElementById('mic-calibration-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+        stopMicMonitoring();
+        stopPlayback();
+    }
+
+    // ========== NOVAS FUNÇÕES DE MONITORAMENTO/GRAVAÇÃO ==========
+
+    // Iniciar monitoramento do microfone (mostra nível em tempo real)
+    async function startMicMonitoring() {
+        try {
+            // Buscar microfone selecionado ou salvo
+            const micSelect = document.getElementById('mic-device-select');
+            const selectedMic = micSelect?.value || localStorage.getItem('selectedMicrophone') || '';
+
+            const audioConstraints = {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: false // Desabilitar AGC para calibração precisa
+            };
+
+            // Se um microfone específico foi selecionado, usar deviceId
+            if (selectedMic) {
+                audioConstraints.deviceId = { exact: selectedMic };
+            }
+
+            try {
+                micCalibrationState.stream = await navigator.mediaDevices.getUserMedia({
+                    audio: audioConstraints
+                });
+            } catch (deviceError) {
+                // Se falhar com deviceId específico, tentar sem ele
+                console.warn('⚠️ Não foi possível usar o microfone selecionado, tentando padrão:', deviceError.message);
+                delete audioConstraints.deviceId;
+                micCalibrationState.stream = await navigator.mediaDevices.getUserMedia({
+                    audio: audioConstraints
+                });
+            }
+
+            // Log do microfone sendo usado
+            const audioTrack = micCalibrationState.stream.getAudioTracks()[0];
+            console.log('🎤 Microfone em uso:', audioTrack.label || 'Sistema');
+
+            // Criar contexto de áudio e analyser
+            micCalibrationState.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            micCalibrationState.analyser = micCalibrationState.audioContext.createAnalyser();
+            micCalibrationState.analyser.fftSize = 256;
+            micCalibrationState.analyser.smoothingTimeConstant = 0.3;
+
+            const source = micCalibrationState.audioContext.createMediaStreamSource(micCalibrationState.stream);
+            source.connect(micCalibrationState.analyser);
+
+            micCalibrationState.isMonitoring = true;
+
+            // Iniciar animação do medidor
+            updateMicLevel();
+
+            console.log('🎤 Monitoramento de microfone iniciado');
+        } catch (err) {
+            console.error('Erro ao acessar microfone:', err);
+            const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+            const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+            alert(isEnglish ? 'Could not access microphone. Check permissions.' : 'Não foi possível acessar o microfone. Verifique as permissões.');
+        }
+    }
+
+    // Parar monitoramento do microfone
+    function stopMicMonitoring() {
+        // Parar gravação se estiver ativa
+        if (micCalibrationState.isRecording) {
+            stopRecording();
+        }
+
+        // Parar stream
+        if (micCalibrationState.stream) {
+            micCalibrationState.stream.getTracks().forEach(track => track.stop());
+            micCalibrationState.stream = null;
+        }
+
+        // Fechar contexto de áudio
+        if (micCalibrationState.audioContext) {
+            micCalibrationState.audioContext.close();
+            micCalibrationState.audioContext = null;
+        }
+
+        // Cancelar animação
+        if (micCalibrationState.animationFrame) {
+            cancelAnimationFrame(micCalibrationState.animationFrame);
+            micCalibrationState.animationFrame = null;
+        }
+
+        micCalibrationState.isMonitoring = false;
+        micCalibrationState.analyser = null;
+
+        // Resetar barra de nível
+        const levelBar = document.getElementById('mic-level-bar');
+        if (levelBar) levelBar.style.width = '0%';
+
+        console.log('🎤 Monitoramento de microfone parado');
+    }
+
+    // Toggle gravação
+    async function toggleRecording() {
+        if (micCalibrationState.isRecording) {
+            stopRecording();
+        } else {
+            await startRecording();
+        }
+    }
+
+    // Iniciar gravação
+    async function startRecording() {
+        // Se o stream não existir, iniciar monitoramento primeiro
+        if (!micCalibrationState.stream) {
+            await startMicMonitoring();
+        }
+
+        if (!micCalibrationState.stream) {
+            console.error('Não há stream de áudio disponível');
+            return;
+        }
+
+        try {
+            // Limpar gravação anterior
+            micCalibrationState.recordedChunks = [];
+            micCalibrationState.recordedBlob = null;
+
+            // Esconder seção de confirmação
+            const confirmSection = document.getElementById('confirm-section');
+            if (confirmSection) confirmSection.classList.add('hidden');
+
+            // Criar MediaRecorder
+            micCalibrationState.mediaRecorder = new MediaRecorder(micCalibrationState.stream, {
+                mimeType: 'audio/webm;codecs=opus'
+            });
+
+            micCalibrationState.mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    micCalibrationState.recordedChunks.push(event.data);
+                }
+            };
+
+            micCalibrationState.mediaRecorder.onstop = () => {
+                // Criar blob da gravação
+                micCalibrationState.recordedBlob = new Blob(micCalibrationState.recordedChunks, {
+                    type: 'audio/webm'
+                });
+                console.log('🎤 Gravação concluída:', micCalibrationState.recordedBlob.size, 'bytes');
+
+                // Habilitar botão de ouvir
+                const playBtn = document.getElementById('mic-play-btn');
+                if (playBtn) {
+                    playBtn.disabled = false;
+                    playBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    playBtn.classList.add('hover:bg-slate-600');
+                }
+
+                // Atualizar para etapa 3
+                micCalibrationState.currentStep = 3;
+                updateCalibrationStepUI(3);
+            };
+
+            // Iniciar gravação
+            micCalibrationState.mediaRecorder.start();
+            micCalibrationState.isRecording = true;
+
+            // Atualizar UI do botão
+            const recordBtn = document.getElementById('mic-record-btn');
+            const recordBtnText = document.getElementById('mic-record-btn-text');
+            if (recordBtn) {
+                recordBtn.classList.remove('from-red-600', 'to-red-500', 'hover:from-red-500', 'hover:to-red-400');
+                recordBtn.classList.add('from-amber-600', 'to-amber-500', 'hover:from-amber-500', 'hover:to-amber-400', 'animate-pulse');
+            }
+            const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+            const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+            if (recordBtnText) recordBtnText.textContent = isEnglish ? 'Stop Recording' : 'Parar Gravação';
+
+            // Atualizar para etapa 2
+            micCalibrationState.currentStep = 2;
+            updateCalibrationStepUI(2);
+
+            console.log('🎤 Gravação iniciada');
+        } catch (err) {
+            console.error('Erro ao iniciar gravação:', err);
+        }
+    }
+
+    // Parar gravação
+    function stopRecording() {
+        if (micCalibrationState.mediaRecorder && micCalibrationState.mediaRecorder.state !== 'inactive') {
+            micCalibrationState.mediaRecorder.stop();
+        }
+        micCalibrationState.isRecording = false;
+
+        // Atualizar UI do botão
+        const recordBtn = document.getElementById('mic-record-btn');
+        const recordBtnText = document.getElementById('mic-record-btn-text');
+        if (recordBtn) {
+            recordBtn.classList.remove('from-amber-600', 'to-amber-500', 'hover:from-amber-500', 'hover:to-amber-400', 'animate-pulse');
+            recordBtn.classList.add('from-red-600', 'to-red-500', 'hover:from-red-500', 'hover:to-red-400');
+        }
+        const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+        const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+        if (recordBtnText) recordBtnText.textContent = isEnglish ? 'Record Voice' : 'Gravar Voz';
+
+        console.log('🎤 Gravação parada');
+    }
+
+    // Reproduzir gravação com o mesmo filtro da conversa
+    async function playRecording() {
+        if (!micCalibrationState.recordedBlob) {
+            console.error('Nenhuma gravação disponível');
+            return;
+        }
+
+        if (micCalibrationState.isPlaying) {
+            stopPlayback();
+            return;
+        }
+
+        try {
+            // Criar contexto de áudio para reprodução
+            micCalibrationState.playbackContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Decodificar o áudio
+            const arrayBuffer = await micCalibrationState.recordedBlob.arrayBuffer();
+            const audioBuffer = await micCalibrationState.playbackContext.decodeAudioData(arrayBuffer);
+
+            // Obter ganho do slider
+            const gainSlider = document.getElementById('mic-gain-slider');
+            const gainValue = gainSlider ? parseFloat(gainSlider.value) : 2.0;
+
+            // Criar nó de ganho
+            const gainNode = micCalibrationState.playbackContext.createGain();
+            gainNode.gain.value = gainValue;
+
+            // Criar filtro passa-baixa (MESMO da conversa)
+            const lowPassFilter = micCalibrationState.playbackContext.createBiquadFilter();
+            lowPassFilter.type = 'lowpass';
+            lowPassFilter.frequency.value = 12000; // Mesma frequência da conversa
+            lowPassFilter.Q.value = 0.5; // Mesmo Q da conversa
+
+            // Criar source node
+            micCalibrationState.sourceNode = micCalibrationState.playbackContext.createBufferSource();
+            micCalibrationState.sourceNode.buffer = audioBuffer;
+
+            // Conectar cadeia: source -> gain -> lowpass -> output
+            micCalibrationState.sourceNode.connect(gainNode);
+            gainNode.connect(lowPassFilter);
+            lowPassFilter.connect(micCalibrationState.playbackContext.destination);
+
+            // Atualizar UI
+            const playBtn = document.getElementById('mic-play-btn');
+            const playBtnText = document.getElementById('mic-play-btn-text');
+            if (playBtn) {
+                playBtn.classList.remove('bg-slate-700');
+                playBtn.classList.add('bg-cyan-600');
+            }
+            const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+            const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+            if (playBtnText) playBtnText.textContent = isEnglish ? 'Stop' : 'Parar';
+
+            micCalibrationState.isPlaying = true;
+
+            // Quando terminar, atualizar UI
+            micCalibrationState.sourceNode.onended = () => {
+                micCalibrationState.isPlaying = false;
+                if (playBtn) {
+                    playBtn.classList.remove('bg-cyan-600');
+                    playBtn.classList.add('bg-slate-700');
+                }
+                if (playBtnText) playBtnText.textContent = isEnglish ? 'Listen' : 'Ouvir';
+
+                // Mostrar seção de confirmação
+                const confirmSection = document.getElementById('confirm-section');
+                if (confirmSection) confirmSection.classList.remove('hidden');
+            };
+
+            // Iniciar reprodução
+            micCalibrationState.sourceNode.start();
+            console.log('🔊 Reproduzindo gravação com ganho:', gainValue, 'e filtro passa-baixo: 12000Hz');
+
+        } catch (err) {
+            console.error('Erro ao reproduzir gravação:', err);
+        }
+    }
+
+    // Parar reprodução
+    function stopPlayback() {
+        if (micCalibrationState.sourceNode) {
+            try {
+                micCalibrationState.sourceNode.stop();
+            } catch (e) {
+                // Pode já ter parado
+            }
+            micCalibrationState.sourceNode = null;
+        }
+        if (micCalibrationState.playbackContext) {
+            micCalibrationState.playbackContext.close();
+            micCalibrationState.playbackContext = null;
+        }
+        micCalibrationState.isPlaying = false;
+
+        const playBtn = document.getElementById('mic-play-btn');
+        const playBtnText = document.getElementById('mic-play-btn-text');
+        const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+        const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+        if (playBtn) {
+            playBtn.classList.remove('bg-cyan-600');
+            playBtn.classList.add('bg-slate-700');
+        }
+        if (playBtnText) playBtnText.textContent = isEnglish ? 'Listen' : 'Ouvir';
+    }
+
+    // Confirmar calibração (som está bom)
+    function confirmCalibration() {
+        const gainSlider = document.getElementById('mic-gain-slider');
+        if (gainSlider) {
+            const gain = parseFloat(gainSlider.value);
+            localStorage.setItem('micGain', gain.toString());
+            localStorage.setItem('micCalibrated', 'true');
+            console.log('🎤 Calibração confirmada! Ganho salvo:', gain);
+        }
+
+        // Habilitar controles da conversa
+        enableConversationControls();
+
+        // Fechar modal
+        closeMicCalibration();
+    }
+
+    // Rejeitar e gravar novamente
+    function rejectCalibration() {
+        // Resetar estado
+        micCalibrationState.recordedBlob = null;
+        micCalibrationState.recordedChunks = [];
+        micCalibrationState.currentStep = 1;
+
+        // Resetar UI
+        resetCalibrationButtons();
+        updateCalibrationStepUI(1);
+
+        // Esconder seção de confirmação
+        const confirmSection = document.getElementById('confirm-section');
+        if (confirmSection) confirmSection.classList.add('hidden');
+
+        console.log('🎤 Gravação rejeitada, pronto para nova gravação');
+    }
+
+    // Função legada mantida para compatibilidade
+    async function toggleMicTest() {
+        await toggleRecording();
+    }
+
+    async function startMicTest() {
+        await startMicMonitoring();
+    }
+
+    function stopMicTest() {
+        stopMicMonitoring();
+    }
+
+    function updateMicLevel() {
+        if (!micCalibrationState.isMonitoring || !micCalibrationState.analyser) return;
+
+        const dataArray = new Uint8Array(micCalibrationState.analyser.frequencyBinCount);
+        micCalibrationState.analyser.getByteFrequencyData(dataArray);
+
+        // Calcular nível médio
+        const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+
+        // Aplicar ganho do slider para preview
+        const gainSlider = document.getElementById('mic-gain-slider');
+        const gain = gainSlider ? parseFloat(gainSlider.value) : 2.0;
+
+        // Normalizar para porcentagem (0-100) com ganho aplicado
+        let level = (average / 255) * 100 * (gain / 2.0);
+        level = Math.min(100, level); // Limitar a 100%
+
+        // Atualizar barra
+        const levelBar = document.getElementById('mic-level-bar');
+        if (levelBar) {
+            levelBar.style.width = level + '%';
+
+            // Mudar cor baseado no nível
+            if (level < 33) {
+                levelBar.className = 'absolute left-0 top-0 bottom-0 bg-gradient-to-r from-red-500 to-red-400 transition-all duration-75';
+            } else if (level < 66) {
+                levelBar.className = 'absolute left-0 top-0 bottom-0 bg-gradient-to-r from-green-500 to-teal-400 transition-all duration-75';
+            } else {
+                levelBar.className = 'absolute left-0 top-0 bottom-0 bg-gradient-to-r from-yellow-500 to-orange-400 transition-all duration-75';
+            }
+        }
+
+        // Continuar animação
+        micCalibrationState.animationFrame = requestAnimationFrame(updateMicLevel);
+    }
+
+    function saveMicCalibration() {
+        const gainSlider = document.getElementById('mic-gain-slider');
+        if (gainSlider) {
+            const gain = parseFloat(gainSlider.value);
+            localStorage.setItem('micGain', gain.toString());
+            localStorage.setItem('micCalibrated', 'true'); // Marcar que foi calibrado
+            console.log('🎤 Ganho do microfone salvo:', gain);
+
+            // Feedback visual
+            const saveBtn = document.getElementById('mic-save-btn');
+            const saveBtnText = document.getElementById('mic-save-btn-text');
+            if (saveBtn && saveBtnText) {
+                const originalText = saveBtnText.textContent;
+                saveBtn.classList.remove('bg-cyan-600', 'hover:bg-cyan-500');
+                saveBtn.classList.add('bg-green-600', 'hover:bg-green-500');
+                const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+                const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+                saveBtnText.textContent = isEnglish ? 'Saved!' : 'Salvo!';
+
+                setTimeout(() => {
+                    saveBtn.classList.remove('bg-green-600', 'hover:bg-green-500');
+                    saveBtn.classList.add('bg-cyan-600', 'hover:bg-cyan-500');
+                    saveBtnText.textContent = originalText;
+                }, 1500);
+            }
+
+            // Habilitar controles após calibração
+            enableConversationControls();
+        }
+
+        // Fechar modal e parar teste
+        closeMicCalibration();
+    }
+
+    // Verificar e aplicar estado de calibração
+    function checkCalibrationStatus() {
+        const isCalibrated = localStorage.getItem('micCalibrated') === 'true';
+        if (isCalibrated) {
+            enableConversationControls();
+        } else {
+            disableConversationControls();
+        }
+    }
+
+    // Desabilitar controles até calibrar
+    function disableConversationControls() {
+        const micBtn = document.getElementById('conv-mic-btn');
+        const voiceSelect = document.getElementById('conv-voice-select');
+        const muteBtn = document.getElementById('conv-mute-btn');
+        const continuousMode = document.getElementById('conv-continuous-mode');
+        const ambientBtn = document.getElementById('conv-ambient-btn');
+        const calibrationSetupArea = document.getElementById('calibration-setup-area');
+        const calibrationWarning = document.getElementById('calibration-warning');
+        const calibrateBtn = document.getElementById('conv-calibrate-mic-btn');
+        const calibrateText = document.getElementById('conv-calibrate-text');
+
+        // Desabilitar botão do microfone
+        if (micBtn) {
+            micBtn.disabled = true;
+            micBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            micBtn.classList.remove('hover:from-cyan-400', 'hover:to-teal-500', 'hover:scale-105');
+        }
+
+        // Desabilitar outros controles
+        if (voiceSelect) {
+            voiceSelect.disabled = true;
+            voiceSelect.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+        if (muteBtn) {
+            muteBtn.disabled = true;
+        }
+        if (continuousMode) {
+            continuousMode.disabled = true;
+            continuousMode.parentElement?.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+        if (ambientBtn) {
+            ambientBtn.disabled = true;
+            ambientBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+
+        // Mostrar área de calibração destacada
+        if (calibrationSetupArea) {
+            calibrationSetupArea.classList.remove('hidden');
+        }
+        if (calibrationWarning) {
+            calibrationWarning.classList.remove('hidden');
+        }
+
+        // Destacar botão de calibração (estilo chamativo - grande e pulsante)
+        if (calibrateBtn) {
+            calibrateBtn.classList.remove('hidden');
+            calibrateBtn.classList.add('animate-pulse');
+        }
+
+        const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+        const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+        if (calibrateText) {
+            calibrateText.textContent = isEnglish ? '🎤 SETUP AUDIO FIRST!' : '🎤 CONFIGURAR ÁUDIO PRIMEIRO!';
+        }
+    }
+
+    // Habilitar controles após calibração
+    function enableConversationControls() {
+        const micBtn = document.getElementById('conv-mic-btn');
+        const voiceSelect = document.getElementById('conv-voice-select');
+        const muteBtn = document.getElementById('conv-mute-btn');
+        const continuousMode = document.getElementById('conv-continuous-mode');
+        const ambientBtn = document.getElementById('conv-ambient-btn');
+        const calibrationSetupArea = document.getElementById('calibration-setup-area');
+        const calibrationWarning = document.getElementById('calibration-warning');
+        const calibrateBtn = document.getElementById('conv-calibrate-mic-btn');
+        const calibrateText = document.getElementById('conv-calibrate-text');
+
+        // Habilitar botão do microfone
+        if (micBtn) {
+            micBtn.disabled = false;
+            micBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            micBtn.classList.add('hover:from-cyan-400', 'hover:to-teal-500', 'hover:scale-105');
+        }
+
+        // Habilitar outros controles
+        if (voiceSelect) {
+            voiceSelect.disabled = false;
+            voiceSelect.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+        if (continuousMode) {
+            continuousMode.disabled = false;
+            continuousMode.parentElement?.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+        if (ambientBtn) {
+            ambientBtn.disabled = false;
+            ambientBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        // Manter área de calibração visível, mas esconder aviso
+        if (calibrationSetupArea) {
+            calibrationSetupArea.classList.remove('hidden');
+        }
+        if (calibrationWarning) {
+            calibrationWarning.classList.add('hidden');
+        }
+
+        // Botão de calibração ainda visível, mas com estilo mais discreto (já está calibrado)
+        if (calibrateBtn) {
+            calibrateBtn.classList.remove('hidden', 'animate-pulse', 'px-6', 'py-4', 'text-lg', 'shadow-xl', 'shadow-amber-500/40', 'border-2', 'border-amber-400', 'rounded-xl', 'gap-3');
+            calibrateBtn.classList.add('px-4', 'py-2', 'text-sm', 'shadow-md', 'rounded-lg', 'gap-2');
+        }
+
+        const lang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+        const isEnglish = lang === 'en' || lang === 'en-US' || lang === 'en-GB';
+        if (calibrateText) {
+            calibrateText.textContent = isEnglish ? '🎤 Reconfigure Audio' : '🎤 Reconfigurar Áudio';
+        }
+    }
+
+    // Função para obter o ganho salvo (usada pelo AudioProcessor)
+    function getSavedMicGain() {
+        const saved = localStorage.getItem('micGain');
+        return saved ? parseFloat(saved) : 2.0;
+    }
+
+    // Exportar função globalmente para uso no AudioProcessor
+    window.getSavedMicGain = getSavedMicGain;
+    // ========== FIM CALIBRAÇÃO DE MICROFONE ==========
+
     // Tocar efeito sonoro único (passos, pratos, etc.)
-    function playSoundEffect(soundFile, volume = 0.5) {
+    async function playSoundEffect(soundFile, volume = 0.5) {
         const audio = new Audio(`/assets/audio/${soundFile}`);
         audio.volume = volume;
+
+        // Aplicar dispositivo de saída selecionado
+        const selectedOutput = localStorage.getItem('selectedAudioOutput');
+        if (selectedOutput && audio.setSinkId) {
+            try {
+                await audio.setSinkId(selectedOutput);
+            } catch (err) {
+                // Silenciosamente ignora erro em efeitos sonoros
+            }
+        }
+
         audio.play().catch(err => {
             console.log('Som não disponível:', soundFile);
         });
@@ -6918,13 +8189,13 @@ WICHTIG - BENUTZERSPRACHE:
         if (enabled) {
             iconOff?.classList.add('hidden');
             iconOn?.classList.remove('hidden');
-            if (textEl) textEl.textContent = '🔊 Tocando...';
+            if (textEl) textEl.textContent = window.t('conversacao.playing');
             btn?.classList.remove('bg-slate-700');
             btn?.classList.add('bg-cyan-600/30', 'border', 'border-cyan-500/50');
         } else {
             iconOff?.classList.remove('hidden');
             iconOn?.classList.add('hidden');
-            if (textEl) textEl.textContent = '🍽️ Som Ambiente';
+            if (textEl) textEl.textContent = '🍽️ ' + window.t('conversacao.ambientSound');
             btn?.classList.remove('bg-cyan-600/30', 'border', 'border-cyan-500/50');
             btn?.classList.add('bg-slate-700');
         }
@@ -6960,6 +8231,21 @@ WICHTIG - BENUTZERSPRACHE:
 
     // Toggle entre conectar/desconectar da conversa
     async function toggleConversation() {
+        // OBRIGATÓRIO: Verificar se o áudio foi configurado antes de permitir conversa
+        const isCalibrated = localStorage.getItem('micCalibrated') === 'true';
+        if (!isCalibrated) {
+            // Mostrar aviso e abrir calibração automaticamente
+            const calibrationWarning = document.getElementById('calibration-warning');
+            if (calibrationWarning) {
+                calibrationWarning.classList.remove('hidden');
+                calibrationWarning.classList.add('animate-pulse');
+                setTimeout(() => calibrationWarning.classList.remove('animate-pulse'), 2000);
+            }
+            // Abrir modal de calibração automaticamente
+            openMicCalibration();
+            return; // Impedir conversa sem calibração
+        }
+
         if (conversacaoState.isConnected || conversacaoState.isConnecting) {
             disconnectConversation();
         } else {
@@ -6971,20 +8257,40 @@ WICHTIG - BENUTZERSPRACHE:
     async function connectConversation() {
         if (conversacaoState.isConnecting || conversacaoState.isConnected) return;
 
+        // IMPORTANTE: Parar qualquer áudio anterior antes de conectar (evita vozes sobrepostas)
+        if (conversacaoState.currentAudioSource) {
+            try {
+                conversacaoState.currentAudioSource.stop();
+                console.log('🔇 Áudio anterior parado antes de nova conexão');
+            } catch (e) {
+                // Ignorar erro se já parou
+            }
+            conversacaoState.currentAudioSource = null;
+        }
+        conversacaoState.audioQueue = [];
+        conversacaoState.isPlayingAudio = false;
+
+        // Detectar se é reconexão (já tinha tempo acumulado)
+        const isReconnecting = conversacaoState.totalSeconds > 0 || conversacaoState.reconnectAttempts > 0;
+
         try {
             conversacaoState.isConnecting = true;
-            updateStatus('Conectando...', 'connecting');
+            updateStatus(window.t('conversacao.connecting'), 'connecting');
             updateConversacaoUI('connecting');
 
-            // Limpar correções da sessão anterior (forçar reset completo)
-            clearCorrections(true);
+            // Só limpar correções se NÃO for reconexão (preservar erros na reconexão)
+            if (!isReconnecting) {
+                clearCorrections(true);
+            } else {
+                console.log('🔄 Reconexão detectada - preservando erros e timer');
+            }
 
             // Obter API key do backend
             if (!conversacaoState.apiKey) {
                 console.log('Obtendo API key para userId:', currentUser?.id);
 
                 if (!currentUser?.id) {
-                    throw new Error('Você precisa estar logado para usar a conversa.');
+                    throw new Error(window.t('conversacao.mustBeLoggedIn'));
                 }
 
                 const keyResponse = await fetch('/.netlify/functions/get-gemini-key', {
@@ -6998,40 +8304,76 @@ WICHTIG - BENUTZERSPRACHE:
                 const keyData = await keyResponse.json();
                 if (!keyResponse.ok) {
                     if (keyResponse.status === 402) {
-                        throw new Error(`Créditos insuficientes (${keyData.credits || 0}). Você precisa de pelo menos 5 créditos.`);
+                        throw new Error(`${window.t('conversacao.insufficientCredits')} (${keyData.credits || 0}). ${window.t('conversacao.needAtLeast5Credits')}`);
                     } else if (keyResponse.status === 401) {
-                        throw new Error('Usuário não autenticado. Faça login novamente.');
+                        throw new Error(window.t('conversacao.userNotAuthenticated'));
                     } else if (keyResponse.status === 500 && keyData.error === 'API key not configured') {
-                        throw new Error('Serviço temporariamente indisponível. Tente novamente mais tarde.');
+                        throw new Error(window.t('conversacao.serviceUnavailable'));
                     }
-                    throw new Error(keyData.message || keyData.error || 'Erro ao obter credenciais');
+                    throw new Error(keyData.message || keyData.error || window.t('conversacao.credentialsError'));
                 }
 
                 if (!keyData.apiKey) {
-                    throw new Error('API key não recebida do servidor.');
+                    throw new Error(window.t('conversacao.apiKeyNotReceived'));
                 }
 
                 conversacaoState.apiKey = keyData.apiKey;
                 console.log('API key obtida com sucesso. Créditos:', keyData.credits);
             }
 
-            // Solicitar permissão do microfone
-            conversacaoState.stream = await navigator.mediaDevices.getUserMedia({
-                audio: {
-                    sampleRate: 16000,
-                    channelCount: 1,
-                    echoCancellation: true,
-                    noiseSuppression: true
+            // Configurar constraints com microfone selecionado
+            const selectedMic = localStorage.getItem('selectedMicrophone');
+            const audioConstraints = {
+                sampleRate: 16000,
+                channelCount: 1,
+                echoCancellation: true,
+                noiseSuppression: true
+            };
+
+            // Se um microfone específico foi selecionado, usar deviceId com 'exact' primeiro
+            // para garantir consistência com a calibração (que também usa 'exact')
+            if (selectedMic) {
+                audioConstraints.deviceId = { exact: selectedMic };
+            }
+
+            // Solicitar permissão do microfone com fallback
+            try {
+                conversacaoState.stream = await navigator.mediaDevices.getUserMedia({
+                    audio: audioConstraints
+                });
+            } catch (constraintError) {
+                // Se falhar com 'exact', tentar com 'ideal' para maior compatibilidade
+                console.warn('⚠️ Não foi possível usar o microfone selecionado com exact, tentando ideal:', constraintError.message);
+                if (selectedMic) {
+                    audioConstraints.deviceId = { ideal: selectedMic };
+                    try {
+                        conversacaoState.stream = await navigator.mediaDevices.getUserMedia({
+                            audio: audioConstraints
+                        });
+                    } catch (idealError) {
+                        // Se falhar também com ideal, usar microfone padrão
+                        console.warn('⚠️ Não foi possível usar o microfone selecionado, tentando padrão:', idealError.message);
+                        delete audioConstraints.deviceId;
+                        conversacaoState.stream = await navigator.mediaDevices.getUserMedia({
+                            audio: audioConstraints
+                        });
+                    }
+                } else {
+                    delete audioConstraints.deviceId;
+                    conversacaoState.stream = await navigator.mediaDevices.getUserMedia({
+                        audio: audioConstraints
+                    });
                 }
-            });
+            }
 
             // Log das configurações reais do microfone
             const audioTrack = conversacaoState.stream.getAudioTracks()[0];
             const settings = audioTrack.getSettings();
             console.log('🎤 MICROFONE OBTIDO:');
+            console.log('   - Nome:', audioTrack.label || 'não disponível');
             console.log('   - Sample Rate real:', settings.sampleRate || 'não disponível');
             console.log('   - Channels:', settings.channelCount || 'não disponível');
-            console.log('   - Device:', settings.deviceId?.substring(0, 20) || 'padrão');
+            console.log('   - Device ID:', settings.deviceId?.substring(0, 20) || 'padrão');
 
             // Conectar WebSocket ao Gemini Live API
             // Usando v1alpha que funciona com gemini-2.0-flash-exp
@@ -7044,7 +8386,7 @@ WICHTIG - BENUTZERSPRACHE:
                 if (conversacaoState.ws && conversacaoState.ws.readyState !== WebSocket.OPEN) {
                     console.error('Timeout de conexão WebSocket');
                     conversacaoState.ws.close();
-                    showConversacaoError('Timeout na conexão. Verifique sua internet e tente novamente.');
+                    showConversacaoError(window.t('conversacao.connectionTimeout'));
                     cleanupConversation();
                 }
             }, 15000);
@@ -7070,9 +8412,65 @@ WICHTIG - BENUTZERSPRACHE:
                             }
                         },
                         systemInstruction: {
-                            parts: [{ text: selectedPersona ? selectedPersona.systemInstruction : 'Du bist ein freundlicher Deutschlehrer. Sprich nur Deutsch.' }]
+                            parts: [{ text: (selectedPersona ? selectedPersona.systemInstruction : 'Du bist ein freundlicher Deutschlehrer. Sprich nur Deutsch.') + `
+
+=== KRITISCHE ANWEISUNGEN - LIES SORGFÄLTIG ===
+
+DER SCHÜLER:
+- Der Schüler ist BRASILIANER und lernt DEUTSCH.
+- Er spricht DEUTSCH mit sehr starkem brasilianischen Akzent.
+- Er macht viele Aussprachefehler und grammatische Fehler.
+- ALLES was er sagt ist ein VERSUCH, Deutsch zu sprechen.
+
+SPRACHERKENNUNG - EXTREM WICHTIG:
+- Die automatische Transkription kann FALSCH sein!
+- Wenn die Transkription Japanisch, Chinesisch, Englisch oder andere Sprachen zeigt - IGNORIERE DAS!
+- Der Schüler spricht IMMER DEUTSCH, auch wenn die Transkription etwas anderes zeigt.
+- Beispiel: Wenn du "はい" siehst, meint der Schüler wahrscheinlich "Ja" oder "Hai" auf Deutsch.
+- Beispiel: Wenn du "I should" siehst, meint er wahrscheinlich "Ich sollte" oder "Ich schaue".
+- HÖRE AUF DEN KLANG, nicht auf die Transkription!
+- Versuche immer zu erraten, welches DEUTSCHE Wort der Schüler meinen könnte.
+
+WENN DU NICHT VERSTEHST:
+- Frage höflich: "Entschuldigung, ich habe das nicht ganz verstanden. Kannst du das bitte wiederholen?"
+- Oder rate: "Meinst du vielleicht [deutsches Wort]?"
+- NIEMALS auf Japanisch, Chinesisch oder andere Sprachen antworten!
+- IMMER auf DEUTSCH antworten!
+
+GESPRÄCHSREGELN - ABSOLUT KRITISCH:
+- UNTERBRECHE DEN SCHÜLER NIEMALS!
+- Der Schüler spricht LANGSAM und macht LANGE PAUSEN - DAS IST VÖLLIG NORMAL!
+- Der Schüler denkt nach und sucht nach Wörtern - GIB IHM DIESE ZEIT!
+- Wenn der Schüler "ähm", "äh", "hm" sagt, warte still - er sucht das nächste Wort!
+- Antworte nur, wenn du sicher bist, dass der Schüler fertig gesprochen hat.
+- SAGE NIEMALS "warte", "Moment", "Sekunde" oder ähnliches! Warte einfach still!
+- KURZE ANTWORTEN! Maximal 2-3 kurze Sätze auf einmal!
+- Sei geduldig, ermutigend und freundlich.` }]
                         },
-                        // Ativar transcrição de entrada para melhor compreensão
+                        // Configuração de VAD (Voice Activity Detection) para melhor detecção de fala
+                        // NOTA: VAD local já filtra silêncio - Gemini recebe áudio mais limpo
+                        realtimeInputConfig: {
+                            // NÃO interromper a IA quando o usuário começa a falar - deixa terminar
+                            activityHandling: 'NO_INTERRUPTION',
+                            // Configurar detecção automática de atividade de voz
+                            automaticActivityDetection: {
+                                disabled: false,
+                                // Sensibilidade ALTA para detectar início de fala (não perder palavras)
+                                // IMPORTANTE: A API usa START_SENSITIVITY_*, não START_OF_SPEECH_SENSITIVITY_*
+                                startOfSpeechSensitivity: 'START_SENSITIVITY_HIGH',
+                                // Sensibilidade BAIXA para fim de fala (dar tempo para pausas naturais)
+                                // LOW evita cortar a fala do usuário prematuramente
+                                endOfSpeechSensitivity: 'END_SENSITIVITY_LOW',
+                                // Padding antes do início da fala (ms) - aumentado para capturar contexto
+                                prefixPaddingMs: 200,
+                                // Duração do silêncio para considerar fim de fala (ms)
+                                // 1200ms = resposta rápida (~2s total de delay)
+                                silenceDurationMs: 1200
+                            },
+                            // Incluir todo o input na conversa
+                            turnCoverage: 'TURN_INCLUDES_ALL_INPUT'
+                        },
+                        // Ativar transcrição de entrada - idioma é inferido automaticamente do áudio
                         inputAudioTranscription: {},
                         // Ativar transcrição de saída para debug
                         outputAudioTranscription: {}
@@ -7122,13 +8520,13 @@ WICHTIG - BENUTZERSPRACHE:
                 // Códigos de erro específicos do WebSocket
                 let errorMsg = '';
                 if (event.code === 1006) {
-                    errorMsg = 'Conexão perdida. Tentando reconectar...';
+                    errorMsg = window.t('conversacao.connectionLostReconnecting');
                 } else if (event.code === 1008 || event.code === 1003) {
-                    errorMsg = 'Sessão encerrada pelo servidor.';
+                    errorMsg = window.t('conversacao.sessionEndedByServer');
                 } else if (event.code === 4001) {
-                    errorMsg = 'API key inválida ou expirada.';
+                    errorMsg = window.t('conversacao.invalidApiKey');
                 } else if (event.reason) {
-                    errorMsg = `Conexão encerrada: ${event.reason}`;
+                    errorMsg = `${window.t('conversacao.connectionEnded')}: ${event.reason}`;
                 }
 
                 if (shouldTryReconnect) {
@@ -7138,7 +8536,7 @@ WICHTIG - BENUTZERSPRACHE:
                     if (errorMsg && !conversacaoState.isConnected) {
                         showConversacaoError(errorMsg);
                     } else if (conversacaoState.isConnected) {
-                        showConversacaoError('Conexão encerrada.');
+                        showConversacaoError(window.t('conversacao.connectionEnded'));
                     }
                     cleanupConversation();
                 }
@@ -7147,9 +8545,9 @@ WICHTIG - BENUTZERSPRACHE:
         } catch (error) {
             console.error('Erro ao conectar:', error);
             if (error.name === 'NotAllowedError') {
-                showConversacaoError('Permissão de microfone negada.');
+                showConversacaoError(window.t('conversacao.micPermissionDenied'));
             } else {
-                showConversacaoError('Erro ao conectar: ' + error.message);
+                showConversacaoError(window.t('conversacao.connectionError') + ': ' + error.message);
             }
             cleanupConversation();
         }
@@ -7166,23 +8564,43 @@ WICHTIG - BENUTZERSPRACHE:
 
             const message = JSON.parse(data);
 
+            // DEBUG: Log de todas as mensagens recebidas (exceto áudio que é muito verbose)
+            const msgKeys = Object.keys(message);
+            if (!message.serverContent?.modelTurn?.parts?.some(p => p.inlineData)) {
+                console.log('📨 WS Msg:', msgKeys.join(', '), message.serverContent ? JSON.stringify({
+                    turnComplete: message.serverContent.turnComplete,
+                    generationComplete: message.serverContent.generationComplete,
+                    interrupted: message.serverContent.interrupted,
+                    inputTranscription: message.serverContent.inputTranscription,
+                    outputTranscription: message.serverContent.outputTranscription?.text?.substring(0, 30)
+                }) : '');
+            }
+
             // Setup complete - pronto para conversar
             if (message.setupComplete) {
                 console.log('✅ Setup completo - iniciando captura de áudio');
-                const isReconnection = conversacaoState.reconnectAttempts > 0;
+                // Detectar reconexão: ou tentativa de reconexão em andamento, ou já tinha tempo acumulado
+                const isReconnection = conversacaoState.reconnectAttempts > 0 || conversacaoState.totalSeconds > 0;
+                console.log(`🔗 isReconnection: ${isReconnection} (attempts: ${conversacaoState.reconnectAttempts}, totalSeconds: ${conversacaoState.totalSeconds})`);
                 conversacaoState.isConnected = true;
                 conversacaoState.isConnecting = false;
                 conversacaoState.reconnectAttempts = 0; // Reset contador de reconexão
                 conversacaoState.connectionStartTime = Date.now(); // Registrar início da conexão
-                updateStatus('Conectado - Fale agora!', 'connected');
+                updateStatus(window.t('conversacao.waiting'), 'connecting');
                 updateConversacaoUI('recording');
                 startAudioCapture();
-                startTimer(isReconnection); // Pass flag to preserve timer on reconnection
-                startErrorAnalysisTimer(); // Inicia análise de erros a cada 5 min
-                startSessionRefreshTimer(); // Reconexão proativa antes do limite de 10min
+
+                // Só iniciar timer se é reconexão (já estava conversando)
+                // Para nova conexão, esperar a persona falar primeiro
                 if (isReconnection) {
-                    console.log(`🔄 Reconexão bem-sucedida - tempo acumulado preservado: ${conversacaoState.totalSeconds}s`);
+                    startTimer(true); // Continuar timer na reconexão - NÃO reseta totalSeconds
+                    console.log(`🔄 Reconexão bem-sucedida - tempo acumulado: ${conversacaoState.totalSeconds}s`);
+                    conversacaoState.personaHasSpoken = true; // Assume que já falou antes
                 }
+
+                // Análise de erros agora é em tempo real (após cada frase do usuário)
+                // startErrorAnalysisTimer(); // Timer de 5 min desativado
+                startSessionRefreshTimer(); // Reconexão proativa antes do limite de 10min
                 // Keep-alive desativado - o streaming de áudio já mantém a conexão
                 // startKeepAlive();
 
@@ -7190,6 +8608,14 @@ WICHTIG - BENUTZERSPRACHE:
                 if (conversacaoState.currentScenario?.includes('restaurante')) {
                     startAmbientSound();
                     updateAmbientButtonUI(true);
+                }
+
+                // PERSONA FALA PRIMEIRO - enviar mensagem de início para a IA começar a conversa
+                if (!isReconnection) {
+                    triggerPersonaGreeting();
+                } else {
+                    // Na reconexão, informar a IA que é uma continuação
+                    triggerReconnectionContinuation();
                 }
             }
 
@@ -7225,7 +8651,12 @@ WICHTIG - BENUTZERSPRACHE:
                         if (!conversacaoState.isAISpeaking) {
                             console.log('🗣️ IA começou a falar...');
                             conversacaoState.isAISpeaking = true;
+                            startAISpeakingWatchdog();
                         }
+                        // Atualizar timestamp do último chunk (para watchdog)
+                        conversacaoState.lastAudioChunkTime = Date.now();
+                        resetAISpeakingWatchdog();
+
                         // Adicionar à fila de áudio
                         conversacaoState.audioQueue.push(part.inlineData.data);
                         // Iniciar playback se não estiver tocando
@@ -7237,12 +8668,42 @@ WICHTIG - BENUTZERSPRACHE:
 
                 // Fim do turno do servidor
                 if (message.serverContent.turnComplete) {
-                    console.log('✅ Turno do servidor completo - IA terminou de falar');
-                    console.log('👂 AGORA É SUA VEZ DE FALAR - O sistema está ouvindo...');
-                    updateStatus('Sua vez de falar...', 'listening');
+                    console.log('✅ Turno do servidor completo - IA terminou de gerar resposta');
+
+                    // Parar watchdog e resetar flags de fala
+                    stopAISpeakingWatchdog();
                     conversacaoState.isAISpeaking = false;
+                    conversacaoState.lastAudioChunkTime = null;
+
+                    // IMPORTANTE: Só liberar microfone quando o áudio terminar de tocar
+                    // Se ainda há áudio pendente, esperar o playAudioQueue terminar
+                    const hasAudioPending = conversacaoState.audioQueue.length > 0 || conversacaoState.isPlayingAudio;
+
+                    if (!hasAudioPending) {
+                        // Sem áudio pendente - microfone liberado imediatamente
+                        console.log('👂 AGORA É SUA VEZ DE FALAR - O sistema está ouvindo...');
+                        console.log('👂 ========================================');
+                        console.log('👂 MICROFONE LIBERADO IMEDIATAMENTE (sem áudio pendente)');
+                        console.log('👂 ========================================');
+                        updateStatus(window.t('conversacao.yourTurnToSpeak'), 'listening');
+                        // Iniciar watchdog somente quando não há áudio pendente
+                        startMicBlockedWatchdog();
+                    } else {
+                        // Há áudio tocando - o playAudioQueue vai liberar o microfone quando terminar
+                        console.log('👂 Aguardando áudio terminar antes de liberar microfone...');
+                        console.log(`   - audioQueue: ${conversacaoState.audioQueue.length} chunks`);
+                        console.log(`   - isPlayingAudio: ${conversacaoState.isPlayingAudio}`);
+                    }
+
                     conversacaoState.turnCount = (conversacaoState.turnCount || 0) + 1;
                     console.log(`📊 Turno #${conversacaoState.turnCount} completo`);
+
+                    // Iniciar timer na PRIMEIRA VEZ que a persona fala
+                    if (!conversacaoState.personaHasSpoken) {
+                        conversacaoState.personaHasSpoken = true;
+                        startTimer(false); // Iniciar timer agora
+                        console.log('⏱️ Timer iniciado após primeira fala da persona');
+                    }
 
                     // Atualizar créditos (aproximado)
                     conversacaoState.creditsUsed += 0.5;
@@ -7252,7 +8713,12 @@ WICHTIG - BENUTZERSPRACHE:
                 // Transcrição do que o usuário falou (entrada)
                 if (message.serverContent.inputTranscription) {
                     const fragment = message.serverContent.inputTranscription.text || '';
-                    console.log('🎤 VOCÊ DISSE:', fragment);
+                    const now = new Date();
+                    const timestamp = `${now.getMinutes()}:${now.getSeconds().toString().padStart(2,'0')}.${now.getMilliseconds().toString().padStart(3,'0')}`;
+                    console.log(`🎤 [${timestamp}] VOCÊ DISSE:`, fragment);
+
+                    // Usuário está falando - parar watchdog do microfone bloqueado
+                    stopMicBlockedWatchdog();
 
                     // Acumula fragmentos na frase atual
                     conversacaoState.currentUserTranscript += fragment;
@@ -7271,9 +8737,15 @@ WICHTIG - BENUTZERSPRACHE:
                 // Transcrição do que a IA falou (saída)
                 if (message.serverContent.outputTranscription) {
                     const transcript = message.serverContent.outputTranscription.text;
-                    console.log('🤖 IA DISSE:', transcript);
+                    const now = new Date();
+                    const timestamp = `${now.getMinutes()}:${now.getSeconds().toString().padStart(2,'0')}.${now.getMilliseconds().toString().padStart(3,'0')}`;
+                    console.log(`🤖 [${timestamp}] IA DISSE:`, transcript);
                     // Quando a IA fala, flush o transcript do usuário acumulado
                     flushUserTranscript();
+                    // Processa transcrição da IA para extrair correções
+                    if (transcript && transcript.length > 10) {
+                        processAITranscript(transcript);
+                    }
                 }
 
                 // Generation complete - a IA terminou de gerar resposta
@@ -7286,7 +8758,7 @@ WICHTIG - BENUTZERSPRACHE:
             if (message.goAway) {
                 const timeLeft = message.goAway.timeLeft;
                 console.log(`⚠️ Servidor vai desconectar em ${timeLeft}`);
-                updateStatus(`Reconectando em breve...`, 'warning');
+                updateStatus(window.t('conversacao.reconnectingSoon'), 'warning');
             }
 
             // Erro
@@ -7307,7 +8779,7 @@ WICHTIG - BENUTZERSPRACHE:
                 // Reconectar após pequeno delay
                 setTimeout(async () => {
                     console.log('🔄 Reconectando após encerramento...');
-                    updateStatus('Reconectando...', 'connecting');
+                    updateStatus(window.t('conversacao.reconnecting'), 'connecting');
                     await connectConversation();
                 }, 1000);
             }
@@ -7327,16 +8799,34 @@ WICHTIG - BENUTZERSPRACHE:
     // Iniciar captura de áudio do microfone com detecção de silêncio
     async function startAudioCapture() {
         try {
-            // Criar AudioContext para captura
-            conversacaoState.audioContext = new (window.AudioContext || window.webkitAudioContext)({
-                sampleRate: 16000
-            });
+            // Criar AudioContext para captura - usar sample rate nativo do dispositivo
+            // NÃO forçar 16kHz porque muitos navegadores ignoram e usam a taxa nativa mesmo assim
+            conversacaoState.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Obter o sample rate REAL do AudioContext (pode ser 44100, 48000, etc)
+            const realSampleRate = conversacaoState.audioContext.sampleRate;
+            console.log('🎤 AudioContext sampleRate REAL:', realSampleRate);
 
             // Criar worklet para processar áudio
             await conversacaoState.audioContext.audioWorklet.addModule(createAudioWorkletProcessor());
 
             const source = conversacaoState.audioContext.createMediaStreamSource(conversacaoState.stream);
-            conversacaoState.workletNode = new AudioWorkletNode(conversacaoState.audioContext, 'audio-processor');
+
+            // Passar o sample rate real e o ganho calibrado para o worklet fazer downsampling correto para 16kHz
+            // IMPORTANTE: Limitar o ganho máximo a 4x para evitar distorção que confunde o reconhecimento de voz
+            const rawMicGain = window.getSavedMicGain ? window.getSavedMicGain() : 2.0;
+            const MAX_MIC_GAIN = 4.0; // Ganho acima de 4x causa distorção severa
+            const savedMicGain = Math.min(rawMicGain, MAX_MIC_GAIN);
+            if (rawMicGain > MAX_MIC_GAIN) {
+                console.warn(`⚠️ Ganho calibrado (${rawMicGain}) excede máximo permitido. Usando ${MAX_MIC_GAIN}x para evitar distorção.`);
+            }
+            conversacaoState.workletNode = new AudioWorkletNode(conversacaoState.audioContext, 'audio-processor', {
+                processorOptions: {
+                    inputSampleRate: realSampleRate,
+                    micGain: savedMicGain
+                }
+            });
+            console.log('🎤 Usando ganho de microfone:', savedMicGain, rawMicGain > MAX_MIC_GAIN ? '(limitado de ' + rawMicGain + ')' : '(calibrado)');
 
             // Inicializar timestamp do último som
             conversacaoState.lastSoundTime = Date.now();
@@ -7347,14 +8837,30 @@ WICHTIG - BENUTZERSPRACHE:
 
             conversacaoState.workletNode.port.onmessage = (event) => {
                 if (conversacaoState.ws?.readyState === WebSocket.OPEN && conversacaoState.isConnected) {
-                    const { audioData, hasSound, rmsLevel } = event.data;
-
-                    // Atualizar timestamp se detectou som
-                    if (hasSound) {
-                        conversacaoState.lastSoundTime = Date.now();
+                    // Verificar se é sinal de fim de fala do VAD local
+                    if (event.data.speechEnded) {
+                        // Enviar audioStreamEnd para sinalizar ao Gemini que o usuário parou de falar
+                        // Isso faz o Gemini processar o áudio acumulado e gerar resposta
+                        console.log('📤 VAD local detectou fim de fala - enviando audioStreamEnd');
+                        const endMessage = {
+                            realtimeInput: {
+                                audioStreamEnd: true
+                            }
+                        };
+                        conversacaoState.ws.send(JSON.stringify(endMessage));
+                        return;
                     }
 
-                    // Converter para base64 e enviar
+                    const { audioData } = event.data;
+                    if (!audioData) return;
+
+                    // Atualizar timestamp de atividade
+                    conversacaoState.lastSoundTime = Date.now();
+
+                    // IMPORTANTE: Enviar SEMPRE - deixar o Gemini VAD decidir o que é fala
+                    // O Gemini tem cancelamento de eco e VAD melhor que qualquer lógica local
+
+                    // Converter para base64 e enviar - VAD é feito pelo Gemini
                     const audioBase64 = arrayBufferToBase64(audioData);
                     totalBytesEnviados += audioData.byteLength;
 
@@ -7376,18 +8882,11 @@ WICHTIG - BENUTZERSPRACHE:
                         console.log('🎤 PRIMEIRO CHUNK DE ÁUDIO ENVIADO!');
                         console.log('   - Tamanho do chunk:', audioData.byteLength, 'bytes');
                         console.log('   - Base64 length:', audioBase64.length);
-                        console.log('   - RMS Level:', rmsLevel?.toFixed(6) || 'N/A');
-                        console.log('   - Som detectado:', hasSound);
                     }
 
-                    // Log a cada 50 chunks (~3 segundos de áudio)
-                    if (audioChunksSent % 50 === 0) {
-                        console.log(`🎙️ Áudio enviado: ${audioChunksSent} chunks (${Math.round(totalBytesEnviados/1024)}KB), som: ${hasSound}, RMS: ${rmsLevel?.toFixed(4) || 'N/A'}, isAISpeaking: ${conversacaoState.isAISpeaking}`);
-                    }
-
-                    // Log quando som é detectado (para debug)
-                    if (hasSound && rmsLevel > 0.01) {
-                        console.log(`🔊 SOM DETECTADO! RMS: ${rmsLevel?.toFixed(4)}, isAISpeaking: ${conversacaoState.isAISpeaking}`);
+                    // Log a cada 100 chunks (~6 segundos de áudio)
+                    if (audioChunksSent % 100 === 0) {
+                        console.log(`🎙️ Áudio enviado: ${audioChunksSent} chunks (${Math.round(totalBytesEnviados/1024)}KB)`);
                     }
                 }
             };
@@ -7441,6 +8940,116 @@ WICHTIG - BENUTZERSPRACHE:
         }
     }
 
+    // ========== WATCHDOG PARA DETECTAR TRAVAMENTOS ==========
+
+    // Watchdog que detecta se isAISpeaking ficou travado em TRUE
+    function startAISpeakingWatchdog() {
+        stopAISpeakingWatchdog(); // Limpar anterior
+
+        conversacaoState.aiSpeakingWatchdog = setTimeout(() => {
+            // Verificar se ainda está marcado como falando mas sem receber chunks
+            if (conversacaoState.isAISpeaking) {
+                const timeSinceLastChunk = conversacaoState.lastAudioChunkTime
+                    ? Date.now() - conversacaoState.lastAudioChunkTime
+                    : conversacaoState.AI_SPEAKING_TIMEOUT + 1000;
+
+                if (timeSinceLastChunk >= conversacaoState.AI_SPEAKING_TIMEOUT) {
+                    console.warn('⚠️ WATCHDOG: isAISpeaking travado por', Math.round(timeSinceLastChunk / 1000), 'segundos - forçando reset');
+                    forceResetSpeakingState();
+                } else {
+                    // Reiniciar watchdog se ainda está recebendo chunks
+                    resetAISpeakingWatchdog();
+                }
+            }
+        }, conversacaoState.AI_SPEAKING_TIMEOUT);
+    }
+
+    function resetAISpeakingWatchdog() {
+        if (conversacaoState.aiSpeakingWatchdog) {
+            clearTimeout(conversacaoState.aiSpeakingWatchdog);
+        }
+        // Só reiniciar se ainda está falando
+        if (conversacaoState.isAISpeaking) {
+            conversacaoState.aiSpeakingWatchdog = setTimeout(() => {
+                if (conversacaoState.isAISpeaking) {
+                    console.warn('⚠️ WATCHDOG: Sem novos chunks de áudio por', conversacaoState.AI_SPEAKING_TIMEOUT / 1000, 'segundos');
+                    forceResetSpeakingState();
+                }
+            }, conversacaoState.AI_SPEAKING_TIMEOUT);
+        }
+    }
+
+    function stopAISpeakingWatchdog() {
+        if (conversacaoState.aiSpeakingWatchdog) {
+            clearTimeout(conversacaoState.aiSpeakingWatchdog);
+            conversacaoState.aiSpeakingWatchdog = null;
+        }
+    }
+
+    // Watchdog que detecta se o microfone está bloqueado (usuário não consegue falar)
+    function startMicBlockedWatchdog() {
+        stopMicBlockedWatchdog(); // Limpar anterior
+
+        conversacaoState.micBlockedWatchdog = setTimeout(() => {
+            // Se ainda está em "sua vez de falar" mas nenhuma transcrição chegou
+            if (conversacaoState.isConnected && !conversacaoState.isAISpeaking && !conversacaoState.isPlayingAudio) {
+                console.warn('⚠️ WATCHDOG: Microfone possivelmente bloqueado por', conversacaoState.MIC_BLOCKED_TIMEOUT / 1000, 'segundos');
+                console.log('   - isAISpeaking:', conversacaoState.isAISpeaking);
+                console.log('   - isPlayingAudio:', conversacaoState.isPlayingAudio);
+                console.log('   - isRecording:', conversacaoState.isRecording);
+
+                // Tentar recuperar forçando reset das flags
+                forceResetSpeakingState();
+                updateStatus(window.t('conversacao.micFreedSpeakNow'), 'listening');
+            }
+        }, conversacaoState.MIC_BLOCKED_TIMEOUT);
+    }
+
+    function stopMicBlockedWatchdog() {
+        if (conversacaoState.micBlockedWatchdog) {
+            clearTimeout(conversacaoState.micBlockedWatchdog);
+            conversacaoState.micBlockedWatchdog = null;
+        }
+    }
+
+    // Forçar reset de todas as flags de fala
+    function forceResetSpeakingState() {
+        console.log('🔄 FORÇA RESET: Verificando estado...');
+
+        // Se ainda há áudio na fila para reproduzir, NÃO limpar!
+        // Isso evita cortar a fala da IA no meio
+        if (conversacaoState.audioQueue.length > 0) {
+            console.log('   - Há', conversacaoState.audioQueue.length, 'chunks de áudio pendentes - MANTENDO para reprodução');
+            console.log('   - Aguardando playback terminar antes de liberar microfone');
+
+            // Apenas garantir que o playback está rodando
+            if (!conversacaoState.isPlayingAudio) {
+                console.log('   - Reiniciando playback dos chunks pendentes');
+                playAudioQueue();
+            }
+            return; // Não fazer reset enquanto há áudio para tocar
+        }
+
+        console.log('🔄 FORÇA RESET: Liberando microfone (sem áudio pendente)...');
+
+        // Parar todos os watchdogs
+        stopAISpeakingWatchdog();
+        stopMicBlockedWatchdog();
+
+        // Resetar flags
+        conversacaoState.isAISpeaking = false;
+        conversacaoState.isPlayingAudio = false;
+        conversacaoState.lastAudioChunkTime = null;
+
+        // Atualizar UI
+        if (conversacaoState.isConnected) {
+            updateStatus(window.t('conversacao.yourTurnToSpeak'), 'listening');
+            updateConversacaoUI('recording');
+        }
+
+        console.log('✅ FORÇA RESET: Microfone liberado - sistema pronto para ouvir');
+    }
+
     function startSilenceDetection() {
         // Limpar intervalo anterior se existir
         if (conversacaoState.silenceCheckInterval) {
@@ -7458,12 +9067,12 @@ WICHTIG - BENUTZERSPRACHE:
 
             if (timeSinceLastSound >= conversacaoState.SILENCE_TIMEOUT) {
                 console.log('Silêncio detectado por 2 minutos - desconectando...');
-                updateStatus('Desconectado por inatividade', 'idle');
+                updateStatus(window.t('conversacao.disconnectedByInactivity'), 'idle');
                 disconnectConversation();
             } else if (timeSinceLastSound >= conversacaoState.SILENCE_TIMEOUT - 30000) {
                 // Avisar o usuário apenas nos últimos 30 segundos
                 const remaining = Math.ceil((conversacaoState.SILENCE_TIMEOUT - timeSinceLastSound) / 1000);
-                updateStatus(`Inatividade detectada... (${remaining}s)`, 'warning');
+                updateStatus(`${window.t('conversacao.inactivityDetected')} (${remaining}s)`, 'warning');
             }
         }, 5000); // Verificar a cada 5 segundos (não precisa ser tão frequente)
     }
@@ -7476,16 +9085,102 @@ WICHTIG - BENUTZERSPRACHE:
         }
     }
 
-    // Criar processador de áudio inline com detecção de silêncio
+    // Criar processador de áudio inline - com filtro passa-baixa, downsampling e VAD local
+    // VAD local filtra silêncio ANTES de enviar ao Gemini para reduzir tráfego desnecessário
     function createAudioWorkletProcessor() {
         const processorCode = `
             class AudioProcessor extends AudioWorkletProcessor {
-                constructor() {
+                constructor(options) {
                     super();
-                    this.bufferSize = 4096;
-                    this.buffer = new Float32Array(this.bufferSize);
-                    this.bufferIndex = 0;
-                    this.silenceThreshold = 0.0005; // Limiar MUITO baixo para detectar som
+                    // Obter sample rate de entrada passado via options
+                    this.inputSampleRate = options.processorOptions?.inputSampleRate || sampleRate;
+                    this.targetSampleRate = 16000;
+                    this.downsampleRatio = Math.round(this.inputSampleRate / this.targetSampleRate);
+
+                    // Buffer de saída MENOR para reduzir latência
+                    // 1024 amostras a 16kHz = 64ms (era 4096 = 256ms de delay!)
+                    // Para conversação em tempo real, latência baixa é crítica
+                    this.outputBufferSize = 1024;
+                    this.outputBuffer = new Float32Array(this.outputBufferSize);
+                    this.outputBufferIndex = 0;
+
+                    // Contador de frames para flush periódico de buffer parcial
+                    this.frameCount = 0;
+                    // Flush a cada ~100ms mesmo se buffer não estiver cheio (previne delay no fim da fala)
+                    this.flushIntervalFrames = 8; // ~100ms (128 samples/frame * 8 = 1024 samples = 64ms + margem)
+
+                    // Buffer de acumulação para downsampling
+                    this.accumulator = 0;
+                    this.accumulatorCount = 0;
+
+                    // Ganho para garantir que áudio seja audível ao Gemini VAD
+                    // Usa valor calibrado pelo usuário ou 2.0 como padrão
+                    this.gain = options.processorOptions?.micGain || 2.0;
+
+                    // Filtro passa-baixa para eliminar ruídos de alta frequência
+                    // Frequência de corte ~8kHz (preserva clareza da voz humana)
+                    // A voz tem frequências importantes até ~8kHz para clareza e inteligibilidade
+                    // Coeficiente alpha para filtro IIR single-pole: alpha = dt / (RC + dt)
+                    // Para fc=8000Hz e fs=inputSampleRate: alpha = 2*pi*fc / (fs + 2*pi*fc)
+                    const fc = 8000; // Frequência de corte em Hz
+                    this.lpfAlpha = (2 * Math.PI * fc / this.inputSampleRate) /
+                                    (1 + 2 * Math.PI * fc / this.inputSampleRate);
+                    this.lpfPrevSample = 0; // Estado anterior do filtro
+
+                    // ========== VAD LOCAL (Voice Activity Detection) ==========
+                    // Threshold de energia RMS para considerar como fala
+                    // Valor baixo = mais sensível (detecta fala suave)
+                    // Valor alto = menos sensível (ignora ruídos)
+                    this.vadThreshold = options.processorOptions?.vadThreshold || 0.008;
+
+                    // Estado do VAD
+                    this.isSpeaking = false;
+
+                    // Hangover: continuar enviando por X frames após silêncio detectado
+                    // Evita cortar o fim das palavras
+                    // 60 frames (~800ms) coordenado com silenceDurationMs: 1200 para resposta rápida (~2s)
+                    this.hangoverFrames = 60; // ~800ms de hangover
+                    this.hangoverCounter = 0;
+
+                    // Ring buffer para pré-fala (não cortar início das palavras)
+                    // Armazena os últimos N buffers de áudio
+                    this.preSpeechBufferSize = 3; // ~200ms de pré-fala
+                    this.preSpeechBuffer = [];
+
+                    // Energia RMS suavizada (evita decisões bruscas)
+                    this.smoothedRMS = 0;
+                    this.rmsSmoothing = 0.3; // 0 = sem suavização, 1 = máxima suavização
+
+                    // Contadores de diagnóstico
+                    this.chunksSent = 0;
+                    this.chunksSkipped = 0;
+                    this.lastDiagnosticTime = Date.now();
+
+                    console.log('AudioProcessor: inputSampleRate=' + this.inputSampleRate +
+                                ', targetSampleRate=' + this.targetSampleRate +
+                                ', downsampleRatio=' + this.downsampleRatio +
+                                ', gain=' + this.gain +
+                                ', lpfAlpha=' + this.lpfAlpha.toFixed(4) +
+                                ', vadThreshold=' + this.vadThreshold);
+                }
+
+                // Calcular energia RMS do buffer
+                calculateRMS(buffer, length) {
+                    let sumSquares = 0;
+                    for (let i = 0; i < length; i++) {
+                        sumSquares += buffer[i] * buffer[i];
+                    }
+                    return Math.sqrt(sumSquares / length);
+                }
+
+                // Enviar buffer de áudio
+                sendAudioBuffer(buffer, length) {
+                    const pcmData = new Int16Array(length);
+                    for (let j = 0; j < length; j++) {
+                        pcmData[j] = Math.max(-32768, Math.min(32767, buffer[j] * 32767));
+                    }
+                    this.port.postMessage({ audioData: pcmData.buffer });
+                    this.chunksSent++;
                 }
 
                 process(inputs, outputs, parameters) {
@@ -7493,35 +9188,133 @@ WICHTIG - BENUTZERSPRACHE:
                     if (input.length > 0) {
                         const channelData = input[0];
 
-                        // Calcular RMS (volume) do chunk atual
-                        let sumSquares = 0;
+                        // Fazer downsampling de inputSampleRate para 16kHz
                         for (let i = 0; i < channelData.length; i++) {
-                            sumSquares += channelData[i] * channelData[i];
-                        }
-                        const rms = Math.sqrt(sumSquares / channelData.length);
+                            // Aplicar filtro passa-baixa IIR (single-pole)
+                            // y[n] = alpha * x[n] + (1 - alpha) * y[n-1]
+                            const filteredSample = this.lpfAlpha * channelData[i] +
+                                                   (1 - this.lpfAlpha) * this.lpfPrevSample;
+                            this.lpfPrevSample = filteredSample;
 
-                        for (let i = 0; i < channelData.length; i++) {
-                            this.buffer[this.bufferIndex++] = channelData[i];
+                            // Acumular amostras filtradas com ganho aplicado
+                            this.accumulator += filteredSample * this.gain;
+                            this.accumulatorCount++;
 
-                            if (this.bufferIndex >= this.bufferSize) {
-                                // Converter para PCM 16-bit
-                                const pcmData = new Int16Array(this.bufferSize);
-                                for (let j = 0; j < this.bufferSize; j++) {
-                                    pcmData[j] = Math.max(-32768, Math.min(32767, this.buffer[j] * 32767));
+                            // Quando acumulamos amostras suficientes, produzir uma amostra de saída
+                            if (this.accumulatorCount >= this.downsampleRatio) {
+                                // Média das amostras acumuladas
+                                const avgSample = this.accumulator / this.accumulatorCount;
+                                // Soft clipping para evitar distorção
+                                this.outputBuffer[this.outputBufferIndex++] = Math.tanh(avgSample);
+
+                                // Reset acumulador
+                                this.accumulator = 0;
+                                this.accumulatorCount = 0;
+
+                                // Quando buffer de saída estiver cheio, processar com VAD
+                                if (this.outputBufferIndex >= this.outputBufferSize) {
+                                    this.processBufferWithVAD();
                                 }
-
-                                // Enviar dados de áudio junto com indicador de som detectado
-                                const hasSound = rms > this.silenceThreshold;
-                                this.port.postMessage({
-                                    audioData: pcmData.buffer,
-                                    hasSound: hasSound,
-                                    rmsLevel: rms // Enviar nível de RMS para debug
-                                });
-                                this.bufferIndex = 0;
                             }
+                        }
+
+                        // Incrementar contador de frames
+                        this.frameCount++;
+
+                        // FLUSH PERIÓDICO: Processar buffer parcial com VAD
+                        if (this.frameCount >= this.flushIntervalFrames && this.outputBufferIndex > 0) {
+                            this.processBufferWithVAD();
+                            this.frameCount = 0;
+                        }
+
+                        // Log de diagnóstico a cada 5 segundos
+                        const now = Date.now();
+                        if (now - this.lastDiagnosticTime >= 5000) {
+                            const total = this.chunksSent + this.chunksSkipped;
+                            const skipRate = total > 0 ? ((this.chunksSkipped / total) * 100).toFixed(1) : 0;
+                            console.log('🎤 VAD: enviados=' + this.chunksSent +
+                                       ', ignorados=' + this.chunksSkipped +
+                                       ' (' + skipRate + '% silêncio), speaking=' + this.isSpeaking +
+                                       ', RMS=' + this.smoothedRMS.toFixed(4));
+                            this.chunksSent = 0;
+                            this.chunksSkipped = 0;
+                            this.lastDiagnosticTime = now;
                         }
                     }
                     return true;
+                }
+
+                // Processar buffer com VAD antes de decidir se envia
+                processBufferWithVAD() {
+                    const bufferLength = this.outputBufferIndex;
+                    if (bufferLength === 0) return;
+
+                    // Calcular energia RMS do buffer atual
+                    const currentRMS = this.calculateRMS(this.outputBuffer, bufferLength);
+
+                    // Suavizar RMS para evitar decisões bruscas
+                    this.smoothedRMS = this.rmsSmoothing * this.smoothedRMS +
+                                       (1 - this.rmsSmoothing) * currentRMS;
+
+                    // Criar cópia do buffer para o ring buffer de pré-fala
+                    const bufferCopy = new Float32Array(bufferLength);
+                    for (let i = 0; i < bufferLength; i++) {
+                        bufferCopy[i] = this.outputBuffer[i];
+                    }
+
+                    // Decidir se é fala ou silêncio
+                    const isVoiceDetected = this.smoothedRMS >= this.vadThreshold;
+
+                    if (isVoiceDetected) {
+                        // Fala detectada!
+
+                        // Se estava em silêncio, enviar buffers de pré-fala primeiro
+                        if (!this.isSpeaking && this.preSpeechBuffer.length > 0) {
+                            console.log('🎤 VAD: Início de fala detectado! Enviando ' +
+                                       this.preSpeechBuffer.length + ' buffers de pré-fala');
+                            for (const preBuffer of this.preSpeechBuffer) {
+                                this.sendAudioBuffer(preBuffer, preBuffer.length);
+                            }
+                            this.preSpeechBuffer = [];
+                        }
+
+                        this.isSpeaking = true;
+                        this.hangoverCounter = this.hangoverFrames;
+
+                        // Enviar buffer atual
+                        this.sendAudioBuffer(this.outputBuffer, bufferLength);
+
+                    } else {
+                        // Silêncio detectado
+
+                        if (this.hangoverCounter > 0) {
+                            // Ainda no período de hangover - continuar enviando
+                            this.hangoverCounter--;
+                            this.sendAudioBuffer(this.outputBuffer, bufferLength);
+
+                            if (this.hangoverCounter === 0) {
+                                console.log('🎤 VAD: Fim de fala detectado (hangover expirado)');
+                                this.isSpeaking = false;
+                                // Sinalizar ao código principal que a fala terminou
+                                // para enviar audioStreamEnd ao Gemini
+                                this.port.postMessage({ speechEnded: true });
+                            }
+                        } else {
+                            // Silêncio real - adicionar ao ring buffer de pré-fala
+                            this.preSpeechBuffer.push(bufferCopy);
+
+                            // Manter apenas os últimos N buffers
+                            while (this.preSpeechBuffer.length > this.preSpeechBufferSize) {
+                                this.preSpeechBuffer.shift();
+                            }
+
+                            this.chunksSkipped++;
+                            this.isSpeaking = false;
+                        }
+                    }
+
+                    // Reset buffer de saída
+                    this.outputBufferIndex = 0;
                 }
             }
 
@@ -7543,6 +9336,34 @@ WICHTIG - BENUTZERSPRACHE:
             conversacaoState.playbackContext = new (window.AudioContext || window.webkitAudioContext)({
                 sampleRate: 24000 // Gemini retorna áudio a 24kHz
             });
+            console.log('🔊 Contexto de playback criado - estado:', conversacaoState.playbackContext.state);
+
+            // Aplicar dispositivo de saída selecionado (se suportado)
+            const selectedOutput = localStorage.getItem('selectedAudioOutput');
+            if (selectedOutput && conversacaoState.playbackContext.setSinkId) {
+                try {
+                    await conversacaoState.playbackContext.setSinkId(selectedOutput);
+                    console.log('🔊 Saída de áudio configurada:', selectedOutput.substring(0, 20) + '...');
+                } catch (err) {
+                    console.warn('⚠️ Não foi possível configurar saída de áudio:', err.message);
+                }
+            }
+        }
+
+        // IMPORTANTE: Garantir que o contexto de áudio esteja ativo
+        // Navegadores podem suspender o AudioContext devido a políticas de autoplay
+        if (conversacaoState.playbackContext.state === 'suspended') {
+            console.log('🔊 Contexto de playback suspenso - tentando resumir...');
+            try {
+                await conversacaoState.playbackContext.resume();
+                console.log('🔊 Contexto de playback resumido com sucesso - estado:', conversacaoState.playbackContext.state);
+            } catch (err) {
+                console.error('❌ Erro ao resumir contexto de playback:', err);
+            }
+        }
+
+        // Criar nós de processamento se não existirem
+        if (!conversacaoState.gainNode) {
 
             // Criar nós de processamento para qualidade de voz natural e clara
             conversacaoState.gainNode = conversacaoState.playbackContext.createGain();
@@ -7554,19 +9375,20 @@ WICHTIG - BENUTZERSPRACHE:
             highPassFilter.frequency.value = 80; // Remove frequências abaixo de 80Hz
             highPassFilter.Q.value = 0.7;
 
-            // Filtro passa-baixa suave - preservar clareza da voz
+            // Filtro passa-baixa suave - preservar clareza e brilho da voz
             conversacaoState.lowPassFilter = conversacaoState.playbackContext.createBiquadFilter();
             conversacaoState.lowPassFilter.type = 'lowpass';
-            conversacaoState.lowPassFilter.frequency.value = 11000; // Preservar harmônicos da voz
-            conversacaoState.lowPassFilter.Q.value = 0.7; // Transição suave
+            conversacaoState.lowPassFilter.frequency.value = 12000; // Frequência mais alta preserva clareza
+            conversacaoState.lowPassFilter.Q.value = 0.5; // Q mais baixo = transição mais suave
 
-            // Compressor muito suave - apenas para evitar clipping, não comprimir demais
+            // Compressor MUITO suave - apenas para evitar clipping extremo
+            // Evita comprimir demais para não causar voz rouca/abafada após uso prolongado
             conversacaoState.compressor = conversacaoState.playbackContext.createDynamicsCompressor();
-            conversacaoState.compressor.threshold.value = -18; // Threshold mais alto = menos compressão
-            conversacaoState.compressor.knee.value = 30; // Knee suave
-            conversacaoState.compressor.ratio.value = 2; // Ratio baixo = compressão suave
-            conversacaoState.compressor.attack.value = 0.003; // Attack rápido
-            conversacaoState.compressor.release.value = 0.25; // Release rápido para voz natural
+            conversacaoState.compressor.threshold.value = -12; // Threshold alto - compressão só em picos extremos
+            conversacaoState.compressor.knee.value = 40; // Knee muito suave para transição gradual
+            conversacaoState.compressor.ratio.value = 1.5; // Ratio muito baixo = compressão mínima
+            conversacaoState.compressor.attack.value = 0.01; // Attack mais lento preserva transientes
+            conversacaoState.compressor.release.value = 0.4; // Release mais lento para naturalidade
 
             // Conectar cadeia de áudio: gain -> highpass -> lowpass -> compressor -> output
             conversacaoState.gainNode.connect(highPassFilter);
@@ -7577,6 +9399,8 @@ WICHTIG - BENUTZERSPRACHE:
 
         // Acumular TODOS os chunks primeiro para reprodução contínua sem tremor
         let allSamples = [];
+        const chunksToProcess = conversacaoState.audioQueue.length;
+        console.log(`🔊 Processando ${chunksToProcess} chunks de áudio...`);
 
         // Coletar todos os chunks disponíveis
         while (conversacaoState.audioQueue.length > 0) {
@@ -7599,13 +9423,19 @@ WICHTIG - BENUTZERSPRACHE:
                 }
 
                 // NÃO aplicar fade em cada chunk - isso causa tremor!
-                // Apenas acumular as amostras
-                allSamples.push(...float32Data);
+                // Apenas acumular as amostras usando concat para evitar stack overflow
+                for (let i = 0; i < float32Data.length; i++) {
+                    allSamples.push(float32Data[i]);
+                }
 
             } catch (error) {
                 console.error('Erro ao processar chunk de áudio:', error);
             }
         }
+
+        console.log(`🔊 Total de amostras: ${allSamples.length} (duração esperada: ${(allSamples.length / 24000).toFixed(2)}s)`);
+        console.log(`🔊 gainNode existe: ${!!conversacaoState.gainNode}, playbackContext estado: ${conversacaoState.playbackContext?.state}`);
+
 
         // Reproduzir todas as amostras acumuladas de uma vez
         if (allSamples.length > 0) {
@@ -7628,10 +9458,38 @@ WICHTIG - BENUTZERSPRACHE:
                 source.buffer = audioBuffer;
                 source.connect(conversacaoState.gainNode);
 
-                // Esperar o áudio terminar
+                // Guardar referência para poder parar na reconexão
+                conversacaoState.currentAudioSource = source;
+
+                // Esperar o áudio terminar COM TIMEOUT DE SEGURANÇA
+                // Calcula duração esperada: samples / sampleRate (em segundos) + margem
+                const expectedDuration = (samples.length / 24000) * 1000 + 2000; // +2 segundos de margem
+                console.log(`🔊 Iniciando playback - duração: ${(samples.length / 24000).toFixed(2)}s, timeout: ${Math.round(expectedDuration / 1000)}s`);
+
                 await new Promise((resolve) => {
-                    source.onended = resolve;
+                    let resolved = false;
+                    const startTime = Date.now();
+
+                    source.onended = () => {
+                        if (!resolved) {
+                            resolved = true;
+                            conversacaoState.currentAudioSource = null;
+                            const actualDuration = (Date.now() - startTime) / 1000;
+                            console.log(`🔊 Playback terminou naturalmente após ${actualDuration.toFixed(2)}s`);
+                            resolve();
+                        }
+                    };
                     source.start();
+
+                    // Timeout de segurança caso onended não dispare
+                    setTimeout(() => {
+                        if (!resolved) {
+                            resolved = true;
+                            conversacaoState.currentAudioSource = null;
+                            console.warn('⚠️ Playback timeout - forçando fim após', Math.round(expectedDuration / 1000), 'segundos');
+                            resolve();
+                        }
+                    }, expectedDuration);
                 });
 
             } catch (error) {
@@ -7647,9 +9505,25 @@ WICHTIG - BENUTZERSPRACHE:
             return;
         }
 
+        // Playback terminou completamente
         conversacaoState.isPlayingAudio = false;
+        console.log('🔊 Playback completo - isPlayingAudio:', conversacaoState.isPlayingAudio, ', isAISpeaking:', conversacaoState.isAISpeaking);
+
         if (conversacaoState.isConnected) {
             updateConversacaoUI('recording');
+
+            // Se turnComplete já foi recebido (isAISpeaking = false), liberar microfone
+            if (!conversacaoState.isAISpeaking) {
+                console.log('👂 ========================================');
+                console.log('👂 MICROFONE PRONTO - FALE AGORA!');
+                console.log('👂 isAISpeaking:', conversacaoState.isAISpeaking);
+                console.log('👂 isPlayingAudio:', conversacaoState.isPlayingAudio);
+                console.log('👂 ========================================');
+                // Atualizar status para o usuário saber que pode falar
+                updateStatus(window.t('conversacao.yourTurnToSpeak'), 'listening');
+                // Iniciar watchdog do microfone bloqueado
+                startMicBlockedWatchdog();
+            }
         }
     }
 
@@ -7709,7 +9583,7 @@ WICHTIG - BENUTZERSPRACHE:
     }
 
     // Desconectar da conversa
-    function disconnectConversation() {
+    async function disconnectConversation() {
         console.log('Desconectando...');
 
         // Guardar duração antes de limpar (totalSeconds is preserved across reconnections)
@@ -7724,16 +9598,27 @@ WICHTIG - BENUTZERSPRACHE:
         console.log(`⏱️ Duração total da conversa: ${conversationDuration} segundos (${(conversationDuration/60).toFixed(2)} minutos)`);
         console.log(`💰 Créditos esperados: ${expectedCredits} (10 créditos/minuto)`);
 
-        if (conversacaoState.ws) {
-            conversacaoState.ws.close();
+        // VERIFICAR ANÁLISES PENDENTES: Aguardar conclusão antes de desconectar
+        if (pendingAnalysisCount > 0) {
+            console.log(`⏳ Aguardando ${pendingAnalysisCount} análise(s) pendente(s) do DeepSeek...`);
+            updateStatus(window.t('conversacao.waitingAnalysis') || 'Aguardando análise...', 'connecting');
+
+            // Aguardar até 10 segundos para análises pendentes
+            const maxWait = 10000; // 10 segundos
+            const startWait = Date.now();
+            while (pendingAnalysisCount > 0 && (Date.now() - startWait) < maxWait) {
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+
+            if (pendingAnalysisCount > 0) {
+                console.log(`⚠️ Timeout: ainda há ${pendingAnalysisCount} análise(s) pendente(s), prosseguindo...`);
+            } else {
+                console.log('✅ Todas as análises pendentes concluídas!');
+            }
         }
 
-        // Dispara análise de erros ao desconectar (se houver transcripts)
-        if (conversacaoState.transcripts && conversacaoState.transcripts.length > 0) {
-            console.log('📊 Disparando análise de correções...');
-            triggerAnalysis();
-        } else {
-            console.log('⚠️ Nenhum transcript para analisar!');
+        if (conversacaoState.ws) {
+            conversacaoState.ws.close();
         }
 
         // Deduzir créditos baseado no tempo de conversa
@@ -7742,7 +9627,7 @@ WICHTIG - BENUTZERSPRACHE:
         }
 
         cleanupConversation();
-        updateStatus('Desconectado', 'idle');
+        updateStatus(window.t('conversacao.disconnected'), 'idle');
         updateConversacaoUI('idle');
         stopTimer();
         stopErrorAnalysisTimer(); // Para o timer de análise de erros
@@ -7750,17 +9635,49 @@ WICHTIG - BENUTZERSPRACHE:
 
     // Limpar recursos
     function cleanupConversation() {
+        // IMPORTANTE: Parar áudio atual PRIMEIRO antes de qualquer limpeza
+        // Isso evita vozes sobrepostas durante reconexão
+        if (conversacaoState.currentAudioSource) {
+            try {
+                conversacaoState.currentAudioSource.stop();
+                console.log('🔇 Áudio atual parado explicitamente');
+            } catch (e) {
+                // Ignorar erro se já parou
+            }
+            conversacaoState.currentAudioSource = null;
+        }
+
+        // IMPORTANTE: Suspender o contexto de playback ANTES de fechar
+        // Isso garante que qualquer áudio em andamento seja interrompido imediatamente
+        if (conversacaoState.playbackContext && conversacaoState.playbackContext.state === 'running') {
+            try {
+                conversacaoState.playbackContext.suspend();
+                console.log('🔇 Contexto de playback suspenso');
+            } catch (e) {
+                // Ignorar erro
+            }
+        }
+
         conversacaoState.isConnected = false;
         conversacaoState.isConnecting = false;
         conversacaoState.isRecording = false;
         conversacaoState.ws = null;
         conversacaoState.connectionStartTime = null;
+        conversacaoState.personaHasSpoken = false; // Reset para próxima conversa
 
-        // Parar timer, keep-alive, detecção de silêncio, session refresh e som ambiente
+        // Resetar flags de fala
+        conversacaoState.isAISpeaking = false;
+        conversacaoState.isPlayingAudio = false;
+        conversacaoState.lastAudioChunkTime = null;
+        conversacaoState.audioQueue = [];
+
+        // Parar timer, keep-alive, detecção de silêncio, session refresh, watchdogs e som ambiente
         stopTimer();
         stopKeepAlive();
         stopSilenceDetection();
         stopSessionRefreshTimer();
+        stopAISpeakingWatchdog();
+        stopMicBlockedWatchdog();
         // Parar som ambiente e atualizar botão
         if (conversacaoState.ambientEnabled) {
             stopAmbientSound();
@@ -7795,9 +9712,9 @@ WICHTIG - BENUTZERSPRACHE:
 
         if (conversacaoState.reconnectAttempts > conversacaoState.maxReconnectAttempts) {
             console.log('Máximo de tentativas de reconexão atingido');
-            showConversacaoError('Conexão perdida. Clique no microfone para reconectar.');
+            showConversacaoError(window.t('conversacao.connectionLostClickMic'));
             cleanupConversation();
-            updateStatus('Desconectado', 'idle');
+            updateStatus(window.t('conversacao.disconnected'), 'idle');
             updateConversacaoUI('idle');
             conversacaoState.reconnectAttempts = 0;
             return;
@@ -7807,12 +9724,26 @@ WICHTIG - BENUTZERSPRACHE:
         const delay = Math.pow(2, conversacaoState.reconnectAttempts) * 1000;
         console.log(`Tentativa de reconexão ${conversacaoState.reconnectAttempts}/${conversacaoState.maxReconnectAttempts} em ${delay/1000}s...`);
 
-        updateStatus(`Reconectando (${conversacaoState.reconnectAttempts}/${conversacaoState.maxReconnectAttempts})...`, 'connecting');
+        updateStatus(`${window.t('conversacao.reconnectingAttempt')} (${conversacaoState.reconnectAttempts}/${conversacaoState.maxReconnectAttempts})...`, 'connecting');
 
-        // Limpar recursos antigos mas manter apiKey
+        // Preservar dados importantes antes de limpar
         const savedApiKey = conversacaoState.apiKey;
+        const savedTotalSeconds = conversacaoState.totalSeconds;
+        const savedTranscripts = [...conversacaoState.transcripts];
+        const savedAccumulatedErrors = [...accumulatedErrors];
+
         cleanupConversation();
+
+        // Aguardar um pequeno delay para garantir que o áudio seja totalmente parado
+        // Isso evita sobreposição de vozes durante a reconexão
+        await new Promise(resolve => setTimeout(resolve, 300));
+        console.log('🔇 Áudio completamente parado - iniciando reconexão');
+
+        // Restaurar dados preservados
         conversacaoState.apiKey = savedApiKey;
+        conversacaoState.totalSeconds = savedTotalSeconds;
+        conversacaoState.transcripts = savedTranscripts;
+        accumulatedErrors = savedAccumulatedErrors;
 
         // Aguardar antes de reconectar
         await new Promise(resolve => setTimeout(resolve, delay));
@@ -7827,6 +9758,76 @@ WICHTIG - BENUTZERSPRACHE:
             console.error('Falha na reconexão:', error);
             // A próxima tentativa será feita pelo onclose/onerror
         }
+    }
+
+    // Função para fazer a PERSONA FALAR PRIMEIRO
+    // Envia uma mensagem de texto que trigger a IA a iniciar a conversa
+    function triggerPersonaGreeting() {
+        if (conversacaoState.ws?.readyState !== WebSocket.OPEN) {
+            console.log('⚠️ WebSocket não está aberto - não é possível enviar greeting');
+            return;
+        }
+
+        // Mensagem que faz a IA começar a conversa naturalmente
+        // A IA vai se apresentar e mencionar a duração de até 45 minutos
+        const greetingPrompt = `Bitte beginne jetzt das Gespräch! Stelle dich kurz vor (nur 1-2 Sätze), begrüße den Schüler herzlich, und erwähne, dass ihr bis zu 45 Minuten Zeit habt zu üben. Dann stelle ihm eine einfache Frage, um das Gespräch zu starten. WICHTIG: Sprich SOFORT, warte nicht auf den Benutzer!`;
+
+        const textMessage = {
+            clientContent: {
+                turns: [{
+                    role: 'user',
+                    parts: [{ text: greetingPrompt }]
+                }],
+                turnComplete: true
+            }
+        };
+
+        // Não bloquear microfone - deixar Gemini VAD cuidar de tudo
+        // O Gemini tem activityHandling: 'START_OF_ACTIVITY_INTERRUPTS' que ignora ruídos
+
+        console.log('🎙️ Enviando trigger para persona falar primeiro...');
+        conversacaoState.ws.send(JSON.stringify(textMessage));
+
+        // Atualizar status após enviar
+        setTimeout(() => {
+            if (conversacaoState.isConnected) {
+                updateStatus(window.t('conversacao.listeningToPersona'), 'listening');
+            }
+        }, 500);
+    }
+
+    // Função para CONTINUAR a conversa após reconexão
+    // Envia um prompt para a IA retomar a conversa de onde parou
+    function triggerReconnectionContinuation() {
+        if (conversacaoState.ws?.readyState !== WebSocket.OPEN) {
+            console.log('⚠️ WebSocket não está aberto - não é possível enviar continuação');
+            return;
+        }
+
+        // Mensagem que instrui a IA a continuar a conversa
+        const continuationPrompt = `WICHTIG: Das Gespräch geht weiter! Die Verbindung wurde kurz unterbrochen, aber wir machen nahtlos weiter. Sage kurz etwas wie "Entschuldigung, wo waren wir?" oder "Lass uns weitermachen!" und warte dann auf den Schüler. KEINE neue Vorstellung - das Gespräch läuft schon! Sprich JETZT!`;
+
+        const textMessage = {
+            clientContent: {
+                turns: [{
+                    role: 'user',
+                    parts: [{ text: continuationPrompt }]
+                }],
+                turnComplete: true
+            }
+        };
+
+        // Não bloquear microfone - deixar Gemini VAD cuidar de tudo
+
+        console.log('🔄 Enviando trigger para continuar conversa após reconexão...');
+        conversacaoState.ws.send(JSON.stringify(textMessage));
+
+        // Atualizar status
+        setTimeout(() => {
+            if (conversacaoState.isConnected) {
+                updateStatus(window.t('conversacao.conversationResumed'), 'listening');
+            }
+        }, 500);
     }
 
     // Iniciar timer de refresh proativo da sessão (antes do limite de 10 minutos do Gemini)
@@ -7872,7 +9873,7 @@ WICHTIG - BENUTZERSPRACHE:
             }
 
             if (!conversacaoState.isConnected) {
-                showConversacaoError('Não foi possível conectar.');
+                showConversacaoError(window.t('conversacao.couldNotConnect'));
                 return;
             }
         }
@@ -7897,21 +9898,21 @@ WICHTIG - BENUTZERSPRACHE:
                 // ===== RESTAURANTE - CENÁRIO A2: Almoço com Colegas =====
                 'restaurante-a2': `PERSONAGEM: Du bist Anna UND spielst auch Markus und Sofia (drei Kollegen beim Mittagessen).
 
-ABSOLUT KRITISCH - DU DARFST NIEMALS STILL SEIN!
-================================================
+SEI GEDULDIG MIT DEM SCHÜLER!
+==============================
 Du MUSST UNUNTERBROCHEN sprechen! Wenn der Schüler nichts sagt:
 - Sprich als Anna
 - Dann als Markus: "Markus sagt: ..."
 - Dann als Sofia: "Sofia fragt: ..."
 - Beschreibe was passiert: "Der Kellner kommt..."
-- MAXIMAL 2 SEKUNDEN PAUSE! Danach MUSST du etwas sagen!
+- Gib dem Schüler Zeit zum Nachdenken! Bei langen Pausen (5+ Sekunden) hilf sanft weiter.
 
 KONTEXT: Mittagessen in einem Berliner Gasthaus mit Kollegen.
 
 ABLAUF (folge dieser Reihenfolge!):
 1. ANNA begrüßt: "Hallo! Schön dass du mitkommst! Ich bin Anna. Das sind Markus und Sofia."
 2. MARKUS stellt sich vor: "Markus hier sagt: Hi! Freut mich! Hast du Hunger?"
-3. Warte auf Antwort des Schülers (MAX 3 Sekunden!)
+3. Warte auf Antwort des Schülers (gib ihm Zeit zum Nachdenken!)
 4. SOFIA zeigt Speisekarte: "Sofia zeigt dir die Karte: Schau mal, das Tagesgericht sieht gut aus!"
 5. ANNA fragt: "Was möchtest du essen? Ich nehme das Schnitzel."
 6. Warte auf Bestellung des Schülers
@@ -7922,12 +9923,12 @@ ABLAUF (folge dieser Reihenfolge!):
 11. SOFIA macht Small Talk: "Sofia fragt dich: Wie gefällt dir Berlin bisher?"
 12. Am Ende: MARKUS fragt nach Rechnung: "Markus sagt: Können wir zahlen bitte?"
 
-WENN DER SCHÜLER STILL IST (nach 2-3 Sekunden):
+WENN DER SCHÜLER LANGE STILL IST (nach 5+ Sekunden):
 - SOFORT als anderer Charakter sprechen!
 - "Markus schaut dich an: Alles okay? Was möchtest du essen?"
 - "Sofia hilft: Versuch mal zu sagen: Ich hätte gern..."
 - "Anna erklärt: Die Currywurst hier ist sehr gut!"
-- NIEMALS WARTEN! IMMER SPRECHEN!
+- Wenn der Schüler LANGE schweigt (5+ Sekunden), hilf ihm sanft weiter.
 
 OBJEKTIV ERREICHT - GESPRÄCH BEENDEN:
 Wenn der Schüler bestellt hat UND bezahlt hat (oder um die Rechnung bittet):
@@ -7959,13 +9960,13 @@ WICHTIG - TIMING BEI BEWEGUNGEN:
   3. Dann komm zurück mit: "So, ich bin wieder da. Das Schnitzel wird gerade erwärmt. Es dauert etwa 5 Minuten. Darf ich Ihnen in der Zwischenzeit etwas zu trinken bringen?"
 - Kurze Pausen von 3-4 Sekunden reichen aus - nicht länger warten!
 
-KRITISCH - NIEMALS LÄNGER ALS 3 SEKUNDEN STILL SEIN:
-Du MUSST IMMER das Gespräch am Laufen halten! Wenn der Gast still ist:
-- Frage sofort: "Ist alles in Ordnung? Kann ich Ihnen noch etwas bringen?"
+WENN DER GAST LANGE STILL IST (nach 5+ Sekunden):
+Hilf dem Gast sanft weiter, er ist ein Deutschlerner und braucht Zeit zum Nachdenken:
+- Frage freundlich: "Ist alles in Ordnung? Kann ich Ihnen noch etwas bringen?"
 - Mache Small Talk: "Feiern Sie heute einen besonderen Anlass?"
 - Biete etwas an: "Möchten Sie vielleicht die Weinkarte sehen?"
 - Beschreibe die Umgebung: "Das Restaurant ist heute gut besucht, nicht wahr?"
-- NIEMALS, NIEMALS still warten! Du bist ein echter Kellner - halte immer das Gespräch am Leben!
+- Sei geduldig! Der Gast ist Deutschlerner und sucht nach Wörtern.
 
 WENN DAS GESPRÄCH ABWEICHT:
 - Lenke höflich zurück zum Restaurant-Kontext: "Das klingt interessant! Aber ich möchte Sie nicht zu lange aufhalten - Ihr Schnitzel wird sonst kalt. Kann ich Ihnen noch etwas bringen?"
@@ -7988,8 +9989,8 @@ Wenn das Gespräch einen natürlichen Abschluss erreicht hat (Rechnung bezahlt, 
                 // ===== SUPERMERCADO A2 =====
                 'supermercado-a2': `PERSONAGEM: Du bist Lisa, Mitarbeiterin bei REWE. Manchmal spricht auch ein KUNDE im Hintergrund.
 
-ABSOLUT KRITISCH - DU DARFST NIEMALS STILL SEIN!
-================================================
+SEI GEDULDIG MIT DEM SCHÜLER!
+==============================
 MAXIMAL 2 SEKUNDEN PAUSE! Danach MUSST du etwas sagen!
 - Beschreibe was du siehst: "Hier sind die Tomaten..."
 - Erkläre Produkte: "Das hier ist Bio, das ist günstiger..."
@@ -8001,7 +10002,7 @@ KONTEXT: REWE Supermarkt in Berlin. Der Kunde sucht Zutaten.
 
 ABLAUF (folge dieser Reihenfolge!):
 1. Begrüße: "Guten Tag! Kann ich Ihnen helfen? Sie sehen etwas verloren aus."
-2. Warte MAX 3 Sekunden auf Antwort
+2. Warte gib ihm Zeit zum Nachdenken auf Antwort
 3. Wenn er sagt was er sucht: "Ah, [Produkt]! Das finden Sie in Gang 3. Kommen Sie, ich zeige es Ihnen!"
 4. Geh mit ihm: "So, hier sind wir. Die [Produkte] sind hier unten. Das Bio-Produkt kostet 2 Euro, das normale 1,50."
 5. Frage: "Brauchen Sie noch etwas anderes?"
@@ -8012,7 +10013,7 @@ WENN DER SCHÜLER STILL IST:
 - SOFORT sprechen! "Hmm, suchen Sie vielleicht Brot? Das ist in Gang 5."
 - Oder: "Ein Kunde im Hintergrund fragt mich etwas... Moment... So, ich bin wieder da!"
 - Oder: "Übrigens, heute haben wir Sonderangebote bei den Milchprodukten!"
-- NIEMALS WARTEN!
+- Bei sehr langen Pausen (5+ Sekunden), hilf dem Schüler sanft weiter.
 
 OBJEKTIV ERREICHT - GESPRÄCH BEENDEN:
 Wenn der Schüler sagt "Das war's" oder "Ich gehe zur Kasse" oder bezahlen will:
@@ -8025,8 +10026,8 @@ VOKABELN: Wo finde ich...?, Was kostet das?, Im Angebot, das Pfand, Mit Karte bi
                 // ===== MÉDICO A2 =====
                 'medico-a2': `PERSONAGEM: Du bist Dr. Müller. Manchmal kommt auch die KRANKENSCHWESTER Frau Schmidt.
 
-ABSOLUT KRITISCH - DU DARFST NIEMALS STILL SEIN!
-================================================
+SEI GEDULDIG MIT DEM SCHÜLER!
+==============================
 MAXIMAL 2 SEKUNDEN PAUSE! Danach MUSST du etwas sagen!
 - Stelle Fragen: "Wo tut es weh?"
 - Erkläre was du machst: "Ich höre jetzt Ihre Lunge ab..."
@@ -8038,7 +10039,7 @@ KONTEXT: Arztpraxis. Patient fühlt sich nicht wohl.
 
 ABLAUF (folge dieser Reihenfolge!):
 1. Begrüße: "Guten Tag! Ich bin Dr. Müller. Setzen Sie sich bitte. Was fehlt Ihnen denn?"
-2. Warte MAX 3 Sekunden auf Antwort
+2. Warte gib ihm Zeit zum Nachdenken auf Antwort
 3. Basierend auf Symptomen, frage weiter: "Seit wann haben Sie das? Haben Sie auch Fieber?"
 4. Mache Untersuchung: "Ich höre jetzt Ihre Lunge ab. Atmen Sie tief ein... und aus... gut."
 5. Diagnose: "Ich glaube, Sie haben eine Erkältung. Nichts Schlimmes."
@@ -8050,7 +10051,7 @@ WENN DER SCHÜLER STILL IST:
 - SOFORT sprechen! "Hmm, haben Sie vielleicht auch Kopfschmerzen?"
 - Oder: "Die Krankenschwester bringt ein Glas Wasser..."
 - Oder: "Ich schaue mir Ihren Hals an... Mund auf bitte... Ah, ein bisschen rot."
-- NIEMALS WARTEN!
+- Bei sehr langen Pausen (5+ Sekunden), hilf dem Schüler sanft weiter.
 
 OBJEKTIV ERREICHT - GESPRÄCH BEENDEN:
 Wenn der Schüler das Rezept hat UND keine weiteren Fragen:
@@ -8063,8 +10064,8 @@ VOKABELN: Ich habe Schmerzen, Wo tut es weh?, Seit wann?, Fieber, Husten, das Re
                 // ===== TRANSPORTE A2 =====
                 'transporte-a2': `PERSONAGEM: Du bist Thomas am Fahrkartenschalter. Manchmal hörst du DURCHSAGEN im Bahnhof.
 
-ABSOLUT KRITISCH - DU DARFST NIEMALS STILL SEIN!
-================================================
+SEI GEDULDIG MIT DEM SCHÜLER!
+==============================
 MAXIMAL 2 SEKUNDEN PAUSE! Danach MUSST du etwas sagen!
 - Beschreibe: "Ich schaue im Computer nach..."
 - Durchsage: "Achtung, eine Durchsage: Der ICE nach München fährt auf Gleis 5..."
@@ -8076,7 +10077,7 @@ KONTEXT: Berliner Hauptbahnhof, Fahrkartenschalter.
 
 ABLAUF (folge dieser Reihenfolge!):
 1. Begrüße: "Guten Tag! Wohin möchten Sie fahren?"
-2. Warte MAX 3 Sekunden auf Antwort
+2. Warte gib ihm Zeit zum Nachdenken auf Antwort
 3. Wenn er ein Ziel nennt: "Nach [Stadt]? Kein Problem! Wann möchten Sie fahren?"
 4. Computer tippen: "Ich schaue mal... So, wir haben einen ICE um 14:30 und einen IC um 15:00."
 5. Erkläre: "Der ICE kostet 89 Euro, ist aber schneller. Der IC kostet 59 Euro."
@@ -8088,7 +10089,7 @@ WENN DER SCHÜLER STILL IST:
 - SOFORT sprechen! "Hmm, wohin soll es denn gehen?"
 - Durchsage: "Im Hintergrund hören Sie: Vorsicht an Gleis 3, ein Zug fährt ein..."
 - Oder: "Möchten Sie vielleicht den Sparpreis? Der ist günstiger!"
-- NIEMALS WARTEN!
+- Bei sehr langen Pausen (5+ Sekunden), hilf dem Schüler sanft weiter.
 
 OBJEKTIV ERREICHT - GESPRÄCH BEENDEN:
 Wenn der Schüler sein Ticket hat:
@@ -8101,8 +10102,8 @@ VOKABELN: Einmal nach... bitte, Hin und zurück, Von welchem Gleis?, der ICE, de
                 // ===== FESTA A2 =====
                 'festa-a2': `PERSONAGEM: Du bist Max UND spielst auch Lisa und Tim (Gäste auf der Party).
 
-ABSOLUT KRITISCH - DU DARFST NIEMALS STILL SEIN!
-================================================
+SEI GEDULDIG MIT DEM SCHÜLER!
+==============================
 MAXIMAL 2 SEKUNDEN PAUSE! Danach MUSST du etwas sagen!
 - Beschreibe: "Die Musik spielt, Leute lachen..."
 - Andere Gäste: "Lisa ruft: Hey Max, wo ist das Bier?"
@@ -8126,7 +10127,7 @@ WENN DER SCHÜLER STILL IST:
 - SOFORT sprechen! "Lisa fragt: Alles okay? Brauchst du noch was zu trinken?"
 - Oder: "Im Hintergrund: Tim erzählt einen Witz und alle lachen..."
 - Oder: "Max sagt: Kennst du schon meine Freundin? Sie ist dort drüben!"
-- NIEMALS WARTEN!
+- Bei sehr langen Pausen (5+ Sekunden), hilf dem Schüler sanft weiter.
 
 OBJEKTIV ERREICHT - GESPRÄCH BEENDEN:
 Wenn der Schüler "Ich muss gehen" oder "Tschüss" sagt:
@@ -8139,8 +10140,8 @@ VOKABELN: Alles Gute!, Das ist für dich, Prost!, Das schmeckt lecker!, Noch etw
                 // ===== TRABALHO/ESTÁGIO A2 =====
                 'trabalho-a2': `PERSONAGEM: Du bist Thomas UND spielst auch Lisa (Chefin) und Markus (Kollege).
 
-ABSOLUT KRITISCH - DU DARFST NIEMALS STILL SEIN!
-================================================
+SEI GEDULDIG MIT DEM SCHÜLER!
+==============================
 MAXIMAL 2 SEKUNDEN PAUSE! Danach MUSST du etwas sagen!
 - Beschreibe: "Wir gehen durch den Flur..."
 - Kollegen: "Markus winkt: Hey, der Neue!"
@@ -8164,7 +10165,7 @@ WENN DER SCHÜLER STILL IST:
 - SOFORT sprechen! "Alles klar soweit? Hast du Fragen?"
 - Oder: "Markus ruft rüber: Hey Thomas, Meeting in 5 Minuten!"
 - Oder: "Ich zeige dir noch den Drucker, der ist hier um die Ecke..."
-- NIEMALS WARTEN!
+- Bei sehr langen Pausen (5+ Sekunden), hilf dem Schüler sanft weiter.
 
 OBJEKTIV ERREICHT - GESPRÄCH BEENDEN:
 Wenn der Schüler seine Aufgaben verstanden hat UND keine Fragen mehr hat:
@@ -8177,8 +10178,8 @@ VOKABELN: Ich bin neu hier, Was sind meine Aufgaben?, Wann ist Pause?, Wo ist de
                 // ===== APARTAMENTO B1 =====
                 'apartamento-b1': `PERSONAGEM: Du bist Herr Schmidt, ein erfahrener Immobilienmakler.
 
-ABSOLUT KRITISCH - DU DARFST NIEMALS STILL SEIN!
-================================================
+SEI GEDULDIG MIT DEM SCHÜLER!
+==============================
 MAXIMAL 2 SEKUNDEN PAUSE! Danach MUSST du etwas sagen!
 - Beschreibe den Raum: "Wie Sie sehen, ist das Wohnzimmer sehr hell..."
 - Zeige Details: "Hier ist der begehbare Kleiderschrank..."
@@ -8204,7 +10205,7 @@ WENN DER INTERESSENT STILL IST:
 - SOFORT weitersprechen! "Haben Sie Fragen zur Miete?"
 - Oder: "Möchten Sie den Keller sehen? Der gehört auch dazu."
 - Oder: "Die Nachbarn sind übrigens sehr nett, ein älteres Ehepaar oben..."
-- NIEMALS WARTEN!
+- Bei sehr langen Pausen (5+ Sekunden), hilf dem Schüler sanft weiter.
 
 OBJEKTIV ERREICHT - GESPRÄCH BEENDEN:
 Wenn der Interessent sagt er will die Wohnung ODER er hat keine weiteren Fragen:
@@ -8217,8 +10218,8 @@ VOKABELN: die Kaltmiete, die Warmmiete, die Nebenkosten, die Kaution, der Mietve
                 // ===== ACADEMIA B1 =====
                 'academia-b1': `PERSONAGEM: Du bist Marco, ein energischer Trainer UND spielst auch Sarah (Rezeptionistin) im FitLife Fitnessstudio.
 
-ABSOLUT KRITISCH - DU DARFST NIEMALS STILL SEIN!
-================================================
+SEI GEDULDIG MIT DEM SCHÜLER!
+==============================
 MAXIMAL 2 SEKUNDEN PAUSE! Danach MUSST du etwas sagen!
 - Beschreibe: "Im Hintergrund trainieren Leute, Musik läuft..."
 - Zeige Geräte: "Hier ist unser Cardio-Bereich, schau mal..."
@@ -8244,7 +10245,7 @@ WENN DER KUNDE STILL IST:
 - SOFORT weitersprechen! "Hast du eine Frage? Ich erkläre gerne alles!"
 - Oder: "Oh, schau mal das Laufband! Willst du es testen?"
 - Oder: "Sarah fragt: Möchtest du Wasser oder einen Smoothie?"
-- NIEMALS WARTEN!
+- Bei sehr langen Pausen (5+ Sekunden), hilf dem Schüler sanft weiter.
 
 OBJEKTIV ERREICHT - GESPRÄCH BEENDEN:
 Wenn der Kunde sagt "Ja, ich melde mich an" ODER "Ich möchte das Probetraining":
@@ -8257,8 +10258,8 @@ VOKABELN: Ich möchte mich anmelden, das Probetraining, der Mitgliedsbeitrag, k�
                 // ===== VIAGEM B1 =====
                 'viagem-b1': `PERSONAGEM: Du bist Julia, eine enthusiastische Freundin UND spielst auch kurz Tom (gemeinsamer Freund der anruft).
 
-ABSOLUT KRITISCH - DU DARFST NIEMALS STILL SEIN!
-================================================
+SEI GEDULDIG MIT DEM SCHÜLER!
+==============================
 MAXIMAL 2 SEKUNDEN PAUSE! Danach MUSST du etwas sagen!
 - Zeige Begeisterung: "Oh, das klingt toll! Ich stelle mir das schon vor..."
 - Mache Vorschläge: "Wie wäre es mit Innsbruck? Da gibt es Berge UND Stadt!"
@@ -8284,7 +10285,7 @@ WENN DER FREUND STILL IST:
 - SOFORT weitersprechen! "Was denkst du? Gefällt dir die Idee?"
 - Oder: "Ich zeige dir mal Fotos auf meinem Handy... schau, wie schön!"
 - Oder: "Oh, ich habe gerade eine Idee! Was ist mit...?"
-- NIEMALS WARTEN!
+- Bei sehr langen Pausen (5+ Sekunden), hilf dem Schüler sanft weiter.
 
 OBJEKTIV ERREICHT - GESPRÄCH BEENDEN:
 Wenn ihr euch auf Ziel, Unterkunft UND Aktivitäten geeinigt habt:
@@ -8297,8 +10298,8 @@ VOKABELN: Wie wäre es mit...?, Das klingt gut!, Das ist mir zu teuer, die Unter
                 // ===== ESCOLA DE IDIOMAS B1 =====
                 'escola-b1': `PERSONAGEM: Du bist Frau Weber, eine freundliche Deutschlehrerin UND spielst auch kurz Hans (ein anderer Schüler der zu spät kommt).
 
-ABSOLUT KRITISCH - DU DARFST NIEMALS STILL SEIN!
-================================================
+SEI GEDULDIG MIT DEM SCHÜLER!
+==============================
 MAXIMAL 2 SEKUNDEN PAUSE! Danach MUSST du etwas sagen!
 - Stelle Fragen: "Was denkst du darüber? Erzähl mir mehr!"
 - Korrigiere sanft: "Fast richtig! Man sagt es so: ..."
@@ -8324,7 +10325,7 @@ WENN DER SCHÜLER STILL IST:
 - SOFORT helfen! "Brauchst du ein Wort? Was willst du sagen?"
 - Oder: "Ich gebe dir einen Tipp: Benutze 'Meiner Meinung nach...'"
 - Oder: "Hans fragt dich: Was ist dein Lieblingsessen in Deutschland?"
-- NIEMALS WARTEN!
+- Bei sehr langen Pausen (5+ Sekunden), hilf dem Schüler sanft weiter.
 
 OBJEKTIV ERREICHT - GESPRÄCH BEENDEN:
 Wenn der Schüler seine Meinung gut begründet hat UND mehrere Aspekte besprochen wurden:
@@ -8337,8 +10338,8 @@ VOKABELN: Meiner Meinung nach..., Ich denke, dass..., Das stimmt, aber..., zum B
                 // ===== TECNOLOGIA B1 =====
                 'tecnologia-b1': `PERSONAGEM: Du bist Stefan, ein erfahrener Techniker UND spielst auch Lisa (Kollegin an der Kasse) im TechFix-Reparaturgeschäft.
 
-ABSOLUT KRITISCH - DU DARFST NIEMALS STILL SEIN!
-================================================
+SEI GEDULDIG MIT DEM SCHÜLER!
+==============================
 MAXIMAL 2 SEKUNDEN PAUSE! Danach MUSST du etwas sagen!
 - Stelle Fragen: "Seit wann ist das Problem? Was passiert genau?"
 - Erkläre: "Das könnte die Festplatte sein, oder vielleicht..."
@@ -8364,7 +10365,7 @@ WENN DER KUNDE STILL IST:
 - SOFORT weitersprechen! "Haben Sie Fragen zu den Kosten?"
 - Oder: "Soll ich das anders erklären? Technisch gesehen..."
 - Oder: "Lisa fragt: Braucht der Kunde eine Ersatzgerät während der Reparatur?"
-- NIEMALS WARTEN!
+- Bei sehr langen Pausen (5+ Sekunden), hilf dem Schüler sanft weiter.
 
 OBJEKTIV ERREICHT - GESPRÄCH BEENDEN:
 Wenn der Kunde das Gerät abgibt ODER sagt er überlegt es sich:
@@ -8377,8 +10378,8 @@ VOKABELN: Das Gerät funktioniert nicht, der Bildschirm, die Festplatte, der Akk
                 // ===== SAÚDE/BEM-ESTAR B1 =====
                 'saude-b1': `PERSONAGEM: Du bist Frau Dr. Bergmann, eine einfühlsame Ernährungsberaterin UND spielst auch kurz Anna (Assistentin die Tee bringt).
 
-ABSOLUT KRITISCH - DU DARFST NIEMALS STILL SEIN!
-================================================
+SEI GEDULDIG MIT DEM SCHÜLER!
+==============================
 MAXIMAL 2 SEKUNDEN PAUSE! Danach MUSST du etwas sagen!
 - Stelle Fragen: "Wie fühlen Sie sich dabei? Erzählen Sie mir mehr..."
 - Sei empathisch: "Das verstehe ich total. Viele Menschen haben das..."
@@ -8404,7 +10405,7 @@ WENN DER KLIENT STILL IST:
 - SOFORT weiterfragen! "Wie fühlen Sie sich dabei?"
 - Oder: "Keine Sorge, das ist ganz normal. Viele meiner Klienten..."
 - Oder: "Anna fragt von draußen: Noch einen Tee, Frau Doktor?"
-- NIEMALS WARTEN!
+- Bei sehr langen Pausen (5+ Sekunden), hilf dem Schüler sanft weiter.
 
 OBJEKTIV ERREICHT - GESPRÄCH BEENDEN:
 Wenn der Klient seinen Plan verstanden hat UND bereit ist, den Tipp auszuprobieren:
@@ -8427,9 +10428,11 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
                 }
             };
 
+            // Não bloquear microfone - deixar Gemini VAD cuidar de tudo
+
             conversacaoState.ws.send(JSON.stringify(textMessage));
             addMessageToHistory('user', `Tema: ${topic}`);
-            updateStatus('Aguardando resposta...', 'speaking');
+            updateStatus(window.t('conversacao.awaitingResponse'), 'speaking');
         }
     }
 
@@ -8577,6 +10580,50 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
         vocabulario: { hex: '#4ade80', name: 'Vocabulário' }
     };
 
+    // Normaliza categorias em inglês para português (para compatibilidade)
+    function normalizeCategory(categoria) {
+        if (!categoria) {
+            console.warn('⚠️ normalizeCategory: categoria undefined/null');
+            return 'vocabulario';
+        }
+        // Remove espaços, pontuação, e converte para minúsculas
+        const cat = String(categoria).toLowerCase().trim().replace(/[.,;:!?]/g, '');
+        const mapping = {
+            // Inglês → Português (várias variações)
+            'declension': 'declinacao',
+            'declination': 'declinacao',
+            'declinations': 'declinacao',
+            'conjugation': 'conjugacao',
+            'conjugations': 'conjugacao',
+            'prepositions': 'preposicoes',
+            'preposition': 'preposicoes',
+            'syntax': 'sintaxe',
+            'syntactic': 'sintaxe',
+            'word order': 'sintaxe',
+            'word-order': 'sintaxe',
+            'vocabulary': 'vocabulario',
+            'lexical': 'vocabulario',
+            'word choice': 'vocabulario',
+            // Português já normalizado
+            'declinacao': 'declinacao',
+            'declinação': 'declinacao',
+            'conjugacao': 'conjugacao',
+            'conjugação': 'conjugacao',
+            'preposicoes': 'preposicoes',
+            'preposições': 'preposicoes',
+            'preposição': 'preposicoes',
+            'sintaxe': 'sintaxe',
+            'vocabulario': 'vocabulario',
+            'vocabulário': 'vocabulario'
+        };
+        const result = mapping[cat];
+        if (!result) {
+            console.warn(`⚠️ normalizeCategory: categoria não mapeada: "${cat}" (original: "${categoria}")`);
+            return 'vocabulario';
+        }
+        return result;
+    }
+
     // Contadores de erros por categoria
     let errorCounts = {
         declinacao: 0,
@@ -8592,10 +10639,18 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
         const noErrorsMsg = document.getElementById('conv-no-errors-msg');
         if (!pieChart) return;
 
+        // DEBUG: Log para verificar estado dos contadores
+        console.log('📊 updatePieChart - errorCounts:', JSON.stringify(errorCounts));
+
         // Atualizar contadores na legenda
         Object.keys(errorCounts).forEach(cat => {
             const countEl = document.getElementById(`conv-count-${cat}`);
-            if (countEl) countEl.textContent = errorCounts[cat];
+            if (countEl) {
+                countEl.textContent = errorCounts[cat];
+                console.log(`📊 Atualizando conv-count-${cat}: ${errorCounts[cat]}`);
+            } else {
+                console.warn(`📊 Elemento conv-count-${cat} não encontrado!`);
+            }
         });
 
         const total = Object.values(errorCounts).reduce((a, b) => a + b, 0);
@@ -8675,8 +10730,98 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
                 .replace(/\s+/g, ' ')
                 .trim();
 
+            // FILTRO: Ignora transcrições que claramente não são alemãs
+            // Detecta caracteres japoneses, chineses, árabes, coreanos, etc.
+            const nonGermanPattern = /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\u0600-\u06FF\uAC00-\uD7AF\u0590-\u05FF]/;
+            if (nonGermanPattern.test(cleaned)) {
+                console.log('⚠️ Transcrição ignorada (caracteres não-alemães detectados):', cleaned);
+                return; // Não armazena transcrições em outros idiomas
+            }
+
             if (cleaned.length > 5) {
                 storeTranscript(cleaned, 'user');
+            }
+        }
+    }
+
+    // Função para extrair correções da fala da IA (persona)
+    function extractCorrectionsFromAI(text) {
+        if (!text || text.length < 10) return [];
+
+        const corrections = [];
+
+        // Padrões de correção em alemão e português que a persona pode usar
+        const patterns = [
+            // "Nicht X, sondern Y" ou "Nicht X, Y"
+            /nicht\s+["']?([^"',]+)["']?\s*,?\s*(?:sondern|)?\s*["']?([^"'.!]+)["']?/gi,
+            // "X ist falsch, richtig ist Y" ou "X falsch, richtig Y"
+            /["']?([^"',]+)["']?\s+(?:ist\s+)?falsch[,.]?\s*(?:richtig\s+ist\s*)?["']?([^"'.!]+)["']?/gi,
+            // "Es heißt X, nicht Y" ou "Man sagt X"
+            /(?:es heißt|man sagt)\s+["']?([^"',]+)["']?\s*,?\s*nicht\s+["']?([^"'.!]+)["']?/gi,
+            // "Besser wäre X" ou "Richtig wäre X"
+            /(?:besser|richtig|korrekt)\s+(?:wäre|ist)\s+["']?([^"'.!]+)["']?/gi,
+            // Português: "O correto é X" ou "deveria ser X"
+            /(?:o\s+correto\s+é|deveria\s+ser|seria\s+melhor)\s+["']?([^"'.!]+)["']?/gi,
+            // "Du hast X gesagt, aber Y" ou "Sie sagten X, aber Y"
+            /(?:du\s+hast|sie\s+haben?)\s+["']?([^"',]+)["']?\s+gesagt,?\s*aber\s+["']?([^"'.!]+)["']?/gi
+        ];
+
+        for (const pattern of patterns) {
+            let match;
+            while ((match = pattern.exec(text)) !== null) {
+                if (match[1] && match[2]) {
+                    const erro = match[1].trim();
+                    const correcao = match[2].trim();
+                    // Evitar falsos positivos muito curtos
+                    if (erro.length > 2 && correcao.length > 2 && erro !== correcao) {
+                        corrections.push({
+                            categoria: 'vocabulario', // Padrão, será refinado pela análise
+                            contexto: text.substring(0, 100) + '...',
+                            erro: erro,
+                            correcao: correcao,
+                            explicacao: 'Correção feita pela persona durante a conversa'
+                        });
+                    }
+                } else if (match[1]) {
+                    // Padrões que só capturam a correção
+                    const correcao = match[1].trim();
+                    if (correcao.length > 3) {
+                        // Não podemos deduzir o erro, mas marcamos como dica
+                        console.log(`💡 Dica da persona: "${correcao}"`);
+                    }
+                }
+            }
+        }
+
+        return corrections;
+    }
+
+    // Função para processar transcrição da IA e extrair correções
+    function processAITranscript(text) {
+        if (!text || text.length < 10) return;
+
+        // Armazena também a fala da IA (para contexto)
+        conversacaoState.transcripts.push({
+            timestamp: Date.now(),
+            speaker: 'ai',
+            text: text.trim()
+        });
+
+        // Extrai correções e adiciona aos erros acumulados
+        const corrections = extractCorrectionsFromAI(text);
+        if (corrections.length > 0) {
+            console.log(`🔍 Extraídas ${corrections.length} correção(ões) da fala da IA`);
+            corrections.forEach(corr => {
+                const exists = accumulatedErrors.some(e =>
+                    e.erro === corr.erro && e.correcao === corr.correcao
+                );
+                if (!exists) {
+                    accumulatedErrors.push(corr);
+                    console.log(`➕ Correção da persona: "${corr.erro}" → "${corr.correcao}"`);
+                }
+            });
+            if (corrections.length > 0) {
+                displayAccumulatedErrors();
             }
         }
     }
@@ -8694,12 +10839,10 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
 
         console.log(`📝 FRASE COMPLETA ARMAZENADA (${speaker}):`, text);
 
-        // Inicia timer de 5 minutos se ainda não foi iniciado
-        if (!conversacaoState.analysisTimer && !conversacaoState.analysisTriggered) {
-            conversacaoState.analysisTimer = setTimeout(() => {
-                console.log('⏰ Timer de 5 minutos atingido - iniciando análise');
-                triggerAnalysis();
-            }, 5 * 60 * 1000); // 5 minutos
+        // ANÁLISE EM TEMPO REAL: Se for fala do usuário, analisa imediatamente
+        if (speaker === 'user') {
+            console.log('🔍 Disparando análise em tempo real para:', text.substring(0, 50) + '...');
+            analyzeUserPhraseRealtime(text);
         }
     }
 
@@ -8730,12 +10873,15 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
         showAnalysisStatus(window.t('conversacao.analyzing'));
 
         try {
-            // Get current language for error explanations
+            // Get current UI language for error explanations (pt-BR or en)
             const currentLang = window.getCurrentLanguage ? window.getCurrentLanguage() : 'pt-BR';
+            // Target language is always German for now (could be extended for other languages)
+            const targetLang = 'de';  // Idioma sendo estudado: alemão
             const requestBody = {
                 transcripts: userTranscripts,
                 fullAnalysis: true,
-                language: currentLang
+                language: currentLang,      // Idioma das explicações (pt-BR ou en)
+                targetLanguage: targetLang  // Idioma sendo estudado (de = alemão)
             };
             console.log('📤 Enviando para DeepSeek:', JSON.stringify(requestBody, null, 2));
 
@@ -8789,15 +10935,26 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
     }
 
     // Função para exibir correções na UI com contexto completo
-    function displayCorrections(corrections) {
+    // ACUMULA erros novos com os existentes (não substitui)
+    function displayCorrections(corrections, replaceAll = false) {
         const correctionsEl = document.getElementById('conv-corrections');
         const analysisSection = document.getElementById('conv-error-analysis-section');
         if (!correctionsEl) return;
 
-        // Limpa tudo
+        // Adicionar novos erros aos acumulados (evitando duplicatas)
+        corrections.forEach(err => {
+            const exists = accumulatedErrors.some(e =>
+                e.erro === err.erro && e.correcao === err.correcao
+            );
+            if (!exists) {
+                accumulatedErrors.push(err);
+            }
+        });
+
+        // Limpa a UI para re-renderizar todos os erros acumulados
         correctionsEl.innerHTML = '';
 
-        // Resetar contadores
+        // Resetar contadores (vamos recalcular com todos os erros acumulados)
         errorCounts = {
             declinacao: 0,
             conjugacao: 0,
@@ -8811,17 +10968,30 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
             analysisSection.classList.remove('hidden');
         }
 
-        corrections.forEach(corr => {
-            const categoria = corr.categoria || 'vocabulario';
-            const color = CORRECTION_COLORS[categoria] || CORRECTION_COLORS.vocabulario;
-            conversacaoState.totalCorrections++;
+        // Esconder mensagem de "sem erros"
+        const noErrorsMsg = document.getElementById('conv-no-errors-msg');
+        if (noErrorsMsg && accumulatedErrors.length > 0) {
+            noErrorsMsg.classList.add('hidden');
+        }
 
-            // Incrementar contador por categoria
-            if (errorCounts.hasOwnProperty(categoria)) {
-                errorCounts[categoria]++;
-            } else {
-                errorCounts.vocabulario++;
-            }
+        // Renderizar TODOS os erros acumulados
+        accumulatedErrors.forEach(corr => {
+            // DEBUG: Log para verificar valor da categoria recebida
+            console.log('🔍 DEBUG categoria:', {
+                original: corr.categoria,
+                tipo: typeof corr.categoria,
+                keys: Object.keys(corr)
+            });
+
+            // Normaliza categoria para português (suporta EN e PT)
+            const categoria = normalizeCategory(corr.categoria);
+            console.log('🔍 DEBUG normalizada:', categoria, '→ errorCounts antes:', errorCounts[categoria]);
+
+            const color = CORRECTION_COLORS[categoria] || CORRECTION_COLORS.vocabulario;
+
+            // Incrementar contador por categoria (já normalizada)
+            errorCounts[categoria]++;
+            console.log('🔍 DEBUG errorCounts depois:', errorCounts[categoria]);
 
             // Criar card de correção com contexto
             const corrDiv = document.createElement('div');
@@ -8849,6 +11019,9 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
                 }
             }
 
+            // Obter nome da categoria traduzido
+            const categoryName = getCategoryName(categoria);
+
             corrDiv.innerHTML = `
                 ${corr.contexto ? `
                 <div style="margin-bottom: 10px; padding: 8px; background: #0f172a; border-radius: 6px; font-style: italic; color: #e2e8f0; font-size: 12px; line-height: 1.4;">
@@ -8856,7 +11029,7 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
                 </div>` : ''}
                 <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
                     <span style="display: inline-block; width: 8px; height: 8px; background: ${color.hex}; border-radius: 50%;"></span>
-                    <span style="color: ${color.hex}; font-size: 10px; font-weight: 600; text-transform: uppercase;">${color.name}</span>
+                    <span style="color: ${color.hex}; font-size: 10px; font-weight: 600; text-transform: uppercase;">${categoryName}</span>
                 </div>
                 <div style="margin-bottom: 6px;">
                     <span style="color: #ef4444; text-decoration: line-through; font-weight: 500; font-size: 12px;">${escapeHtml(corr.erro || '')}</span>
@@ -8869,8 +11042,31 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
             correctionsEl.appendChild(corrDiv);
         });
 
+        // Atualizar total de correções
+        conversacaoState.totalCorrections = accumulatedErrors.length;
+
         // Atualizar gráfico de pizza
         updatePieChart();
+
+        console.log(`📊 Total de erros acumulados: ${accumulatedErrors.length}`);
+    }
+
+    // Função auxiliar para obter o nome da categoria traduzido
+    function getCategoryName(categoria) {
+        const categoryMap = {
+            'declinacao': 'conversacao.declension',
+            'conjugacao': 'conversacao.conjugation',
+            'preposicoes': 'conversacao.prepositions',
+            'sintaxe': 'conversacao.syntax',
+            'vocabulario': 'conversacao.vocabulary',
+            'declination': 'conversacao.declension',
+            'conjugation': 'conversacao.conjugation',
+            'prepositions': 'conversacao.prepositions',
+            'syntax': 'conversacao.syntax',
+            'vocabulary': 'conversacao.vocabulary'
+        };
+        const key = categoryMap[categoria?.toLowerCase()] || 'conversacao.vocabulary';
+        return window.t ? window.t(key) : categoria;
     }
 
     // Função legada - agora apenas armazena transcripts
@@ -8900,9 +11096,10 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
             analysisSection.classList.add('hidden');
         }
 
-        // Mostrar mensagem de "sem erros"
+        // Mostrar mensagem de "sem erros" com texto traduzido
         const noErrorsMsg = document.getElementById('conv-no-errors-msg');
         if (noErrorsMsg) {
+            noErrorsMsg.textContent = window.t ? window.t('conversacao.errorsWillAppear') : 'Erros aparecerão aqui em tempo real durante a conversa.';
             noErrorsMsg.classList.remove('hidden');
         }
 
@@ -8919,6 +11116,12 @@ VOKABELN: Ich möchte gesünder leben, sich ernähren, der Stress, ausgewogen, a
             clearTimeout(conversacaoState.analysisTimer);
             conversacaoState.analysisTimer = null;
         }
+
+        // Limpar erros acumulados (apenas quando for nova sessão, não reconexão)
+        accumulatedErrors = [];
+        lastAnalyzedTranscriptIndex = 0; // Resetar índice de análise
+        pendingAnalysisCount = 0; // Resetar contador de análises pendentes
+        analysisQueue = []; // Limpar fila de análises
 
         // Resetar contadores de erro por categoria
         errorCounts = {

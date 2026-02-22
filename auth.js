@@ -50,7 +50,7 @@ registerForm.addEventListener('submit', async (e) => {
         const { error: profileError } = await _supabase
             .from('profiles')
             .insert([
-                { id: data.user.id, credits: 2, avatar_url: null }
+                { id: data.user.id, credits: 100, avatar_url: null }
             ]);
 
         if (profileError) {
