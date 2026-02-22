@@ -225,6 +225,13 @@
                     messageDiv.textContent = 'Login realizado! Redirecionando...';
                     messageDiv.className = 'text-center text-green-400 mt-4';
                     console.log('Login successful, waiting for onAuthStateChange to redirect...');
+                    // Fallback: se o onAuthStateChange não redirecionar em 10s, forçar redirect
+                    setTimeout(() => {
+                        if (window.location.pathname.endsWith('login.html') || window.location.pathname === '/' || window.location.pathname.endsWith('login')) {
+                            console.warn('⚠️ Fallback: onAuthStateChange não redirecionou, forçando redirect para dashboard');
+                            window.location.href = 'dashboard-new.html';
+                        }
+                    }, 10000);
                 }
             } catch (err) {
                 console.error('Unexpected login error:', err);
@@ -297,6 +304,9 @@
             showForm(updatePasswordContainer);
         }
 
+        // Guard para evitar múltiplas execuções simultâneas do handler de redirect
+        let isRedirecting = false;
+
         _supabase.auth.onAuthStateChange(async (event, session) => {
             console.log('🔄 Auth state changed:', event, session?.user?.email);
 
@@ -310,16 +320,29 @@
             if (session?.user && !isPasswordRecovery) {
                  // Verifica se a URL atual não é a do dashboard para evitar loops
                 if (!window.location.pathname.endsWith('dashboard-new.html') && !window.location.pathname.endsWith('onboarding.html')) {
+                    // Evita que TOKEN_REFRESHED e SIGNED_IN disparem redirect simultâneo
+                    if (isRedirecting) {
+                        console.log('⏳ Redirect já em andamento, ignorando evento:', event);
+                        return;
+                    }
+                    isRedirecting = true;
+
                     console.log('🔍 Verificando onboarding para usuário:', session.user.email);
                     console.log('🔍 User ID:', session.user.id);
 
                     try {
-                        // Verificar se usuário já completou onboarding
-                        const { data: leadData, error: leadError } = await _supabase
+                        // Verificar se usuário já completou onboarding (com timeout de 8s)
+                        const leadsQuery = _supabase
                             .from('leads')
                             .select('id')
                             .eq('id', session.user.id)
                             .single();
+
+                        const timeoutPromise = new Promise((_, reject) =>
+                            setTimeout(() => reject(new Error('Timeout: leads query took too long')), 8000)
+                        );
+
+                        const { data: leadData, error: leadError } = await Promise.race([leadsQuery, timeoutPromise]);
 
                         console.log('Lead data:', leadData);
                         console.log('Lead error:', leadError);
@@ -342,7 +365,7 @@
                         }
                     } catch (err) {
                         console.error('❌ Erro inesperado ao verificar onboarding:', err);
-                        // Em caso de erro, tentar redirecionar para dashboard
+                        // Em caso de erro ou timeout, redirecionar para dashboard
                         window.location.href = 'dashboard-new.html';
                     }
                 }
