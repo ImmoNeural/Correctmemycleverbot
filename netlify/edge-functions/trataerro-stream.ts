@@ -245,15 +245,14 @@ async function updateStats(userId: string, fullResponse: string, currentProfile:
         const erros = parsedJson.erros || parsedJson;
         const contagem = countErrors(erros);
 
-        // Atualizar perfil
+        // Atualizar perfil (só contagens de erros - créditos já foram deduzidos antes do stream)
         const updateData = {
             error_declinacao: (parseInt(String(contagem.declinacao)) || 0) + (parseInt(String(currentProfile.error_declinacao)) || 0),
             error_conjugacao: (parseInt(String(contagem.conjugacao)) || 0) + (parseInt(String(currentProfile.error_conjugacao)) || 0),
             error_sintaxe: (parseInt(String(contagem.sintaxe)) || 0) + (parseInt(String(currentProfile.error_sintaxe)) || 0),
             error_preposicao: (parseInt(String(contagem.preposicoes)) || 0) + (parseInt(String(currentProfile.error_preposicao)) || 0),
             error_vocabulario: (parseInt(String(contagem.vocabulario)) || 0) + (parseInt(String(currentProfile.error_vocabulario)) || 0),
-            total_essays: (parseInt(String(currentProfile.total_essays)) || 0) + 1,
-            credits: parseInt(String(currentProfile.credits)) - 20
+            total_essays: (parseInt(String(currentProfile.total_essays)) || 0) + 1
         };
 
         await supabaseRequest(`/rest/v1/profiles?id=eq.${userId}`, {
@@ -339,7 +338,15 @@ export default async function handler(request: Request) {
             });
         }
 
-        console.log('User validated, starting DeepSeek stream...');
+        // Deduzir 20 créditos IMEDIATAMENTE (antes do stream)
+        const newCredits = parseInt(String(userProfile.credits)) - 20;
+        await supabaseRequest(`/rest/v1/profiles?id=eq.${userId}`, {
+            method: 'PATCH',
+            headers: { 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ credits: newCredits })
+        });
+
+        console.log('User validated, 20 credits deducted, starting DeepSeek stream...');
 
         // 2. Fazer chamada ao DeepSeek com streaming
         const deepseekResponse = await fetch(DEEPSEEK_API_URL, {
