@@ -16,10 +16,13 @@ Se a redação tiver aspas, colchetes, parênteses ou chaves, ou quebra de linha
 REGRAS DE ANÁLISE
 Para cada erro encontrado no texto, você deve:
 1. Identificar a palavra ou trecho exato do erro.
-2. Fornecer uma sugestão de correção.
+2. Fornecer uma sugestão de correção DIFERENTE da palavra errada. Se a palavra já está correta, NÃO a inclua como erro.
 3. Consultar a TABELA DE REFERÊNCIA e encontrar o tópico mais específico que descreve o erro.
 4. Criar uma descrição curta e contextualizada do erro.
 5. Criar um prompt de busca claro para uma base de conhecimento.
+6. Escrever uma explicação didática e contextualizada do erro no campo "explicacao_pt" (em português) e "explicacao_en" (em inglês). A explicação deve dizer POR QUE a palavra está errada e QUAL é a regra gramatical aplicável, de forma clara e útil para o aluno.
+
+REGRA CRÍTICA: NUNCA reporte como erro uma palavra que já está correta. Se "palavra_errada" e "sugestao_correcao" forem iguais, NÃO inclua esse erro. Palavras estrangeiras comuns (como "Website", "E-Mail", "Computer", "Handy") que são aceitas no alemão moderno NÃO devem ser marcadas como erro.
 
 FORMATO DA RESPOSTA
 A sua resposta DEVE ser APENAS um objeto JSON válido, sem nenhum texto extra. A estrutura do JSON deve ser exatamente esta:
@@ -33,6 +36,8 @@ A sua resposta DEVE ser APENAS um objeto JSON válido, sem nenhum texto extra. A
       "coluna": "",
       "palavra_errada": "",
       "sugestao_correcao": "",
+      "explicacao_pt": "",
+      "explicacao_en": "",
       "prompt_busca_rag": ""
     }
   ],
@@ -45,6 +50,8 @@ A sua resposta DEVE ser APENAS um objeto JSON válido, sem nenhum texto extra. A
       "coluna": "",
       "palavra_errada": "",
       "sugestao_correcao": "",
+      "explicacao_pt": "",
+      "explicacao_en": "",
       "prompt_busca_rag": ""
     }
   ],
@@ -57,6 +64,8 @@ A sua resposta DEVE ser APENAS um objeto JSON válido, sem nenhum texto extra. A
       "coluna": "",
       "palavra_errada": "",
       "sugestao_correcao": "",
+      "explicacao_pt": "",
+      "explicacao_en": "",
       "prompt_busca_rag": ""
     }
   ],
@@ -69,6 +78,8 @@ A sua resposta DEVE ser APENAS um objeto JSON válido, sem nenhum texto extra. A
       "coluna": "",
       "palavra_errada": "",
       "sugestao_correcao": "",
+      "explicacao_pt": "",
+      "explicacao_en": "",
       "prompt_busca_rag": ""
     }
   ],
@@ -81,6 +92,8 @@ A sua resposta DEVE ser APENAS um objeto JSON válido, sem nenhum texto extra. A
       "coluna": "",
       "palavra_errada": "",
       "sugestao_correcao": "",
+      "explicacao_pt": "",
+      "explicacao_en": "",
       "prompt_busca_rag": ""
     }
   ]
@@ -240,7 +253,7 @@ async function updateStats(userId: string, fullResponse: string, currentProfile:
             error_preposicao: (parseInt(String(contagem.preposicoes)) || 0) + (parseInt(String(currentProfile.error_preposicao)) || 0),
             error_vocabulario: (parseInt(String(contagem.vocabulario)) || 0) + (parseInt(String(currentProfile.error_vocabulario)) || 0),
             total_essays: (parseInt(String(currentProfile.total_essays)) || 0) + 1,
-            credits: parseInt(String(currentProfile.credits)) - 100
+            credits: parseInt(String(currentProfile.credits)) - 20
         };
 
         await supabaseRequest(`/rest/v1/profiles?id=eq.${userId}`, {
@@ -319,7 +332,7 @@ export default async function handler(request: Request) {
             });
         }
 
-        if (parseInt(String(userProfile.credits)) < 100) {
+        if (parseInt(String(userProfile.credits)) < 20) {
             return new Response(JSON.stringify({ error: 'Sem crédito suficiente' }), {
                 status: 402,
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' }

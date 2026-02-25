@@ -1381,7 +1381,8 @@ async function handleCorrectionSubmit(e) {
             errorFound: isEnglish ? 'error(s) found' : 'erro(s) encontrado(s)',
             analyzing: isEnglish ? 'Analyzing...' : 'Analisando...',
             analysisComplete: isEnglish ? 'Analysis complete!' : 'Análise completa!',
-            noErrors: isEnglish ? 'Essay without errors! Congratulations!' : 'Redação sem erros! Parabéns!'
+            noErrors: isEnglish ? 'Essay without errors! Congratulations!' : 'Redação sem erros! Parabéns!',
+            explanation: isEnglish ? 'Explanation:' : 'Explicação:'
         };
 
         // Definição das categorias (precisa estar acessível antes)
@@ -1534,9 +1535,16 @@ async function handleCorrectionSubmit(e) {
         function exibirErro(catKey, errObj) {
             const cat = categorias[catKey];
             const palavraErrada = (errObj.palavra_errada || errObj.palavra || '').trim();
+            const sugestao = (errObj.sugestao_correcao || '').trim();
+
+            // FILTRO: Ignorar falsos positivos (palavra_errada === sugestao_correcao)
+            if (palavraErrada && sugestao && palavraErrada.toLowerCase() === sugestao.toLowerCase()) {
+                console.log(`Falso positivo ignorado: "${palavraErrada}" === "${sugestao}"`);
+                return;
+            }
 
             // Gera ID único para evitar duplicatas
-            const erroId = `${catKey}-${palavraErrada}-${errObj.sugestao_correcao || ''}`;
+            const erroId = `${catKey}-${palavraErrada}-${sugestao}`;
             if (errosProcessados.has(erroId)) return;
             errosProcessados.add(erroId);
 
@@ -1552,10 +1560,14 @@ async function handleCorrectionSubmit(e) {
             // 3. Extrai dados do erro
             const tituloErro = escapeHtml((errObj.topico_grammatical_nome || errObj.topico_gramatical_nome || '').trim());
             const palavraErradaEscaped = escapeHtml(palavraErrada);
-            const sugestaoCorrecao = escapeHtml((errObj.sugestao_correcao || '').trim());
-            const gramatica = escapeHtml((errObj.gramatica || '').trim());
+            const sugestaoCorrecao = escapeHtml(sugestao);
 
-            // 4. Cria o card do erro (formato anterior - mais simples)
+            // 4. Extrai explicação conforme idioma ativo (bandeira)
+            const explicacao = isEnglish
+                ? escapeHtml((errObj.explicacao_en || errObj.explicacao_pt || errObj.descricao_topico_gramatical || errObj.gramatica || '').trim())
+                : escapeHtml((errObj.explicacao_pt || errObj.descricao_topico_gramatical || errObj.gramatica || '').trim());
+
+            // 5. Cria o card do erro
             const cardDiv = document.createElement('div');
             cardDiv.className = 'error-card-appear';
             cardDiv.style.cssText = `background-color: #1e293b; border: 1px solid #475569; border-left: 4px solid ${cat.corHex}; border-radius: 8px; padding: 16px; margin-bottom: 12px;`;
@@ -1577,9 +1589,9 @@ async function handleCorrectionSubmit(e) {
                         <span style="color: #86efac; font-weight: 600;">${sugestaoCorrecao}</span>
                     </p>` : ''}
 
-                ${gramatica ? `
+                ${explicacao ? `
                     <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #334155;">
-                        <p style="margin: 0; color: #cbd5e1; font-size: 14px; line-height: 1.6;">${gramatica}</p>
+                        <p style="margin: 0; color: #ffffff; font-size: 14px; line-height: 1.7;">${explicacao}</p>
                     </div>` : ''}
             `;
 
@@ -1602,7 +1614,7 @@ async function handleCorrectionSubmit(e) {
         }
 
         // Parser incremental para extrair erros do JSON em streaming
-        const camposComConteudo = ['palavra_errada', 'palavra', 'sugestao_correcao', 'sugestao', 'gramatica', 'descricao_topico_gramatical', 'descricao', 'explicacao', 'explanation'];
+        const camposComConteudo = ['palavra_errada', 'palavra', 'sugestao_correcao', 'sugestao', 'gramatica', 'descricao_topico_gramatical', 'descricao', 'explicacao', 'explanation', 'explicacao_pt', 'explicacao_en'];
         const categoryKeys = Object.keys(categorias);
         let lastProcessedLength = 0;
 
